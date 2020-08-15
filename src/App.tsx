@@ -6,6 +6,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h2>hola mundo</h2>
+        <button onClick={methodDoesNotExist}>Break the world</button>;
       </header>
     </div>
   );
