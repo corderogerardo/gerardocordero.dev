@@ -1,13 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=MuseoModerno:wght@100;400;700&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --main-color: black;
+  --font-family: "MuseoModerno", cursive;
+  --font-small: 12px;
+  --font-normal: 16px;
+  --font-big: 32px;
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-16: 16px;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-image: url("/images/background.png");
+  font-family: var(--font-family);
+  font-size: var(--font-normal);
+  color: var(--main-color);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: var(--font-family);
 }
