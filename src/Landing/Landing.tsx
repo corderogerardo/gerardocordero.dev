@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import media from "styled-media-query";
 
+import About from "./Abouts/Container";
+
 const LandingContainer = styled.div``;
 const Title = styled.h1`
   font-size: var(--font-normal);
@@ -47,6 +49,7 @@ export default function Landing() {
         curious about Virtual Reality Gaming, Blockchain, Quality of life and
         Mental Health.
       </SubTitle>
+      <About></About>
     </LandingContainer>
   );
 }

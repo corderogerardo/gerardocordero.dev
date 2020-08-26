@@ -2,16 +2,42 @@ import React from "react";
 import styled from "styled-components";
 
 const AboutsMenu = styled.header`
-  border: 1px solid red;
+  width: 100%;
   display: flex;
-  flex-direction: row;
   justify-content: center;
-  align-items: space-around;
+  margin: 20px 0;
 `;
+
+const NavAbout = styled.nav`
+  display: flex;
+  width: 30%;
+  align-items: center;
+  justify-content: space-around;
+`;
+
+const AAbout = styled.a`
+  display: flex;
+  justify-content: center;
+  border: 1px solid green;
+  width: 100px;
+  text-decoration: none;
+  color: green;
+`;
+
+const lastYears = ["2020", "Oldest"];
+
 const Menu = () => {
-  return <AboutsMenu>
-  
-  </AboutsMenu>;
+  return (
+    <AboutsMenu>
+      <NavAbout>
+        {lastYears.map((year) => (
+          <AAbout href={`/${year}`} key="year">
+            {year}
+          </AAbout>
+        ))}
+      </NavAbout>
+    </AboutsMenu>
+  );
 };
 
 export default Menu;
