@@ -1,0 +1,3 @@
+@sentry/react @testing-library/jest-dom @testing-library/user-event @types/jest @types/node @types/react @types/react-dom axios axios-hooks i18next i18next-browser-languagedetector i18next-http-backend react react-dom react-hook-form react-i18next react-router-dom react-scripts recoil styled-components styled-media-query swr typescript
+
+@testing-library/react @types/styled-components cypress

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 import React from "react";
 import ReactDOM from "react-dom";
 import * as Sentry from "@sentry/react";
