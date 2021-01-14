@@ -3,6 +3,7 @@ import styled from "styled-components";
 import media from "styled-media-query";
 
 import About from "./Abouts/Container";
+import EffectWithInterval from "../ReactTests/EffectWithInterval"
 
 const LandingContainer = styled.div``;
 const Title = styled.h1`
@@ -50,6 +51,7 @@ export default function Landing() {
         Mental Health.
       </SubTitle>
       <About></About>
+
     </LandingContainer>
   );
 }
