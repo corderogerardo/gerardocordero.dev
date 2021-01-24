@@ -48,7 +48,7 @@ function anagrams(word, words) {
       return x.sort() === word.sort();
   });
 }
-// other
+// other 
 function anagrams(word, words) {
   return words.filter(w => reorder(w) === reorder(word));
 }
