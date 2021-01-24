@@ -1,7 +1,7 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 
 const EffectWithInterval = () => {
-  const [timer, setTimer] = React.useState(60)
+  const [timer, setTimer] = useState(60)
 
   const countDown = () => {
     setInterval(() => {
@@ -9,7 +9,7 @@ const EffectWithInterval = () => {
     }, 1000)
   }
 
-  React.useEffect(countDown, [])
+  useEffect(countDown, [countDown])
 
   return (
     <div>
