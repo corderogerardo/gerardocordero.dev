@@ -35,7 +35,8 @@ var lengthOfLongestSubstring = function(s) {
 
 // Complexity analysis
 // Time: O(n), each caracters of the string needs to be visited once
-// Space: O(min(m, n)) the number of keys in Hash Map is bounded by the size of the string n and the size of the charset/alphabet m.
+// Space: O(min(m, n)) the number of keys in Hash Map is bounded by the size of the string n and the size of the charset/alphabet m. M is always 26 all letter of the alphabet
+
 
 // Análisis de complejidad
 // Hora: O (n), cada carácter de la cadena debe visitarse una vez
