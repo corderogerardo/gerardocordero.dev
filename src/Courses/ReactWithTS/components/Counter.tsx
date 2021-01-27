@@ -5,11 +5,11 @@ interface CounterProps {
 }
 
 interface CounterState {
-  count:
+  count: number
 }
 
-class Counter extends Component<CounterProps> {
-  constructor(props) {
+class Counter extends Component<CounterProps, CounterState> {
+  constructor(props: CounterProps) {
     super(props);
     this.state = {
       count: props.defaultCount
