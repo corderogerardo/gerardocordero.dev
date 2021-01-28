@@ -9,10 +9,12 @@
  // 3. Si al iterar nos encontramos con que el char es el closing tag `]})` que hace par con el top que tenemos de nuestra stack, sacamos el valor top/arriba de nuestra stack/pila.
  // 4. Finalmente si al terminar el loop for y nuestra stack/pila esta vacia retornamos true. Quiere decir que es un `valid input string`, un input de string valido de caracteres.
  // 5. Si por otro lado nuestra stack/pila no esta vacia, retornamos false
+
  //  Completixy analysis:
- // Time: O()
- // Space: O()
-var ValidParentheses = s => {
+ // Time: O(n) We iterate thru input string just once.
+ // Space: O(n) In worst case, stack is same length as input string
+
+ var ValidParentheses = s => {
   // recuerda que s es un string con n.length chars
   // simulamos una stack con un arreglo
   let stack = [];
