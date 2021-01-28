@@ -1,5 +1,4 @@
-function TicTackToeChecker(board) {
-  // TODO: Check if the board is solved!
+ // TODO: Check if the board is solved!
   // 1. Itera sobre el arreglo principal
   // 2. segun el indice del primer arreglo va a iterar en busca de casos
   // 3. ahora la primera fila es la que descubre mas casos
@@ -10,7 +9,7 @@ function TicTackToeChecker(board) {
   // caso del final
   // 4. la segunda fila solo me intersa el caso del medio hacia la derecha
   // 5. la tercera fila solo me interesa el caso del final hacia la derecha
-
+function TicTackToeChecker(board) {
   const xWon = '111';
   const oWon = '222'
   const aSpotEmpty = '0';
@@ -21,9 +20,7 @@ function TicTackToeChecker(board) {
     'empty': [],
     'draw': [],
   }
-
   const boardCopy = [...board];
-
   const checkWinner = (arr) => {
     const str = arr.join``;
     if(str === xWon){
@@ -33,8 +30,6 @@ function TicTackToeChecker(board) {
     if(str === oWon){
       winner['o'] = 2;
     }
-
-
     if(!str.includes(aSpotEmpty)){
       winner['draw'].push('0');
     }else{
@@ -42,8 +37,6 @@ function TicTackToeChecker(board) {
         winner['empty'].push('-1');
       }
     }
-
-
   }
 
   const buildDown = (position, mainArr) => {
