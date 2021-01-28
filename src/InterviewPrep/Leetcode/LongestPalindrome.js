@@ -2,6 +2,9 @@
  * @param {string} s
  * @return {string}
  */
+// Time Complexity Analysis
+// Time: O(n^2): Since expanding a palindrome around its center could take up to O(n), and we do this for each char.
+// Space: 0(1)
 var LongestPalindrome = function(s) {
   let startIndex = 0;
   let maxLength = 1;
