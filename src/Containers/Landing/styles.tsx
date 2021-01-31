@@ -2,7 +2,6 @@ import styled from "styled-components";
 import media from "styled-media-query";
 
 const LandingContainer = styled.div`
-  border: 2px solid green;
   padding: 0;
   margin: 0;
   width: 100%;
