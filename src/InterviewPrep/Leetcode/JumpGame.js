@@ -1,3 +1,14 @@
+// Dynamic Programming exercise
+
+//Completixy analysis:
+// Time: O(N ^ 2) Nested for loops
+// Space: O(N) DP Array  same size as Input Array
+
+// Which is the main Idea of this exercise?
+// la idea principal es saber si puedes saltar a la siguiente valor, teniendo en cuenta el indice + el valor del inice es mayor al siguiente valor, si es mayor se puede saltar?
+
+// ToDO: Volver a estudiar!
+
 const JumpGame = (nums) => {
   let dpPositions = new Array(nums.length).fill(false);
   dpPositions[0] = true;
