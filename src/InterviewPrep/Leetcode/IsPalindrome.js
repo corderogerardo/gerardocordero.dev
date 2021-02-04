@@ -15,7 +15,7 @@
  //Completixy analysis:
  // Time: O(N)
  // Space: O(1) LEFT and RIGHT pointers take up constant space.
- var isPalindrome = function(s) {
+ var IsPalindrome = function(s) {
   s = s.toLowerCase().replace(/[\W_]/g, "");
   let left = 0;
   let right = s.length -1;
@@ -29,4 +29,3 @@
 
   return true;
 };
-

@@ -1,7 +1,13 @@
 import styled from "styled-components";
 import media from "styled-media-query";
 
-const LandingContainer = styled.div``;
+const LandingContainer = styled.div`
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-image: mySvg;
+`;
 const Title = styled.h1`
   font-size: var(--font-normal);
   color: black;
@@ -37,8 +43,4 @@ const SubTitle = styled.h2`
   `}
 `;
 
-export {
-  LandingContainer,
-  SubTitle,
-  Title
-}
+export { LandingContainer, SubTitle, Title };

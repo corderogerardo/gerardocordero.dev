@@ -22,5 +22,6 @@
   },
   "include": [
     "src"
-, "Courses"  ]
+  ],
+  "exclude":["Courses"]
 }
