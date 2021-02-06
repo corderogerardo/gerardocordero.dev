@@ -2,11 +2,14 @@ import styled from "styled-components";
 import media from "styled-media-query";
 
 const LandingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 0;
   margin: 0;
   width: 100%;
   height: 100%;
-  background-image: mySvg;
+  background-color: ${({ theme }) => theme.colors.bluePrussian};
 `;
 const Title = styled.h1`
   font-size: var(--font-normal);

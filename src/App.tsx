@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+
 import "./App.css";
+
 
 import Landing from "./Containers/Landing/Landing"
 import TailwindCSS from "./Experiments/TailwindCSS/TailwindCSS"

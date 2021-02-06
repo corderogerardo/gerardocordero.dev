@@ -1,17 +1,20 @@
+import { useEffect } from 'react'
+import styled from "styled-components"
 import { LandingContainer } from './styles'
-import { Button } from './../../Components/LevelUp/PassProps'
-import ButtonRounded from './../../Components/Buttons/ButtonRounded';
-import ButtonCancel from './../../Components/Buttons/ButtonCancel';
+
+const MainContainer = styled.div`
+width: 90%;
+height: 90%;
+background-color: ${({ theme }) => theme.colors.white}
+`
 
 export default function Landing() {
+  useEffect(() => {
+
+  }, [])
   return (
     <LandingContainer>
-      <Button types="save">Save</Button>
-
-      <ButtonCancel>Cancel</ButtonCancel>
-
-      <ButtonRounded> Hola Rounded </ButtonRounded>
-
+      <MainContainer></MainContainer>
     </LandingContainer>
   );
 }
