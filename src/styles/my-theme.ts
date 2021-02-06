@@ -4,6 +4,12 @@ import { DefaultTheme } from "./default-theme";
 const myTheme: DefaultTheme = {
   borderRadius: "5px",
 
+  spaces: {
+    four: "4px",
+    eigth: "8px",
+    sixteen: "16px",
+  },
+
   colors: {
     redImperial: "#E63946",
     bluePrussian: "#1D3557",
@@ -12,6 +18,10 @@ const myTheme: DefaultTheme = {
     blueCeladon: "#457B9D",
     white: "#FFFFFF",
     black: "#000000",
+  },
+  fontFamily: {
+    oxygen: "Oxygen",
+    major: "Major Mono Display",
   },
 };
 
