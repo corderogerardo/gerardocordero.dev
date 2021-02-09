@@ -25,3 +25,16 @@ function urlShortener(longURL) {
 function urlRedirector(shortURL) {
   return urlsHashMap.short[shortURL];
 }
+
+// Another solution I like!
+let data = {};
+
+function urlShortener2(longURL) {
+  let shortURL = "short.ly/" + longURL.replace(/[^a-z]/g, "").slice(-4);
+  if (!data[shortURL]) data[shortURL] = longURL;
+  return shortURL;
+}
+
+function urlRedirector2(shortURL) {
+  return data[shortURL];
+}
