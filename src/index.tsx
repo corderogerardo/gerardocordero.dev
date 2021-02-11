@@ -5,7 +5,10 @@ import * as Sentry from "@sentry/react";
 import "./index.css";
 import "./i18n";
 import App from "./App";
+import { ThemeProvider } from 'styled-components'
 import * as serviceWorker from "./serviceWorker";
+
+import { myTheme } from './styles/my-theme'
 
 Sentry.init({
   dsn:
@@ -14,7 +17,10 @@ Sentry.init({
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={myTheme}>
+      <App />
+    </ThemeProvider>
+
   </React.StrictMode>,
   document.getElementById("root")
 );
