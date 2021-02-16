@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import styled from "styled-components"
 import { LandingContainer } from './styles'
-import { DefaultTheme } from './../../styles/default-theme'
 
-import MainTech from './../../Components/MainTech/MainTech'
+import { Linkedin, Twitter, Github, Experiments, Portfolio } from '../../images';
+import { Row, Col, Title, Subtitle, Description, Images, Text, ContactInfo } from './../../Components/ResumeComponents'
 
 const MainContainer = styled.div`
 display: flex;
@@ -13,83 +13,73 @@ height: 85%;
 background-color: ${({ theme }) => theme.colors.white}
 `
 
-interface RowProps {
-  height: string
-}
-interface ColProps {
-  width: string,
-  border?: boolean,
-  background?: boolean,
-  theme: DefaultTheme
-};
-
-const Row = styled.div`
-display: flex;
-width: 100%;
-height: ${(props: RowProps) => props.height};
-background-color: ${({ theme }) => theme.colors.white};
-position: relative;
-`;
-const Col = styled.div`
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-width: ${(props: ColProps) => props.width};
-height: 100%;
-border: ${(props: ColProps) => props.border ? "2px solid" : 'none'};
-border-top: none;
-border-color: ${(props: ColProps) => props.border ? props.theme.colors.redImperial : 'none'};
-background-color: ${(props: ColProps) => props.background ? props.theme.colors.redImperial : props.theme.colors.white};
-position: relative;
-`;
-
-const Title = styled.h1`
-font-family: ${({ theme }) => theme.fontFamily.oxygen};
-width: 80%;
-display: flex;
-justify-content: flex-start;
-color: ${({ theme }) => theme.colors.black};
-`;
-const Text = styled.div`
-font-style: normal;
-font-weight: bold;
-font-size: 30px;
-padding: 0;
-margin: 0;
-margin-right: ${({ theme }) => theme.spaces.four};
-&::first-letter{
-  font-size: 40px;
-};
-`;
 const Name = styled(Text)``;
-
-const Subtitle = styled.h2`
-width: 80%;
-font-family: ${({ theme }) => theme.fontFamily.major};
-font-style: normal;
-font-weight: normal;
-font-size: 12px;
-line-height: 16px;
+const PortfolioExperiments = styled.div`
 display: flex;
+justify-content: space-around;
 align-items: center;
-color: ${({ theme }) => theme.colors.black};
-`;
-
-const Description = styled.p`
-width: 80%;
-font-family: ${({ theme }) => theme.fontFamily.oxygen};
-font-style: normal;
-font-weight: normal;
-font-size: 12px;
-line-height: 20px;
-color: ${({ theme }) => theme.colors.black};
-`;
-
-const Images = styled(MainTech)`
-position: absolute;
-bottom: 5%;
-`;
+flex-direction: column;
+height: 85%;
+.portfolio-logos{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.experiments-logos{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.and{
+  display: flex;
+  font-family: ${({ theme }) => theme.fontFamily.major};
+  font-size: 24px;
+  justify-content: center;
+  width: 100%;
+}
+.portfolio{
+  font-style: normal;
+  font-weight: normal;
+  font-family: ${({ theme }) => theme.fontFamily.oxygen};
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #000000;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 48px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  span{
+    margin: 0;
+    padding: 0;
+    font-size: 72px;
+  }
+}
+.experiments{
+  font-style: normal;
+  font-weight: normal;
+  font-family: ${({ theme }) => theme.fontFamily.major};
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  color: #000000;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 48px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  span{
+    margin: 0;
+    padding: 0;
+    font-size: 72px;
+  }
+}
+`
 
 export default function Landing() {
   useEffect(() => {
@@ -99,7 +89,7 @@ export default function Landing() {
     <LandingContainer>
       <MainContainer>
         <Row height="60%">
-          <Col width="30%" border={false} background={false}>
+          <Col width="25%" border={false} background={false}>
             <Title>
               <Name>
                 Gerardo
@@ -116,12 +106,45 @@ export default function Landing() {
             </Description>
             <Images></Images>
           </Col>
-          <Col width="50%" border={true}> </Col>
+          <Col width="55%" border={true}>
+            <PortfolioExperiments className="portfolio-experiments">
+              <Row height="10%">
+                <a href="/portfolio" rel="noreferrer" className="portfolio-logos">
+                  <Portfolio />
+                </a>
+              </Row>
+              <Row height="20%">
+                <a href="/portfolio" className="portfolio"> <span>P</span>ortfolio</a>
+              </Row>
+              <Row height="5%">
+                <span className="and">&&</span>
+              </Row>
+              <Row height="20%">
+                <a href="/experiments" rel="noreferrer" className="experiments"><span>E</span>xperiments</a>
+              </Row>
+              <Row height="10%">
+                <a href="/experiments" rel="noreferrer" className="experiments-logos">
+                  <Experiments />
+                </a>
+              </Row>
+            </PortfolioExperiments>
+          </Col>
           <Col width="20%" background={true}> </Col>
         </Row>
         <Row height="40%">
-          <Col width="30%" background={true}> </Col>
-          <Col width="70%"> </Col>
+          <Col width="25%" background={true}>
+            <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
+            <ContactInfo href="mailto:me@gerardocordero.dev?subject = Hiring&body = We are looking for a JavaScript Developer." info="me@gerardocordero.dev" name="Email" />
+            <ContactInfo href="tel:cordero_gerardo" info="cordero_gerardo" name="Skype" />
+            <ContactInfo href="https://blog.gerardocordero.dev" info="Blog" name="Blog" />
+            <div className="contact-info-social">
+              <a href="https://twitter.com/gecordero" target="_blank" rel="noreferrer"><Twitter /></a>
+              <a href="https://www.linkedin.com/in/corderogerardo/" target="_blank" rel="noreferrer"><Linkedin /></a>
+              <a href="https://github.com/corderogerardo" target="_blank" rel="noreferrer"><Github /></a>
+            </div>
+
+          </Col>
+          <Col width="75%"> </Col>
         </Row>
 
       </MainContainer>
