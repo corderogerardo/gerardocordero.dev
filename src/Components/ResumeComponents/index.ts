@@ -5,3 +5,5 @@ export * from "./Images";
 export * from "./Subtitle";
 export * from "./Title";
 export * from "./Text";
+export * from "./Anchor";
+export * from "./ContactInfo";
