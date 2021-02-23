@@ -31,7 +31,9 @@ height: 85%;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  display: grid;
+};
+
 .and{
   display: flex;
   font-family: ${({ theme }) => theme.fontFamily.major};

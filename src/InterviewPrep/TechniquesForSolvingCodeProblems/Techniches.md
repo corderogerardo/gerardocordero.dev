@@ -24,6 +24,6 @@ La idea es tener 2 centros, 1. El char que iteramos, y 2. El espacio entre char.
 ## Que es DFS?
 
 
-## Window mirrowing technique
+## Window mirroring technique
 
 ### En esta tecnica defines 2 punteros LEFT y RIGHT, y comienzas a iterar de izquierda a derecha y de derecha a izquierda hasta llegar al medio y terminar, sirve para buscar palindromes, para poder encontrar si el caracter del inicio es igual al caracter del final, comparas como si el arreglo fuera un espejo.
