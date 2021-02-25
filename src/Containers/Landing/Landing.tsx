@@ -14,7 +14,7 @@ background-color: ${({ theme }) => theme.colors.white}
 `
 
 const Name = styled(Text)``;
-const PortfolioExperiments = styled.div`
+const PortfolioExperiments = styled.section`
 display: flex;
 justify-content: space-around;
 align-items: center;
@@ -83,6 +83,50 @@ height: 85%;
 }
 `
 
+const BlogContainer = styled.section`
+  font-family: ${({ theme }) => theme.fontFamily.oxygen};
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  .blogTitle {
+    font-size: 16px;
+    a{
+      text-decoration: none;
+      color: ${({ theme }) => theme.colors.honeydew};
+      &:hover{
+        color: ${({ theme }) => theme.colors.bluePrussian};
+        text-decoration: underline;
+      }
+    }
+  }
+  .blog-post{
+      font-size: 12px;
+      color: ${({ theme }) => theme.colors.honeydew};
+      text-decoration: none;
+      &:hover{
+        color: ${({ theme }) => theme.colors.bluePrussian};
+        text-decoration: underline;
+      }
+    }
+`
+
+const ExperienceAndEducation = styled.section`
+  border: 1px solid green;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .headers{
+    border: 2px solid blue;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+  }
+`;
+
 export default function Landing() {
   useEffect(() => {
 
@@ -105,6 +149,7 @@ export default function Landing() {
               I'm an individual contributor focused on JavaScript, React, React Native.
 
               As part of Outsourcing and Staff augmentation companies, I’ve participated in several projects in the business of Education, Finance, Travel, and telecommunications.
+              <h3 className="more-info"><a href="https://me.gerardocordero.dev" rel="noreferrer" target="_blank">More info</a></h3>
             </Description>
             <Images></Images>
           </Col>
@@ -116,7 +161,7 @@ export default function Landing() {
                 </a>
               </Row>
               <Row height="20%">
-                <a href="/portfolio" className="portfolio"> <span>P</span>ortfolio</a>
+                <a href="/portfolio" className="portfolio"> <span className="portfolio-p">P</span>ortfolio</a>
               </Row>
               <Row height="5%">
                 <span className="and">&&</span>
@@ -131,14 +176,25 @@ export default function Landing() {
               </Row>
             </PortfolioExperiments>
           </Col>
-          <Col width="20%" background={true}> </Col>
+          <Col width="20%" background={true}>
+            <BlogContainer>
+              <h1 className="blogTitle"><a href="https://blog.gerardocordero.dev" rel="noreferrer" target="_blank">Blog</a></h1>
+              <a className="blog-post" href="https://blog.gerardocordero.dev/WIP-What-is-tab-napping-attacks-3299a4a47e9345c7b98cc2055d8d0cc2" rel="noreferrer" target="_blank">What is tab-napping attacks?</a>
+
+              <a className="blog-post" href="https://blog.gerardocordero.dev/React-Native-Architecture-9ddeb379c7c846de987bd3719ca8d6dc" rel="noreferrer" target="_blank">React Native Architecture</a>
+
+              <h2 className="blogTitle"><a href="https://resume.gerardocordero.dev" rel="noreferrer" target="_blank">Resume</a></h2>
+
+              <iframe src="https://open.spotify.com/embed/playlist/0JDoNVr7hDoSzg3Cme80tn" width="100%" height="230" frameborder="0" allowtransparency="true" allow="encrypted-media" title="TheSpaceTravelYouNeed"></iframe>
+            </BlogContainer>
+          </Col>
         </Row>
         <Row height="40%">
           <Col width="25%" background={true}>
             <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
-            <ContactInfo href="mailto:me@gerardocordero.dev?subject = Hiring&body = We are looking for a JavaScript Developer." info="me@gerardocordero.dev" name="Email" />
+            <ContactInfo href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="mail@gerardocordero.dev" name="Email" />
             <ContactInfo href="tel:cordero_gerardo" info="cordero_gerardo" name="Skype" />
-            <ContactInfo href="https://blog.gerardocordero.dev" info="Blog" name="Blog" />
+            <ContactInfo href="https://www.efset.org/cert/5P9HC2" info="C1 Advanced" name="English" />
             <div className="contact-info-social">
               <a href="https://twitter.com/gecordero" target="_blank" rel="noreferrer"><Twitter /></a>
               <a href="https://www.linkedin.com/in/corderogerardo/" target="_blank" rel="noreferrer"><Linkedin /></a>
@@ -146,7 +202,12 @@ export default function Landing() {
             </div>
 
           </Col>
-          <Col width="75%"> </Col>
+          <Col width="75%">
+            <ExperienceAndEducation>
+
+            </ExperienceAndEducation>
+
+          </Col>
         </Row>
 
       </MainContainer>

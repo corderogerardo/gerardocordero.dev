@@ -27,7 +27,7 @@ export const ContactInfo = styled(Contact)`
   justify-content: space-between;
   margin: 16px 0;
   font-family: ${({ theme }) => theme.fontFamily.oxygen};
-  font-size: 14px;
+  font-size: 13px;
   span{
     width: auto;
     color: ${({ theme }) => theme.colors.honeydew};
@@ -37,5 +37,9 @@ export const ContactInfo = styled(Contact)`
     color: ${({ theme }) => theme.colors.honeydew};
     text-decoration: none;
     cursor: pointer;
+    &:hover{
+      color: ${({ theme }) => theme.colors.bluePrussian};
+      text-decoration: underline;
+    }
   }
 `;

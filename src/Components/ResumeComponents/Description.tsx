@@ -8,4 +8,11 @@ font-weight: normal;
 font-size: 12px;
 line-height: 20px;
 color: ${({ theme }) => theme.colors.black};
+.more-info{
+  font-size: 12px;
+  a{
+    color: ${({ theme }) => theme.colors.bluePrussian};
+    text-decoration: underline;
+  }
+}
 `;
