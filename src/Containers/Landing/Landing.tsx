@@ -122,9 +122,28 @@ const ExperienceAndEducation = styled.section`
   .headers{
     border: 2px solid blue;
     width: 100%;
+    height: 20%;
     display: flex;
     flex-direction: row;
+    .experience{
+
+    }
+    .education{
+
+    }
   }
+  .content{
+    border: 1px solid green;
+    width: 100%;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+    .experience
+    .education{
+
+    }
+  }
+
 `;
 
 export default function Landing() {

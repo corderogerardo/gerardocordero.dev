@@ -5,13 +5,13 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 // the translations
 // (tip move them in a JSON file and import them)
-const resources = {
-  en: {
-    translation: {
-      "Welcome to React": "Welcome to React and react-i18next",
-    },
-  },
-};
+// const resources = {
+//   en: {
+//     translation: {
+//       "Welcome to React": "Welcome to React and react-i18next",
+//     },
+//   },
+// };
 
 i18n
   // load translation using http -> see /public/locales
