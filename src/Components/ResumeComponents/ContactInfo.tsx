@@ -22,7 +22,7 @@ function Contact({ info, href, name, className }: ContactProps) {
 };
 
 export const ContactInfo = styled(Contact)`
-  width: 70%;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   margin: 16px 0;

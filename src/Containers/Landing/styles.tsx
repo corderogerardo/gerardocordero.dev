@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import media from "styled-media-query";
 
-const LandingContainer = styled.div`
+const LandingContainer = styled.main`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -10,6 +10,13 @@ const LandingContainer = styled.div`
   width: 100%;
   height: 100%;
   background-color: ${({ theme }) => theme.colors.bluePrussian};
+  .address{
+    all: unset;
+    width: 70%;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+  }
 `;
 const Title = styled.h1`
   font-size: var(--font-normal);

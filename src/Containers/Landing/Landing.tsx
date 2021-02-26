@@ -83,7 +83,7 @@ height: 85%;
 }
 `
 
-const BlogContainer = styled.section`
+const BlogContainer = styled.aside`
   font-family: ${({ theme }) => theme.fontFamily.oxygen};
   display: flex;
   align-items: center;
@@ -113,23 +113,40 @@ const BlogContainer = styled.section`
     }
 `
 
-const ExperienceAndEducation = styled.section`
-  border: 1px solid green;
+const Experience = styled.section`
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   .headers{
-    border: 2px solid blue;
     width: 100%;
     height: 20%;
     display: flex;
-    flex-direction: row;
-    .experience{
-
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    h2{
+      font-family: Oxygen;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 18px;
+      display: flex;
+      align-items: center;
+      color: #1D3557;
+      padding-left: 2%
     }
-    .education{
-
+    .experience{
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      span{
+        height: 1px;
+        width: 70%;
+        background-color: ${({ theme }) => theme.colors.bluePrussian};
+      }
     }
   }
   .content{
@@ -138,9 +155,83 @@ const ExperienceAndEducation = styled.section`
     height: 80%;
     display: flex;
     flex-direction: column;
-    .experience
+    .card{
+
+    }
+  }
+`;
+
+const Education = styled.section`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .headers{
+    width: 100%;
+    height: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    h2{
+      font-family: Oxygen;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 18px;
+      display: flex;
+      align-items: center;
+      color: #1D3557;
+      padding-left: 2%
+    }
+    .education{
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      span{
+        height: 1px;
+        width: 50%;
+        background-color: ${({ theme }) => theme.colors.bluePrussian};
+      }
+    }
+  }
+  .content{
+    border: 1px solid green;
+    width: 100%;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
     .education{
 
+    }
+  }
+`;
+
+const Card = styled.section`
+  width: 185px;
+  height: 164px;
+  border: 2px solid purple;
+  .time{
+    width: 20%;
+    height: 100%;
+    border: 1px solid black;
+  }
+  .content{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-start;
+    h1{
+      width: 100%;
+    }
+    em{
+      content: 'JavaScript Developer';
+      width: 100%;
+    }
+    p{
+      width: 100%;
     }
   }
 
@@ -210,10 +301,13 @@ export default function Landing() {
         </Row>
         <Row height="40%">
           <Col width="25%" background={true}>
-            <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
-            <ContactInfo href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="mail@gerardocordero.dev" name="Email" />
-            <ContactInfo href="tel:cordero_gerardo" info="cordero_gerardo" name="Skype" />
-            <ContactInfo href="https://www.efset.org/cert/5P9HC2" info="C1 Advanced" name="English" />
+            <address className="address">
+              <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
+              <ContactInfo href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="mail@gerardocordero.dev" name="Email" />
+              <ContactInfo href="tel:cordero_gerardo" info="cordero_gerardo" name="Skype" />
+              <ContactInfo href="https://www.efset.org/cert/5P9HC2" info="C1 Advanced" name="English" />
+            </address>
+
             <div className="contact-info-social">
               <a href="https://twitter.com/gecordero" target="_blank" rel="noreferrer"><Twitter /></a>
               <a href="https://www.linkedin.com/in/corderogerardo/" target="_blank" rel="noreferrer"><Linkedin /></a>
@@ -222,10 +316,34 @@ export default function Landing() {
 
           </Col>
           <Col width="75%">
-            <ExperienceAndEducation>
-
-            </ExperienceAndEducation>
-
+            <Row height="100%">
+              <Col width="70%">
+                <Experience>
+                  <head className="headers">
+                    <div className="experience">
+                      <h2>EXPERIENCE</h2>
+                      <span></span>
+                    </div>
+                  </head>
+                  <section className="content">
+                    <Card>
+                      time
+                    </Card>
+                  </section>
+                </Experience>
+              </Col>
+              <Col width="30%">
+                <Education>
+                  <head className="headers">
+                    <div className="education">
+                      <h2>EDUCATION</h2>
+                      <span></span>
+                    </div>
+                  </head>
+                  <section className="content"></section>
+                </Education>
+              </Col>
+            </Row>
           </Col>
         </Row>
 
