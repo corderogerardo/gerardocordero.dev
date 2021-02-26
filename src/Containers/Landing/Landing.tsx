@@ -150,14 +150,13 @@ const Experience = styled.section`
     }
   }
   .content{
-    border: 1px solid green;
     width: 100%;
     height: 80%;
     display: flex;
     flex-direction: column;
-    .card{
-
-    }
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
 `;
 
@@ -198,40 +197,64 @@ const Education = styled.section`
     }
   }
   .content{
-    border: 1px solid green;
     width: 100%;
     height: 80%;
     display: flex;
-    flex-direction: column;
-    .education{
-
-    }
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 8%;
   }
 `;
 
 const Card = styled.section`
-  width: 185px;
-  height: 164px;
-  border: 2px solid purple;
+  width: 200px;
+  height: 200px;
+  font-family: ${({ theme }) => theme.fontFamily.oxygen};
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  align-items: center;
+  justify-content: center;
   .time{
-    width: 20%;
-    height: 100%;
-    border: 1px solid black;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 10px;
+    position: absolute;
+    left: -20px;
+    top: 40px;
+    color: #000000;
+    transform: rotate(-90deg);
+    font-family: ${({ theme }) => theme.fontFamily.oxygen};
   }
-  .content{
+  .main{
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: flex-start;
+    margin-left: 10%;
+    width: 90%;
+    height: 100%;
+    font-family: ${({ theme }) => theme.fontFamily.oxygen};
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    padding-left: ${({ theme }) => theme.spaces.eigth};
+
     h1{
       width: 100%;
+      font-size: 12px;
     }
     em{
-      content: 'JavaScript Developer';
       width: 100%;
+      font-family: ${({ theme }) => theme.fontFamily.major};
+      font-size: 10px;
     }
     p{
-      width: 100%;
+      width: 85%;
+      font-size: 10px;
     }
   }
 
@@ -327,7 +350,37 @@ export default function Landing() {
                   </head>
                   <section className="content">
                     <Card>
-                      time
+                      <time className="time">2018 - 2020</time>
+                      <div className="main">
+                        <h1>Bits Kingdom, OINO</h1>
+                        <em>Full Stack</em>
+                        <p>As a Full Stack I took designs to code caring about UX, accessibility, responsiveness, testing and DX, API integrations, propose and implement new libraries.</p>
+                        <p>
+                          <b>Projects</b>: Clinkky, StartUY, Mamalingua.
+                        </p>
+                      </div>
+                    </Card>
+                    <Card>
+                      <time className="time">2018 - 2019</time>
+                      <div className="main">
+                        <h1>Solera Mobile</h1>
+                        <em>Frontend Developer</em>
+                        <p>As a frontend developer I mockup designs to code creating components to build a product from scratch and helping add business logic in other products. </p>
+                        <p>
+                          <b>Projects</b>: Tuenti Freemium, Dinners backoffice.
+                        </p>
+                      </div>
+                    </Card>
+                    <Card>
+                      <time className="time">2017 - 2017</time>
+                      <div className="main">
+                        <h1>Tuten</h1>
+                        <em>Frontend Developer</em>
+                        <p>As a frontend developer I added new business logic to the frontend apps, maintain and refactored old code following angular best practice for optimization and performance. </p>
+                        <p>
+                          <b>Projects</b>: Tuten.
+                        </p>
+                      </div>
                     </Card>
                   </section>
                 </Experience>
@@ -340,7 +393,16 @@ export default function Landing() {
                       <span></span>
                     </div>
                   </head>
-                  <section className="content"></section>
+                  <section className="content">
+                    <Card>
+                      <time className="time">2006 - 2009</time>
+                      <div className="main">
+                        <h1>IUT Antonio Jose de Sucre, Barquisimeto (Venezuela)</h1>
+                        <em>Senior University Technician in Computer Science</em>
+                        <p>Learned about POO, system design UML, SQL, C++, networks</p>
+                      </div>
+                    </Card>
+                  </section>
                 </Education>
               </Col>
             </Row>
