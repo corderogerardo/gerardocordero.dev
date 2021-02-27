@@ -2,7 +2,7 @@ import styled from "styled-components"
 import media from "styled-media-query"
 
 export const Card = styled.section`
-width: 200px;
+width: 300px;
 height: 200px;
 font-family: ${({ theme }) => theme.fontFamily.oxygen};
 display: flex;
@@ -10,6 +10,10 @@ flex-direction: row;
 position: relative;
 align-items: center;
 justify-content: center;
+${media.greaterThan("medium")`
+  width: 200px;
+  height: 200px;
+`};
 .time{
   font-style: normal;
   font-weight: normal;
@@ -28,7 +32,6 @@ justify-content: center;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-left: 10%;
   width: 90%;
   height: 100%;
   font-family: ${({ theme }) => theme.fontFamily.oxygen};

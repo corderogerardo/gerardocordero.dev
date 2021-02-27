@@ -42,8 +42,12 @@ export const Experience = styled.section`
     height: 80%;
     display: flex;
     flex-direction: column;
-    flex-direction: column;
     justify-content: center;
-    align-items: center;
+      align-items: center;
+    ${media.greaterThan("medium")`
+      flex-direction: row;
+      width: 100%;
+      padding-left: 5%;
+    `};
   }
 `;

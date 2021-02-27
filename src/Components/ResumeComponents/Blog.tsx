@@ -7,8 +7,14 @@ display: flex;
 align-items: center;
 flex-direction: column;
 justify-content: space-between;
-height: 100%;
+height: 400px;
 width: 100%;
+order: 5;
+background-color: ${(props) => props.theme.colors.redImperial};
+${media.greaterThan("medium")`
+  order: 0;
+  height: 100%;
+`};
 .blogTitle {
   font-size: 16px;
   a{

@@ -15,7 +15,7 @@ export default function Landing() {
   return (
     <LandingContainer>
       <MainContainer>
-        <Col width="100%" border={false} background={false}>
+        <Col width="100%" border={false} background={false} order={1}>
           <Title>
             <Name>
               Gerardo
@@ -34,7 +34,7 @@ export default function Landing() {
           </Description>
           <Images></Images>
         </Col>
-        <Col width="100%" border={true}>
+        <Col width="100%" border={true} order={2}>
           <PortfolioAndExperiments className="portfolio-experiments">
             <a href="/portfolio" rel="noreferrer" className="portfolio-logos">
               <Portfolio />
@@ -47,19 +47,17 @@ export default function Landing() {
             </a>
           </PortfolioAndExperiments>
         </Col>
-        <Col width="100%" background={true}>
-          <Blog>
-            <h1 className="blogTitle"><a href="https://blog.gerardocordero.dev" rel="noreferrer" target="_blank">Blog</a></h1>
-            <a className="blog-post" href="https://blog.gerardocordero.dev/WIP-What-is-tab-napping-attacks-3299a4a47e9345c7b98cc2055d8d0cc2" rel="noreferrer" target="_blank">What is tab-napping attacks?</a>
+        <Blog>
+          <h1 className="blogTitle"><a href="https://blog.gerardocordero.dev" rel="noreferrer" target="_blank">Blog</a></h1>
+          <a className="blog-post" href="https://blog.gerardocordero.dev/WIP-What-is-tab-napping-attacks-3299a4a47e9345c7b98cc2055d8d0cc2" rel="noreferrer" target="_blank">What is tab-napping attacks?</a>
 
-            <a className="blog-post" href="https://blog.gerardocordero.dev/React-Native-Architecture-9ddeb379c7c846de987bd3719ca8d6dc" rel="noreferrer" target="_blank">React Native Architecture</a>
+          <a className="blog-post" href="https://blog.gerardocordero.dev/React-Native-Architecture-9ddeb379c7c846de987bd3719ca8d6dc" rel="noreferrer" target="_blank">React Native Architecture</a>
 
-            <h2 className="blogTitle"><a href="https://resume.gerardocordero.dev" rel="noreferrer" target="_blank">Resume</a></h2>
+          <h2 className="blogTitle"><a href="https://resume.gerardocordero.dev" rel="noreferrer" target="_blank">Resume</a></h2>
 
-            <iframe src="https://open.spotify.com/embed/playlist/0JDoNVr7hDoSzg3Cme80tn" width="100%" height="230" frameBorder="0" allowtransparency="true" allow="encrypted-media" title="TheSpaceTravelYouNeed"></iframe>
-          </Blog>
-        </Col>
-        <Col width="100%" background={true}>
+          <iframe src="https://open.spotify.com/embed/playlist/0JDoNVr7hDoSzg3Cme80tn" width="100%" height="230" frameBorder="0" allowtransparency="true" allow="encrypted-media" title="TheSpaceTravelYouNeed"></iframe>
+        </Blog>
+        <Col width="100%" background={true} order={6}>
           <address className="address">
             <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
             <ContactInfo href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="mail@gerardocordero.dev" name="Email" />
@@ -75,7 +73,7 @@ export default function Landing() {
           </div>
 
         </Col>
-        <Col width="100%">
+        <Col width="100%" order={3}>
           <Experience>
             <section className="headers">
               <div className="experience">
@@ -120,7 +118,7 @@ export default function Landing() {
             </section>
           </Experience>
         </Col>
-        <Col width="30%">
+        <Col width="30%" order={4}>
           <Education>
             <section className="headers">
               <div className="education">

@@ -24,9 +24,12 @@ height: 450px;
 .and{
   display: flex;
   font-family: ${({ theme }) => theme.fontFamily.major};
-  font-size: 24px;
   justify-content: center;
   width: 100%;
+  font-size: 18px;
+  ${media.greaterThan("medium")`
+    font-size: 24px;
+  `};
 }
 .portfolio{
   font-style: normal;
@@ -38,14 +41,20 @@ height: 450px;
   color: #000000;
   text-decoration: none;
   text-transform: uppercase;
-  font-size: 48px;
+  font-size: 36px;
   width: 100%;
   margin: 0;
   padding: 0;
+  ${media.greaterThan("medium")`
+    font-size: 48px;
+  `};
   span{
     margin: 0;
     padding: 0;
+    font-size: 48px;
+    ${media.greaterThan("medium")`
     font-size: 72px;
+  `};
   }
 }
 .experiments{
@@ -58,14 +67,20 @@ height: 450px;
   color: #000000;
   text-decoration: none;
   text-transform: uppercase;
-  font-size: 48px;
+  font-size: 36px;
   width: 100%;
   margin: 0;
   padding: 0;
+  ${media.greaterThan("medium")`
+    font-size: 48px;
+  `};
   span{
     margin: 0;
     padding: 0;
+    font-size: 48px;
+    ${media.greaterThan("medium")`
     font-size: 72px;
+  `};
   }
 }
 `
