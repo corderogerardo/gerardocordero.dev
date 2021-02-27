@@ -3,11 +3,11 @@ import media from "styled-media-query"
 
 const CodeWars = () => (<div>
   <a href="https://www.codewars.com/users/corderogerardo" rel="noreferrer">
-    <img src="https://www.codewars.com/users/corderogerardo/badges/micro" alt="Code Wars Profile" />
+    <img width="100px" height="auto" src="https://www.codewars.com/users/corderogerardo/badges/micro" alt="Code Wars Profile" />
   </a>
   {' '}
   <a href="https://leetcode.com/corderogerardo/" rel="noreferrer">
-    <img width="100px" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/LeetCode_Logo_black_with_text.svg/1280px-LeetCode_Logo_black_with_text.svg.png" alt="Leet Code Profile" />
+    <img width="100px" height="auto" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/LeetCode_Logo_black_with_text.svg/1280px-LeetCode_Logo_black_with_text.svg.png" alt="Leet Code Profile" />
   </a>
 
 </div>)

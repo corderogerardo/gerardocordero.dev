@@ -1,5 +1,4 @@
 import styled from "styled-components"
-import media from "styled-media-query"
 
 export const Education = styled.section`
 width: 100%;
