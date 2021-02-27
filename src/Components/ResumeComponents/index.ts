@@ -1,3 +1,4 @@
+export * from "./MainContainer";
 export * from "./Col";
 export * from "./Row";
 export * from "./Description";
@@ -7,3 +8,8 @@ export * from "./Title";
 export * from "./Text";
 export * from "./Anchor";
 export * from "./ContactInfo";
+export * from "./PortfolioAndExperiments";
+export * from "./Experience";
+export * from "./Education";
+export * from "./Card";
+export * from "./Blog";

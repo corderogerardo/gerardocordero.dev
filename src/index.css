@@ -8,11 +8,20 @@
 box-sizing: border-box;
 }
 
-body, #root{
-  width: 100vw;
-  height: 100vh;
+body{
   padding: 0;
   margin: 0;
+  display: flex;
+  width: 100vw;
   font-family: 'Oxygen', sans-serif;
+  scroll-behavior: smooth;
+  @media (min-width: 1170px) {
+    background: blue;
+    height: 100vh;
+  }
+}
+
+#root{
+  width: 100%;
 }
 

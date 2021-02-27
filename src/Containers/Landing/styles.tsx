@@ -2,14 +2,19 @@ import styled from "styled-components";
 import media from "styled-media-query";
 
 const LandingContainer = styled.main`
-  display: flex;
   justify-content: center;
-  align-items: center;
   padding: 0;
   margin: 0;
-  width: 100%;
-  height: 100%;
   background-color: ${({ theme }) => theme.colors.bluePrussian};
+  scroll-behavior: smooth;
+  ${media.greaterThan("medium")`
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `};
   .address{
     all: unset;
     width: 70%;
