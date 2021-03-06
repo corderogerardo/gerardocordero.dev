@@ -1,19 +1,19 @@
-import styled from "styled-components"
-import media from "styled-media-query"
+import styled from "styled-components";
+import media from "styled-media-query";
 
 export const Experience = styled.section`
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  .headers{
+  .headers {
     width: 100%;
     height: 20%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    h2{
+    h2 {
       font-family: Oxygen;
       font-style: normal;
       font-weight: bold;
@@ -21,33 +21,33 @@ export const Experience = styled.section`
       line-height: 18px;
       display: flex;
       align-items: center;
-      color: #1D3557;
-      padding-left: 2%
+      color: #1d3557;
+      padding-left: 2%;
     }
-    .experience{
+    .experience {
       width: 100%;
       display: flex;
       flex-direction: row;
       justify-content: space-around;
       align-items: center;
-      span{
+      span {
         height: 1px;
-        width: 70%;
+        width: 50%;
         background-color: ${({ theme }) => theme.colors.bluePrussian};
       }
     }
   }
-  .content{
+  .content {
     width: 100%;
     height: 80%;
     display: flex;
     flex-direction: column;
     justify-content: center;
-      align-items: center;
+    align-items: center;
+    padding-left: 8%;
     ${media.greaterThan("medium")`
       flex-direction: row;
       width: 100%;
-      padding-left: 5%;
     `};
   }
 `;

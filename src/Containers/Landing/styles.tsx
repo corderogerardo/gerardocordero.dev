@@ -15,7 +15,7 @@ const LandingContainer = styled.main`
     justify-content: center;
     align-items: center;
   `};
-  .address{
+  .address {
     all: unset;
     width: 70%;
     display: flex;

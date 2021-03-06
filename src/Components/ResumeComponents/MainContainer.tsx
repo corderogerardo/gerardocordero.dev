@@ -1,5 +1,5 @@
-import styled from "styled-components"
-import media from "styled-media-query"
+import styled from "styled-components";
+import media from "styled-media-query";
 
 export const MainContainer = styled.div`
   margin: 0;
@@ -11,5 +11,12 @@ export const MainContainer = styled.div`
     display: grid;
     grid-template-rows: 60% 40%;
     grid-template-columns: 25% 50% 25%;
+    width: 90%;
   `};
-`
+  ${media.greaterThan("1600px")`
+    width: 65%;
+  `};
+  ${media.greaterThan("1900px")`
+    width: 50%;
+  `};
+`;
