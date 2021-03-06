@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import media from "styled-media-query";
 
+const hugger: any = "1600px";
+const extraLarge: any = "1900px";
 export const MainContainer = styled.div`
   margin: 0;
   padding: 0;
@@ -13,10 +15,10 @@ export const MainContainer = styled.div`
     grid-template-columns: 25% 50% 25%;
     width: 90%;
   `};
-  ${media.greaterThan("1600px")`
+  ${media.greaterThan(hugger)`
     width: 65%;
   `};
-  ${media.greaterThan("1900px")`
+  ${media.greaterThan(extraLarge)`
     width: 50%;
   `};
 `;
