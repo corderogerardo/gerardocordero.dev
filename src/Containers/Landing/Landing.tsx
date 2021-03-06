@@ -1,36 +1,58 @@
-import { useEffect } from 'react'
-import styled from "styled-components"
-import { LandingContainer } from './styles'
+import { useEffect } from "react";
+import styled from "styled-components";
+import { LandingContainer } from "./styles";
 
-import { Linkedin, Twitter, Github, Experiments, Portfolio } from '../../images';
-import { Col, Title, Subtitle, Description, Images, Text, ContactInfo, PortfolioAndExperiments, Experience, Education, MainContainer, Blog, Card } from './../../Components/ResumeComponents'
-
+import {
+  Linkedin,
+  Twitter,
+  Github,
+  Experiments,
+  Portfolio,
+} from "../../images";
+import {
+  Col,
+  Title,
+  Subtitle,
+  Description,
+  Images,
+  Text,
+  ContactInfo,
+  PortfolioAndExperiments,
+  Experience,
+  Education,
+  MainContainer,
+  Blog,
+  Card,
+} from "./../../Components/ResumeComponents";
 
 const Name = styled(Text)``;
 
 export default function Landing() {
-  useEffect(() => {
-
-  }, [])
+  useEffect(() => {}, []);
   return (
     <LandingContainer>
       <MainContainer>
         <Col width="100%" border={false} background={false} order={1}>
           <Title>
-            <Name>
-              Gerardo
-            </Name>
-            <Name>
-              Cordero
-            </Name>
+            <Name>Gerardo</Name>
+            <Name>Cordero</Name>
           </Title>
           <Subtitle>JavaScript Developer</Subtitle>
           <Description>
-            I'm an individual contributor focused on JavaScript, React, React Native.
-
-            As part of Outsourcing and Staff augmentation companies, I’ve participated in several projects in the business of Education, Finance, Travel, and telecommunications.
-              <br />
-            <span className="more-info"><a href="https://me.gerardocordero.dev" rel="noreferrer" target="_blank">More info</a></span>
+            I'm an individual contributor focused on JavaScript, React, React
+            Native. As part of Outsourcing and Staff augmentation companies,
+            I’ve participated in several projects in the business of Education,
+            Finance, Travel, and telecommunications.
+            <br />
+            <span className="more-info">
+              <a
+                href="https://me.gerardocordero.dev"
+                rel="noreferrer"
+                target="_blank"
+              >
+                More info
+              </a>
+            </span>
           </Description>
           <Images></Images>
         </Col>
@@ -39,39 +61,123 @@ export default function Landing() {
             <a href="/portfolio" rel="noreferrer" className="portfolio-logos">
               <Portfolio />
             </a>
-            <a href="/portfolio" className="portfolio"> <span className="portfolio-p">P</span>ortfolio</a>
+            <a href="/portfolio" className="portfolio">
+              {" "}
+              <span className="portfolio-p">P</span>ortfolio
+            </a>
             <span className="and">&&</span>
-            <a href="/experiments" rel="noreferrer" className="experiments"><span>E</span>xperiments</a>
-            <a href="/experiments" rel="noreferrer" className="experiments-logos">
+            <a href="/experiments" rel="noreferrer" className="experiments">
+              <span>E</span>xperiments
+            </a>
+            <a
+              href="/experiments"
+              rel="noreferrer"
+              className="experiments-logos"
+            >
               <Experiments />
             </a>
           </PortfolioAndExperiments>
         </Col>
         <Blog>
-          <h1 className="blogTitle"><a href="https://blog.gerardocordero.dev" rel="noreferrer" target="_blank">Blog</a></h1>
-          <a className="blog-post" href="https://blog.gerardocordero.dev/WIP-What-is-tab-napping-attacks-3299a4a47e9345c7b98cc2055d8d0cc2" rel="noreferrer" target="_blank">What is tab-napping attacks?</a>
+          <h1 className="blogTitle">
+            <a
+              href="https://blog.gerardocordero.dev"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Blog
+            </a>
+          </h1>
+          <a
+            className="blog-post"
+            href="https://blog.gerardocordero.dev/WIP-What-is-tab-napping-attacks-3299a4a47e9345c7b98cc2055d8d0cc2"
+            rel="noreferrer"
+            target="_blank"
+          >
+            What is tab-napping attacks?
+          </a>
 
-          <a className="blog-post" href="https://blog.gerardocordero.dev/React-Native-Architecture-9ddeb379c7c846de987bd3719ca8d6dc" rel="noreferrer" target="_blank">React Native Architecture</a>
+          <a
+            className="blog-post"
+            href="https://blog.gerardocordero.dev/React-Native-Architecture-9ddeb379c7c846de987bd3719ca8d6dc"
+            rel="noreferrer"
+            target="_blank"
+          >
+            React Native Architecture
+          </a>
 
-          <h2 className="blogTitle"><a href="https://resume.gerardocordero.dev" rel="noreferrer" target="_blank">Resume</a></h2>
+          <h2 className="blogTitle">
+            <a
+              href="https://resume.gerardocordero.dev"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Resume
+            </a>
+          </h2>
 
-          <iframe src="https://open.spotify.com/embed/playlist/0JDoNVr7hDoSzg3Cme80tn" width="100%" height="230" frameBorder="0" allowtransparency="true" allow="encrypted-media" title="TheSpaceTravelYouNeed"></iframe>
+          <iframe
+            src="https://open.spotify.com/embed/playlist/0JDoNVr7hDoSzg3Cme80tn"
+            width="100%"
+            height="230"
+            frameBorder="0"
+            allowtransparency="true"
+            allow="encrypted-media"
+            title="TheSpaceTravelYouNeed"
+          ></iframe>
         </Blog>
         <Col width="100%" background={true} order={6}>
           <address className="address">
-            <ContactInfo href="tel:+51968661977" info="+51968661977" name="Phone" />
-            <ContactInfo href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="mail@gerardocordero.dev" name="Email" />
-            <ContactInfo href="mailto:cordero.gerard@gmail.com?subject = Hiring - Project&body = We are looking for a JavaScript Developer." info="cordero.gerard@gmail.com" name="Meet" />
-            <ContactInfo href="tel:cordero_gerardo" info="cordero_gerardo" name="Skype" />
-            <ContactInfo href="https://www.efset.org/cert/5P9HC2" info="C1 Advanced" name="English" />
+            <ContactInfo
+              href="tel:+51968661977"
+              info="+51968661977"
+              name="Phone"
+            />
+            <ContactInfo
+              href="mailto:mail@gerardocordero.dev?subject = Hiring - Project&body = We are looking for a JavaScript Developer."
+              info="mail@gerardocordero.dev"
+              name="Email"
+            />
+            <ContactInfo
+              href="mailto:cordero.gerard@gmail.com?subject = Hiring - Project&body = We are looking for a JavaScript Developer."
+              info="cordero.gerard@gmail.com"
+              name="Meet"
+            />
+            <ContactInfo
+              href="tel:cordero_gerardo"
+              info="cordero_gerardo"
+              name="Skype"
+            />
+            <ContactInfo
+              href="https://www.efset.org/cert/5P9HC2"
+              info="C1 Advanced"
+              name="English"
+            />
           </address>
 
           <div className="contact-info-social">
-            <a href="https://twitter.com/gecordero" target="_blank" rel="noreferrer"><Twitter /></a>
-            <a href="https://www.linkedin.com/in/corderogerardo/" target="_blank" rel="noreferrer"><Linkedin /></a>
-            <a href="https://github.com/corderogerardo" target="_blank" rel="noreferrer"><Github /></a>
+            <a
+              href="https://twitter.com/gecordero"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Twitter />
+            </a>
+            <a
+              href="https://www.linkedin.com/in/corderogerardo/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Linkedin />
+            </a>
+            <a
+              href="https://github.com/corderogerardo"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Github />
+            </a>
           </div>
-
         </Col>
         <Col width="100%" order={3}>
           <Experience>
@@ -87,10 +193,14 @@ export default function Landing() {
                 <div className="main">
                   <h1>Bits Kingdom, OINO</h1>
                   <em>Full Stack</em>
-                  <p>As a Full Stack I took designs to code caring about UX, accessibility, responsiveness, testing and DX, API integrations, propose and implement new libraries.</p>
+                  <p>
+                    As a Full Stack I took designs to code caring about UX,
+                    accessibility, responsiveness, testing and DX, API
+                    integrations, propose and implement new libraries.
+                  </p>
                   <p>
                     <b>Projects</b>: Clinkky, StartUY, Mamalingua.
-                        </p>
+                  </p>
                 </div>
               </Card>
               <Card>
@@ -98,10 +208,14 @@ export default function Landing() {
                 <div className="main">
                   <h1>Solera Mobile</h1>
                   <em>Frontend Developer</em>
-                  <p>As a frontend developer I mockup designs to code creating components to build a product from scratch and helping add business logic in other products. </p>
+                  <p>
+                    As a frontend developer I mockup designs to code creating
+                    components to build a product from scratch and helping add
+                    business logic in other products.{" "}
+                  </p>
                   <p>
                     <b>Projects</b>: Tuenti Freemium, Dinners backoffice.
-                        </p>
+                  </p>
                 </div>
               </Card>
               <Card>
@@ -109,16 +223,20 @@ export default function Landing() {
                 <div className="main">
                   <h1>Tuten</h1>
                   <em>Frontend Developer</em>
-                  <p>As a frontend developer I added new business logic to the frontend apps, maintain and refactored old code following angular best practice for optimization and performance. </p>
+                  <p>
+                    As a frontend developer I added new business logic to the
+                    frontend apps, maintain and refactored old code following
+                    angular best practice for optimization and performance.{" "}
+                  </p>
                   <p>
                     <b>Projects</b>: Tuten.
-                        </p>
+                  </p>
                 </div>
               </Card>
             </section>
           </Experience>
         </Col>
-        <Col width="30%" order={4}>
+        <Col width="100%" order={4}>
           <Education>
             <section className="headers">
               <div className="education">
@@ -132,14 +250,15 @@ export default function Landing() {
                 <div className="main">
                   <h1>IUT Antonio Jose de Sucre, Barquisimeto (Venezuela)</h1>
                   <em>Senior University Technician in Computer Science</em>
-                  <p>Learned about POO, system design UML, SQL, C++, networks</p>
+                  <p>
+                    Learned about POO, system design UML, SQL, C++, networks
+                  </p>
                 </div>
               </Card>
             </section>
           </Education>
         </Col>
-
-      </MainContainer >
-    </LandingContainer >
+      </MainContainer>
+    </LandingContainer>
   );
 }
