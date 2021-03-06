@@ -1,6 +1,6 @@
 var CACHE_NAME = "pwa-task-manager";
 var urlsToCache = ["/", "/completed"];
-
+let self = this;
 // Install a service worker
 self.addEventListener("install", (event) => {
   // Perform install steps
@@ -31,6 +31,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
+        // eslint-disable-next-line array-callback-return
         cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);

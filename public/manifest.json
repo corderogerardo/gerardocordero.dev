@@ -1,6 +1,15 @@
 {
-  "short_name": "Gerardo Cordero",
   "name": "Gerardo Cordero",
+  "short_name": "Gerardo Cordero",
+  "description": "Gerardo Cordero's Website",
+  "start_url": "/index.html",
+  "scope": ".",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en-US",
   "icons": [
     {
       "src": "favicon.ico",
@@ -17,9 +26,5 @@
       "type": "image/png",
       "sizes": "512x512"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
