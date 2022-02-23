@@ -23,6 +23,7 @@ import {
   MainContainer,
   Blog,
   Card,
+  Footer,
 } from "./../../Components/ResumeComponents";
 
 const Name = styled(Text)``;
@@ -157,7 +158,7 @@ export default function Landing() {
 
           <div className="contact-info-social">
             <a
-              href="https://twitter.com/gecordero"
+              href="https://twitter.com/officelocation"
               target="_blank"
               rel="noreferrer"
             >
@@ -189,9 +190,20 @@ export default function Landing() {
             </section>
             <section className="content">
               <Card>
+                <time className="time">2021 - now</time>
+                <div className="main">
+                  <h1>NovaComp</h1>
+                  <em>Consultor Senior</em>
+                  <p>Working in React Native Apps for US Clients.</p>
+                  <p>
+                    <b>Projects</b>: SplashSpot, Instatoolz, WeCurl, Hotspotter.
+                  </p>
+                </div>
+              </Card>
+              <Card>
                 <time className="time">2018 - 2020</time>
                 <div className="main">
-                  <h1>Bits Kingdom, OINO</h1>
+                  <h1>Bits Kingdom</h1>
                   <em>Full Stack</em>
                   <p>
                     As a Full Stack I took designs to code caring about UX,
@@ -218,7 +230,7 @@ export default function Landing() {
                   </p>
                 </div>
               </Card>
-              <Card>
+              {/* <Card>
                 <time className="time">2017 - 2017</time>
                 <div className="main">
                   <h1>Tuten</h1>
@@ -232,7 +244,7 @@ export default function Landing() {
                     <b>Projects</b>: Tuten.
                   </p>
                 </div>
-              </Card>
+              </Card> */}
             </section>
           </Experience>
         </Col>
@@ -259,6 +271,10 @@ export default function Landing() {
           </Education>
         </Col>
       </MainContainer>
+      <Footer>
+        <a href="https://gerardocordero.dev">Gerardo Cordero</a>
+        <p>2021</p>
+      </Footer>
     </LandingContainer>
   );
 }
