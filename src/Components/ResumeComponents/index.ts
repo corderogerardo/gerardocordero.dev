@@ -13,3 +13,4 @@ export * from "./Experience";
 export * from "./Education";
 export * from "./Card";
 export * from "./Blog";
+export * from "./Footer";
