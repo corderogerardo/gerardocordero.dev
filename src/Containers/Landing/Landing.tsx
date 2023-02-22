@@ -9,22 +9,7 @@ import {
   Experiments,
   Portfolio,
 } from "../../images";
-import {
-  Col,
-  Title,
-  Subtitle,
-  Description,
-  Images,
-  Text,
-  ContactInfo,
-  PortfolioAndExperiments,
-  Experience,
-  Education,
-  MainContainer,
-  Blog,
-  Card,
-  Footer,
-} from "./../../Components/ResumeComponents";
+import { Blog, Card, Footer } from "./../../Components/ResumeComponents";
 
 const Name = styled(Text)``;
 
@@ -63,7 +48,6 @@ export default function Landing() {
               <Portfolio />
             </a>
             <a href="/portfolio" className="portfolio">
-              {" "}
               <span className="portfolio-p">P</span>ortfolio
             </a>
             <span className="and">&&</span>
@@ -122,8 +106,6 @@ export default function Landing() {
             width="100%"
             height="230"
             frameBorder="0"
-            allowtransparency="true"
-            allow="encrypted-media"
             title="TheSpaceTravelYouNeed"
           ></iframe>
         </Blog>

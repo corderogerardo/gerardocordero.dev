@@ -9,7 +9,7 @@ const AboutBody = styled.div`
   align-items: space-around;
   border: 1px solid red;
   width: 100%;
-  height: fit-content;
+  height: 100%;
   text-align: left;
   padding: 0 4%;
 `;

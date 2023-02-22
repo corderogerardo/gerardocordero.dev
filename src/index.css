@@ -10,7 +10,8 @@ body {
   display: flex;
   width: 100vw;
   font-family: "Oxygen", sans-serif;
-  scroll-behavior: smooth;
+  overflow-x: hidden;
+  scroll-behavior: auto;
   @media (min-width: 1170px) {
     background: blue;
     height: 100vh;

@@ -6,7 +6,6 @@ const LandingContainer = styled.main`
   padding: 0;
   margin: 0;
   background-color: ${({ theme }) => theme.colors.bluePrussian};
-  scroll-behavior: smooth;
   ${media.greaterThan("medium")`
     display: grid;
     width: 100vw;
