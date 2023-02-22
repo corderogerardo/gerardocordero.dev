@@ -190,7 +190,7 @@ export default function Landing() {
             </section>
             <section className="content">
               <Card>
-                <time className="time">2021 - now</time>
+                <time className="time">2021 - 2022</time>
                 <div className="main">
                   <h1>NovaComp</h1>
                   <em>Consultor Senior</em>
