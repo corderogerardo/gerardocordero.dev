@@ -65,7 +65,8 @@
     "husky": "^8.0.3",
     "postcss": "^7",
     "prettier": "2.2.1",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat"
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "webpack": "4.44.2"
   },
   "resolutions": {
     "styled-components": "^5"

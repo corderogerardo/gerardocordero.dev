@@ -9,7 +9,22 @@ import {
   Experiments,
   Portfolio,
 } from "../../images";
-import { Blog, Card, Footer } from "./../../Components/ResumeComponents";
+import {
+  Blog,
+  Card,
+  Col,
+  ContactInfo,
+  Description,
+  Education,
+  Experience,
+  Footer,
+  Images,
+  MainContainer,
+  PortfolioAndExperiments,
+  Subtitle,
+  Text,
+  Title,
+} from "./../../Components/ResumeComponents";
 
 const Name = styled(Text)``;
 
@@ -255,7 +270,7 @@ export default function Landing() {
       </MainContainer>
       <Footer>
         <a href="https://gerardocordero.dev">Gerardo Cordero</a>
-        <p>2021</p>
+        <p>{new Date().getFullYear().toString()}</p>
       </Footer>
     </LandingContainer>
   );
