@@ -1,0 +1,18 @@
+{
+  "name": "Zod-Tutorial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-fetch": "^3.1.5",
+    "vitest": "^0.29.2",
+    "zod": "^3.21.0"
+  }
+}
