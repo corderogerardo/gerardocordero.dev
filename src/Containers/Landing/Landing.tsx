@@ -187,6 +187,17 @@ export default function Landing() {
             </section>
             <section className="content">
               <Card>
+                <time className="time">2023 - Now</time>
+                <div className="main">
+                  <h1>TrueNorth.co</h1>
+                  <em>Sr. Mobile Developer</em>
+                  <p>Working in React Native.</p>
+                  <p>
+                    <b>Projects</b>: WIP
+                  </p>
+                </div>
+              </Card>
+              <Card>
                 <time className="time">2021 - 2022</time>
                 <div className="main">
                   <h1>NovaComp</h1>
