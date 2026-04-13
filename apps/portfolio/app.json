@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Gerardo Cordero",
+    "slug": "gerardocordero-portfolio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "portfolio",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1D3557"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.gerardocordero.portfolio"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1D3557"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "dev.gerardocordero.portfolio"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
