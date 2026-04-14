@@ -1,0 +1,6 @@
+ios/
+android/
+node_modules/.cache/
+.expo/
+.turbo/
+*.log

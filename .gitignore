@@ -36,3 +36,6 @@ yarn-error.log*
 
 # ide
 .vscode/settings.json
+
+# Claude Code local state and ephemeral worktrees
+.claude/
