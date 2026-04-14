@@ -1,26 +1,20 @@
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css";
-@import "nativewind/theme";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source "../../packages/ui/src";
+@layer base {
+  html,
+  body,
+  #root {
+    background-color: #f1faee;
+    color: #1d3557;
+    font-family: "PlusJakartaSans_400Regular", "Plus Jakarta Sans",
+      system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-@theme {
-  /* Portfolio brand colors */
-  --color-imperial-red: #E63946;
-  --color-prussian-blue: #1D3557;
-  --color-honeydew: #F1FAEE;
-  --color-powder-blue: #A8DADC;
-  --color-celadon-blue: #457B9D;
-
-  /* Semantic aliases */
-  --color-foreground: #1D3557;
-  --color-background: #F1FAEE;
-  --color-muted: #A8DADC;
-  --color-accent: #457B9D;
-  --color-destructive: #E63946;
-
-  /* Font families */
-  --font-oxygen: "Oxygen", sans-serif;
-  --font-major: "MajorMonoDisplay", monospace;
+  body {
+    overscroll-behavior: none;
+  }
 }

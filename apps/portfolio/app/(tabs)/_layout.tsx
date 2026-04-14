@@ -1,25 +1,35 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
-  return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={18} {...props} />;
 }
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: "#E63946",
         tabBarInactiveTintColor: "#457B9D",
         tabBarStyle: {
-          backgroundColor: "#1D3557",
-          borderTopColor: "#457B9D",
+          backgroundColor: "#F1FAEE",
+          borderTopColor: "#1D3557",
+          borderTopWidth: 2,
+          height: Platform.OS === "ios" ? 86 : 66,
+          paddingTop: 10,
+          paddingBottom: Platform.OS === "ios" ? 24 : 8,
         },
-        headerStyle: { backgroundColor: "#1D3557" },
-        headerTintColor: "#F1FAEE",
+        tabBarLabelStyle: {
+          fontSize: 10,
+          letterSpacing: 0.5,
+          marginTop: 4,
+          fontFamily: "PlusJakartaSans_800ExtraBold",
+        },
       }}
     >
       <Tabs.Screen
@@ -32,25 +42,25 @@ export default function TabLayout() {
       <Tabs.Screen
         name="experience"
         options={{
-          title: "Experience",
-          tabBarIcon: ({ color }) => <TabBarIcon name="briefcase" color={color} />,
+          title: "Career",
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="briefcase" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="education"
         options={{
-          title: "Education",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="graduation-cap" color={color} />
-          ),
+          title: "Learn",
+          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
         }}
       />
       <Tabs.Screen
         name="contact"
         options={{
-          title: "Contact",
+          title: "Connect",
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="address-card" color={color} />
+            <TabBarIcon name="paper-plane" color={color} />
           ),
         }}
       />

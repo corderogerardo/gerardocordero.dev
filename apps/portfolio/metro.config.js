@@ -1,25 +1,55 @@
-const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require("nativewind/metro");
+// Learn more: https://docs.expo.dev/guides/monorepos/
 const path = require("path");
 
-const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, "../..");
+const { getDefaultConfig } = require("expo/metro-config");
+const { FileStore } = require("metro-cache");
+const { withNativeWind } = require("nativewind/metro");
 
-const config = getDefaultConfig(projectRoot);
+const config = withTurborepoManagedCache(
+  withMonorepoPaths(
+    withNativeWind(getDefaultConfig(__dirname), {
+      input: "./global.css",
+      inlineRem: 16,
+    })
+  )
+);
 
-// Watch all files within the monorepo
-config.watchFolders = [monorepoRoot];
-
-// Let Metro know where to resolve packages
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
+// Inject a SharedArrayBuffer shim into the bundle prelude. Hermes on
+// RN 0.81 does not expose SharedArrayBuffer as a global, and modules
+// like webidl-conversions (pulled in via expo/winter -> whatwg-url)
+// reference it at top-level evaluation time. Polyfills are bundled
+// before InitializeCore and before any __r() call, so this runs in
+// time to save us. See apps/portfolio/polyfills/shared-array-buffer.js
+// for the full explanation.
+const upstreamGetPolyfills = config.serializer.getPolyfills;
+config.serializer.getPolyfills = (options) => [
+  ...upstreamGetPolyfills(options),
+  require.resolve("./polyfills/shared-array-buffer.js"),
 ];
 
-// Prevent duplicate package resolution
-config.resolver.disableHierarchicalLookup = true;
+module.exports = config;
 
-module.exports = withNativeWind(config, {
-  input: "./global.css",
-  configPath: "./postcss.config.mjs",
-});
+function withMonorepoPaths(config) {
+  const projectRoot = __dirname;
+  const workspaceRoot = path.resolve(projectRoot, "../..");
+
+  config.watchFolders = [workspaceRoot];
+
+  config.resolver.nodeModulesPaths = [
+    path.resolve(projectRoot, "node_modules"),
+    path.resolve(workspaceRoot, "node_modules"),
+  ];
+
+  config.resolver.disableHierarchicalLookup = true;
+
+  return config;
+}
+
+function withTurborepoManagedCache(config) {
+  config.cacheStores = [
+    new FileStore({
+      root: path.join(__dirname, "node_modules/.cache/metro"),
+    }),
+  ];
+  return config;
+}
