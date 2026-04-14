@@ -1,25 +1,40 @@
-const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require("nativewind/metro");
+// Learn more: https://docs.expo.dev/guides/monorepos/
 const path = require("path");
 
-const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, "../..");
+const { getDefaultConfig } = require("expo/metro-config");
+const { FileStore } = require("metro-cache");
+const { withNativeWind } = require("nativewind/metro");
 
-const config = getDefaultConfig(projectRoot);
+module.exports = withTurborepoManagedCache(
+  withMonorepoPaths(
+    withNativeWind(getDefaultConfig(__dirname), {
+      input: "./global.css",
+      inlineRem: 16,
+    })
+  )
+);
 
-// Watch all files within the monorepo
-config.watchFolders = [monorepoRoot];
+function withMonorepoPaths(config) {
+  const projectRoot = __dirname;
+  const workspaceRoot = path.resolve(projectRoot, "../..");
 
-// Let Metro know where to resolve packages
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
+  config.watchFolders = [workspaceRoot];
 
-// Prevent duplicate package resolution
-config.resolver.disableHierarchicalLookup = true;
+  config.resolver.nodeModulesPaths = [
+    path.resolve(projectRoot, "node_modules"),
+    path.resolve(workspaceRoot, "node_modules"),
+  ];
 
-module.exports = withNativeWind(config, {
-  input: "./global.css",
-  configPath: "./postcss.config.mjs",
-});
+  config.resolver.disableHierarchicalLookup = true;
+
+  return config;
+}
+
+function withTurborepoManagedCache(config) {
+  config.cacheStores = [
+    new FileStore({
+      root: path.join(__dirname, "node_modules/.cache/metro"),
+    }),
+  ];
+  return config;
+}

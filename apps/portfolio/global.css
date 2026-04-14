@@ -1,34 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Oxygen:wght@300;400;700&display=swap');
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css";
-@import "nativewind/theme";
 
-@source "../../packages/ui/src";
-
-@theme {
-  --color-imperial-red: #E63946;
-  --color-prussian-blue: #1D3557;
-  --color-honeydew: #F1FAEE;
-  --color-powder-blue: #A8DADC;
-  --color-celadon-blue: #457B9D;
-
-  --color-foreground: #1D3557;
-  --color-background: #F1FAEE;
-  --color-muted: #A8DADC;
-  --color-accent: #457B9D;
-  --color-destructive: #E63946;
-
-  --font-oxygen: "Oxygen", system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --font-major: "Major Mono Display", "Courier New", ui-monospace, monospace;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
-  html, body, #root {
-    background-color: #F1FAEE;
-    font-family: var(--font-oxygen);
-    color: #1D3557;
+  html,
+  body,
+  #root {
+    background-color: #f1faee;
+    color: #1d3557;
+    font-family: "Oxygen", system-ui, -apple-system, "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    overscroll-behavior: none;
   }
 }
