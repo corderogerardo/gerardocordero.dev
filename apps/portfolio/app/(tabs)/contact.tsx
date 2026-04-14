@@ -1,169 +1,173 @@
 import { View, Text, ScrollView, Pressable, Linking } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { contactInfo, socialLinks } from "@/src/data/contact";
 import { externalLinks } from "@/src/data/blog";
 
 export default function ContactScreen() {
+  const insets = useSafeAreaInsets();
+
   return (
     <ScrollView
       className="flex-1 bg-honeydew"
-      contentContainerClassName="pb-16"
+      contentContainerClassName="pb-20"
+      showsVerticalScrollIndicator={false}
     >
       <StatusBar style="dark" />
 
-      {/* Top status strip */}
-      <View className="flex-row items-center justify-between border-b-2 border-prussian-blue px-6 py-3">
-        <Text className="font-major text-[10px] uppercase tracking-[2px] text-prussian-blue">
-          §04 — dispatch
-        </Text>
-        <View className="flex-row items-center gap-2">
-          <View className="h-2 w-2 rounded-full bg-imperial-red" />
-          <Text className="font-major text-[10px] uppercase tracking-[2px] text-prussian-blue">
-            channels open
-          </Text>
-        </View>
-      </View>
-
       {/* Header */}
-      <View className="px-6 pt-12 pb-10">
-        <Text className="font-major text-[10px] uppercase tracking-[3px] text-imperial-red">
-          ↳ send word
-        </Text>
-        <Text className="mt-3 font-major text-5xl leading-[0.88] text-prussian-blue">
-          dispatch
-        </Text>
-        <View className="mt-5 border-l-2 border-imperial-red pl-5">
-          <Text className="font-oxygen text-sm leading-6 text-prussian-blue/80">
-            Channels for inquiries, collaborations, and conversation. Email is
-            the most reliable.
-          </Text>
-        </View>
-      </View>
-
-      {/* Primary mailto block */}
-      <View className="px-6 pb-10">
-        <Pressable
-          onPress={() => Linking.openURL("mailto:mail@gerardocordero.dev")}
-          className="border-2 border-prussian-blue bg-prussian-blue p-6"
-        >
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="font-major text-[10px] uppercase tracking-[3px] text-powder-blue/70">
-              ↳ primary line
-            </Text>
-            <Text className="font-major text-[10px] uppercase tracking-[2px] text-imperial-red">
-              ●
+      <View style={{ paddingTop: insets.top + 16 }} className="mb-6 px-6">
+        <View className="mb-6 flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2 rounded-full bg-imperial-red px-3 py-1.5">
+            <View className="h-2 w-2 rounded-full bg-honeydew" />
+            <Text className="font-display text-[10px] text-honeydew">
+              OPEN TO CHAT
             </Text>
           </View>
-          <Text className="font-major text-2xl leading-[1.1] text-honeydew">
+          <Text className="font-display text-[11px] text-prussian-blue/50">
+            24/7 INBOX
+          </Text>
+        </View>
+        <Text className="font-display text-5xl leading-tight text-prussian-blue">
+          Connect
+        </Text>
+        <Text className="mt-2 font-ui text-sm text-prussian-blue/60">
+          Pick a channel. Email is the fastest path.
+        </Text>
+      </View>
+
+      {/* Primary CTA */}
+      <View className="mx-6 mb-5">
+        <Pressable
+          onPress={() => Linking.openURL("mailto:mail@gerardocordero.dev")}
+          className="rounded-3xl bg-prussian-blue p-6"
+        >
+          <View className="mb-5 flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2 rounded-full bg-imperial-red px-3 py-1.5">
+              <FontAwesome name="envelope" size={10} color="#F1FAEE" />
+              <Text className="font-display text-[10px] text-honeydew">
+                PRIMARY LINE
+              </Text>
+            </View>
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-imperial-red">
+              <FontAwesome name="arrow-right" size={14} color="#F1FAEE" />
+            </View>
+          </View>
+          <Text className="font-display text-[28px] leading-tight text-honeydew">
             mail@
           </Text>
-          <Text className="font-major text-2xl leading-[1.1] text-honeydew">
-            gerardocordero
+          <Text className="font-display text-[28px] leading-tight text-honeydew">
+            gerardocordero.dev
           </Text>
-          <View className="flex-row items-baseline">
-            <Text className="font-major text-2xl leading-[1.1] text-imperial-red">
-              .dev
+          <View className="mt-4 flex-row items-center gap-2">
+            <View className="h-1.5 w-1.5 rounded-full bg-imperial-red" />
+            <Text className="font-ui text-xs text-powder-blue">
+              Tap to compose · typically replies within a day
             </Text>
-            <Text className="ml-2 font-major text-xl text-imperial-red">→</Text>
           </View>
         </Pressable>
       </View>
 
-      {/* Direct lines */}
-      <View className="border-t-2 border-prussian-blue px-6 py-8">
-        <Text className="mb-5 font-major text-[10px] uppercase tracking-[3px] text-imperial-red">
-          ↳ direct lines
+      {/* Direct Lines */}
+      <View className="mb-6 px-6">
+        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
+          DIRECT LINES
         </Text>
-        {contactInfo.map((item, i) => (
-          <Pressable
-            key={`${item.label}-${i}`}
-            onPress={() => item.href && Linking.openURL(item.href)}
-            className="flex-row items-center justify-between border-b border-prussian-blue/30 py-4"
-          >
-            <View className="flex-1 flex-row items-baseline gap-5">
-              <Text className="font-major text-[10px] text-imperial-red">
-                {String(i + 1).padStart(2, "0")}
-              </Text>
-              <View className="flex-1">
-                <Text className="font-major text-[9px] uppercase tracking-[2px] text-celadon-blue">
-                  {item.label}
-                </Text>
-                <Text className="mt-1 font-oxygen text-base text-prussian-blue">
-                  {item.value}
-                </Text>
-              </View>
-            </View>
-            {item.href && (
-              <Text className="font-major text-base text-prussian-blue">→</Text>
-            )}
-          </Pressable>
-        ))}
+        <View className="gap-3">
+          {contactInfo.map((item, i) => {
+            const hasHref = !!item.href;
+            const icons = ["phone", "envelope", "envelope", "language"];
+            return (
+              <Pressable
+                key={`${item.label}-${item.value}`}
+                onPress={() => item.href && Linking.openURL(item.href)}
+                disabled={!hasHref}
+                className={`flex-row items-center gap-4 rounded-2xl p-4 ${
+                  hasHref
+                    ? "border-2 border-prussian-blue"
+                    : "bg-powder-blue/40"
+                }`}
+              >
+                <View
+                  className={`h-11 w-11 items-center justify-center rounded-xl ${
+                    hasHref ? "bg-prussian-blue" : "bg-celadon-blue"
+                  }`}
+                >
+                  <FontAwesome
+                    name={icons[i] as any}
+                    size={15}
+                    color="#F1FAEE"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-display text-[10px] text-prussian-blue/50">
+                    {item.label.toUpperCase()}
+                  </Text>
+                  <Text className="mt-0.5 font-display text-base text-prussian-blue">
+                    {item.value}
+                  </Text>
+                </View>
+                {hasHref && (
+                  <FontAwesome name="arrow-right" size={14} color="#E63946" />
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
-      {/* Channels */}
-      <View className="border-t-2 border-prussian-blue px-6 py-8">
-        <Text className="mb-5 font-major text-[10px] uppercase tracking-[3px] text-imperial-red">
-          ↳ social channels
+      {/* Social */}
+      <View className="mb-6 px-6">
+        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
+          SOCIAL
         </Text>
-        <View className="flex-row flex-wrap gap-3">
+        <View className="flex-row gap-3">
           {socialLinks.map((link) => (
             <Pressable
               key={link.platform}
               onPress={() => Linking.openURL(link.url)}
-              className="flex-row items-center gap-3 border border-prussian-blue px-4 py-3"
+              className="flex-1 items-center justify-center rounded-2xl bg-celadon-blue p-5"
             >
               <FontAwesome
                 name={link.icon as any}
-                size={14}
-                color="#1D3557"
+                size={26}
+                color="#F1FAEE"
               />
-              <Text className="font-major text-[11px] uppercase tracking-[2px] text-prussian-blue">
-                {link.platform}
+              <Text className="mt-3 font-display text-[11px] text-honeydew">
+                {link.platform.toUpperCase()}
               </Text>
             </Pressable>
           ))}
         </View>
       </View>
 
-      {/* External links */}
-      <View className="border-t-2 border-prussian-blue px-6 py-8">
-        <Text className="mb-5 font-major text-[10px] uppercase tracking-[3px] text-imperial-red">
-          ↳ elsewhere
+      {/* Elsewhere */}
+      <View className="mb-4 px-6">
+        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
+          ELSEWHERE ON THE WEB
         </Text>
-        {Object.entries(externalLinks).map(([label, url], i) => (
-          <Pressable
-            key={label}
-            onPress={() => Linking.openURL(url)}
-            className="flex-row items-center justify-between border-b border-prussian-blue/30 py-4"
-          >
-            <View className="flex-1 flex-row items-baseline gap-5">
-              <Text className="font-major text-[10px] text-imperial-red">
-                {String(i + 1).padStart(2, "0")}
-              </Text>
+        <View className="gap-3">
+          {Object.entries(externalLinks).map(([label, url]) => (
+            <Pressable
+              key={label}
+              onPress={() => Linking.openURL(url)}
+              className="flex-row items-center gap-4 rounded-2xl border-2 border-prussian-blue p-4"
+            >
+              <View className="h-11 w-11 items-center justify-center rounded-xl bg-imperial-red">
+                <FontAwesome name="globe" size={15} color="#F1FAEE" />
+              </View>
               <View className="flex-1">
-                <Text className="font-major text-[9px] uppercase tracking-[2px] text-celadon-blue">
+                <Text className="font-display text-base capitalize text-prussian-blue">
                   {label}
                 </Text>
-                <Text className="mt-1 font-oxygen text-sm text-prussian-blue">
+                <Text className="mt-0.5 font-ui text-[11px] text-prussian-blue/60">
                   {url.replace("https://", "")}
                 </Text>
               </View>
-            </View>
-            <Text className="font-major text-base text-prussian-blue">↗</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {/* Footer */}
-      <View className="border-t-2 border-prussian-blue px-6 py-5">
-        <View className="flex-row items-center justify-between">
-          <Text className="font-major text-[9px] uppercase tracking-[2px] text-prussian-blue">
-            end · dispatch ledger
-          </Text>
-          <Text className="font-major text-[9px] uppercase tracking-[2px] text-prussian-blue">
-            §04
-          </Text>
+              <FontAwesome name="external-link" size={14} color="#E63946" />
+            </Pressable>
+          ))}
         </View>
       </View>
     </ScrollView>

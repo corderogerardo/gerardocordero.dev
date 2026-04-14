@@ -16,6 +16,7 @@
     "postinstall": "tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css"
   },
   "dependencies": {
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.0",
     "@expo/vector-icons": "^15.0.3",
     "@gerardocordero/ui": "workspace:*",
     "@react-navigation/native": "^7.1.8",

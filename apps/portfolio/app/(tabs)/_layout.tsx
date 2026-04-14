@@ -6,7 +6,7 @@ function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
   color: string;
 }) {
-  return <FontAwesome size={16} {...props} />;
+  return <FontAwesome size={18} {...props} />;
 }
 
 export default function TabLayout() {
@@ -15,54 +15,53 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#E63946",
-        tabBarInactiveTintColor: "#1D3557",
+        tabBarInactiveTintColor: "#457B9D",
         tabBarStyle: {
           backgroundColor: "#F1FAEE",
           borderTopColor: "#1D3557",
           borderTopWidth: 2,
-          height: Platform.OS === "ios" ? 84 : 64,
+          height: Platform.OS === "ios" ? 86 : 66,
           paddingTop: 10,
           paddingBottom: Platform.OS === "ios" ? 24 : 8,
         },
         tabBarLabelStyle: {
-          fontSize: 9,
-          fontWeight: "700",
-          letterSpacing: 2,
-          textTransform: "uppercase",
-          fontFamily: Platform.select({
-            web: '"Major Mono Display", "Courier New", monospace',
-            ios: "Courier",
-            android: "monospace",
-          }),
+          fontSize: 10,
+          letterSpacing: 0.5,
+          marginTop: 4,
+          fontFamily: "PlusJakartaSans_800ExtraBold",
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Index",
-          tabBarIcon: ({ color }) => <TabBarIcon name="circle-o" color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="experience"
         options={{
-          title: "Tenure",
-          tabBarIcon: ({ color }) => <TabBarIcon name="briefcase" color={color} />,
+          title: "Career",
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="briefcase" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="education"
         options={{
-          title: "Studies",
+          title: "Learn",
           tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
         }}
       />
       <Tabs.Screen
         name="contact"
         options={{
-          title: "Dispatch",
-          tabBarIcon: ({ color }) => <TabBarIcon name="paper-plane" color={color} />,
+          title: "Connect",
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="paper-plane" color={color} />
+          ),
         }}
       />
     </Tabs>

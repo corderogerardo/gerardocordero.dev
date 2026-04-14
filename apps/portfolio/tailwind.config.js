@@ -20,8 +20,25 @@ module.exports = {
         "celadon-blue": "#457B9D",
       },
       fontFamily: {
-        major: ['"Major Mono Display"', '"Courier New"', "monospace"],
-        oxygen: ["Oxygen", "system-ui", "sans-serif"],
+        sans: [
+          "PlusJakartaSans_400Regular",
+          "Plus Jakarta Sans",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+        ui: [
+          "PlusJakartaSans_600SemiBold",
+          "Plus Jakarta Sans",
+          "system-ui",
+          "sans-serif",
+        ],
+        display: [
+          "PlusJakartaSans_800ExtraBold",
+          "Plus Jakarta Sans",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       borderWidth: {
         hairline: hairlineWidth(),

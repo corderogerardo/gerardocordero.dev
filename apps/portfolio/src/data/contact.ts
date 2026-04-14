@@ -18,7 +18,7 @@ export interface SocialLink {
 }
 
 export const socialLinks: SocialLink[] = [
-  { platform: "GitHub", url: "https://github.com/corderogerardo", icon: "logo-github" },
-  { platform: "LinkedIn", url: "https://www.linkedin.com/in/corderogerardo/", icon: "logo-linkedin" },
-  { platform: "Twitter", url: "https://twitter.com/officelocation", icon: "logo-twitter" },
+  { platform: "GitHub", url: "https://github.com/corderogerardo", icon: "github" },
+  { platform: "LinkedIn", url: "https://www.linkedin.com/in/corderogerardo/", icon: "linkedin" },
+  { platform: "Twitter", url: "https://twitter.com/officelocation", icon: "twitter" },
 ];
