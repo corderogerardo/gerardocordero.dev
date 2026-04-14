@@ -27,7 +27,7 @@ export default function HomeScreen() {
         <View className="flex-row items-center gap-2">
           <View className="h-2 w-2 rounded-full bg-imperial-red" />
           <Text className="font-major text-[10px] uppercase tracking-[2px] text-prussian-blue">
-            available · lima, pe
+            available · barquisimeto, ve
           </Text>
         </View>
         <Text className="font-major text-[10px] uppercase tracking-[2px] text-prussian-blue">
@@ -92,27 +92,30 @@ export default function HomeScreen() {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/70">
-              origin
-            </Text>
-            <Text className="mt-1 font-major text-base uppercase tracking-[1px] text-honeydew">
-              caracas, ve
-            </Text>
-            <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/60">
-              10.4806° n
-            </Text>
-          </View>
-          <View className="items-center">
-            <Text className="font-major text-2xl text-imperial-red">→</Text>
-          </View>
-          <View className="items-end">
-            <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/70">
-              based
+              previously
             </Text>
             <Text className="mt-1 font-major text-base uppercase tracking-[1px] text-honeydew">
               lima, pe
             </Text>
             <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/60">
               12.0464° s
+            </Text>
+          </View>
+          <View className="items-center">
+            <Text className="font-major text-2xl text-imperial-red">←</Text>
+            <Text className="mt-1 font-major text-[8px] uppercase tracking-[2px] text-powder-blue/60">
+              oct 2022
+            </Text>
+          </View>
+          <View className="items-end">
+            <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/70">
+              home · based
+            </Text>
+            <Text className="mt-1 font-major text-base uppercase tracking-[1px] text-honeydew">
+              barquisimeto, ve
+            </Text>
+            <Text className="font-major text-[9px] uppercase tracking-[2px] text-powder-blue/60">
+              10.0678° n
             </Text>
           </View>
         </View>
