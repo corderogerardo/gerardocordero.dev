@@ -6,12 +6,13 @@
   html,
   body,
   #root {
-    background-color: #f1faee;
-    color: #1d3557;
-    font-family: "PlusJakartaSans_400Regular", "Plus Jakarta Sans",
+    background-color: #f6f4ed;
+    color: #111826;
+    font-family: "DMSans_400Regular", "DM Sans",
       system-ui, -apple-system, "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
   }
 
   body {

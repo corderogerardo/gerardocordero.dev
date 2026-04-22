@@ -1,69 +1,120 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { T } from "@/components/hud";
 
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
-}) {
-  return <FontAwesome size={18} {...props} />;
+const TAB_META: Record<
+  string,
+  {
+    label: string;
+    icon: React.ComponentProps<typeof FontAwesome>["name"];
+    title: string;
+  }
+> = {
+  index: { label: "Status", icon: "circle-o-notch", title: "Status" },
+  experience: { label: "Log", icon: "terminal", title: "Log" },
+  education: { label: "Tree", icon: "sitemap", title: "Tree" },
+  contact: { label: "Comms", icon: "paper-plane", title: "Comms" },
+};
+
+function HUDTabBar({ state, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={{
+        position: "absolute",
+        left: 16,
+        right: 16,
+        bottom: Math.max(insets.bottom, 12) + 6,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: T.ink,
+          borderRadius: 9999,
+          padding: 6,
+          flexDirection: "row",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 14 },
+          shadowOpacity: 0.18,
+          shadowRadius: 30,
+          elevation: 10,
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const meta = TAB_META[route.name];
+          if (!meta) return null;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              style={{
+                flex: 1,
+                borderRadius: 9999,
+                paddingVertical: 9,
+                paddingHorizontal: 4,
+                backgroundColor: focused ? T.red : "transparent",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+              }}
+            >
+              <FontAwesome
+                name={meta.icon}
+                size={14}
+                color={focused ? T.paper : "rgba(246,244,237,0.62)"}
+              />
+              <Text
+                style={{
+                  fontFamily: "JetBrainsMono_500Medium",
+                  fontSize: 9,
+                  letterSpacing: 0.9,
+                  textTransform: "uppercase",
+                  color: focused ? T.paper : "rgba(246,244,237,0.62)",
+                }}
+              >
+                {meta.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
 export default function TabLayout() {
   return (
     <Tabs
+      tabBar={(props) => <HUDTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#E63946",
-        tabBarInactiveTintColor: "#457B9D",
-        tabBarStyle: {
-          backgroundColor: "#F1FAEE",
-          borderTopColor: "#1D3557",
-          borderTopWidth: 2,
-          height: Platform.OS === "ios" ? 86 : 66,
-          paddingTop: 10,
-          paddingBottom: Platform.OS === "ios" ? 24 : 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          letterSpacing: 0.5,
-          marginTop: 4,
-          fontFamily: "PlusJakartaSans_800ExtraBold",
-        },
+        tabBarStyle: { backgroundColor: "transparent" },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="experience"
-        options={{
-          title: "Career",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="briefcase" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="education"
-        options={{
-          title: "Learn",
-          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="contact"
-        options={{
-          title: "Connect",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="paper-plane" color={color} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: "Status" }} />
+      <Tabs.Screen name="experience" options={{ title: "Log" }} />
+      <Tabs.Screen name="education" options={{ title: "Tree" }} />
+      <Tabs.Screen name="contact" options={{ title: "Comms" }} />
     </Tabs>
   );
 }

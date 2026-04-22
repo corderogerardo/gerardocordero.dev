@@ -11,16 +11,21 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1D3557"
+      "backgroundColor": "#D4412A"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "dev.gerardocordero.portfolio"
+      "bundleIdentifier": "dev.gerardocordero.portfolio",
+      "icon": "./assets/app-icon.icon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#1D3557"
+        "monochromeImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#D4412A"
       },
       "edgeToEdgeEnabled": true,
       "package": "dev.gerardocordero.portfolio"

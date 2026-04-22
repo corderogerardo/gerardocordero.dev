@@ -4,3 +4,17 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# Disable Cloudflare Rocket Loader / HTML transforms on HTML responses.
+# Rocket Loader rewrites <script type="module"> into a hashed pseudo-MIME
+# that breaks Expo Router's hydration script and triggers SRI failures
+# on the auto-injected web-analytics beacon.
+
+/
+  Cache-Control: no-transform, public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: no-transform, public, max-age=0, must-revalidate
+
+/*/
+  Cache-Control: no-transform, public, max-age=0, must-revalidate

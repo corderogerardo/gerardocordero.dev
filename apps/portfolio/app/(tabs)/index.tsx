@@ -1,11 +1,22 @@
-import { View, Text, ScrollView, Pressable, Linking } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { socialLinks } from "@/src/data/contact";
+import Svg, { Circle, Line } from "react-native-svg";
 import { experiences } from "@/src/data/experience";
-import { education } from "@/src/data/education";
+import {
+  GCBar,
+  GCChip,
+  GCDash,
+  GCDots,
+  GCEye,
+  GCHair,
+  GCKV,
+  GCStatus,
+  GCTick,
+  T,
+} from "@/components/hud";
 
 const STACK = [
   "React",
@@ -16,298 +27,680 @@ const STACK = [
   "JavaScript",
 ];
 
-const INTERESTS = ["AI", "Video Games", "Data", "Languages"];
-
-const YEARS = [
-  { label: "JS", value: "10Y" },
-  { label: "REACT / RN", value: "8Y" },
-  { label: "EXPRESS", value: "3Y" },
-  { label: "ANGULAR", value: "2Y" },
+const INTERESTS = [
+  { label: "AI", verb: "Explore" },
+  { label: "Video Games", verb: "Play" },
+  { label: "Data", verb: "Build" },
+  { label: "Languages", verb: "Learn" },
 ];
 
-const QUICK_LINKS = [
-  {
-    label: "Career Log",
-    sub: `${String(experiences.length).padStart(2, "0")} quests completed`,
-    path: "/experience",
-    icon: "briefcase" as const,
-  },
-  {
-    label: "Studies",
-    sub: `${String(education.length).padStart(2, "0")} entries unlocked`,
-    path: "/education",
-    icon: "book" as const,
-  },
-  {
-    label: "Connect",
-    sub: "Send a message",
-    path: "/contact",
-    icon: "paper-plane" as const,
-  },
+const YEARS: { label: string; value: number; unit: string }[] = [
+  { label: "JS", value: 10, unit: "Y" },
+  { label: "REACT / RN", value: 8, unit: "Y" },
+  { label: "EXPRESS", value: 3, unit: "Y" },
+  { label: "ANGULAR", value: 2, unit: "Y" },
 ];
+
+function XPRing({
+  years,
+  progress = 0.92,
+}: {
+  years: number;
+  progress?: number;
+}) {
+  const size = 168;
+  const stroke = 2;
+  const r = (size - stroke) / 2;
+  const innerR = r - 6;
+  const c = 2 * Math.PI * innerR;
+  const dashArray = `${c * progress} ${c}`;
+  const cx = size / 2;
+  const cy = size / 2;
+  const ticks = [0, 45, 90, 135, 180, 225, 270, 315];
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Svg
+        width={size}
+        height={size}
+        style={{ position: "absolute", top: 0, left: 0 }}
+      >
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke={T.inkThread}
+          strokeWidth={1}
+          strokeDasharray="2 5"
+        />
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={innerR}
+          fill="none"
+          stroke={T.red}
+          strokeWidth={stroke}
+          strokeDasharray={dashArray}
+          strokeDashoffset={c * 0.25}
+          originX={cx}
+          originY={cy}
+          rotation={-90}
+        />
+        {ticks.map((deg, i) => {
+          const rad = (deg * Math.PI) / 180;
+          const x1 = cx + Math.cos(rad) * (r - 12);
+          const y1 = cy + Math.sin(rad) * (r - 12);
+          const x2 = cx + Math.cos(rad) * (r - 4);
+          const y2 = cy + Math.sin(rad) * (r - 4);
+          return (
+            <Line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={T.inkThread}
+              strokeWidth={1}
+            />
+          );
+        })}
+      </Svg>
+      <View style={{ alignItems: "center" }}>
+        <Text
+          style={{
+            fontFamily: "JetBrainsMono_500Medium",
+            fontSize: 10,
+            letterSpacing: 1.5,
+            color: T.red,
+            textTransform: "uppercase",
+          }}
+        >
+          LVL · 10
+        </Text>
+        <Text
+          style={{
+            fontFamily: "DMSans_500Medium",
+            fontSize: 68,
+            lineHeight: 72,
+            letterSpacing: -4,
+            color: T.ink,
+            marginTop: 2,
+          }}
+        >
+          {years}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "JetBrainsMono_500Medium",
+            fontSize: 9,
+            letterSpacing: 1.6,
+            textTransform: "uppercase",
+            color: T.inkMid,
+            marginTop: 2,
+          }}
+        >
+          YR · EXP
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function Readout({
+  label,
+  value,
+  bar,
+  sub,
+  color,
+}: {
+  label: string;
+  value: string;
+  bar: { value: number; max: number };
+  sub?: string;
+  color?: string;
+}) {
+  return (
+    <View>
+      <View className="mb-1.5 flex-row items-baseline justify-between">
+        <GCEye>{label}</GCEye>
+        <Text
+          style={{
+            fontFamily: "JetBrainsMono_500Medium",
+            fontSize: 13,
+            color: T.ink,
+          }}
+        >
+          {value}
+        </Text>
+      </View>
+      <GCBar value={bar.value} max={bar.max} color={color ?? T.ink} height={3} />
+      {sub ? (
+        <View className="mt-1">
+          <GCTick>{sub}</GCTick>
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const currentExp = experiences.find((e) => e.isCurrent) ?? experiences[0];
 
   return (
     <ScrollView
-      className="flex-1 bg-honeydew"
-      contentContainerClassName="pb-20"
+      style={{ flex: 1, backgroundColor: T.paper }}
+      contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}
     >
       <StatusBar style="dark" />
 
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 16 }} className="mb-4 px-6">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2 rounded-full bg-imperial-red/15 px-3 py-1.5">
-            <View className="h-2 w-2 rounded-full bg-imperial-red" />
-            <Text className="font-display text-[11px] text-imperial-red">
-              AVAILABLE
-            </Text>
-          </View>
-          <Text className="font-display text-[11px] text-prussian-blue/50">
-            2026 · v1.0
-          </Text>
-        </View>
+      {/* System status bar */}
+      <View
+        style={{
+          paddingTop: insets.top + 6,
+          paddingHorizontal: 20,
+          paddingBottom: 4,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <GCStatus label="ONLINE · AVAILABLE" />
+        <GCTick>10.06°N 69.36°W · UTC-4</GCTick>
       </View>
 
-      {/* Player Card */}
-      <View className="mx-6 mb-5 rounded-3xl bg-prussian-blue p-6">
-        <View className="mb-6 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-1.5 rounded-full bg-imperial-red px-3 py-1.5">
-            <FontAwesome name="bolt" size={10} color="#F1FAEE" />
-            <Text className="font-display text-[10px] text-honeydew">
-              LEVEL 10
-            </Text>
-          </View>
-          <Text className="font-display text-[10px] text-powder-blue">
-            @ VALT NETWORK INC.
-          </Text>
-        </View>
-
-        <View className="mb-7 flex-row items-center gap-4">
-          <View className="h-20 w-20 items-center justify-center rounded-2xl bg-imperial-red">
-            <Text className="font-display text-3xl text-honeydew">GC</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="font-display text-3xl leading-tight text-honeydew">
+      {/* Header block — name + monogram mark */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <View className="flex-row items-start justify-between">
+          <View style={{ flex: 1 }}>
+            <GCEye tone="red">PLAYER · 001</GCEye>
+            <Text
+              style={{
+                marginTop: 8,
+                fontFamily: "DMSans_500Medium",
+                fontSize: 40,
+                lineHeight: 40,
+                letterSpacing: -1.6,
+                color: T.ink,
+              }}
+            >
               Gerardo
             </Text>
-            <Text className="font-display text-3xl leading-tight text-honeydew">
-              Cordero
+            <Text
+              style={{
+                fontFamily: "DMSans_500Medium",
+                fontSize: 40,
+                lineHeight: 40,
+                letterSpacing: -1.6,
+                color: T.ink,
+              }}
+            >
+              Cordero.
             </Text>
-            <Text className="mt-1 font-ui text-xs text-powder-blue">
-              Sr. Mobile Engineer
+            <Text
+              style={{
+                marginTop: 14,
+                fontFamily: "DMSans_500Medium",
+                fontSize: 14,
+                color: T.ink,
+              }}
+            >
+              {currentExp.role}
+            </Text>
+            <View className="mt-0.5">
+              <GCEye>
+                @ {currentExp.company.toUpperCase()} · {currentExp.location.toUpperCase()}
+              </GCEye>
+            </View>
+          </View>
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderWidth: 1,
+              borderColor: T.ink,
+              borderRadius: 4,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "JetBrainsMono_500Medium",
+                fontSize: 20,
+                letterSpacing: -0.4,
+                color: T.ink,
+              }}
+            >
+              GC
             </Text>
           </View>
         </View>
+        <GCHair className="mt-5" />
+      </View>
 
-        <View>
-          <View className="mb-2 flex-row items-center justify-between">
-            <Text className="font-display text-[10px] text-powder-blue">
-              EXPERIENCE
-            </Text>
-            <Text className="font-display text-[11px] text-honeydew">
-              10+ YEARS
-            </Text>
-          </View>
-          <View className="h-2.5 overflow-hidden rounded-full bg-celadon-blue/30">
-            <View className="h-full w-[95%] rounded-full bg-imperial-red" />
-          </View>
+      {/* XP ring + readouts */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 20,
+        }}
+      >
+        <XPRing years={10} />
+        <View style={{ flex: 1, gap: 14 }}>
+          <Readout
+            label="Companies"
+            value="10"
+            bar={{ value: 10, max: 12 }}
+            sub="2016 → 2026"
+          />
+          <Readout
+            label="Stack · Depth"
+            value="06"
+            bar={{ value: 6, max: 6 }}
+            sub="Native + Web + Cloud"
+            color={T.red}
+          />
+          <Readout
+            label="Availability"
+            value="OPEN"
+            bar={{ value: 95, max: 100 }}
+            sub="Contract · Remote"
+            color={T.mint}
+          />
         </View>
       </View>
 
-      {/* Stats Grid */}
-      <View className="mx-6 mb-6 flex-row gap-3">
-        <View className="flex-1 rounded-2xl bg-imperial-red p-5">
-          <Text className="font-display text-4xl text-honeydew">10</Text>
-          <Text className="mt-1 font-display text-[10px] text-honeydew/80">
-            COMPANIES
-          </Text>
-        </View>
-        <View className="flex-1 rounded-2xl bg-celadon-blue p-5">
-          <Text className="font-display text-4xl text-honeydew">10+</Text>
-          <Text className="mt-1 font-display text-[10px] text-honeydew/80">
-            YEARS
-          </Text>
-        </View>
-        <View className="flex-1 rounded-2xl border-2 border-prussian-blue p-5">
-          <Text className="font-display text-4xl text-prussian-blue">06</Text>
-          <Text className="mt-1 font-display text-[10px] text-prussian-blue/60">
-            STACK
-          </Text>
-        </View>
-      </View>
+      <GCDash className="mx-5" />
 
-      {/* About / Bio */}
-      <View className="mx-6 mb-6 rounded-2xl border-2 border-prussian-blue p-5">
+      {/* §01 Overview */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
         <View className="mb-3 flex-row items-center justify-between">
-          <Text className="font-display text-xs text-prussian-blue/60">
-            ABOUT
-          </Text>
-          <View className="rounded-full bg-imperial-red/15 px-2.5 py-1">
-            <Text className="font-display text-[9px] text-imperial-red">
-              REMOTE · GLOBAL
-            </Text>
-          </View>
+          <GCEye tone="red">§ 01 · OVERVIEW</GCEye>
+          <GCChip variant="ghost" size="xs">
+            REMOTE · GLOBAL
+          </GCChip>
         </View>
-        <Text className="font-sans text-sm leading-6 text-prussian-blue/85">
-          Full-stack developer focused on mobile. 10+ years remote across
-          education, financial education, private markets, home services,
-          telecom, and staff augmentation. Deeply invested in developer
-          experience — reviews, tests, and shipping quality.
+        <Text
+          style={{
+            fontFamily: "DMSans_400Regular",
+            fontSize: 15,
+            lineHeight: 22,
+            color: T.ink,
+            maxWidth: "95%",
+          }}
+        >
+          Full-stack developer focused on{" "}
+          <Text
+            style={{ color: T.red, fontFamily: "DMSans_500Medium" }}
+          >
+            mobile
+          </Text>
+          . 10+ years remote across education, financial education, private
+          markets, home services, telecom, and staff augmentation. Deeply
+          invested in developer experience — reviews, tests, and shipping
+          quality.
         </Text>
-        <View className="mt-4 flex-row flex-wrap gap-1.5">
+
+        {/* Years-in-stack grid */}
+        <View
+          style={{
+            marginTop: 18,
+            flexDirection: "row",
+            flexWrap: "wrap",
+            columnGap: 16,
+            rowGap: 10,
+          }}
+        >
           {YEARS.map((y) => (
             <View
               key={y.label}
-              className="flex-row items-center gap-1.5 rounded-full bg-prussian-blue/10 px-2.5 py-1"
+              style={{ width: "47%", paddingBottom: 6 }}
             >
-              <Text className="font-display text-[10px] text-imperial-red">
-                {y.value}
-              </Text>
-              <Text className="font-display text-[9px] text-prussian-blue/70">
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  paddingBottom: 6,
+                }}
+              >
+              <Text
+                style={{
+                  fontFamily: "JetBrainsMono_500Medium",
+                  fontSize: 10,
+                  color: T.inkMid,
+                  letterSpacing: 0.8,
+                  textTransform: "uppercase",
+                }}
+              >
                 {y.label}
               </Text>
+              <Text
+                style={{
+                  fontFamily: "DMSans_500Medium",
+                  fontSize: 18,
+                  letterSpacing: -0.4,
+                  color: T.ink,
+                }}
+              >
+                {y.value}
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: T.inkMid,
+                  }}
+                >
+                  {y.unit}
+                </Text>
+              </Text>
+              </View>
+              <GCDots />
             </View>
           ))}
         </View>
       </View>
 
-      {/* Stack */}
-      <View className="mb-6 px-6">
-        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
-          LOADOUT · STACK
-        </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {STACK.map((tech) => (
-            <View
+      <View style={{ height: 28 }} />
+      <GCDash className="mx-5" />
+
+      {/* §02 Loadout */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+        <View className="mb-3.5 flex-row items-center justify-between">
+          <GCEye tone="red">§ 02 · LOADOUT</GCEye>
+          <GCTick>STACK · 06 / ACTIVE</GCTick>
+        </View>
+        <View className="flex-row flex-wrap gap-1.5">
+          {STACK.map((tech, i) => (
+            <GCChip
               key={tech}
-              className="rounded-full border-2 border-prussian-blue px-4 py-2"
+              variant={i === 0 ? "solid" : "ghost"}
             >
-              <Text className="font-display text-xs text-prussian-blue">
-                {tech}
+              <Text
+                style={{
+                  fontFamily: "JetBrainsMono_500Medium",
+                  fontSize: 9,
+                  color: i === 0 ? "rgba(246,244,237,0.55)" : T.inkLow,
+                  letterSpacing: 0.66,
+                }}
+              >
+                {String(i + 1).padStart(2, "0")}
+                {"  "}
               </Text>
-            </View>
+              {tech}
+            </GCChip>
           ))}
         </View>
       </View>
 
-      {/* Home base */}
-      <View className="mx-6 mb-6 rounded-2xl bg-powder-blue/40 p-5">
-        <View className="mb-3 flex-row items-center justify-between">
-          <Text className="font-display text-xs text-prussian-blue/60">
-            HOME BASE
+      <View style={{ height: 28 }} />
+
+      {/* §03 Home Base — dark card with grid overlay */}
+      <View style={{ paddingHorizontal: 20 }}>
+        <View
+          style={{
+            backgroundColor: T.ink,
+            borderRadius: 20,
+            padding: 20,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 14,
+            }}
+          >
+            <GCEye tone="onDark">§ 03 · HOME BASE</GCEye>
+            <GCStatus label="ACTIVE" dark />
+          </View>
+          <Text
+            style={{
+              fontFamily: "JetBrainsMono_500Medium",
+              fontSize: 9,
+              color: "rgba(246,244,237,0.5)",
+              letterSpacing: 1.35,
+              marginBottom: 6,
+            }}
+          >
+            N 10°04&apos;04&quot; · W 69°19&apos;04&quot;
           </Text>
-          <View className="flex-row items-center gap-1.5 rounded-full bg-imperial-red/15 px-2.5 py-1">
-            <View className="h-1.5 w-1.5 rounded-full bg-imperial-red" />
-            <Text className="font-display text-[9px] text-imperial-red">
-              ACTIVE
-            </Text>
-          </View>
-        </View>
-        <Text className="font-display text-2xl text-prussian-blue">
-          Barquisimeto
-        </Text>
-        <Text className="font-ui text-sm text-prussian-blue/70">
-          Venezuela · 10.0678° N
-        </Text>
-        <View className="mt-4 border-t border-prussian-blue/15 pt-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-display text-[10px] text-prussian-blue/50">
-              PREVIOUSLY
-            </Text>
-            <Text className="font-display text-[11px] text-prussian-blue">
-              LIMA, PE
-            </Text>
-          </View>
-          <View className="mt-1.5 flex-row items-center justify-between">
-            <Text className="font-display text-[10px] text-prussian-blue/50">
-              RETURNED
-            </Text>
-            <Text className="font-display text-[11px] text-prussian-blue">
-              OCT 2022
-            </Text>
+          <Text
+            style={{
+              fontFamily: "DMSans_500Medium",
+              fontSize: 32,
+              letterSpacing: -1,
+              lineHeight: 32,
+              color: T.paper,
+            }}
+          >
+            Barquisimeto
+          </Text>
+          <Text
+            style={{
+              marginTop: 4,
+              fontFamily: "DMSans_400Regular",
+              fontSize: 13,
+              color: "rgba(246,244,237,0.7)",
+            }}
+          >
+            Venezuela
+          </Text>
+          <View
+            style={{
+              marginTop: 18,
+              paddingTop: 14,
+              borderTopWidth: 1,
+              borderTopColor: T.onDarkHair,
+              flexDirection: "row",
+              gap: 12,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <GCKV label="PREV" value="Lima, PE" onDark valueSize={13} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <GCKV label="RETURN" value="OCT 2022" onDark valueSize={13} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <GCKV label="UTC" value="−04:00" onDark valueSize={13} />
+            </View>
           </View>
         </View>
       </View>
 
-      {/* Interests */}
-      <View className="mb-6 px-6">
-        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
-          PASSIONS
-        </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {INTERESTS.map((item) => (
+      <View style={{ height: 28 }} />
+
+      {/* §04 Interests */}
+      <View style={{ paddingHorizontal: 20 }}>
+        <View className="mb-3 flex-row items-center justify-between">
+          <GCEye tone="red">§ 04 · INTERESTS</GCEye>
+          <GCTick>04 VECTORS</GCTick>
+        </View>
+        <View>
+          {INTERESTS.map((it, i) => (
+            <View key={it.label}>
             <View
-              key={item}
-              className="flex-row items-center gap-2 rounded-full bg-prussian-blue px-4 py-2"
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 12,
+              }}
             >
-              <View className="h-1.5 w-1.5 rounded-full bg-imperial-red" />
-              <Text className="font-display text-xs text-honeydew">
-                {item}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "JetBrainsMono_500Medium",
+                    fontSize: 10,
+                    color: T.inkLow,
+                    width: 22,
+                    letterSpacing: 0.66,
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "DMSans_500Medium",
+                    fontSize: 20,
+                    letterSpacing: -0.4,
+                    color: T.ink,
+                  }}
+                >
+                  {it.label}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  fontFamily: "JetBrainsMono_500Medium",
+                  fontSize: 10,
+                  color: T.inkMid,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                }}
+              >
+                {it.verb}
               </Text>
+            </View>
+            {i < INTERESTS.length - 1 ? <GCDots /> : null}
             </View>
           ))}
         </View>
       </View>
 
-      {/* Quick links */}
-      <View className="mb-6 px-6">
-        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
-          CONTINUE
-        </Text>
-        <View className="gap-3">
-          {QUICK_LINKS.map((item) => (
-            <Link key={item.label} href={item.path as any} asChild>
-              <Pressable className="flex-row items-center justify-between rounded-2xl border-2 border-prussian-blue p-4">
-                <View className="flex-row items-center gap-4">
-                  <View className="h-11 w-11 items-center justify-center rounded-xl bg-prussian-blue">
-                    <FontAwesome
-                      name={item.icon}
-                      size={15}
-                      color="#F1FAEE"
-                    />
-                  </View>
-                  <View>
-                    <Text className="font-display text-base text-prussian-blue">
-                      {item.label}
-                    </Text>
-                    <Text className="mt-0.5 font-ui text-[11px] text-prussian-blue/60">
-                      {item.sub}
-                    </Text>
-                  </View>
+      <View style={{ height: 32 }} />
+
+      {/* §05 Quick portals */}
+      <View style={{ paddingHorizontal: 20 }}>
+        <View className="mb-3">
+          <GCEye tone="red">§ 05 · QUICK PORTALS</GCEye>
+        </View>
+        <View style={{ gap: 10 }}>
+          {(
+            [
+              {
+                href: "/experience",
+                icon: "briefcase",
+                label: "Mission Log",
+                sub: `${String(experiences.length).padStart(2, "0")} quests · 10+ years`,
+              },
+              {
+                href: "/education",
+                icon: "graduation-cap",
+                label: "Skill Tree",
+                sub: "06 nodes · 02 formal",
+              },
+              {
+                href: "/contact",
+                icon: "paper-plane",
+                label: "Comms",
+                sub: "mail · 3 channels",
+              },
+            ] as const
+          ).map((q) => (
+            <Link key={q.href} href={q.href} asChild>
+              <Pressable
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: T.inkHair,
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: T.ink,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <FontAwesome
+                    name={q.icon}
+                    size={14}
+                    color={T.ink}
+                  />
                 </View>
-                <FontAwesome name="arrow-right" size={14} color="#E63946" />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "DMSans_500Medium",
+                      fontSize: 17,
+                      letterSpacing: -0.2,
+                      color: T.ink,
+                    }}
+                  >
+                    {q.label}
+                  </Text>
+                  <Text
+                    style={{
+                      marginTop: 1,
+                      fontFamily: "JetBrainsMono_500Medium",
+                      fontSize: 10,
+                      color: T.inkMid,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    {q.sub}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontFamily: "JetBrainsMono_500Medium",
+                    fontSize: 14,
+                    color: T.red,
+                  }}
+                >
+                  →
+                </Text>
               </Pressable>
             </Link>
           ))}
         </View>
       </View>
 
-      {/* Channels */}
-      <View className="mb-4 px-6">
-        <Text className="mb-3 font-display text-xs text-prussian-blue/60">
-          CHANNELS
-        </Text>
-        <View className="flex-row gap-3">
-          {socialLinks.map((link) => (
-            <Pressable
-              key={link.platform}
-              onPress={() => Linking.openURL(link.url)}
-              className="flex-1 items-center justify-center rounded-2xl bg-prussian-blue p-4"
-            >
-              <FontAwesome
-                name={link.icon as any}
-                size={20}
-                color="#F1FAEE"
-              />
-              <Text className="mt-2 font-display text-[10px] text-honeydew">
-                {link.platform.toUpperCase()}
-              </Text>
-            </Pressable>
-          ))}
+      <View style={{ height: 40 }} />
+
+      {/* Footer signature */}
+      <View style={{ paddingHorizontal: 20 }}>
+        <GCDash />
+        <View
+          style={{
+            marginTop: 10,
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <GCTick>GC · PORTFOLIO · v2.0 / 2026</GCTick>
+          <GCTick>BUILD 0417</GCTick>
         </View>
       </View>
     </ScrollView>

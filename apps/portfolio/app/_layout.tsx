@@ -2,11 +2,16 @@ import "../global.css";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
-  useFonts,
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_800ExtraBold,
-} from "@expo-google-fonts/plus-jakarta-sans";
+  useFonts as useDMSans,
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from "@expo-google-fonts/dm-sans";
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_500Medium,
+} from "@expo-google-fonts/jetbrains-mono";
 import {
   DarkTheme,
   DefaultTheme,
@@ -28,11 +33,14 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [loaded, error] = useDMSans({
     ...FontAwesome.font,
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_800ExtraBold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_500Medium,
   });
 
   useEffect(() => {
@@ -45,11 +53,9 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  // On native, gate on fonts to avoid a flash of unstyled text and to keep the
-  // splash screen up while fonts download. On web (and during static
-  // pre-rendering at export time), don't gate — the browser resolves
-  // @font-face via CSS and blocking here produces an empty root in the
-  // pre-rendered HTML, breaking SEO and social previews.
+  // On native, gate on fonts to avoid a flash of unstyled text. On web, don't
+  // gate — CSS @font-face handles loading, and blocking here breaks SEO
+  // pre-rendering with an empty root.
   if (!loaded && Platform.OS !== "web") {
     return null;
   }

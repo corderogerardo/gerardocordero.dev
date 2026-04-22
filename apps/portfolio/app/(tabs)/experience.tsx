@@ -1,265 +1,426 @@
 import { View, Text, ScrollView } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { experiences, type Experience } from "@/src/data/experience";
+import {
+  GCChip,
+  GCEye,
+  GCScreenHeader,
+  GCTick,
+  GCVDash,
+  T,
+} from "@/components/hud";
 
-function QuestCard({ exp, index }: { exp: Experience; index: number }) {
+function startCode(period: string) {
+  const [start] = period.split("—");
+  const trimmed = start.trim();
+  const match = trimmed.match(/(\w+)\s+(\d{4})/);
+  if (!match) return trimmed;
+  const month: Record<string, string> = {
+    Jan: "01",
+    Feb: "02",
+    Mar: "03",
+    Apr: "04",
+    May: "05",
+    Jun: "06",
+    Jul: "07",
+    Aug: "08",
+    Sep: "09",
+    Oct: "10",
+    Nov: "11",
+    Dec: "12",
+  };
+  return `${match[2]}.${month[match[1]] ?? "01"}`;
+}
+
+function MissionCard({
+  exp,
+  index,
+  total,
+}: {
+  exp: Experience;
+  index: number;
+  total: number;
+}) {
   const isCurrent = !!exp.isCurrent;
+  const num = String(total - index).padStart(2, "0");
 
   return (
     <View
-      className={`rounded-3xl p-6 ${
-        isCurrent ? "bg-prussian-blue" : "border-2 border-prussian-blue"
-      }`}
+      style={{
+        position: "relative",
+        paddingLeft: 32,
+        paddingBottom: 28,
+        marginLeft: 20,
+      }}
     >
-      {/* Period + status row */}
-      <View className="mb-4 flex-row items-center justify-between">
+      {/* Timeline rail */}
+      {isCurrent ? (
         <View
-          className={`flex-row items-center gap-2 rounded-full px-3 py-1.5 ${
-            isCurrent ? "bg-imperial-red" : "bg-powder-blue/40"
-          }`}
-        >
-          <FontAwesome
-            name="calendar"
-            size={10}
-            color={isCurrent ? "#F1FAEE" : "#1D3557"}
-          />
-          <Text
-            className={`font-display text-[10px] ${
-              isCurrent ? "text-honeydew" : "text-prussian-blue"
-            }`}
-          >
-            {exp.period.toUpperCase()}
-          </Text>
-        </View>
-        <View
-          className={`flex-row items-center gap-1.5 rounded-full px-3 py-1.5 ${
-            isCurrent ? "bg-honeydew/15" : "bg-prussian-blue/10"
-          }`}
-        >
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 1,
+            backgroundColor: T.red,
+          }}
+        />
+      ) : (
+        <GCVDash
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+          }}
+        />
+      )}
+
+      {/* Timeline node */}
+      <View
+        style={{
+          position: "absolute",
+          left: -7,
+          top: 0,
+          width: 13,
+          height: 13,
+          borderRadius: 9999,
+          backgroundColor: T.paper,
+          borderWidth: 1.5,
+          borderColor: isCurrent ? T.red : T.ink,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {isCurrent ? (
           <View
-            className={`h-1.5 w-1.5 rounded-full ${
-              isCurrent ? "bg-imperial-red" : "bg-celadon-blue"
-            }`}
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: 9999,
+              backgroundColor: T.red,
+            }}
           />
-          <Text
-            className={`font-display text-[9px] ${
-              isCurrent ? "text-honeydew" : "text-prussian-blue/60"
-            }`}
-          >
-            {isCurrent ? "IN PROGRESS" : "COMPLETED"}
-          </Text>
-        </View>
+        ) : null}
       </View>
 
-      {/* Quest number */}
-      <Text
-        className={`mb-1 font-display text-[10px] ${
-          isCurrent ? "text-powder-blue" : "text-imperial-red/80"
-        }`}
+      {/* Start-date tick on the rail */}
+      <View
+        style={{
+          position: "absolute",
+          left: -56,
+          top: -2,
+          width: 44,
+          alignItems: "flex-end",
+        }}
       >
-        QUEST · {String(index + 1).padStart(2, "0")}
-      </Text>
+        <Text
+          style={{
+            fontFamily: "JetBrainsMono_500Medium",
+            fontSize: 9,
+            color: T.inkMid,
+            letterSpacing: 0.72,
+          }}
+        >
+          {startCode(exp.period)}
+        </Text>
+      </View>
+
+      {/* Mission number + status */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 6,
+        }}
+      >
+        <GCEye tone="red">MISSION · {num}</GCEye>
+        {isCurrent ? (
+          <GCChip variant="red" size="xs" dot="#fff">
+            LIVE
+          </GCChip>
+        ) : (
+          <GCChip variant="ghost" size="xs">
+            SHIPPED
+          </GCChip>
+        )}
+      </View>
 
       {/* Company */}
       <Text
-        className={`font-display text-3xl leading-tight ${
-          isCurrent ? "text-honeydew" : "text-prussian-blue"
-        }`}
+        style={{
+          marginTop: 4,
+          marginBottom: 2,
+          fontFamily: "DMSans_500Medium",
+          fontSize: 26,
+          letterSpacing: -0.8,
+          color: T.ink,
+          lineHeight: 28,
+        }}
       >
         {exp.company}
       </Text>
       <Text
-        className={`mt-1 font-display text-xs ${
-          isCurrent ? "text-powder-blue" : "text-imperial-red"
-        }`}
+        style={{
+          fontFamily: "DMSans_500Medium",
+          fontSize: 13,
+          color: T.red,
+          marginBottom: 4,
+        }}
       >
-        {exp.role.toUpperCase()}
+        {exp.role}
       </Text>
-
-      {/* Meta row: employment type + location */}
-      <View className="mt-3 flex-row flex-wrap gap-2">
-        <View
-          className={`rounded-full px-2.5 py-1 ${
-            isCurrent ? "bg-honeydew/10" : "bg-prussian-blue/10"
-          }`}
-        >
-          <Text
-            className={`font-display text-[9px] ${
-              isCurrent ? "text-powder-blue" : "text-prussian-blue/70"
-            }`}
-          >
-            {exp.employmentType.toUpperCase()}
-          </Text>
-        </View>
-        <View
-          className={`rounded-full px-2.5 py-1 ${
-            isCurrent ? "bg-honeydew/10" : "bg-prussian-blue/10"
-          }`}
-        >
-          <Text
-            className={`font-display text-[9px] ${
-              isCurrent ? "text-powder-blue" : "text-prussian-blue/70"
-            }`}
-          >
-            {exp.location.toUpperCase()}
-          </Text>
-        </View>
-      </View>
+      <Text
+        style={{
+          fontFamily: "JetBrainsMono_500Medium",
+          fontSize: 10,
+          color: T.inkMid,
+          letterSpacing: 0.8,
+        }}
+      >
+        {exp.period.toUpperCase()} · {exp.employmentType.toUpperCase()} ·{" "}
+        {exp.location.toUpperCase()}
+      </Text>
 
       {/* Description */}
       <Text
-        className={`mt-4 font-sans text-sm leading-6 ${
-          isCurrent ? "text-honeydew/85" : "text-prussian-blue/80"
-        }`}
+        style={{
+          marginTop: 14,
+          fontFamily: "DMSans_400Regular",
+          fontSize: 14,
+          lineHeight: 21,
+          color: T.inkSoft,
+        }}
       >
         {exp.description}
       </Text>
 
       {/* Highlights */}
-      {exp.highlights.length > 0 && (
-        <View className="mt-5">
-          <Text
-            className={`mb-2 font-display text-[10px] ${
-              isCurrent ? "text-powder-blue" : "text-prussian-blue/50"
-            }`}
-          >
-            HIGHLIGHTS
-          </Text>
-          <View className="gap-2">
-            {exp.highlights.map((h) => (
-              <View key={h} className="flex-row gap-2">
+      {exp.highlights.length > 0 ? (
+        <View style={{ marginTop: 16 }}>
+          <GCEye>LOG ENTRIES</GCEye>
+          <View style={{ marginTop: 8, gap: 8 }}>
+            {exp.highlights.map((hl, i) => (
+              <View key={hl} style={{ flexDirection: "row", gap: 10 }}>
                 <Text
-                  className={`font-display text-[12px] ${
-                    isCurrent ? "text-imperial-red" : "text-imperial-red"
-                  }`}
+                  style={{
+                    fontFamily: "JetBrainsMono_500Medium",
+                    fontSize: 10,
+                    color: T.red,
+                    letterSpacing: 0.6,
+                    minWidth: 24,
+                    paddingTop: 2,
+                  }}
                 >
-                  ▸
+                  · {String(i + 1).padStart(2, "0")}
                 </Text>
                 <Text
-                  className={`flex-1 font-sans text-[13px] leading-5 ${
-                    isCurrent ? "text-honeydew/85" : "text-prussian-blue/80"
-                  }`}
+                  style={{
+                    flex: 1,
+                    fontFamily: "DMSans_400Regular",
+                    fontSize: 13,
+                    lineHeight: 20,
+                    color: T.ink,
+                  }}
                 >
-                  {h}
+                  {hl}
                 </Text>
               </View>
             ))}
           </View>
         </View>
-      )}
+      ) : null}
 
       {/* Projects */}
-      {exp.projects.length > 0 && (
-        <View className="mt-5">
-          <Text
-            className={`mb-2 font-display text-[10px] ${
-              isCurrent ? "text-powder-blue" : "text-prussian-blue/50"
-            }`}
+      {exp.projects.length > 0 ? (
+        <View style={{ marginTop: 16 }}>
+          <GCEye>PROJECTS SHIPPED</GCEye>
+          <View
+            style={{
+              marginTop: 8,
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 6,
+            }}
           >
-            PROJECTS SHIPPED
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {exp.projects.map((proj) => (
-              <View
-                key={proj}
-                className={`rounded-full px-3 py-1.5 ${
-                  isCurrent ? "bg-celadon-blue/50" : "bg-powder-blue/40"
-                }`}
-              >
-                <Text
-                  className={`font-display text-[11px] ${
-                    isCurrent ? "text-honeydew" : "text-prussian-blue"
-                  }`}
-                >
-                  {proj}
-                </Text>
-              </View>
+            {exp.projects.map((p) => (
+              <GCChip key={p} variant="redSoft">
+                {p}
+              </GCChip>
             ))}
           </View>
         </View>
-      )}
+      ) : null}
 
       {/* Skills */}
-      {exp.skills.length > 0 && (
-        <View className="mt-4">
-          <Text
-            className={`mb-2 font-display text-[10px] ${
-              isCurrent ? "text-powder-blue" : "text-prussian-blue/50"
-            }`}
+      {exp.skills.length > 0 ? (
+        <View style={{ marginTop: 14 }}>
+          <GCEye>STACK</GCEye>
+          <View
+            style={{
+              marginTop: 8,
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 6,
+            }}
           >
-            SKILLS USED
-          </Text>
-          <View className="flex-row flex-wrap gap-1.5">
-            {exp.skills.map((skill) => (
-              <View
-                key={skill}
-                className={`rounded-full border px-2.5 py-1 ${
-                  isCurrent
-                    ? "border-honeydew/30"
-                    : "border-prussian-blue/30"
-                }`}
-              >
-                <Text
-                  className={`font-display text-[10px] ${
-                    isCurrent ? "text-honeydew/90" : "text-prussian-blue/80"
-                  }`}
-                >
-                  {skill}
-                </Text>
-              </View>
+            {exp.skills.map((s) => (
+              <GCChip key={s} variant="ghost" size="xs">
+                {s}
+              </GCChip>
             ))}
           </View>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
 
 export default function ExperienceScreen() {
   const insets = useSafeAreaInsets();
+  const total = experiences.length;
 
   return (
     <ScrollView
-      className="flex-1 bg-honeydew"
-      contentContainerClassName="pb-20"
+      style={{ flex: 1, backgroundColor: T.paper }}
+      contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}
     >
       <StatusBar style="dark" />
+      <View style={{ paddingTop: insets.top + 4 }} />
 
-      {/* Header */}
-      <View style={{ paddingTop: insets.top + 16 }} className="mb-6 px-6">
-        <View className="mb-6 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2 rounded-full bg-prussian-blue px-3 py-1.5">
-            <FontAwesome name="briefcase" size={10} color="#F1FAEE" />
-            <Text className="font-display text-[10px] text-honeydew">
-              CAREER LOG
+      <GCScreenHeader
+        eyebrow="§ CAREER LOG"
+        title="Mission Log."
+        sub="Shipped roles and projects since 2016. Most recent on top, threaded by start date."
+        meta={`${String(total).padStart(2, "0")} / ${String(total).padStart(
+          2,
+          "0",
+        )} MISSIONS`}
+      />
+
+      {/* Summary stats strip */}
+      <View
+        style={{
+          marginHorizontal: 20,
+          flexDirection: "row",
+          borderWidth: 1,
+          borderColor: T.inkHair,
+          marginBottom: 4,
+        }}
+      >
+        {[
+          { label: "YEARS", value: "10+" },
+          { label: "MISSIONS", value: String(total).padStart(2, "0") },
+          { label: "SHIPS", value: "08" },
+        ].map((s, i) => (
+          <View
+            key={s.label}
+            style={{
+              flex: 1,
+              paddingVertical: 14,
+              alignItems: "center",
+              borderLeftWidth: i === 0 ? 0 : 1,
+              borderLeftColor: T.inkHair,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "DMSans_500Medium",
+                fontSize: 28,
+                letterSpacing: -1.1,
+                color: T.ink,
+                lineHeight: 28,
+              }}
+            >
+              {s.value}
             </Text>
+            <View style={{ marginTop: 4 }}>
+              <GCEye>{s.label}</GCEye>
+            </View>
           </View>
-          <Text className="font-display text-[11px] text-prussian-blue/50">
-            {String(experiences.length).padStart(2, "0")} QUESTS
-          </Text>
-        </View>
-        <Text className="font-display text-5xl leading-tight text-prussian-blue">
-          Experience
-        </Text>
-        <Text className="mt-2 font-ui text-sm text-prussian-blue/60">
-          Roles, projects, and missions shipped from 2016 onward — newest
-          first.
-        </Text>
+        ))}
       </View>
 
-      <View className="gap-4 px-6">
+      {/* Legend */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 4,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <View style={{ flexDirection: "row", gap: 14 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 9999,
+                backgroundColor: T.red,
+              }}
+            />
+            <GCEye>LIVE</GCEye>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 9999,
+                backgroundColor: T.paper,
+                borderWidth: 1.5,
+                borderColor: T.ink,
+              }}
+            />
+            <GCEye>SHIPPED</GCEye>
+          </View>
+        </View>
+        <GCTick>NEWEST → OLDEST</GCTick>
+      </View>
+
+      {/* Timeline */}
+      <View style={{ paddingTop: 18, paddingLeft: 40, paddingRight: 16 }}>
         {experiences.map((exp, i) => (
-          <QuestCard key={`${exp.company}-${exp.period}`} exp={exp} index={i} />
+          <MissionCard
+            key={`${exp.company}-${exp.period}`}
+            exp={exp}
+            index={i}
+            total={total}
+          />
         ))}
 
-        {/* Timeline footer */}
-        <View className="mt-2 items-center">
-          <View className="rounded-full bg-prussian-blue/10 px-4 py-2">
-            <Text className="font-display text-[10px] text-prussian-blue/60">
-              · START · JUL 2016
+        {/* End of timeline marker */}
+        <View style={{ marginLeft: 20, position: "relative" }}>
+          <View
+            style={{
+              position: "absolute",
+              left: -7,
+              top: 0,
+              width: 13,
+              height: 13,
+              borderRadius: 9999,
+              backgroundColor: T.paper,
+              borderWidth: 1.5,
+              borderColor: T.inkThread,
+            }}
+          />
+          <View style={{ paddingLeft: 32, paddingBottom: 20 }}>
+            <GCEye>START · JUL 2016</GCEye>
+            <Text
+              style={{
+                marginTop: 4,
+                fontFamily: "DMSans_400Regular",
+                fontSize: 13,
+                color: T.inkMid,
+              }}
+            >
+              Earlier roles redacted — available on request.
             </Text>
           </View>
         </View>

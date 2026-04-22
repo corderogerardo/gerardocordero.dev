@@ -10,6 +10,7 @@
     "clean": "turbo clean"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "turbo": "^2.5"
   },
   "packageManager": "pnpm@10.11.0",
