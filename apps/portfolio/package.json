@@ -27,6 +27,7 @@
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.0",
     "@expo/vector-icons": "^15.0.3",
     "@gerardocordero/ui": "workspace:*",
+    "@huggingface/transformers": "^4.2.0",
     "expo": "~56.0.12",
     "expo-application": "~56.0.3",
     "expo-constants": "~56.0.18",
