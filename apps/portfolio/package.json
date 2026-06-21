@@ -18,7 +18,8 @@
     "postinstall": "tailwindcss -i ./global.css -o ./node_modules/.cache/nativewind/global.css",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --runInBand --coverage"
+    "test:ci": "jest --ci --runInBand --coverage",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
@@ -27,6 +28,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@gerardocordero/ui": "workspace:*",
     "expo": "~56.0.12",
+    "expo-application": "~56.0.3",
     "expo-constants": "~56.0.18",
     "expo-dev-client": "~56.0.20",
     "expo-font": "~56.0.7",

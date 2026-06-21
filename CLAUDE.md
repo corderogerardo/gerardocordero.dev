@@ -97,6 +97,33 @@ Triggering EAS Workflows needs the **EAS GitHub app** connected (no token) or
 `eas workflow:run …` with `EXPO_TOKEN`; `eas login` is required for any local `eas build`. The
 `e2e-test` build profile (`withoutCredentials`, sim/apk) is in `eas.json`.
 
+## Versioning & releases
+
+One SemVer marketing version is the source of truth; EAS owns the native build
+numbers; a git tag mirrors the version; the app shows exactly what's running.
+
+| Layer | Source of truth | Notes |
+|---|---|---|
+| Marketing version | `app.json` → `expo.version` | bump with the release script |
+| Native build number | **EAS remote** (`appVersionSource: remote` + production `autoIncrement`) | iOS `buildNumber` / Android `versionCode`, monotonic; never hand-edited. Inspect: `eas build:version:get --platform ios\|android` |
+| Git tag + GitHub Release | `vX.Y.Z`, mirrors `expo.version` | created by the release script |
+| In-app display | `apps/portfolio/src/version.ts` → `versionLabel()` | Status-screen footer, e.g. `v1.0.0 (7) · a1b2c3d` |
+
+- **Git SHA** is injected into `extra.gitCommitHash` by `apps/portfolio/app.config.js`
+  (dynamic config extending `app.json`): `EAS_BUILD_GIT_COMMIT_HASH` on EAS, local
+  `git` otherwise. The build number comes from `expo-application` at runtime, so it
+  only shows in a real native build (dev/EAS); in Expo Go/web it's omitted.
+
+**Cut a release** (from `apps/portfolio/`):
+```bash
+node scripts/release.mjs <patch|minor|major|X.Y.Z>   # bump app.json, commit, tag vX.Y.Z
+git push origin HEAD --follow-tags                    # or pass --push to the script
+```
+Pushing the `v*` tag runs `.github/workflows/release.yml` → creates the GitHub
+Release (auto notes). To also auto-build on tag, set repo variable
+`RELEASE_BUILDS=true` + secret `EXPO_TOKEN`; otherwise build manually with
+`eas build --platform all --profile production`.
+
 ## Loop coverage (what's measured vs. not)
 
 - ✅ **Types** — `pnpm typecheck` (portfolio + ui).
