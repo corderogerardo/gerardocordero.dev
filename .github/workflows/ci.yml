@@ -1,7 +1,10 @@
 name: CI
 
-# The outer loop: the same checks you run locally (pnpm typecheck / pnpm lint),
-# enforced on every push to main and every pull request so regressions can't merge.
+# The outer loop: the same checks you run locally (pnpm typecheck / pnpm lint /
+# pnpm test), enforced on every push to main and every pull request so regressions
+# can't merge. On a push to main — and ONLY after that loop is green — the
+# `deploy-web` job ships the Expo web export to Cloudflare Pages (the live site at
+# gerardocordero.dev). PRs run the loop but never deploy.
 on:
   push:
     branches: [main]
@@ -39,3 +42,43 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  # Ship the live web build. `needs: verify` is the gate — this job cannot start
+  # until typecheck + lint + test all pass, so a red main can never reach production.
+  # The `if` restricts it to actual pushes to main (PRs and other branches skip it).
+  deploy-web:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Expo Router static export → apps/portfolio/dist. The build also copies
+      # public/_redirects (SPA fallback) and public/_headers (security headers)
+      # into dist so Cloudflare Pages applies them.
+      - name: Build web export
+        working-directory: apps/portfolio
+        run: npx expo export --platform web
+
+      # Direct Upload to the existing Pages project. --branch=main targets the
+      # production branch, so this updates the apex (gerardocordero.dev) plus the
+      # www and app custom domains. Auth comes from two repo secrets:
+      #   CLOUDFLARE_API_TOKEN   — a token scoped to "Cloudflare Pages: Edit"
+      #   CLOUDFLARE_ACCOUNT_ID  — the account id (already set)
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/portfolio
+          command: pages deploy dist --project-name=gerardocordero-portfolio --branch=main
