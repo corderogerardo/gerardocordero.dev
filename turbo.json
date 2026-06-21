@@ -15,6 +15,19 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": [
+        "src/**",
+        "app/**",
+        "components/**",
+        "__tests__/**",
+        "jest.config.js",
+        "jest-setup.ts",
+        "package.json"
+      ]
+    },
     "clean": {
       "cache": false
     }

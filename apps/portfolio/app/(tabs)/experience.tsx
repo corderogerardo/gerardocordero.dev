@@ -284,6 +284,7 @@ export default function ExperienceScreen() {
 
   return (
     <ScrollView
+      testID="screen-experience"
       style={{ flex: 1, backgroundColor: T.paper }}
       contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}

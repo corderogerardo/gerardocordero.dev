@@ -23,6 +23,10 @@ build/
 .env.local
 .env.*.local
 
+# signing credentials (e.g. EAS android google-service-account.json)
+credentials/
+google-service-account*.json
+
 # testing
 coverage/
 
@@ -39,3 +43,4 @@ yarn-error.log*
 
 # Claude Code local state and ephemeral worktrees
 .claude/
+.tokensave

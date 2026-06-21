@@ -1,0 +1,35 @@
+# Walks all 5 HUD tabs, asserting each screen root mounted (not just the always-on
+# tab label). tab-* ids come from app/(tabs)/_layout.tsx (testID={`tab-${route.name}`});
+# screen-* ids are on each screen's root ScrollView.
+appId: dev.gerardocordero.portfolio
+---
+- launchApp:
+    clearState: true
+
+- assertVisible:
+    id: "screen-status"
+- takeScreenshot: 01-status
+
+- tapOn:
+    id: "tab-experience"
+- assertVisible:
+    id: "screen-experience"
+- takeScreenshot: 02-log
+
+- tapOn:
+    id: "tab-projects"
+- assertVisible:
+    id: "screen-projects"
+- takeScreenshot: 03-fleet
+
+- tapOn:
+    id: "tab-education"
+- assertVisible:
+    id: "screen-education"
+- takeScreenshot: 04-tree
+
+- tapOn:
+    id: "tab-contact"
+- assertVisible:
+    id: "screen-contact"
+- takeScreenshot: 05-comms

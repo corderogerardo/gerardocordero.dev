@@ -40,6 +40,11 @@ function withMonorepoPaths(config) {
     path.resolve(workspaceRoot, "node_modules"),
   ];
 
+  // Keep this `true`. expo-doctor advises `false`, but flipping it lets Metro
+  // walk up into packages/ui/node_modules and resolve the React 17 copy that
+  // apps/old-web (quarantined) drags into the hoisted tree — giving the bundle
+  // two Reacts. With it disabled, Metro resolves only from nodeModulesPaths
+  // above (root + app node_modules → a single React 19).
   config.resolver.disableHierarchicalLookup = true;
 
   return config;

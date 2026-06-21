@@ -1,0 +1,8 @@
+# The "does the app boot?" gate. Used by the EAS Workflow e2e job and locally:
+#   maestro test .maestro/smoke.yml
+# launchApp fails on a native crash / bad JS bundle; the screen-status assertion
+# fails if expo-router never mounts the (tabs) group.
+appId: dev.gerardocordero.portfolio
+---
+- runFlow: subflows/launch.yml
+- takeScreenshot: boot-ok

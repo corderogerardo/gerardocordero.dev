@@ -1,0 +1,46 @@
+# EAS Workflow: production store release. Manual trigger (workflow_dispatch) so a
+# full store build/submit only happens when you deliberately ship — boot confidence
+# comes from the PR e2e gate (e2e.yml). Build numbers auto-increment via the
+# production profile (appVersionSource: remote in eas.json).
+#
+# Trigger: EAS dashboard "Run workflow", or `eas workflow:run .eas/workflows/deploy.yml`.
+name: Production release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    name: Build iOS (production)
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  build_android:
+    name: Build Android (production)
+    type: build
+    params:
+      platform: android
+      profile: production
+
+  approve:
+    name: Approve store submission
+    type: require-approval
+    needs: [build_ios, build_android]
+
+  submit_ios:
+    name: Submit to App Store
+    type: submit
+    needs: [build_ios, approve]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
+
+  submit_android:
+    name: Submit to Play (internal track)
+    type: submit
+    needs: [build_android, approve]
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production

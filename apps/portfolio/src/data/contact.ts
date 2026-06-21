@@ -6,7 +6,6 @@ export interface ContactItem {
 
 export const contactInfo: ContactItem[] = [
   { label: "Phone", value: "+584129156498", href: "tel:+584129156498" },
-  { label: "Email", value: "mail@gerardocordero.dev", href: "mailto:mail@gerardocordero.dev" },
   { label: "Email", value: "cordero.gerard@gmail.com", href: "mailto:cordero.gerard@gmail.com" },
   { label: "English", value: "C1 Advanced (EF SET)" },
 ];

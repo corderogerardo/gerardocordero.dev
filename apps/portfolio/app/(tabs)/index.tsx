@@ -5,6 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line } from "react-native-svg";
 import { experiences } from "@/src/data/experience";
+import { projects } from "@/src/data/projects";
 import {
   GCBar,
   GCChip,
@@ -194,9 +195,14 @@ function Readout({
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const currentExp = experiences.find((e) => e.isCurrent) ?? experiences[0];
+  const shipCount = String(projects.length).padStart(2, "0");
+  const storeCount = String(
+    projects.filter((p) => p.linkLabel === "App Store").length,
+  ).padStart(2, "0");
 
   return (
     <ScrollView
+      testID="screen-status"
       style={{ flex: 1, backgroundColor: T.paper }}
       contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}
@@ -599,6 +605,12 @@ export default function HomeScreen() {
         <View style={{ gap: 10 }}>
           {(
             [
+              {
+                href: "/projects",
+                icon: "rocket",
+                label: "Fleet",
+                sub: `${shipCount} ships · ${storeCount} on the App Store`,
+              },
               {
                 href: "/experience",
                 icon: "briefcase",
