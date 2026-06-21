@@ -19,8 +19,9 @@ import {
   GCTick,
   T,
 } from "@/components/hud";
-import { corpusSize, search, warmUp } from "@/src/ai/engine";
-import type { SearchHit, SearchMode } from "@/src/ai/types";
+import { answer } from "@/src/ai/answer";
+import { corpusSize, warmUp } from "@/src/ai/engine";
+import type { Answer } from "@/src/ai/types";
 
 const SUGGESTIONS = [
   "real-time chat",
@@ -33,38 +34,37 @@ export default function AskScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [mode, setMode] = useState<SearchMode>("lexical");
+  const [result, setResult] = useState<Answer | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Start loading the on-device embedder (web/native) ahead of the first query.
+  // Warm up the on-device backends ahead of the first question.
   useEffect(() => warmUp(), []);
 
-  // Debounced search as the user types. All state updates run inside the
-  // timeout (deferred) so we never setState synchronously within the effect.
+  // Debounced ask-as-you-type. All state updates run inside the timeout.
   useEffect(() => {
     const q = query.trim();
     let active = true;
     const id = setTimeout(() => {
       if (!active) return;
       if (!q) {
-        setHits([]);
+        setResult(null);
         setLoading(false);
         return;
       }
       setLoading(true);
-      search(q, 6).then((res) => {
+      answer(q, 6).then((res) => {
         if (!active) return;
-        setHits(res.hits);
-        setMode(res.mode);
+        setResult(res);
         setLoading(false);
       });
-    }, 180);
+    }, 200);
     return () => {
       active = false;
       clearTimeout(id);
     };
   }, [query]);
+
+  const hits = result?.hits ?? [];
 
   return (
     <ScrollView
@@ -78,9 +78,9 @@ export default function AskScreen() {
       <View style={{ paddingTop: insets.top + 4 }} />
 
       <GCScreenHeader
-        eyebrow="§ ON-DEVICE SEARCH"
+        eyebrow="§ ASK MY PORTFOLIO"
         title="Ask."
-        sub="Search the portfolio by meaning — runs fully on your device, offline."
+        sub="Question the portfolio in plain words — retrieval + answer run fully on-device, offline."
         meta={`${corpusSize} DOCS`}
       />
 
@@ -110,7 +110,7 @@ export default function AskScreen() {
             testID="ask-input"
             value={query}
             onChangeText={setQuery}
-            placeholder="e.g. real-time chat, biometric auth…"
+            placeholder="e.g. does he have real-time chat experience?"
             placeholderTextColor={T.inkMid}
             autoCapitalize="none"
             autoCorrect={false}
@@ -146,8 +146,55 @@ export default function AskScreen() {
         ) : null}
       </View>
 
+      {/* Grounded answer */}
+      {result?.text ? (
+        <View style={{ paddingHorizontal: 20, paddingTop: 22 }}>
+          <View
+            style={{
+              borderRadius: 16,
+              backgroundColor: T.ink,
+              padding: 18,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
+              <GCEye tone="onDark">ANSWER</GCEye>
+              <Text
+                style={{
+                  fontFamily: "JetBrainsMono_500Medium",
+                  fontSize: 9,
+                  letterSpacing: 0.9,
+                  color: "rgba(246,244,237,0.55)",
+                  textTransform: "uppercase",
+                }}
+              >
+                {result.mode} · on-device
+              </Text>
+            </View>
+            <Text
+              style={{
+                fontFamily: "DMSans_500Medium",
+                fontSize: 16,
+                lineHeight: 23,
+                letterSpacing: -0.2,
+                color: T.paper,
+              }}
+            >
+              {result.text}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Sources */}
       {hits.length > 0 ? (
-        <View style={{ paddingHorizontal: 20, paddingTop: 26 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
           <View
             style={{
               marginBottom: 4,
@@ -156,10 +203,8 @@ export default function AskScreen() {
               justifyContent: "space-between",
             }}
           >
-            <GCEye tone="red">§ RESULTS</GCEye>
-            <GCTick>
-              {mode === "semantic" ? "SEMANTIC · ON-DEVICE" : "LEXICAL"}
-            </GCTick>
+            <GCEye tone="red">§ SOURCES</GCEye>
+            <GCTick>{`${hits.length} MATCHES`}</GCTick>
           </View>
           {hits.map((h) => (
             <Pressable
@@ -209,7 +254,7 @@ export default function AskScreen() {
           ))}
         </View>
       ) : query && !loading ? (
-        <View style={{ paddingHorizontal: 20, paddingTop: 26 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
           <GCEye tone="mid">No matches — try different words.</GCEye>
         </View>
       ) : null}

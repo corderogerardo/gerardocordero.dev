@@ -24,3 +24,17 @@ export type Embedder = {
 export type SearchMode = "semantic" | "lexical";
 
 export type SearchResult = { hits: SearchHit[]; mode: SearchMode };
+
+/** Optional text-generation backend (web: WebLLM, native: ExecuTorch LLM). */
+export type Generator = {
+  generate(query: string, context: Doc[]): Promise<string>;
+};
+
+export type AnswerMode = "generative" | "extractive";
+
+export type Answer = {
+  text: string;
+  sources: Doc[];
+  hits: SearchHit[];
+  mode: AnswerMode;
+};

@@ -1,4 +1,5 @@
 import { buildCorpus } from "../src/ai/corpus";
+import { extractiveAnswer } from "../src/ai/extractive";
 import { buildLexicalIndex, lexicalSearch } from "../src/ai/lexical";
 
 describe("portfolio search (lexical fallback)", () => {
@@ -23,5 +24,12 @@ describe("portfolio search (lexical fallback)", () => {
 
   it("returns nothing for an empty query", () => {
     expect(lexicalSearch(index, "   ", 5)).toHaveLength(0);
+  });
+
+  it("extractive answer is grounded in a matching source", () => {
+    const hits = lexicalSearch(index, "real-time chat", 4);
+    const a = extractiveAnswer("real-time chat", hits);
+    expect(a.text.toLowerCase()).toContain("chat");
+    expect(a.sources.length).toBeGreaterThan(0);
   });
 });

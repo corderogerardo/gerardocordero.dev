@@ -38,11 +38,24 @@ by file extension, so the screen code is identical across web and native.
 
 Use the **same MiniLM family** on both sides so web and native share a vector space.
 
+## Answering (RAG)
+
+`answer.ts` retrieves the top docs (via `engine.search`) and replies from them:
+
+- **`extractive.ts`** — the zero-LLM, always-available answerer: picks the
+  best-matching sentences from the retrieved docs and stitches a short grounded
+  reply. Can't hallucinate facts that aren't in the data. This is the default.
+- **`generator.web.ts`** → WebLLM (`@mlc-ai/web-llm`, WebGPU) — stub.
+- **`generator.native.ts`** → ExecuTorch LLM (Llama-3.2-1B) — stub.
+
+When a generator is wired, `answer()` uses it and reports `mode: "generative"`;
+otherwise `mode: "extractive"`.
+
 ## Roadmap
 
-- ✅ **Semantic search** (this) — rank portfolio docs by meaning.
-- ⏭️ **RAG chat** ("Ask my portfolio") — feed the top docs to a small on-device LLM
-  (executorch Llama-3.2-1B on native / WebLLM on web) for grounded answers.
+- ✅ **Semantic search** — rank portfolio docs by meaning (lexical default + transformers.js on web).
+- ✅ **RAG answering** ("Ask my portfolio") — retrieve + extractive answer, LLM-ready.
+- ⏭️ **Generative LLM** — wire WebLLM (web) / ExecuTorch (native) into `generator.*`.
 - ⏭️ **Voice** — Whisper STT + TTS for spoken Q&A.
 
-Keep models small, lazy-loaded, and cached; always keep lexical as the fallback.
+Keep models small, lazy-loaded, and cached; always keep the extractive/lexical path as the fallback.

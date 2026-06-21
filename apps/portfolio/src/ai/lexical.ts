@@ -9,7 +9,7 @@ const STOP = new Set([
   "across", "what", "does", "do", "his", "he",
 ]);
 
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   return (text.toLowerCase().match(/[a-z0-9.+#]+/g) ?? []).filter(
     (t) => t.length > 1 && !STOP.has(t),
   );
