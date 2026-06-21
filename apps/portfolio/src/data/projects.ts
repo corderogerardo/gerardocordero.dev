@@ -117,4 +117,16 @@ export const projects: Project[] = [
     linkLabel: "Web",
     stack: ["Expo Router", "NativeWind v5", "Turborepo", "TypeScript"],
   },
+  {
+    name: "React Native Interview Prep",
+    domain: "Interview Prep",
+    tagline:
+      "A senior React Native engineer study guide — mobile-architecture notes, practice pitches, and Q&A flashcards with a progress tracker.",
+    period: "2026",
+    status: "live",
+    platforms: ["Web"],
+    href: "https://reactnative.gerardocordero.dev/",
+    linkLabel: "Web",
+    stack: ["Expo Router", "React Native Web", "TypeScript"],
+  },
 ];
