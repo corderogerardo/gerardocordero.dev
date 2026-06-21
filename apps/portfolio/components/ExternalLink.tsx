@@ -10,7 +10,9 @@ export function ExternalLink(
     <Link
       target="_blank"
       {...props}
-      href={props.href}
+      // This component is for external URLs (http/https), which aren't app
+      // routes — cast past expo-router's typed-route Href union at the boundary.
+      href={props.href as React.ComponentProps<typeof Link>['href']}
       onPress={(e) => {
         if (Platform.OS !== 'web') {
           // Prevent the default behavior of linking to the default browser on native.
