@@ -14,6 +14,7 @@ const TAB_META: Record<
   }
 > = {
   index: { label: "Status", icon: "circle-o-notch", title: "Status" },
+  ask: { label: "Ask", icon: "search", title: "Ask" },
   experience: { label: "Log", icon: "terminal", title: "Log" },
   projects: { label: "Fleet", icon: "rocket", title: "Fleet" },
   education: { label: "Tree", icon: "sitemap", title: "Tree" },
@@ -114,6 +115,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Status" }} />
+      <Tabs.Screen name="ask" options={{ title: "Ask" }} />
       <Tabs.Screen name="experience" options={{ title: "Log" }} />
       <Tabs.Screen name="projects" options={{ title: "Fleet" }} />
       <Tabs.Screen name="education" options={{ title: "Tree" }} />

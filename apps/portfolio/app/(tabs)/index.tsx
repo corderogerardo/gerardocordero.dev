@@ -18,6 +18,7 @@ import {
   GCTick,
   T,
 } from "@/components/hud";
+import { versionLabel } from "@/src/version";
 
 const STACK = [
   "React",
@@ -711,8 +712,8 @@ export default function HomeScreen() {
             justifyContent: "space-between",
           }}
         >
-          <GCTick>GC · PORTFOLIO · v2.0 / 2026</GCTick>
-          <GCTick>BUILD 0417</GCTick>
+          <GCTick>GC · PORTFOLIO</GCTick>
+          <GCTick>{versionLabel()}</GCTick>
         </View>
       </View>
     </ScrollView>
