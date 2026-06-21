@@ -1,0 +1,8 @@
+# Reusable "boot the app" step. testID screen-status is on the Status tab's root
+# ScrollView (app/(tabs)/index.tsx); RN testID -> Maestro id:.
+appId: dev.gerardocordero.portfolio
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: "screen-status"

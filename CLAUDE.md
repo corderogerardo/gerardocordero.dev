@@ -1,0 +1,109 @@
+# gerardocordero.dev
+
+Personal portfolio monorepo. pnpm workspaces + Turbo.
+
+## The loop (read this first)
+
+The three commands that tell you a change is correct:
+
+```bash
+pnpm typecheck   # tsc --noEmit
+pnpm lint        # eslint (eslint-config-expo)
+pnpm test        # jest via jest-expo (portfolio unit tests)
+```
+
+All three run via Turbo across every workspace that defines the script (cached — re-runs
+are instant). A green exit (`0`) on all three is the signal that a change is safe.
+**Run them after any code change and before saying a task is done.**
+
+- Scope to the active app:  `pnpm --filter @gerardocordero/portfolio typecheck`
+- First time / after pulling: `pnpm install` (deps are not committed)
+
+End-to-end (Maestro) tests are a separate, device-level gate — see
+"Mobile testing & deploys" below.
+
+## Workspaces
+
+| Path | What it is | In the loop? |
+|---|---|---|
+| `apps/portfolio` | **The active app.** Expo / React Native, expo-router, NativeWind. | ✅ typecheck + lint + unit (jest) + e2e (Maestro) |
+| `apps/old-web` | Legacy portfolio (CRA, React 17). Archived. | ❌ quarantined — has pre-existing JS/TS errors; do not "fix" it as part of unrelated work |
+| `packages/ui` | Shared RN UI library (`@gerardocordero/ui`), consumed by portfolio via a tsconfig path alias to its `src`. | covered via portfolio's typecheck |
+| `packages/courses` | TypeScript course exercises (vitest). Learning material — tests may be intentionally red. | ❌ |
+| `packages/interview-prep` | Algorithm practice. Learning material. | ❌ |
+| `packages/server-node-concepts` | Node concept exercises. Learning material. | ❌ |
+
+## Common commands
+
+```bash
+pnpm dev:portfolio   # Expo dev client for the portfolio app
+pnpm dev             # all dev servers (turbo, persistent)
+pnpm build           # build all buildable workspaces (turbo)
+pnpm typecheck       # the loop — see above
+pnpm lint            # the loop
+pnpm test            # the loop — jest (portfolio)
+
+# e2e (needs JDK 17 + a dev build on a booted iOS sim — see below):
+cd apps/portfolio && maestro test .maestro/smoke.yml
+```
+
+## Conventions & gotchas
+
+- **Package manager:** pnpm@10.11.0, `node-linker=hoisted` (see `.npmrc`). Always `pnpm install` before running anything.
+- **`types: []` in `apps/portfolio/tsconfig.json` is load-bearing.** It stops TypeScript from auto-scanning `node_modules/@types`, which under hoisted pnpm pulls in deprecated stub packages (e.g. `@types/minimatch`) that have no `.d.ts` and break `tsc` with `TS2688`. Types still resolve through imports and triple-slash refs (`expo-env.d.ts`, `nativewind-env.d.ts`). Don't remove it. **Corollary:** the test files (`__tests__/**`, `jest-setup.ts`) are `exclude`d from the main `tsconfig.json` and typed via the scoped `tsconfig.test.json` (`types: ["jest","node"]`), so jest globals don't force `@types/jest` into the app's type resolution.
+- **ESLint is pinned to `^9`, not 10.** `eslint-config-expo` pulls in `eslint-plugin-react@7`, which supports ESLint only up to `^9.7`. ESLint 10 crashes it (`getFilename is not a function`). Config lives in `apps/portfolio/eslint.config.js` (flat config); test files (`__tests__/**`, `*.test.*`, `jest-setup.ts`) are linted with a jest-globals override (no plugin — RNTL's matchers auto-register on import).
+- **Styling:** NativeWind (Tailwind) in the portfolio app; a `postinstall` compiles the global stylesheet.
+- **Unit test stack (portfolio):** `jest-expo ~56` (Jest 29) + `@testing-library/react-native ^14` + `test-renderer ^1.2`. Two SDK-56 gotchas: RN 0.85 extracted the Jest preset into `@react-native/jest-preset` (a required peer), and **RNTL v14 is async-by-default** — `await render(...)`, `await fireEvent...`. Do **not** add `react-test-renderer` (jest-expo bundles its own) or `@testing-library/jest-native` (deprecated; matchers are built in). Reanimated 4 is mocked via `react-native-worklets/src/mock` in `jest-setup.ts`.
+- **Secrets:** EAS Android submit needs `apps/portfolio/credentials/google-service-account.json` (gitignored). Never commit credentials; the `credentials/` dir is ignored.
+
+## Mobile testing & deploys (Maestro + EAS)
+
+**Local prerequisites (one-time, already installed on this machine):** Maestro's CLI needs
+**JDK 17** — without it nothing (CLI or MCP) runs. Installed: `openjdk@17` (Homebrew),
+`idb-companion` (iOS-sim driving), and **Maestro 2.6.1** (`~/.maestro/bin`, symlinked onto
+PATH at `/opt/homebrew/bin/maestro`). Android is **cloud-only** here (no local Android SDK /
+JDK-for-Android). Install note: `get.maestro.dev` may not resolve — install from the official
+GitHub release (`mobile-dev-inc/Maestro` → `maestro.zip`, checksum-verified) or `get.maestro.mobile.dev`.
+
+**E2E flows** live in `apps/portfolio/.maestro/`:
+- `smoke.yml` — the "does the app boot?" gate (`launchApp` + assert `screen-status`).
+- `walk-tabs.yml` — taps every tab (`tab-*` ids) asserting each screen root (`screen-*` ids).
+- `subflows/launch.yml` — reusable boot step.
+
+`testID`s are the shared contract for unit + e2e: tab buttons are `tab-<route>`
+(`app/(tabs)/_layout.tsx`), screen roots are `screen-<name>` (each tab screen's root `ScrollView`).
+
+Maestro can't drive Expo Go — it needs a **dev/standalone build** installed on the device:
+```bash
+cd apps/portfolio && npx expo run:ios          # build + install the dev build to a booted sim
+JAVA_HOME=/opt/homebrew/opt/openjdk@17 maestro test .maestro/smoke.yml
+maestro studio                                  # inspect the live hierarchy / author flows
+```
+
+**Maestro MCP** is registered in `.mcp.json` (project scope) → `maestro mcp`, with
+`JAVA_HOME` pinned. It exposes `list_devices`, `inspect_screen`, `take_screenshot`, `run`,
+`cheat_sheet`, `open_maestro_viewer` so an agent can drive a booted sim and author/self-repair
+flows. Needs JDK 17 + a booted sim with the app installed.
+
+**CI/CD = EAS Workflows** (`apps/portfolio/.eas/workflows/`), run on Expo infra; they coexist
+with the GitHub Actions loop gate:
+- `e2e.yml` (`on: pull_request`) — build the `e2e-test` profile (sim `.app` + emulator `.apk`)
+  → `maestro` job runs `smoke.yml` on **iOS + Android**. The cloud "app boots" gate.
+- `deploy.yml` (`workflow_dispatch`) — production build → `require-approval` → submit to App
+  Store / Play (uses the `submit.production.*` profiles in `eas.json`).
+- `ota-update.yml` (`on: push main`) — `eas update` (channel `production`) for JS-only changes.
+
+Triggering EAS Workflows needs the **EAS GitHub app** connected (no token) or
+`eas workflow:run …` with `EXPO_TOKEN`; `eas login` is required for any local `eas build`. The
+`e2e-test` build profile (`withoutCredentials`, sim/apk) is in `eas.json`.
+
+## Loop coverage (what's measured vs. not)
+
+- ✅ **Types** — `pnpm typecheck` (portfolio + ui).
+- ✅ **Lint** — `pnpm lint` (portfolio, `eslint-config-expo`).
+- ✅ **Unit** — `pnpm test` (portfolio, `jest-expo` + RNTL v14). Tests live in `apps/portfolio/__tests__/` (kept out of `app/` so expo-router doesn't route them).
+- ✅ **E2E** — Maestro flows in `apps/portfolio/.maestro/`. Local: iOS sim. CI: iOS + Android on EAS Workflows.
+- ✅ **CI** — `.github/workflows/ci.yml` runs `pnpm typecheck` + `pnpm lint` + `pnpm test` on push/PR; EAS Workflows handle build + e2e + deploy.
+
+When adding any of the above, wire it through Turbo and document the command here so it
+becomes part of the standing loop.

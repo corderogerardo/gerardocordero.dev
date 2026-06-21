@@ -1,0 +1,44 @@
+# EAS Workflow: e2e "does the app boot" gate on every PR.
+# Builds a simulator (.app) + emulator (.apk) with the credential-free e2e-test
+# profile, then runs the Maestro smoke flow on Expo-hosted devices for BOTH
+# platforms. This is what validates the app boots on iOS + Android in CI.
+#
+# Runs on Expo infra. Requires the EAS GitHub app connected to this repo (no token
+# in CI) OR `eas workflow:run` with EXPO_TOKEN. Lint/typecheck/unit stay in
+# .github/workflows/ci.yml (GitHub Actions).
+name: E2E smoke (app boots)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_ios_e2e:
+    name: Build iOS (simulator)
+    type: build
+    params:
+      platform: ios
+      profile: e2e-test
+
+  build_android_e2e:
+    name: Build Android (apk)
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+
+  e2e_ios:
+    name: Maestro E2E (iOS)
+    type: maestro
+    needs: [build_ios_e2e]
+    params:
+      build_id: ${{ needs.build_ios_e2e.outputs.build_id }}
+      flow_path: ['.maestro/smoke.yml']
+
+  e2e_android:
+    name: Maestro E2E (Android)
+    type: maestro
+    needs: [build_android_e2e]
+    params:
+      build_id: ${{ needs.build_android_e2e.outputs.build_id }}
+      flow_path: ['.maestro/smoke.yml']

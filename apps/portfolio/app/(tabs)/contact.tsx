@@ -26,7 +26,7 @@ const CONTACT_ICONS: Record<
 function PrimaryEmailCard() {
   return (
     <Pressable
-      onPress={() => Linking.openURL("mailto:mail@gerardocordero.dev")}
+      onPress={() => Linking.openURL("mailto:cordero.gerard@gmail.com")}
       style={{
         width: "100%",
         padding: 22,
@@ -86,7 +86,7 @@ function PrimaryEmailCard() {
           color: T.paper,
         }}
       >
-        mail@
+        cordero.gerard@
       </Text>
       <Text
         style={{
@@ -97,7 +97,7 @@ function PrimaryEmailCard() {
           color: T.paper,
         }}
       >
-        gerardocordero.dev
+        gmail.com
       </Text>
       <View style={{ marginTop: 18 }}>
         <GCDash color="rgba(246,244,237,0.22)" />
@@ -276,16 +276,13 @@ function SocialRow({
 export default function ContactScreen() {
   const insets = useSafeAreaInsets();
 
-  const directLines = contactInfo.map((c, i) => ({
-    ...c,
-    // de-duplicate Email label in the visual list
-    label: i === 2 && c.label === "Email" ? "Alt" : c.label,
-  }));
+  const directLines = contactInfo;
 
   const elsewhere = Object.entries(externalLinks) as [string, string][];
 
   return (
     <ScrollView
+      testID="screen-contact"
       style={{ flex: 1, backgroundColor: T.paper }}
       contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}

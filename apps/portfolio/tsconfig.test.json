@@ -1,0 +1,10 @@
+{
+  // Scoped TS config for tests only. The base tsconfig pins `types: []` (load-bearing
+  // under hoisted pnpm — see CLAUDE.md), so jest globals are added here instead of
+  // polluting the app's type resolution.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"]
+  },
+  "include": ["__tests__/**/*.ts", "__tests__/**/*.tsx", "jest-setup.ts", "jest.config.js"]
+}

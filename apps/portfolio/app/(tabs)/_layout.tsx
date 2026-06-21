@@ -1,7 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 import { Pressable, Text, View } from "react-native";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { T } from "@/components/hud";
 
@@ -15,6 +15,7 @@ const TAB_META: Record<
 > = {
   index: { label: "Status", icon: "circle-o-notch", title: "Status" },
   experience: { label: "Log", icon: "terminal", title: "Log" },
+  projects: { label: "Fleet", icon: "rocket", title: "Fleet" },
   education: { label: "Tree", icon: "sitemap", title: "Tree" },
   contact: { label: "Comms", icon: "paper-plane", title: "Comms" },
 };
@@ -64,6 +65,7 @@ function HUDTabBar({ state, navigation }: BottomTabBarProps) {
           return (
             <Pressable
               key={route.key}
+              testID={`tab-${route.name}`}
               onPress={onPress}
               accessibilityRole="button"
               accessibilityState={focused ? { selected: true } : {}}
@@ -113,6 +115,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "Status" }} />
       <Tabs.Screen name="experience" options={{ title: "Log" }} />
+      <Tabs.Screen name="projects" options={{ title: "Fleet" }} />
       <Tabs.Screen name="education" options={{ title: "Tree" }} />
       <Tabs.Screen name="contact" options={{ title: "Comms" }} />
     </Tabs>

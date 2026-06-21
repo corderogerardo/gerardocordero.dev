@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Easing, View, Text } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -382,7 +382,7 @@ export function GCStatus({
   label?: string;
   dark?: boolean;
 }) {
-  const opacity = useRef(new Animated.Value(1)).current;
+  const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     const loop = Animated.loop(

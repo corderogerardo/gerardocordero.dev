@@ -1,0 +1,19 @@
+# EAS Workflow: ship JS/asset-only changes over-the-air on every push to main.
+# Native/dependency changes still need a full store build (deploy.yml). channel and
+# branch are mutually exclusive — using channel: production to match the app's EAS
+# Update config.
+name: OTA update (production channel)
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/portfolio/**']
+
+jobs:
+  publish_update:
+    name: Publish EAS Update
+    type: update
+    params:
+      channel: production
+      platform: all
+      message: ${{ github.sha }}

@@ -15,17 +15,57 @@ import {
   T,
 } from "@/components/hud";
 
+type SkillNode = { name: string; years: number };
+
 type Branch = {
   branch: string;
   icon: React.ComponentProps<typeof FontAwesome>["name"];
-  nodes: string[];
+  nodes: SkillNode[];
 };
 
+// years = approximate years of hands-on experience per skill (review/adjust).
 const SKILL_TREE: Branch[] = [
-  { branch: "Mobile", icon: "mobile", nodes: ["React Native", "Expo", "iOS", "Android", "Hermes"] },
-  { branch: "Frontend", icon: "code", nodes: ["React", "TypeScript", "JavaScript", "Angular"] },
-  { branch: "Backend", icon: "server", nodes: ["Node.js", "Express", "AWS", "Amplify"] },
-  { branch: "Practice", icon: "flask", nodes: ["Testing", "Monorepos", "Open Source", "Accessibility"] },
+  {
+    branch: "Mobile",
+    icon: "mobile",
+    nodes: [
+      { name: "React Native", years: 8 },
+      { name: "Expo", years: 6 },
+      { name: "iOS", years: 6 },
+      { name: "Android", years: 6 },
+      { name: "Hermes", years: 3 },
+    ],
+  },
+  {
+    branch: "Frontend",
+    icon: "code",
+    nodes: [
+      { name: "React", years: 8 },
+      { name: "TypeScript", years: 6 },
+      { name: "JavaScript", years: 10 },
+      { name: "Angular", years: 3 },
+    ],
+  },
+  {
+    branch: "Backend",
+    icon: "server",
+    nodes: [
+      { name: "Node.js", years: 8 },
+      { name: "Express", years: 7 },
+      { name: "AWS", years: 4 },
+      { name: "Amplify", years: 3 },
+    ],
+  },
+  {
+    branch: "Practice",
+    icon: "flask",
+    nodes: [
+      { name: "Testing", years: 7 },
+      { name: "Monorepos", years: 4 },
+      { name: "Open Source", years: 5 },
+      { name: "Accessibility", years: 3 },
+    ],
+  },
 ];
 
 function SkillBranch({
@@ -89,7 +129,7 @@ function SkillBranch({
           const isPrimary = accent && i === 0;
           return (
             <View
-              key={n}
+              key={n.name}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -124,15 +164,23 @@ function SkillBranch({
                   letterSpacing: -0.1,
                 }}
               >
-                {n}
+                {n.name}
               </Text>
-              {isPrimary ? (
-                <View style={{ marginLeft: "auto" }}>
+              <View
+                style={{
+                  marginLeft: "auto",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {isPrimary ? (
                   <GCChip variant="redSoft" size="xs">
                     PRIMARY
                   </GCChip>
-                </View>
-              ) : null}
+                ) : null}
+                <GCTick>{`${n.years}Y`}</GCTick>
+              </View>
             </View>
           );
         })}
@@ -442,6 +490,7 @@ export default function EducationScreen() {
 
   return (
     <ScrollView
+      testID="screen-education"
       style={{ flex: 1, backgroundColor: T.paper }}
       contentContainerStyle={{ paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}

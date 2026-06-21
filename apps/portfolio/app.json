@@ -7,12 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "portfolio",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#D4412A"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "dev.gerardocordero.portfolio",
@@ -27,7 +21,6 @@
         "monochromeImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#D4412A"
       },
-      "edgeToEdgeEnabled": true,
       "package": "dev.gerardocordero.portfolio"
     },
     "web": {
@@ -41,7 +34,17 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#D4412A"
+        }
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
