@@ -81,4 +81,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/portfolio
+          # Force pnpm. With no lockfile inside apps/portfolio the action would
+          # fall back to npm, and `npm i wrangler` chokes on the workspace:*
+          # protocol in this package's deps (EUNSUPPORTEDPROTOCOL). pnpm speaks
+          # workspace:, so its wrangler install succeeds.
+          packageManager: pnpm
           command: pages deploy dist --project-name=gerardocordero-portfolio --branch=main
