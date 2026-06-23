@@ -19,11 +19,31 @@ export function isPromptApiSupported(): boolean {
   return !!lm();
 }
 
+// Recent Chrome builds require every Prompt API request to declare its input
+// and output languages. Omit them and Chrome logs "No output language was
+// specified…" and — more importantly — can refuse to emit text in an
+// "untested" language with a NotSupportedError, which surfaces to the user as
+// the tutor failing to answer. The tutor coaches in English, so we attest
+// English in / English out. Supported codes today: en, es, ja, de, fr.
+//
+// This MUST be applied to both availability() and create(): the readiness
+// check is keyed on the options you pass, so if the two disagree the answer
+// availability() gave no longer describes the session you actually build.
+const LANGUAGE_OPTIONS = {
+  expectedInputs: [{ type: "text", languages: ["en"] }],
+  expectedOutputs: [{ type: "text", languages: ["en"] }],
+};
+
+function withLanguage(opts: any = {}): any {
+  // Caller-supplied keys win, so a future bilingual surface can override.
+  return { ...LANGUAGE_OPTIONS, ...opts };
+}
+
 export async function promptAvailability(opts?: any): Promise<AiAvailability> {
   const L = lm();
   if (!L || typeof L.availability !== "function") return "unsupported";
   try {
-    return (await L.availability(opts)) as AiAvailability;
+    return (await L.availability(withLanguage(opts))) as AiAvailability;
   } catch {
     return "unavailable";
   }
@@ -36,7 +56,7 @@ export async function createSession(
   const L = lm();
   if (!L) throw new Error("Prompt API not supported");
   return L.create({
-    ...opts,
+    ...withLanguage(opts),
     monitor(m: any) {
       try {
         m.addEventListener("downloadprogress", (e: any) =>

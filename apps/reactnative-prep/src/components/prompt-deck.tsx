@@ -7,10 +7,14 @@ import { RichText } from "@/components/rich-text";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "@/lib/levels";
 import {
   type SrsMap,
+  type DayLog,
   isDue,
   schedule,
   todayEpochDay,
   nextLabel,
+  logToday,
+  unlogToday,
+  countToday,
 } from "@/lib/srs";
 
 type Status = "solved" | "revisit";
@@ -21,7 +25,15 @@ const KINDS: { value: PromptKind | "all"; label: string }[] = [
   { value: "design", label: "System design" },
 ];
 
-export function PromptDeck({ prompts }: { prompts: Prompt[] }) {
+export function PromptDeck({
+  prompts,
+  // On /today the prompt set refills as you solve, so "Solved X / total"
+  // can't climb. dailyCounter switches it to "Solved today: N".
+  dailyCounter = false,
+}: {
+  prompts: Prompt[];
+  dailyCounter?: boolean;
+}) {
   const { value: status, set: setStatus, reset } = useLocalStorage<
     Record<string, Status>
   >("rnprep:prompts", {});
@@ -29,6 +41,11 @@ export function PromptDeck({ prompts }: { prompts: Prompt[] }) {
     "rnprep:prompts-srs",
     {},
   );
+  const {
+    value: solvedToday,
+    set: setSolvedToday,
+    reset: resetSolvedToday,
+  } = useLocalStorage<DayLog>("rnprep:prompts-solved-today", { day: 0, ids: [] });
   const [kind, setKind] = useState<PromptKind | "all">("all");
   const [level, setLevel] = useState<Level | "all">("all");
   const [dueOnly, setDueOnly] = useState(false);
@@ -51,6 +68,10 @@ export function PromptDeck({ prompts }: { prompts: Prompt[] }) {
       ...m,
       [id]: schedule(m[id], s === "solved" ? "good" : "again", today),
     }));
+    // Track today's solved tally so the /today counter climbs past the refill.
+    setSolvedToday((log) =>
+      s === "solved" ? logToday(log, id, today) : unlogToday(log, id, today),
+    );
   }
 
   return (
@@ -62,7 +83,15 @@ export function PromptDeck({ prompts }: { prompts: Prompt[] }) {
           </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
-          Solved <b className="text-good">{solved}</b> / {prompts.length}
+          {dailyCounter ? (
+            <>
+              Solved today <b className="text-good">{countToday(solvedToday, today)}</b>
+            </>
+          ) : (
+            <>
+              Solved <b className="text-good">{solved}</b> / {prompts.length}
+            </>
+          )}
         </span>
       </div>
 
@@ -94,6 +123,7 @@ export function PromptDeck({ prompts }: { prompts: Prompt[] }) {
             if (confirm("Reset your practice progress?")) {
               reset();
               resetSrs();
+              resetSolvedToday();
             }
           }}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-bad"

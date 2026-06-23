@@ -102,7 +102,7 @@ export function DailySession() {
               — grade each by confidence
             </span>
           </h2>
-          <FlashcardDeck cards={sessionCards} filters={SESSION_FILTERS} />
+          <FlashcardDeck cards={sessionCards} filters={SESSION_FILTERS} dailyCounter />
         </section>
       )}
 
@@ -114,7 +114,7 @@ export function DailySession() {
               — try before you reveal
             </span>
           </h2>
-          <PromptDeck prompts={todayPrompts} />
+          <PromptDeck prompts={todayPrompts} dailyCounter />
         </section>
       )}
     </div>
