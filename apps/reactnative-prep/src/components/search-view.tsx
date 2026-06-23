@@ -50,42 +50,58 @@ function buildIndex(): Item[] {
   ];
 }
 
-function keywordRank(index: Item[], query: string): Item[] {
+/** Keyword score per item index (title hits weighted higher). */
+function scoreKeyword(index: Item[], query: string): { i: number; score: number }[] {
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!tokens.length) return [];
-  return index
-    .map((it) => {
-      const title = it.title.toLowerCase();
-      const text = it.text.toLowerCase();
-      let score = 0;
-      for (const t of tokens) {
-        if (title.includes(t)) score += 3;
-        if (text.includes(t)) score += 1;
-      }
-      return { it, score };
-    })
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 30)
-    .map((x) => x.it);
+  const out: { i: number; score: number }[] = [];
+  index.forEach((it, i) => {
+    const title = it.title.toLowerCase();
+    const text = it.text.toLowerCase();
+    let score = 0;
+    for (const t of tokens) {
+      if (title.includes(t)) score += 3;
+      if (text.includes(t)) score += 1;
+    }
+    if (score > 0) out.push({ i, score });
+  });
+  return out.sort((a, b) => b.score - a.score);
+}
+
+function fnv(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
 }
 
 type AiState = "off" | "loading" | "ready" | "error";
+type Ranked = { i: number; score: number }[];
 
 export function SearchView() {
   const index = useMemo(() => buildIndex(), []);
+  const embedTexts = useMemo(
+    () => index.map((i) => i.text.slice(0, 400)),
+    [index],
+  );
+  const signature = useMemo(
+    () => `bge:${embedTexts.length}:${fnv(embedTexts.join("|"))}`,
+    [embedTexts],
+  );
+
   const [query, setQuery] = useState("");
   const [ai, setAi] = useState<AiState>("off");
   const [device, setDevice] = useState<string>("");
   const [progress, setProgress] = useState(0);
-  const [semanticResults, setSemanticResults] = useState<Item[]>([]);
+  const [indexMsg, setIndexMsg] = useState("");
+  const [semantic, setSemantic] = useState<Ranked | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const queryIdRef = useRef(0);
 
-  // Keyword results are derived during render — instant, always available.
-  const keywordResults = useMemo(() => keywordRank(index, query), [index, query]);
+  const keywordScored = useMemo(() => scoreKeyword(index, query), [index, query]);
 
-  // Terminate the worker on unmount.
   useEffect(
     () => () => {
       workerRef.current?.terminate();
@@ -103,19 +119,16 @@ export function SearchView() {
         const m = e.data;
         if (m.type === "ready") {
           setDevice(m.device);
-          w.postMessage({ type: "index", texts: index.map((i) => i.text) });
+          w.postMessage({ type: "index", texts: embedTexts, signature });
+        } else if (m.type === "indexProgress") {
+          setIndexMsg(`indexing ${m.done}/${m.total}`);
         } else if (m.type === "indexed") {
+          setIndexMsg("");
           setAi("ready");
         } else if (m.type === "progress") {
           setProgress(m.value);
         } else if (m.type === "results") {
-          if (m.id === queryIdRef.current) {
-            setSemanticResults(
-              (m.ranked as { i: number }[])
-                .map((r) => index[r.i])
-                .filter(Boolean),
-            );
-          }
+          if (m.id === queryIdRef.current) setSemantic(m.ranked as Ranked);
         } else if (m.type === "error") {
           console.error("semantic worker:", m.error);
           setAi("error");
@@ -140,16 +153,30 @@ export function SearchView() {
     const id = ++queryIdRef.current;
     const t = setTimeout(() => {
       const q = query.trim();
-      if (!q) {
-        setSemanticResults([]);
-        return;
-      }
-      workerRef.current?.postMessage({ type: "query", q, id });
-    }, 250);
+      if (q) workerRef.current?.postMessage({ type: "query", q, id });
+    }, 220);
     return () => clearTimeout(t);
   }, [query, ai]);
 
-  const results = ai === "ready" ? semanticResults : keywordResults;
+  // Hybrid ranking: blend normalized keyword + semantic scores (keyword keeps
+  // precision, semantic adds recall). Falls back to keyword-only when AI is off.
+  const results = useMemo(() => {
+    const q = query.trim();
+    if (!q) return [];
+    if (ai !== "ready" || !semantic) {
+      return keywordScored.slice(0, 30).map((x) => index[x.i]);
+    }
+    const kwMax = keywordScored[0]?.score || 1;
+    const kw = new Map(keywordScored.map((x) => [x.i, x.score / kwMax]));
+    const semMax = Math.max(...semantic.map((r) => r.score), 1e-6);
+    const sem = new Map(semantic.map((r) => [r.i, r.score / semMax]));
+    const union = new Set<number>([...kw.keys(), ...sem.keys()]);
+    return [...union]
+      .map((i) => ({ i, score: 0.6 * (kw.get(i) ?? 0) + 0.4 * (sem.get(i) ?? 0) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 30)
+      .map((x) => index[x.i]);
+  }, [ai, semantic, keywordScored, index, query]);
 
   return (
     <div className="space-y-5">
@@ -157,7 +184,7 @@ export function SearchView() {
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by keyword — or enable AI to search by meaning…"
+        placeholder="Search by keyword — or enable AI for hybrid meaning + keyword search…"
         className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none placeholder:text-muted focus:border-accent/60"
       />
 
@@ -167,19 +194,20 @@ export function SearchView() {
             onClick={enableAi}
             className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-3.5 py-1.5 font-semibold text-bg transition-opacity hover:opacity-90"
           >
-            🧠 Try AI semantic search (on-device)
+            🧠 Enable AI hybrid search (on-device)
           </button>
         )}
         {ai === "loading" && (
           <span className="text-muted">
-            Loading on-device model in a worker
-            {progress ? ` · ${progress}%` : " (first time downloads ~25 MB)"}…
+            {indexMsg
+              ? `Embedding content on-device · ${indexMsg}…`
+              : `Loading model in a worker${progress ? ` · ${progress}%` : " (first run downloads the model; then cached)"}…`}
           </span>
         )}
         {ai === "ready" && (
           <span className="rounded-full border border-good/40 bg-good/12 px-3 py-1 font-medium text-good">
-            🧠 AI search on · {device === "webgpu" ? "WebGPU" : "WASM"} · in a
-            worker, fully on your device
+            🧠 Hybrid AI search · {device === "webgpu" ? "WebGPU" : "WASM"} · on
+            your device
           </span>
         )}
         {ai === "error" && (
