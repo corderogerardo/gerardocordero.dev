@@ -6,6 +6,7 @@ name: CI
 # `deploy-web` job ships the Expo web export to Cloudflare Pages (the live site at
 # gerardocordero.dev). PRs run the loop but never deploy.
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
@@ -87,3 +88,97 @@ jobs:
           # workspace:, so its wrangler install succeeds.
           packageManager: pnpm
           command: pages deploy dist --project-name=gerardocordero-portfolio --branch=main
+
+  # Ship apps/ios-prep to its own Pages project (ios-prep) — but ONLY when this
+  # push actually changed files under apps/ios-prep (or on a manual run). Gated
+  # behind `verify`, same as the portfolio deploy, so a red main can't ship.
+  deploy-ios-prep:
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/ios-prep
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/ios-prep/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/ios-prep — skipping deploy."
+          fi
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.changed == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build static export
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/ios-prep
+        run: pnpm build
+      - name: Deploy to Cloudflare Pages
+        if: steps.detect.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/ios-prep
+          packageManager: pnpm
+          command: pages deploy out --project-name=ios-prep --branch=main
+
+  # Same pattern for apps/reactnative-prep -> Pages project reactnative-prep.
+  deploy-reactnative-prep:
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/reactnative-prep
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/reactnative-prep/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/reactnative-prep — skipping deploy."
+          fi
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.changed == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build static export
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/reactnative-prep
+        run: pnpm build
+      - name: Deploy to Cloudflare Pages
+        if: steps.detect.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/reactnative-prep
+          packageManager: pnpm
+          command: pages deploy out --project-name=reactnative-prep --branch=main
