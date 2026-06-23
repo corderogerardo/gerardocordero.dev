@@ -2,9 +2,9 @@ import Link from "next/link";
 import { NAV } from "@/lib/nav";
 
 const STATS = [
-  { value: "340+", label: "Q&A flashcards" },
+  { value: "600+", label: "Q&A flashcards" },
   { value: "16", label: "Practice prompts" },
-  { value: "55", label: "Study-guide topics" },
+  { value: "89", label: "Study-guide topics" },
   { value: "On-device", label: "AI search & tutor" },
 ];
 
