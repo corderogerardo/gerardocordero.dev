@@ -10,16 +10,12 @@ import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "@/lib/levels";
 import {
   type SrsMap,
   type Grade,
-  type DayLog,
   GRADES,
   isDue,
   isKnown,
   schedule,
   todayEpochDay,
   nextLabel,
-  logToday,
-  unlogToday,
-  countToday,
 } from "@/lib/srs";
 
 type Filter = { value: string; label: string };
@@ -27,27 +23,17 @@ type Filter = { value: string; label: string };
 export function FlashcardDeck({
   cards,
   filters,
-  // On /today the set refills as you grade, so the "Known X / total" meter
-  // can't climb. dailyCounter switches it to "Known today: N", backed by a
-  // per-day log that survives the refill.
-  dailyCounter = false,
 }: {
   cards: Flashcard[];
   filters: Filter[];
-  dailyCounter?: boolean;
 }) {
   const { value: grades, set: setGrades, reset } = useLocalStorage<
     Record<string, Grade>
-  >("rnprep:qa", {});
+  >("iosprep:qa", {});
   const { value: srs, set: setSrs, reset: resetSrs } = useLocalStorage<SrsMap>(
-    "rnprep:srs",
+    "iosprep:srs",
     {},
   );
-  const {
-    value: knownToday,
-    set: setKnownToday,
-    reset: resetKnownToday,
-  } = useLocalStorage<DayLog>("rnprep:cards-known-today", { day: 0, ids: [] });
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [aiOpen, setAiOpen] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState("all");
@@ -60,18 +46,10 @@ export function FlashcardDeck({
     () => new Map(cards.map((c) => [c.id, c])),
     [cards],
   );
-  // Apply the (shuffle) order, then append any cards not yet in it. On /today
-  // the set refills as items grade out of the due pool, so fresh cards arrive
-  // absent from `order`; appending them here keeps the deck endless instead of
-  // silently shrinking. For the stable /flashcards deck nothing is appended.
-  const ordered = useMemo(() => {
-    const inOrder = order
-      .map((id) => byId.get(id))
-      .filter((c): c is Flashcard => !!c);
-    const seen = new Set(order);
-    const appended = cards.filter((c) => !seen.has(c.id));
-    return [...inOrder, ...appended];
-  }, [order, byId, cards]);
+  const ordered = useMemo(
+    () => order.map((id) => byId.get(id)).filter((c): c is Flashcard => !!c),
+    [order, byId],
+  );
   const visible = ordered.filter(
     (c) =>
       (filter === "all" || c.category === filter) &&
@@ -85,10 +63,6 @@ export function FlashcardDeck({
   function grade(id: string, g: Grade) {
     setGrades((prev) => ({ ...prev, [id]: g }));
     setSrs((s) => ({ ...s, [id]: schedule(s[id], g, today) }));
-    // Track today's "known" tally so the /today counter climbs past the refill.
-    setKnownToday((log) =>
-      isKnown(g) ? logToday(log, id, today) : unlogToday(log, id, today),
-    );
   }
 
   function shuffle() {
@@ -113,15 +87,7 @@ export function FlashcardDeck({
           </FilterChip>
         ))}
         <span className="ml-auto text-sm text-muted">
-          {dailyCounter ? (
-            <>
-              Known today <b className="text-good">{countToday(knownToday, today)}</b>
-            </>
-          ) : (
-            <>
-              Known <b className="text-good">{known}</b> / {cards.length}
-            </>
-          )}
+          Known <b className="text-good">{known}</b> / {cards.length}
         </span>
       </div>
 
@@ -169,7 +135,6 @@ export function FlashcardDeck({
             if (confirm("Reset grades and spaced-repetition schedule?")) {
               reset();
               resetSrs();
-              resetKnownToday();
             }
           }}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-bad"

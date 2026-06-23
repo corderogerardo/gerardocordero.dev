@@ -18,10 +18,10 @@ const CARD_TARGET = 12;
 const SESSION_FILTERS = [{ value: "all", label: "All" }];
 
 export function DailySession() {
-  const { value: srs } = useLocalStorage<SrsMap>("rnprep:srs", {});
-  const { value: pSrs } = useLocalStorage<SrsMap>("rnprep:prompts-srs", {});
+  const { value: srs } = useLocalStorage<SrsMap>("iosprep:srs", {});
+  const { value: pSrs } = useLocalStorage<SrsMap>("iosprep:prompts-srs", {});
   const { value: streak, set: setStreak } = useLocalStorage<Streak | undefined>(
-    "rnprep:streak",
+    "iosprep:streak",
     undefined,
   );
   const today = todayEpochDay();
@@ -102,7 +102,7 @@ export function DailySession() {
               — grade each by confidence
             </span>
           </h2>
-          <FlashcardDeck cards={sessionCards} filters={SESSION_FILTERS} dailyCounter />
+          <FlashcardDeck cards={sessionCards} filters={SESSION_FILTERS} />
         </section>
       )}
 
@@ -114,7 +114,7 @@ export function DailySession() {
               — try before you reveal
             </span>
           </h2>
-          <PromptDeck prompts={todayPrompts} dailyCounter />
+          <PromptDeck prompts={todayPrompts} />
         </section>
       )}
     </div>

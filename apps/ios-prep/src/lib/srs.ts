@@ -6,28 +6,6 @@ export type SrsEntry = { reps: number; interval: number; ease: number; due: numb
 export type SrsMap = Record<string, SrsEntry>;
 export type Grade = "again" | "hard" | "good" | "easy";
 
-// Per-day log of item ids reviewed "well" today. Powers the /today "X today"
-// counters, which must keep climbing even though the daily set refills as you
-// grade (graded items reschedule out of the due pool and leave the set).
-export type DayLog = { day: number; ids: string[] };
-
-/** Add an id to today's log (resetting it when the day rolls over). */
-export function logToday(log: DayLog, id: string, today = todayEpochDay()): DayLog {
-  const ids = log.day === today ? log.ids : [];
-  return { day: today, ids: ids.includes(id) ? ids : [...ids, id] };
-}
-
-/** Remove an id from today's log (e.g. a re-grade that's no longer "known"). */
-export function unlogToday(log: DayLog, id: string, today = todayEpochDay()): DayLog {
-  const ids = log.day === today ? log.ids : [];
-  return { day: today, ids: ids.filter((x) => x !== id) };
-}
-
-/** Count of ids logged for `today` (0 once the day rolls over). */
-export function countToday(log: DayLog, today = todayEpochDay()): number {
-  return log.day === today ? log.ids.length : 0;
-}
-
 export const GRADES: { value: Grade; label: string; badge: string; key: string }[] = [
   { value: "again", label: "Again", badge: "bg-bad/15 text-bad hover:bg-bad/25", key: "1" },
   { value: "hard", label: "Hard", badge: "bg-warn/15 text-warn hover:bg-warn/25", key: "2" },

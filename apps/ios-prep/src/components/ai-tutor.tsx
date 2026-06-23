@@ -9,7 +9,7 @@ import {
 } from "@/lib/chrome-ai";
 
 const SYSTEM =
-  "You are a concise, encouraging senior React Native interview coach. Answer in a few short sentences or a tight list. Be accurate and practical.";
+  "You are a concise, encouraging senior iOS (Swift & SwiftUI) interview coach. Answer in a few short sentences or a tight list. Be accurate and practical.";
 
 const PRESETS = [
   { label: "Explain simply", q: "Explain this like I'm a junior engineer, in 3 sentences." },
@@ -19,7 +19,7 @@ const PRESETS = [
 
 export function AiTutor({
   context,
-  placeholder = "Ask anything about React Native interviews…",
+  placeholder = "Ask anything about iOS interviews…",
 }: {
   context?: string;
   placeholder?: string;
@@ -29,17 +29,11 @@ export function AiTutor({
   const [input, setInput] = useState("");
   const [answer, setAnswer] = useState("");
   const [progress, setProgress] = useState(0);
-  const [downloading, setDownloading] = useState(false);
   const sessionRef = useRef<unknown>(null);
 
   useEffect(() => {
     let live = true;
-    promptAvailability().then((a) => {
-      if (!live) return;
-      setStatus(a);
-      // Gemini Nano may already be mid-download when the page loads.
-      if (a === "downloading") setDownloading(true);
-    });
+    promptAvailability().then((a) => live && setStatus(a));
     return () => {
       live = false;
     };
@@ -51,24 +45,16 @@ export function AiTutor({
     setAnswer("");
     try {
       if (!sessionRef.current) {
-        // The first create() may download a multi-hundred-MB model. create()
-        // blocks until that finishes, so flag it and surface progress instead
-        // of leaving the user on a silent spinner.
-        if (status === "downloadable" || status === "downloading") {
-          setDownloading(true);
-        }
         sessionRef.current = await createSession(
           { initialPrompts: [{ role: "system", content: SYSTEM }] },
           (loaded) => setProgress(Math.round(loaded * 100)),
         );
-        setDownloading(false);
         setStatus("available");
       }
       const full = context ? `Context:\n${context}\n\nTask: ${text}` : text;
       await streamPrompt(sessionRef.current, full, setAnswer);
     } catch (e) {
       console.error(e);
-      setDownloading(false);
       setAnswer(
         "Sorry — the on-device model couldn't respond. It may still be downloading, or this device isn't supported.",
       );
@@ -104,16 +90,10 @@ export function AiTutor({
         <span className="rounded-full border border-good/40 bg-good/12 px-2.5 py-0.5 text-[0.7rem] font-bold text-good">
           ● On-device · Gemini Nano
         </span>
-        {downloading || status === "downloading" ? (
+        {status === "downloadable" && (
           <span className="text-xs text-muted">
-            ⬇ Downloading Gemini Nano (one-time){progress ? ` · ${progress}%` : "…"}
+            first question downloads the model{progress ? ` · ${progress}%` : ""}
           </span>
-        ) : (
-          status === "downloadable" && (
-            <span className="text-xs text-muted">
-              first question downloads the model
-            </span>
-          )
         )}
       </div>
 
@@ -155,14 +135,6 @@ export function AiTutor({
           {busy ? "…" : "Ask"}
         </button>
       </div>
-
-      {busy && !answer && (
-        <div className="prose-body rounded-lg border border-border bg-surface-2/50 px-3.5 py-3 text-sm text-muted">
-          {downloading
-            ? `Downloading Gemini Nano to your device — a one-time setup that can take a few minutes${progress ? ` · ${progress}%` : ""}. Your answer streams in as soon as the model is ready.`
-            : "Thinking…"}
-        </div>
-      )}
 
       {answer && (
         <div className="prose-body whitespace-pre-wrap rounded-lg border border-border bg-surface-2/50 px-3.5 py-3 text-sm">

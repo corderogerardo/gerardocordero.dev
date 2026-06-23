@@ -129,4 +129,16 @@ export const projects: Project[] = [
     linkLabel: "Web",
     stack: ["Expo Router", "React Native Web", "TypeScript"],
   },
+  {
+    name: "iOS Interview Prep",
+    domain: "Interview Prep",
+    tagline:
+      "A senior iOS engineer study guide — Swift & SwiftUI deep-dives, practice pitches, and Q&A flashcards with a progress tracker.",
+    period: "2026",
+    status: "live",
+    platforms: ["Web"],
+    href: "https://ios.gerardocordero.dev/",
+    linkLabel: "Web",
+    stack: ["Swift", "SwiftUI", "UIKit"],
+  },
 ];
