@@ -1,0 +1,173 @@
+// Content migrated from the original single-file study guide. These typed modules are now the source of truth — edit directly.
+export type ArchSection = { id: string; num: string; title: string; html: string };
+export type DeepDive = { id: string; pill: string; title: string; html: string };
+
+export const ARCH_INTRO = "A senior-level tour of mobile system design, mapped onto React Native and the New Architecture. This is the “how do you think about building a mobile app at scale” material.";
+export const ARCH_SECTIONS: ArchSection[] = [
+  {
+    "id": "arch-1",
+    "num": "01",
+    "title": "01 · Thinking in systems — the CRDDS framework",
+    "html": "<p>System design is <b>decision-making before code</b>. On mobile specifically, interviewers want to see that you\n        design for the <i>worst</i> phone, the <i>worst</i> network, and the worst moment — not lab conditions. This\n        five-step framework keeps you structured under pressure:</p>\n      <table>\n        <tr><th>Step</th><th>What you do</th><th>Time</th></tr>\n        <tr><td><b>C</b> — Clarify</td><td>Functional vs non-functional requirements, scale (DAU/MAU), platforms, online/offline expectations. Spend 4–6 min here — most candidates rush it and design the wrong system.</td><td>~15%</td></tr>\n        <tr><td><b>R</b> — Rough HLD</td><td>Draw the high-level diagram: the four layers and the major components. A “city map, not a street map.”</td><td>~20%</td></tr>\n        <tr><td><b>D</b> — Deep dive</td><td>Zoom into one component (repository, chat service, image loader) — interfaces, methods, patterns, edge cases.</td><td>~35%</td></tr>\n        <tr><td><b>D</b> — Discuss trade-offs</td><td>Name the alternatives and why you chose one. This is the senior signal.</td><td>~20%</td></tr>\n        <tr><td><b>S</b> — Summarize</td><td>Recap the design, call out risks, handle follow-ups.</td><td>~10%</td></tr>\n      </table>\n      <div class=\"callout\"><span class=\"lbl\">Senior tell</span> A line like\n        <i>“I'd use the Repository pattern plus stale-while-revalidate plus single-flight refresh”</i> shows you can name\n        patterns <b>and</b> combine them. Always say the trade-off out loud — “I'm trading freshness for speed here.”</div>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> You already do the C-step instinctively — your CV\n        literally lists “proactively ask clarifying questions.” Lead with that in any design round.</div>"
+  },
+  {
+    "id": "arch-2",
+    "num": "02",
+    "title": "02 · The 4-layer architecture & patterns",
+    "html": "<p>Almost every mobile app shares the same skeleton. Memorize it — it's your HLD template:</p>\n      <table>\n        <tr><th>Layer</th><th>Responsibility</th><th>React Native equivalent</th></tr>\n        <tr><td><b>UI / Presentation</b></td><td>Screens, components, gestures, animations. “Dumb” — renders state, emits events.</td><td>Function components, hooks, navigation, Reanimated</td></tr>\n        <tr><td><b>Business / Domain</b></td><td>Use-cases, validation, app rules. Framework-agnostic, the most testable layer.</td><td>Plain TS modules, custom hooks, state stores (Zustand/MobX)</td></tr>\n        <tr><td><b>Data / Repository</b></td><td>Combines remote + local, caching, mapping DTOs → domain models. The app talks to repositories, never to the API directly.</td><td>Repository modules wrapping React Query + local DB</td></tr>\n        <tr><td><b>Network</b></td><td>HTTP engine, serialization, interceptors, retries.</td><td>fetch/axios + Apollo/urql, interceptors, MMKV/SQLite</td></tr>\n      </table>\n      <p><b>Pattern evolution:</b> MVC → MVP → <b>MVVM</b> (view binds to a view-model exposing observable state) → <b>MVI</b>\n        (one-way data flow, immutable state, reducers) → <b>Clean Architecture</b> (strict layer boundaries, dependencies\n        point inward). In React Native, the idiomatic shape is essentially <b>MVVM/MVI</b>: components observe a store,\n        dispatch actions, and a unidirectional data flow updates the UI.</p>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> Your schema-driven Form Builder is layered thinking in\n        action — a reusable domain package decoupled from any one screen, shared across a Turborepo monorepo.</div>"
+  },
+  {
+    "id": "arch-3",
+    "num": "03",
+    "title": "03 · The networking layer",
+    "html": "<p>A production API client has <b>six separated pieces</b>: (1) the HTTP engine, (2) the serializer, (3) a typed API\n        service interface, (4) <b>interceptors</b> for cross-cutting concerns (auth token, logging, retries), (5) DTOs that\n        match the server JSON, and (6) the <b>repository</b> that wraps it all and adds caching. Never let DTOs leak into the\n        UI — map them to domain models first.</p>\n      <h4>Errors, retries, timeouts</h4>\n      <p>Wrap calls in a result type (success / failure), set sane timeouts, and retry only <b>idempotent</b> requests with\n        <b>exponential backoff + jitter</b>. Distinguish retryable (network, 5xx) from non-retryable (4xx) failures.</p>\n      <h4>Pagination</h4>\n      <table>\n        <tr><th>Strategy</th><th>How</th><th>Use when</th></tr>\n        <tr><td>Offset / limit</td><td><code>?page=3&amp;limit=20</code></td><td>Small, stable lists; jump-to-page</td></tr>\n        <tr><td><b>Cursor</b></td><td>Opaque token to the next slice</td><td>Feeds &amp; infinite scroll — stable under inserts (the usual right answer)</td></tr>\n        <tr><td>Keyset</td><td><code>WHERE id &lt; lastId</code></td><td>Large datasets, performance-critical</td></tr>\n      </table>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> Discovery/global-directory surfaces with search + filters\n        on Valt, and the AppSync GraphQL + OpenSearch data layer at Novacomp, are exactly this layer at work.</div>"
+  },
+  {
+    "id": "arch-4",
+    "num": "04",
+    "title": "04 · Storage & caching",
+    "html": "<p>Two layers, different speeds and lifetimes: <b>memory cache</b> (RAM — fastest, lost on kill) and <b>disk cache</b>\n        (SQLite / Realm / MMKV / files — survives restarts). Caching buys you speed, battery, data savings, and offline\n        support; the cost is complexity — you must decide what to cache, where, when to evict, and when it's stale.</p>\n      <h4>Eviction vs invalidation</h4>\n      <ul>\n        <li><b>Eviction</b> = removing data to free space: <b>LRU</b> (drop least-recently-used) and <b>TTL</b> (expire after N seconds).</li>\n        <li><b>Invalidation</b> = knowing cached data is stale. Strategies: time-based (TTL), event-based (push/mutation invalidates a key), and version-based (bump a version to bust old clients).</li>\n      </ul>\n      <div class=\"callout\"><span class=\"lbl\">The pattern to name</span> <b>Stale-while-revalidate</b>: show cached data instantly,\n        fetch fresh in the background, reconcile. It's the heart of React Query and SWR — render cache, refetch, update.</div>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> You shipped <b>version-based cache invalidation</b> on Valt\n        so fixes could ship without breaking older clients, and you've used React Query and SWR for years.</div>"
+  },
+  {
+    "id": "arch-5",
+    "num": "05",
+    "title": "05 · Offline-first design",
+    "html": "<p>Offline-first flips the model: the <b>local database is the source of truth</b>, and the network just keeps it in sync.\n        The UI always reads from local storage, so the app keeps working with no signal. Three building blocks:</p>\n      <ul>\n        <li><b>Optimistic updates</b> — apply the change locally and update the UI immediately, then confirm with the server and roll back on failure. Makes likes, bookmarks, and sends feel instant.</li>\n        <li><b>Sync queue + replay</b> — queue mutations made offline, then replay them in order when connectivity returns.</li>\n        <li><b>Conflict resolution</b> — when local and server disagree: last-write-wins (simple), server-wins, or merge/CRDT (richest). Pick per data type.</li>\n      </ul>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> You added optimistic updates across profiles and bookmarks on\n        Valt — the exact pattern an interviewer wants you to describe here.</div>"
+  },
+  {
+    "id": "arch-6",
+    "num": "06",
+    "title": "06 · Real-time updates",
+    "html": "<table>\n        <tr><th>Technique</th><th>How it works</th><th>Best for</th></tr>\n        <tr><td>Polling</td><td>Client asks every N seconds</td><td>Simple, low-frequency data; wastes battery if abused</td></tr>\n        <tr><td>Long polling</td><td>Server holds the request until data is ready</td><td>Near-real-time without WebSocket infra</td></tr>\n        <tr><td><b>WebSocket</b></td><td>Full-duplex persistent connection</td><td>Chat, presence, live trading — true two-way real-time</td></tr>\n        <tr><td>SSE</td><td>One-way server → client stream</td><td>Feeds, notifications, live scores (server push only)</td></tr>\n        <tr><td>Push (FCM/APNs)</td><td>OS-level delivery when app is backgrounded/killed</td><td>Re-engagement, messages while app is closed</td></tr>\n      </table>\n      <p><b>Decision guide:</b> two-way + low latency → WebSocket. One-way stream → SSE. App closed → push notification.\n        Don't keep a socket open just for occasional updates — it drains battery (remember the radio “tail energy”).</p>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> Twilio Conversations on Valt is a WebSocket-backed real-time\n        system — you built the singleton provider, unread tracking, and push notifications on top of it.</div>"
+  },
+  {
+    "id": "arch-7",
+    "num": "07",
+    "title": "07 · Performance essentials",
+    "html": "<ul>\n        <li><b>App launch</b> — minimize work before first paint; lazy-load, defer non-critical init. TurboModules help by initializing native modules on demand.</li>\n        <li><b>Smooth 60 FPS scrolling</b> — virtualize long lists (FlatList/FlashList), keep <code>renderItem</code> cheap, stabilize keys, avoid anonymous inline functions/objects in props.</li>\n        <li><b>Re-render discipline</b> — <code>React.memo</code>, <code>useMemo</code>/<code>useCallback</code>, store selectors so a component re-renders only on the slice it uses. Profile first; don't sprinkle memo blindly.</li>\n        <li><b>Image &amp; memory</b> — right-size images, cache decoded bitmaps, release off-screen resources, watch for leaks.</li>\n        <li><b>Battery &amp; network</b> — batch network calls (the radio's “tail energy” makes 10 small calls far worse than 1), cancel work when the user leaves a screen, schedule background sync.</li>\n      </ul>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> This is your signature: you eliminated re-render flickering and\n        frozen screens on Valt by profiling, memoizing, and moving hot state into Zustand selectors.</div>"
+  },
+  {
+    "id": "arch-8",
+    "num": "08",
+    "title": "08 · Security basics",
+    "html": "<ul>\n        <li><b>HTTPS + certificate pinning</b> — encrypt in transit; pin to defeat man-in-the-middle on hostile networks.</li>\n        <li><b>Token storage</b> — never in AsyncStorage. Use the <b>iOS Keychain</b> and <b>Android Keystore</b> (e.g. react-native-keychain / expo-secure-store).</li>\n        <li><b>Encryption at rest</b> — encrypt sensitive local data (SQLCipher, encrypted MMKV).</li>\n        <li><b>Auth flows</b> — OAuth 2.0 / OIDC with PKCE, short-lived access tokens + refresh tokens, biometric gating for sensitive actions.</li>\n      </ul>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> Biometric auth (FaceID/TouchID), Google Sign-In, Salesforce\n        External Connected Apps for secure token management, Cognito + OAuth (Google/Apple/Facebook) — you've shipped the\n        whole auth stack.</div>"
+  },
+  {
+    "id": "arch-9",
+    "num": "09",
+    "title": "09 · React Native — the New Architecture",
+    "html": "<p>This is the highest-leverage topic for a senior RN interview in 2026. Know the before/after cold:</p>\n      <table>\n        <tr><th>Old (legacy bridge)</th><th>New Architecture</th></tr>\n        <tr><td>Async <b>Bridge</b> serializing JSON between JS &amp; native — a batching bottleneck</td><td><b>JSI</b> (JavaScript Interface): JS holds C++ references and calls native <b>synchronously</b>, no JSON bridge</td></tr>\n        <tr><td>Paper renderer (async UI)</td><td><b>Fabric</b>: new concurrent renderer with a shared C++ shadow tree; enables synchronous layout &amp; better React 18 concurrent features</td></tr>\n        <tr><td>NativeModules loaded eagerly at startup</td><td><b>TurboModules</b>: lazy, on-demand native modules → faster startup</td></tr>\n        <tr><td>Manual native interfaces</td><td><b>Codegen</b>: type-safe native interfaces generated from TS specs</td></tr>\n      </table>\n      <p><b>Status to quote:</b> the New Architecture has been the <b>default since React Native 0.76</b> (late 2024); <b>Hermes</b>\n        is the default JS engine; and the legacy bridge is being fully removed (disabled by default around 0.82). Expo apps get\n        it out of the box on recent SDKs. <b>Hermes</b> matters because it precompiles to bytecode for faster startup, lower\n        memory, and smaller bundles.</p>\n      <div class=\"callout\"><span class=\"lbl\">Say this</span> “JSI replaced the bridge, Fabric replaced the renderer, TurboModules\n        replaced native modules, and Codegen makes it all type-safe — it's the default since 0.76, so the old ‘RN is slow because\n        of the bridge’ critique is basically historical now.”</div>"
+  },
+  {
+    "id": "arch-10",
+    "num": "10",
+    "title": "10 · The RN threading model & mobile constraints",
+    "html": "<p>Classic React Native runs on <b>three threads</b>: the <b>JS thread</b> (your React code &amp; business logic), the\n        <b>native/UI (main) thread</b> (rendering, gestures), and a <b>shadow thread</b> (Yoga layout). Jank happens when you\n        block the JS thread (heavy synchronous work) or thrash the bridge. The New Architecture + JSI reduce cross-thread cost,\n        and tools like Reanimated run animations on the UI thread so they stay smooth even if JS is busy.</p>\n      <p>The four constraints that shape every decision: <b>limited resources</b> (battery, memory, CPU, storage),\n        <b>unreliable networks</b> (2G→5G→offline), the <b>app lifecycle</b> (foreground / background / killed), and the fact\n        that you ship to <b>millions of different devices</b> you don't control. Design for the worst case and the happy path\n        takes care of itself.</p>\n      <div class=\"callout tip\"><span class=\"lbl\">Your proof</span> You've debugged the render thread, driven a Hermes rollout,\n        and shipped on a wide device range — speak to the threading model from having actually fought jank, not theory.</div>"
+  }
+];
+
+export const DEEPDIVES_INTRO = "The senior playbook from two advanced guides, in a concept → example → problem → solution shape so each idea sticks as a real engineering decision, not a definition.";
+export const DEEP_DIVES: DeepDive[] = [
+  {
+    "id": "dd-1",
+    "pill": "Startup",
+    "title": "Cold start & Time-to-Interactive (TTI)",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> TTI is the time from tap/launch to a screen the user can actually use. It's the headline cold-start metric and is dominated by JS bundle parse + everything you run before first paint.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A cold-start trace shows 2.5s: ~1.2s evaluating the JS bundle, ~0.8s in eager module/init work for screens the user hasn't even reached yet.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Top-level imports of heavy libraries run their initialization at startup even when the first screen never uses them.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Ship Hermes (bytecode, no parse), lazy/dynamically import non-critical screens, and defer non-urgent work with <code>InteractionManager.runAfterInteractions()</code>. Measure TTI before and after — don't guess.</div>"
+  },
+  {
+    "id": "dd-2",
+    "pill": "Engine",
+    "title": "Hermes — the JS engine",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Hermes precompiles JavaScript to <b>bytecode at build time</b>, so there's no parse/compile step on launch — lower startup time, lower memory, smaller footprint.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Switching a JSC app to Hermes drops Android TTI and steady-state memory measurably; check it's on with <code>!!global.HermesInternal</code>.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> On a non-Hermes engine the full JS source is parsed on every cold start, taxing low-end devices most.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Hermes is the default under the New Architecture (0.76+). Profile CPU hotspots with the Hermes sampling profiler rather than reading code and guessing.</div>"
+  },
+  {
+    "id": "dd-3",
+    "pill": "Rendering",
+    "title": "Re-render discipline",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> React re-renders on state / prop / context change. <code>React.memo</code> only helps if the props are <b>referentially stable</b>.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A parent passes a fresh inline object every render, so a memoized child re-renders anyway:\n          <div class=\"code\">// ❌ new object identity every render\n&lt;Child style={{ margin: 8 }} onPress={() =&gt; go()} /&gt;\n\n// ✅ stable references\nconst style = useMemo(() =&gt; ({ margin: 8 }), []);\nconst onPress = useCallback(() =&gt; go(), []);\n&lt;Child style={style} onPress={onPress} /&gt;</div></div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> A context holding a frequently-changing value re-renders <b>every</b> consumer, even ones reading an unrelated field.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Stabilize props with <code>useMemo</code>/<code>useCallback</code>, split broad contexts, and move hot state into a store with <b>selectors</b> so only the slice's consumers re-render.</div>"
+  },
+  {
+    "id": "dd-4",
+    "pill": "Lists",
+    "title": "Long lists at scale",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Virtualization renders only visible rows; a recycling list (FlashList) reuses row views instead of mounting/unmounting them.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A 10k-row chat janks on a plain list but scrolls at 60fps on a recycling list with a cheap, memoized <code>renderItem</code> and a stable key.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Using the array index as the key. On reorder/insert/delete, views get recycled onto the wrong data → visual glitches.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Always use a <b>stable unique id</b> in <code>keyExtractor</code>, memoize <code>renderItem</code>, and provide <code>getItemLayout</code> for fixed-height rows. FlashList v2 auto-measures under the New Architecture (no <code>estimatedItemSize</code>).</div>"
+  },
+  {
+    "id": "dd-5",
+    "pill": "Memory",
+    "title": "Memory leaks",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> A leak is a reference that outlives its usefulness, blocking GC. On a phone, repeated navigation churn turns a small leak into a crash.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Three classics — a listener, a timer, and a closure capturing a big object:\n          <div class=\"code\">useEffect(() =&gt; {\n  const sub = emitter.addListener('x', onX);\n  const id = setInterval(tick, 1000);\n  return () =&gt; { sub.remove(); clearInterval(id); }; // ✅ cleanup\n}, []);</div></div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Subscriptions never removed, intervals never cleared, or a long-lived callback that retains a large data structure.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Always return a cleanup from <code>useEffect</code>; clear every timer; cancel every subscription; avoid capturing large objects in callbacks that live a long time. Confirm with the memory profiler that the curve flattens.</div>"
+  },
+  {
+    "id": "dd-6",
+    "pill": "Bundle",
+    "title": "Bundle size & tree-shaking",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> A smaller JS bundle means faster download, parse, and TTI. Dead code that survives bundling costs you on every launch.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Importing a whole utility library vs. one function:\n          <div class=\"code\">// ❌ pulls the whole library\nimport _ from 'lodash';\n// ✅ only what you use (tree-shakeable)\nimport groupBy from 'lodash/groupBy';</div></div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Barrel files and side-effectful modules defeat tree-shaking, so unused code ships anyway.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Import specific paths, mark packages <code>\"sideEffects\": false</code> where true, visualize the bundle to find bloat, and enable minify + shrink (R8) on Android to strip dead native/JS code.</div>"
+  },
+  {
+    "id": "dd-7",
+    "pill": "Threads",
+    "title": "Animations & the JS thread",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Classic RN runs your code on the JS thread and rendering on the UI thread. If JS is busy, anything driven by JS stutters.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A gesture-driven animation stays at 60fps because it runs on the UI thread (Reanimated worklets / <code>useNativeDriver: true</code>) while a list does JS work.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> <code>Animated</code> without the native driver, or heavy layout/compute on the JS thread, drops frames during interaction.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Run animations on the UI thread, set <code>useNativeDriver: true</code>, and push heavy compute off the critical path (defer with <code>InteractionManager</code> or a worklet).</div>"
+  },
+  {
+    "id": "dd-8",
+    "pill": "Architecture",
+    "title": "The New Architecture (Fabric · TurboModules · JSI)",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> <b>JSI</b> lets JS call native synchronously (no JSON bridge); <b>Fabric</b> is a concurrent renderer with a C++ shadow tree; <b>TurboModules</b> load native modules lazily.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Fabric's synchronous layout is exactly what lets a modern recycling list measure items on the fly instead of needing size estimates.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> The legacy bridge serialized and batched every call, adding latency on rapid native interactions and blocking concurrent React.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Adopt the New Architecture (default since 0.76) and prefer libraries that support it; it's the foundation the other wins build on.</div>"
+  },
+  {
+    "id": "dd-9",
+    "pill": "Method",
+    "title": "Profiling-first methodology",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Optimization without measurement is guessing. Find the proven bottleneck, fix that, re-measure.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> The React DevTools Profiler shows which component re-rendered and <i>why</i>; the Hermes sampler shows CPU hotspots; native profilers show memory growth.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Sprinkling <code>memo</code>/<code>useMemo</code> everywhere adds overhead and complexity while often fixing nothing real.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Reproduce → measure (render counts / flamegraph) → fix the hotspot → re-measure → lock it with a check so it can't regress.</div>"
+  },
+  {
+    "id": "dd-10",
+    "pill": "Concept",
+    "title": "On-device inference — what & why",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> The model weights live on the phone and all computation runs locally — no server round-trip. A small C++ runtime runs a model exported to a <code>.pte</code> binary, delegating to a hardware backend (CPU/XNNPACK by default).</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A chat assistant runs a 1B quantized LLM fully offline via a declarative hook (<code>useLLM</code>), streaming tokens into the UI.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Cloud inference means network latency, recurring GPU bills, and shipping users' audio/images/chats off-device.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> On-device inference buys <b>privacy</b> (data never leaves the device), <b>offline</b> use, <b>no server cost</b>, and low latency — at the price of RAM/storage budgeting.</div>"
+  },
+  {
+    "id": "dd-11",
+    "pill": "Setup",
+    "title": "New Architecture + mandatory init",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> The runtime ships native code, so it requires the <b>New Architecture</b> (Fabric + TurboModules) and a one-time initialization with a resource-fetcher adapter before any model API is called.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span>\n          <div class=\"code\">// app entry, once, before any model hook\nimport { initExecutorch } from 'react-native-executorch';\nimport { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';\ninitExecutorch({ resourceFetcher: ExpoResourceFetcher });</div></div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Calling a model hook before init throws an \"adapter not initialized\" error; the old architecture is unsupported.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Initialize at the app root. RN 0.76+ / modern Expo SDKs enable the New Architecture by default, so confirm it's on.</div>"
+  },
+  {
+    "id": "dd-12",
+    "pill": "Tooling",
+    "title": "Expo: you must use a dev build",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> A library with native code can't run in the prebuilt Expo Go sandbox — it needs a custom <b>development build</b>.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Add <code>expo-dev-client</code>, then <code>npx expo prebuild</code> + <code>npx expo run:ios -d</code> (real device for iOS release), or build a dev client on EAS.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Trying to test in Expo Go — it will never load the native model code, wasting hours.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Commit to a dev build from day one. No config plugin is needed (it autolinks), but add the resource-fetcher adapter and push <code>.pte</code> into <code>assetExts</code> in <code>metro.config.js</code> if bundling models.</div>"
+  },
+  {
+    "id": "dd-13",
+    "pill": "Loading",
+    "title": "Model loading strategies",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Three ways to supply a model: <b>bundled</b> via <code>require()</code> (&lt; 512&nbsp;MB), <b>remote URL</b> (downloaded to the documents dir with progress), or a <b>local file path</b> the user provides.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Small classifier? Bundle it. 1&nbsp;GB LLM? Download from a URL and show <code>downloadProgress</code> (0→1).</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Bundling a multi-hundred-MB <code>.pte</code> into the binary bloats the app and hits the bundling size limit.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Prefer remote URL for large models, gate the download behind explicit user opt-in with a visible progress UI, and cache it in the documents directory.</div>"
+  },
+  {
+    "id": "dd-14",
+    "pill": "Memory",
+    "title": "Model sizing & device RAM",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> LLMs are RAM-hungry and size scales with parameters and quantization. Rule of thumb: a 1B model ≈ <b>1&nbsp;GB download / ~2&nbsp;GB RAM</b>.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> Device tiers: 8&nbsp;GB+ RAM → 3B models; 6&nbsp;GB → 1B quantized; 4&nbsp;GB → computer-vision models only.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Loading a 3B model on a 4&nbsp;GB device crashes the app (and the iOS Simulator can't run iOS release builds).</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Detect the device tier, start with a small quantized model, and upgrade only when RAM allows. Always test on <b>physical</b> devices.</div>"
+  },
+  {
+    "id": "dd-15",
+    "pill": "Lifecycle",
+    "title": "LLM lifecycle & crash-safety",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> A hook auto-loads its model on mount and exposes <code>isReady</code>, <code>downloadProgress</code>, <code>isGenerating</code>, a streaming <code>response</code>, and <code>interrupt()</code>. Only <b>one</b> LLM instance can be active at a time.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A \"Stop\" button calls <code>interrupt()</code>; token emission is batched (~10 tokens / 80ms) so very fast generation doesn't trigger a re-render storm.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Unmounting or navigating away from the screen <b>while the LLM is still generating crashes the app</b>.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Call <code>interrupt()</code> and wait for <code>isGenerating === false</code> before unmounting; bound memory with a sliding-window context strategy and cap generation length (~256 tokens for short answers).</div>"
+  },
+  {
+    "id": "dd-16",
+    "pill": "Models",
+    "title": "Quantization",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> Quantization lowers weight precision (e.g. SpinQuant / 8da4w / QLoRA), shrinking the model and speeding inference with minimal quality loss.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A base model ~3.3&nbsp;GB vs. its quantized variant ~1.9&nbsp;GB — about a 42% reduction — fitting devices that the base model couldn't.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> A full-precision model is too large/slow for phones and crashes mid-range devices.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Default to quantized variants and budget tokens/sec on your <b>oldest</b> supported device, not just the newest flagship.</div>"
+  },
+  {
+    "id": "dd-17",
+    "pill": "Versioning",
+    "title": "Pre-1.0 churn — pin everything",
+    "html": "<div class=\"dd-block dd-concept\"><span class=\"lbl\">Concept</span> The library is pre-1.0 and ships breaking changes most minor releases; model constants pin to specific tags so the runtime stays compatible.</div>\n        <div class=\"dd-block dd-example\"><span class=\"lbl\">Example</span> A minor bump renamed factory APIs and hooks (e.g. <code>ImageSegmentation</code> → <code>SemanticSegmentation</code>) and made init mandatory.</div>\n        <div class=\"dd-block dd-problem\"><span class=\"lbl\">Problem</span> Auto-upgrading to \"latest\" silently breaks the API surface and your model URLs.</div>\n        <div class=\"dd-block dd-solution\"><span class=\"lbl\">Solution</span> Pin the exact version + matching adapter, read release notes before any bump, re-test on physical iOS/Android release builds, and don't hand-edit pinned model URLs.</div>"
+  }
+];
