@@ -92,9 +92,11 @@ function XPRing({
           strokeWidth={stroke}
           strokeDasharray={dashArray}
           strokeDashoffset={c * 0.25}
-          originX={cx}
-          originY={cy}
-          rotation={-90}
+          // SVG transform string (not the rotation/originX/originY props) so
+          // react-native-svg's web shim emits a valid `transform` attribute
+          // instead of an invalid `transform-origin` DOM prop. Rotates the arc
+          // so it starts at 12 o'clock, identical on native and web.
+          transform={`rotate(-90, ${cx}, ${cy})`}
         />
         {ticks.map((deg, i) => {
           const rad = (deg * Math.PI) / 180;
