@@ -1,0 +1,54 @@
+# App Store screenshot capture flow.
+# Drives every tab by testID and screenshots each screen. Reusable for future
+# store updates. Run per device, e.g.:
+#   cd store/screenshots/<device-dir>
+#   JAVA_HOME=/opt/homebrew/opt/openjdk@17 maestro --device <udid> test ../capture.yml
+appId: dev.gerardocordero.portfolio
+---
+- launchApp
+- assertVisible:
+    id: "screen-status"
+- waitForAnimationToEnd
+- takeScreenshot: "shot-1-status"
+
+- tapOn:
+    id: "tab-ask"
+- assertVisible:
+    id: "screen-ask"
+- tapOn:
+    id: "ask-input"
+- inputText: "real-time chat"
+- waitForAnimationToEnd:
+    timeout: 2500
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: "shot-2-ask"
+
+- tapOn:
+    id: "tab-projects"
+- assertVisible:
+    id: "screen-projects"
+- waitForAnimationToEnd
+- takeScreenshot: "shot-3-projects"
+
+- tapOn:
+    id: "tab-experience"
+- assertVisible:
+    id: "screen-experience"
+- waitForAnimationToEnd
+- takeScreenshot: "shot-4-experience"
+
+- tapOn:
+    id: "tab-education"
+- assertVisible:
+    id: "screen-education"
+- waitForAnimationToEnd
+- takeScreenshot: "shot-5-education"
+
+- tapOn:
+    id: "tab-contact"
+- assertVisible:
+    id: "screen-contact"
+- waitForAnimationToEnd
+- takeScreenshot: "shot-6-contact"
