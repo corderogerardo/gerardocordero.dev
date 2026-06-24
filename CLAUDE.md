@@ -27,6 +27,9 @@ End-to-end (Maestro) tests are a separate, device-level gate — see
 | Path | What it is | In the loop? |
 |---|---|---|
 | `apps/portfolio` | **The active app.** Expo / React Native, expo-router, NativeWind. | ✅ typecheck + lint + unit (jest) + e2e (Maestro) |
+| `apps/ios-prep` | Static Next.js 16 export → Cloudflare Pages (`ios.gerardocordero.dev`). iOS interview-prep study site. | ✅ typecheck + lint (deploy: path-filtered `deploy-ios-prep` in `ci.yml`) |
+| `apps/reactnative-prep` | Static Next.js 16 export → Cloudflare Pages (`reactnative.gerardocordero.dev`). RN interview-prep study site. | ✅ typecheck + lint (deploy: path-filtered `deploy-reactnative-prep` in `ci.yml`) |
+| `apps/android-prep` | Static Next.js 16 export → Cloudflare Pages (`android.gerardocordero.dev`). Android/Kotlin interview-prep study site. | ✅ typecheck + lint (deploy: path-filtered `deploy-android-prep` in `ci.yml`) |
 | `apps/old-web` | Legacy portfolio (CRA, React 17). Archived. | ❌ quarantined — has pre-existing JS/TS errors; do not "fix" it as part of unrelated work |
 | `packages/ui` | Shared RN UI library (`@gerardocordero/ui`), consumed by portfolio via a tsconfig path alias to its `src`. | covered via portfolio's typecheck |
 | `packages/courses` | TypeScript course exercises (vitest). Learning material — tests may be intentionally red. | ❌ |

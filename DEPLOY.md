@@ -1,25 +1,32 @@
 # Deploying the prep apps to Cloudflare Pages
 
-This covers `apps/ios-prep` and `apps/reactnative-prep` (both static Next.js
-exports). The live portfolio (`apps/portfolio`) is handled by the existing
-`deploy-web` job in `ci.yml` and is unchanged.
+This covers `apps/ios-prep`, `apps/reactnative-prep`, and `apps/android-prep`
+(all static Next.js exports). The live portfolio (`apps/portfolio`) is handled
+by the existing `deploy-web` job in `ci.yml` and is unchanged.
+
+| App | Pages project | Custom domain |
+|---|---|---|
+| `apps/ios-prep` | `ios-prep` | `ios.gerardocordero.dev` |
+| `apps/reactnative-prep` | `reactnative-prep` | `reactnative.gerardocordero.dev` |
+| `apps/android-prep` | `android-prep` | `android.gerardocordero.dev` |
 
 ## How it works now
 
 `.github/workflows/ci.yml` runs on every push to `main` and every PR:
 
 1. **`verify`** — `pnpm typecheck`, `pnpm lint`, `pnpm test` across the monorepo.
-2. **`deploy-ios-prep`** and **`deploy-reactnative-prep`** — each `needs: verify`
-   (a red `main` can't ship), then **only deploys if that app actually changed**
-   in the push. The job diffs `github.event.before..github.sha`; if nothing under
-   `apps/ios-prep/` (resp. `apps/reactnative-prep/`) changed, the build/deploy
-   steps are skipped and the job is a fast no-op.
+2. **`deploy-ios-prep`**, **`deploy-reactnative-prep`**, and
+   **`deploy-android-prep`** — each `needs: verify` (a red `main` can't ship),
+   then **only deploys if that app actually changed** in the push. The job diffs
+   `github.event.before..github.sha`; if nothing under `apps/ios-prep/` (resp.
+   `apps/reactnative-prep/`, `apps/android-prep/`) changed, the build/deploy steps
+   are skipped and the job is a fast no-op.
 
 So: merge something that touches `apps/ios-prep/**` → only `ios-prep` redeploys.
-Touch both → both redeploy. Touch neither → neither redeploys.
+Touch several → each changed app redeploys. Touch none → none redeploy.
 
 You can also trigger a deploy manually: **GitHub → Actions → CI → Run workflow**
-(`workflow_dispatch`) deploys both prep apps regardless of what changed.
+(`workflow_dispatch`) deploys all three prep apps regardless of what changed.
 
 Auth reuses the two repo secrets the portfolio deploy already uses:
 `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
@@ -44,16 +51,18 @@ Auth reuses the two repo secrets the portfolio deploy already uses:
    needed. (If a prep deploy ever fails with a 403/auth error, the token is scoped
    to a single project — widen it to account-level Pages: Edit.)
 
-3. **Create the two Pages projects** (one-time). The safest way is to pre-create
+3. **Create the Pages projects** (one-time). The safest way is to pre-create
    them so the first deploy can't fail on a missing project. Either:
 
    **Dashboard:** Workers & Pages → Create → Pages → *Direct Upload* → name it
-   `ios-prep` (and again `reactnative-prep`), production branch `main`.
+   `ios-prep` (and again `reactnative-prep`, `android-prep`), production branch
+   `main`.
 
    **or wrangler (local), authenticated as the same account:**
    ```bash
    npx wrangler pages project create ios-prep --production-branch=main
    npx wrangler pages project create reactnative-prep --production-branch=main
+   npx wrangler pages project create android-prep --production-branch=main
    ```
    (Recent wrangler will also auto-create the project on first `pages deploy`, but
    pre-creating removes any doubt.)
@@ -76,7 +85,8 @@ Cloudflare **creates the DNS record and TLS cert for you**:
 
 **Dashboard:** Workers & Pages → `ios-prep` → **Custom domains** → *Set up a custom
 domain* → `ios.gerardocordero.dev` → Activate. (Repeat on `reactnative-prep` with
-`reactnative.gerardocordero.dev`.)
+`reactnative.gerardocordero.dev`, and on `android-prep` with
+`android.gerardocordero.dev`.)
 
 **or API** (uses the same token + account id):
 ```bash
