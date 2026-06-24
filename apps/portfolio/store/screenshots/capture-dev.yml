@@ -1,0 +1,68 @@
+# Robust App Store screenshot capture (dev-client + Metro). Uses extendedWaitUntil
+# per screen so slower-mounting tabs (e.g. Ask, which warms the on-device engine)
+# don't race the assertion. Does NOT launchApp.
+appId: dev.gerardocordero.portfolio
+---
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "screen-status"
+    timeout: 120000
+- waitForAnimationToEnd
+- takeScreenshot: "shot-1-status"
+
+- tapOn:
+    id: "tab-ask"
+- extendedWaitUntil:
+    visible:
+      id: "screen-ask"
+    timeout: 30000
+- tapOn:
+    id: "ask-input"
+- inputText: "real-time chat"
+- waitForAnimationToEnd:
+    timeout: 3000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "shot-2-ask"
+
+- tapOn:
+    id: "tab-projects"
+- extendedWaitUntil:
+    visible:
+      id: "screen-projects"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: "shot-3-projects"
+
+- tapOn:
+    id: "tab-experience"
+- extendedWaitUntil:
+    visible:
+      id: "screen-experience"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: "shot-4-experience"
+
+- tapOn:
+    id: "tab-education"
+- extendedWaitUntil:
+    visible:
+      id: "screen-education"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: "shot-5-education"
+
+- tapOn:
+    id: "tab-contact"
+- extendedWaitUntil:
+    visible:
+      id: "screen-contact"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: "shot-6-contact"
