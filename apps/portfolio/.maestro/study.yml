@@ -1,0 +1,32 @@
+# Exercises the interactive study loop end-to-end: open the Study tab, reveal a
+# flashcard, and grade it (spaced-repetition advance). This is the user-facing
+# functionality that distinguishes the app from a static portfolio.
+# testIDs come from app/(tabs)/study.tsx.
+appId: dev.gerardocordero.portfolio
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "tab-study"
+- assertVisible:
+    id: "screen-study"
+
+# Pick the React Native subject, then narrow to a category.
+- tapOn:
+    id: "study-subject-react-native"
+- assertVisible:
+    id: "flashcard"
+- takeScreenshot: study-01-question
+
+# Reveal the answer, then grade it — the card advances and the next one resets.
+- tapOn:
+    id: "flashcard"
+- assertVisible:
+    id: "grade-good"
+- takeScreenshot: study-02-answer
+- tapOn:
+    id: "grade-good"
+- assertVisible:
+    id: "flashcard"
+- takeScreenshot: study-03-next
