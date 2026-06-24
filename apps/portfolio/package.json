@@ -28,6 +28,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@gerardocordero/ui": "workspace:*",
     "@huggingface/transformers": "^4.2.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.12",
     "expo-application": "~56.0.3",
     "expo-constants": "~56.0.18",

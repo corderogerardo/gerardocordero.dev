@@ -54,7 +54,31 @@ cd apps/portfolio && maestro test .maestro/smoke.yml
 - **ESLint is pinned to `^9`, not 10.** `eslint-config-expo` pulls in `eslint-plugin-react@7`, which supports ESLint only up to `^9.7`. ESLint 10 crashes it (`getFilename is not a function`). Config lives in `apps/portfolio/eslint.config.js` (flat config); test files (`__tests__/**`, `*.test.*`, `jest-setup.ts`) are linted with a jest-globals override (no plugin — RNTL's matchers auto-register on import).
 - **Styling:** NativeWind (Tailwind) in the portfolio app; a `postinstall` compiles the global stylesheet.
 - **Unit test stack (portfolio):** `jest-expo ~56` (Jest 29) + `@testing-library/react-native ^14` + `test-renderer ^1.2`. Two SDK-56 gotchas: RN 0.85 extracted the Jest preset into `@react-native/jest-preset` (a required peer), and **RNTL v14 is async-by-default** — `await render(...)`, `await fireEvent...`. Do **not** add `react-test-renderer` (jest-expo bundles its own) or `@testing-library/jest-native` (deprecated; matchers are built in). Reanimated 4 is mocked via `react-native-worklets/src/mock` in `jest-setup.ts`.
-- **Secrets:** EAS Android submit needs `apps/portfolio/credentials/google-service-account.json` (gitignored). Never commit credentials; the `credentials/` dir is ignored.
+- **Secrets:** store submission credentials **on EAS**, not in the repo. iOS submit uses an App Store Connect API key and Android uses a Google Play service account, both uploaded once via `eas credentials -p ios|android` — so `eas.json`'s `submit.production` carries no `appleId`/`serviceAccountKeyPath` and CI needs only the `EXPO_TOKEN` GitHub secret. Never commit credentials; the `credentials/` dir stays gitignored for any local key files.
+
+## Study engine (interview prep)
+
+The `Study` tab (`app/(tabs)/study.tsx`) is the app's interactive, repeat-use
+feature — flashcards with on-device spaced repetition — added to satisfy App Store
+**Guideline 4.2.2** (a portfolio alone reads as "marketing material"). All progress
+is local; nothing is uploaded.
+
+- **Engine** (`src/study/`): `srs.ts` (SM-2-lite scheduler, pure), `streak.ts`
+  (daily streak, pure), `store.ts` (`usePersistedState` over AsyncStorage — chosen
+  over MMKV because the app also exports to **web**), `rich.tsx` (a tiny RN markup
+  renderer: `` `code` ``, `**bold**`, blank-line paragraphs, `- ` bullets — content
+  is plain data, **never HTML**).
+- **Scaling to a new subject** (Android, Python, Go, system design, …): drop a
+  `src/study/content/<id>.ts` exporting a `Subject`, then add it to `SUBJECTS` in
+  `src/study/registry.ts`. The picker, category filter, SRS, streak, and stats all
+  pick it up — no engine changes. Categories are derived from card order.
+- **Content** is authored + fact-checked via a workflow and emitted by
+  `node scripts/gen-study-content.mjs <workflow-output.json>`; the generated `.ts`
+  files are the source of truth thereafter (hand-edits win). Card ids must be
+  globally unique (prefix `"<subject>-<category>-N"`).
+- **Loop coverage:** `__tests__/study-srs.test.ts` (scheduler/streak),
+  `study-content.test.ts` (registry + content integrity, no HTML/entities),
+  `study-screen.test.tsx` (reveal → grade flow). E2E: `.maestro/study.yml`.
 
 ## Mobile testing & deploys (Maestro + EAS)
 
@@ -68,6 +92,7 @@ GitHub release (`mobile-dev-inc/Maestro` → `maestro.zip`, checksum-verified) o
 **E2E flows** live in `apps/portfolio/.maestro/`:
 - `smoke.yml` — the "does the app boot?" gate (`launchApp` + assert `screen-status`).
 - `walk-tabs.yml` — taps every tab (`tab-*` ids) asserting each screen root (`screen-*` ids).
+- `study.yml` — drives the interactive study loop (open Study, reveal a flashcard, grade it).
 - `subflows/launch.yml` — reusable boot step.
 
 `testID`s are the shared contract for unit + e2e: tab buttons are `tab-<route>`
@@ -119,10 +144,22 @@ numbers; a git tag mirrors the version; the app shows exactly what's running.
 node scripts/release.mjs <patch|minor|major|X.Y.Z>   # bump app.json, commit, tag vX.Y.Z
 git push origin HEAD --follow-tags                    # or pass --push to the script
 ```
-Pushing the `v*` tag runs `.github/workflows/release.yml` → creates the GitHub
-Release (auto notes). To also auto-build on tag, set repo variable
-`RELEASE_BUILDS=true` + secret `EXPO_TOKEN`; otherwise build manually with
-`eas build --platform all --profile production`.
+Pushing the `v*` tag runs `.github/workflows/release.yml` (GitHub Actions), which
+(1) creates the GitHub Release (auto notes) and (2) runs an EAS **production build
+of both platforms and auto-submits** them — iOS → App Store Connect/TestFlight,
+Android → Play **internal** track. The same workflow has a manual **Run workflow**
+button (`workflow_dispatch`, with an `all|ios|android` platform input). It uses
+`eas build … --auto-submit --non-interactive --no-wait`, so the runner just queues
+the work and EAS does build→submit on its infra. Auto-submit lands in
+TestFlight/internal — it does **not** push to public App Store review by itself.
+
+Requirements (one-time): repo secret `EXPO_TOKEN`
+(`https://expo.dev/settings/access-tokens` → `gh secret set EXPO_TOKEN`) **and**
+the submit credentials stored on EAS (`eas credentials -p ios|android`) — without
+them `--auto-submit --non-interactive` can't prompt and the submit step fails (the
+build still runs). The EAS-native `deploy.yml` workflow remains the
+approval-gated alternative (build → `require-approval` → submit, triggered from the
+EAS dashboard).
 
 ## Loop coverage (what's measured vs. not)
 

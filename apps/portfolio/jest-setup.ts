@@ -28,6 +28,12 @@ jest.mock('@expo-google-fonts/dm-sans', () => ({ useFonts: () => [true, null] })
 jest.mock('@expo-google-fonts/jetbrains-mono', () => ({ useFonts: () => [true, null] }));
 jest.mock('@expo-google-fonts/plus-jakarta-sans', () => ({ useFonts: () => [true, null] }));
 
+// --- AsyncStorage: in-memory mock so the Study screen's persisted state works --
+jest.mock('@react-native-async-storage/async-storage', () =>
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest mock factory
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 // NativeWind ~4.1: no mock by default — className -> style is resolved by its Babel
 // plugin, which jest-expo runs. If a component throws on cssInterop in tests, add a
 // minimal jest.mock('nativewind', () => ({ ...jest.requireActual('nativewind') })) here.
