@@ -1,18 +1,50 @@
 name: Release
 
-# Cutting a release = pushing a v* tag (see apps/portfolio/scripts/release.mjs).
-# This always creates the GitHub Release. The EAS production build is opt-in:
-# set repo variable RELEASE_BUILDS=true and secret EXPO_TOKEN to enable it, so
-# the job never fails just because the token isn't configured.
+# Cutting a release does two things:
+#   1. Pushing a vX.Y.Z tag (see apps/portfolio/scripts/release.mjs) creates the
+#      GitHub Release with auto-generated notes.
+#   2. The same tag — OR a manual "Run workflow" — kicks off an EAS *production*
+#      build and AUTO-SUBMITS the binaries to the stores:
+#        • iOS     → App Store Connect / TestFlight (App Store Connect API key on EAS)
+#        • Android → Google Play "internal" track   (Google service account on EAS)
+#
+# The build + submit run entirely on EAS infrastructure. With --no-wait this
+# runner only evaluates the config and queues the work, then exits in seconds;
+# EAS performs the submission automatically once each build finishes (so almost
+# no GitHub Actions minutes are spent, and a slow build never holds a runner).
+#
+# Requirements (one-time):
+#   • Repo secret EXPO_TOKEN — an Expo access token:
+#       https://expo.dev/settings/access-tokens  →  gh secret set EXPO_TOKEN
+#   • Submit credentials stored ON EAS so non-interactive submit has no prompts:
+#       cd apps/portfolio
+#       eas credentials -p ios      # add an App Store Connect API key
+#       eas credentials -p android  # add the Google Play service account key
+#   --auto-submit --non-interactive CANNOT prompt to set these up; if they are
+#   missing the submit step fails (the build still runs). See eas-cli issue #875.
+#
+# Behavior note: iOS auto-submit lands in App Store Connect / TestFlight — it does
+# NOT push to public App Store review on its own. Android lands on the internal
+# track. Build numbers auto-increment server-side (appVersionSource: remote +
+# production autoIncrement in eas.json).
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform(s) to build + submit
+        type: choice
+        default: all
+        options: [all, ios, android]
 
 permissions:
   contents: write
 
 jobs:
   github-release:
+    # Only a pushed v* tag has something to release; manual runs skip this job.
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,23 +55,57 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${{ github.ref_name }}" --verify-tag --generate-notes
 
-  eas-build:
-    needs: [github-release]
-    if: ${{ vars.RELEASE_BUILDS == 'true' }}
+  build-submit:
+    name: EAS build + store submit (production)
     runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
+      # Fail fast with an actionable message instead of a confusing EAS auth error.
+      - name: Require EXPO_TOKEN
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN repo secret is not set. Create a token at https://expo.dev/settings/access-tokens then run: gh secret set EXPO_TOKEN"
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
+
+      # pnpm/action-setup reads the version from package.json "packageManager".
       - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+
+      # The EAS CLI evaluates app.config.js locally before it queues the cloud
+      # build, so node_modules must be present even though the compile is remote.
       - name: Install
         run: pnpm install --frozen-lockfile
+
+      # expo-github-action installs + authenticates the EAS CLI (its `packager`
+      # input doesn't support pnpm, so dependency install is done above instead).
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: EAS build (production, both platforms)
+
+      # --auto-submit registers a submission EAS runs after each build completes,
+      # matching the "production" submit profile in eas.json. --no-wait lets this
+      # runner exit as soon as the build is queued.
+      #
+      # Platform precedence: manual input → repo variable RELEASE_PLATFORM → "all".
+      # Use the variable to ship iOS-only until Android's one-time Play Console
+      # setup is done, then flip it:  gh variable set RELEASE_PLATFORM --body all
+      # (Android's FIRST Play upload must be done manually; the API can't create
+      # the app, so auto-submit only works from the second Android release on.)
+      - name: EAS build + auto-submit (production)
         working-directory: apps/portfolio
-        run: eas build --platform all --profile production --non-interactive --no-wait
+        run: |
+          eas build \
+            --platform "${{ github.event.inputs.platform || vars.RELEASE_PLATFORM || 'all' }}" \
+            --profile production \
+            --auto-submit \
+            --non-interactive \
+            --no-wait

@@ -43,13 +43,12 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "gerardo@noofficelocation.com",
         "ascAppId": "6762224479",
         "appleTeamId": "P8KHXN4M8N"
       },
       "android": {
-        "serviceAccountKeyPath": "./credentials/google-service-account.json",
-        "track": "internal"
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     }
   }

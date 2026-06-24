@@ -1,0 +1,209 @@
+/*
+ * Styling for migrated long-form content (study guide, architecture, pitches).
+ * The source HTML keeps its semantic structure + a few helper classes
+ * (.callout, .map, .dd-block, .code, .pill); this restyles them in the
+ * modern dark theme. Content is authored/trusted, rendered via <RichText>.
+ */
+
+.rich {
+  color: rgb(var(--text) / 0.92);
+  line-height: 1.7;
+}
+.rich > * + * {
+  margin-top: 0.85rem;
+}
+.rich h4 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+.rich b,
+.rich strong {
+  font-weight: 600;
+  color: #fff;
+}
+.rich i,
+.rich em {
+  color: rgb(var(--text));
+}
+.rich a {
+  color: rgb(var(--accent));
+  text-underline-offset: 2px;
+}
+.rich a:hover {
+  text-decoration: underline;
+}
+.rich code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.82em;
+  color: rgb(var(--accent));
+  background: rgb(var(--surface-2));
+  padding: 0.1em 0.36em;
+  border-radius: 0.32rem;
+}
+.rich ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.rich ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.rich li {
+  margin: 0.3rem 0;
+}
+.rich li::marker {
+  color: rgb(var(--accent) / 0.7);
+}
+
+/* tables (e.g. Zustand vs MobX) */
+.rich table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+.rich th,
+.rich td {
+  border: 1px solid rgb(var(--border));
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+.rich th {
+  color: rgb(var(--accent));
+  font-weight: 700;
+  background: rgb(var(--surface-2) / 0.5);
+}
+
+/* callouts + "your proof" map blocks */
+.rich .callout,
+.rich .map {
+  border-radius: 0.75rem;
+  border: 1px solid rgb(var(--border));
+  border-left-width: 3px;
+  border-left-color: rgb(var(--accent));
+  background: rgb(var(--surface-2) / 0.55);
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+}
+.rich .callout.tip {
+  border-left-color: rgb(var(--good));
+}
+.rich .callout.warn {
+  border-left-color: rgb(var(--warn));
+}
+.rich .map {
+  border-left-color: rgb(var(--accent-2));
+  background: rgb(var(--accent-2) / 0.06);
+}
+.rich .lbl {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--accent));
+  margin-right: 0.45rem;
+}
+.rich .callout.tip .lbl {
+  color: rgb(var(--good));
+}
+.rich .callout.warn .lbl {
+  color: rgb(var(--warn));
+}
+.rich .map .lbl {
+  color: rgb(var(--accent-2));
+}
+
+/* preformatted code samples */
+.rich .code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  background: rgb(var(--bg));
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.6rem;
+  padding: 0.8rem 1rem;
+  color: rgb(var(--text));
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+.rich .code code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* deep-dive 4-quadrant grid */
+.rich .dd-row {
+  display: grid;
+  gap: 0.6rem;
+}
+@media (min-width: 640px) {
+  .rich .dd-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.rich .dd-block {
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  background: rgb(var(--surface-2) / 0.5);
+  border: 1px solid rgb(var(--border));
+  border-left-width: 3px;
+  font-size: 0.92rem;
+}
+.rich .dd-concept {
+  border-left-color: rgb(var(--accent));
+}
+.rich .dd-example {
+  border-left-color: #7aa2ff;
+}
+.rich .dd-problem {
+  border-left-color: rgb(var(--bad));
+}
+.rich .dd-solution {
+  border-left-color: rgb(var(--good));
+}
+.rich .dd-block .lbl {
+  color: inherit;
+  opacity: 0.85;
+}
+.rich .dd-concept .lbl {
+  color: rgb(var(--accent));
+}
+.rich .dd-example .lbl {
+  color: #7aa2ff;
+}
+.rich .dd-problem .lbl {
+  color: rgb(var(--bad));
+}
+.rich .dd-solution .lbl {
+  color: rgb(var(--good));
+}
+
+/* pills + pitch meta */
+.rich .pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgb(var(--surface-2));
+  color: rgb(var(--muted));
+  border: 1px solid rgb(var(--border));
+}
+.rich .pill.accent {
+  color: rgb(var(--accent));
+  border-color: rgb(var(--accent) / 0.4);
+  background: rgb(var(--accent) / 0.12);
+}
+.rich .meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
