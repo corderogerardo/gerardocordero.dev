@@ -42,5 +42,8 @@ shared study engine into `@gerardocordero/prep-kit`, and stand up
 - [x] `apps/template-prep` — canonical scaffold on prep-kit (7 interactive routes, sample data) → green.
 - [x] Full monorepo loop green: typecheck 5/5, lint 5/5, portfolio test 34/34.
 - [x] Global skill (`shared-kit-extraction`) + memory (`prep-apps-framework`).
-- [ ] OPTIONAL / deferred: retrofit the 3 live apps onto shadcn primitives (big-bang
-      re-theme of deployed sites — intentionally NOT bundled with the extraction).
+- [x] shadcn primitive layer in the kit: `cn` + CVA `Button`/`Badge` + `Card`/`Input` +
+      a shared `Chip` + `components.json`. Chip deduped across 3 decks; template-prep
+      showcases `Button`/`Card`. Live apps inherit it, visuals unchanged.
+- [ ] OPTIONAL: full shadcn re-theme of the 3 live deployed apps (a deliberate, larger
+      visual change — not bundled with the structural work).

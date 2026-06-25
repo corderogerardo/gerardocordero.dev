@@ -23,6 +23,14 @@ export type {
   NavItem,
 } from "./types";
 
+// Primitives (shadcn-style: CVA + cn)
+export { cn } from "./lib/cn";
+export { Button, buttonVariants, type ButtonProps } from "./components/ui/button";
+export { Badge, badgeVariants, type BadgeProps } from "./components/ui/badge";
+export { Card } from "./components/ui/card";
+export { Input } from "./components/ui/input";
+export { Chip } from "./components/chip";
+
 // Lib
 export * from "./lib/srs";
 export * from "./lib/streak";

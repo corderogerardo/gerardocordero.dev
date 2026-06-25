@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Prompt, PromptKind } from "../types";
 import { usePersisted } from "../config";
+import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "../lib/levels";
 import {
@@ -226,29 +227,5 @@ export function PromptDeck({
         })}
       </ol>
     </div>
-  );
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        active
-          ? "border-accent/40 bg-accent/15 text-accent"
-          : "border-border bg-surface text-muted hover:text-text"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

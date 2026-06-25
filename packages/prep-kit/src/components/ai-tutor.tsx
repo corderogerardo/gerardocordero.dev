@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePrepConfig } from "../config";
+import { Input } from "./ui/input";
 import {
   type AiAvailability,
   promptAvailability,
@@ -111,7 +112,7 @@ export function AiTutor({
       </div>
 
       <div className="flex gap-2">
-        <input
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -122,7 +123,7 @@ export function AiTutor({
           }}
           placeholder={ph}
           disabled={busy}
-          className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none placeholder:text-muted focus:border-accent/60"
+          className="flex-1"
         />
         <button
           disabled={busy}

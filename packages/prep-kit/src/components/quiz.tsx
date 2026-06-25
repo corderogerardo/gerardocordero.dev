@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { QuizQuestion } from "../types";
 import { usePersisted } from "../config";
+import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 
 type Filter = { value: string; label: string };
@@ -36,18 +37,13 @@ export function Quiz({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         {filters.map((f) => (
-          <button
+          <Chip
             key={f.value}
+            active={filter === f.value}
             onClick={() => setFilter(f.value)}
-            aria-pressed={filter === f.value}
-            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-              filter === f.value
-                ? "border-accent/40 bg-accent/15 text-accent"
-                : "border-border bg-surface text-muted hover:text-text"
-            }`}
           >
             {f.label}
-          </button>
+          </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
           Score <b className="text-good">{correct}</b> / {answeredIds.length}{" "}

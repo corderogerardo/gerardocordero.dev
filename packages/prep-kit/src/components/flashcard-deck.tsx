@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Flashcard } from "../types";
 import { usePersisted } from "../config";
+import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 import { AiTutor } from "./ai-tutor";
 import { plainText } from "../lib/plain-text";
@@ -104,13 +105,13 @@ export function FlashcardDeck({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         {filters.map((f) => (
-          <FilterChip
+          <Chip
             key={f.value}
             active={filter === f.value}
             onClick={() => setFilter(f.value)}
           >
             {f.label}
-          </FilterChip>
+          </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
           {dailyCounter ? (
@@ -129,17 +130,17 @@ export function FlashcardDeck({
         <span className="text-xs font-semibold uppercase tracking-wide text-muted">
           Level
         </span>
-        <FilterChip active={level === "all"} onClick={() => setLevel("all")}>
+        <Chip active={level === "all"} onClick={() => setLevel("all")}>
           All
-        </FilterChip>
+        </Chip>
         {LEVELS.map((l) => (
-          <FilterChip
+          <Chip
             key={l.value}
             active={level === l.value}
             onClick={() => setLevel(l.value)}
           >
             {l.label}
-          </FilterChip>
+          </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
           Showing <b className="text-text">{visible.length}</b>
@@ -281,29 +282,5 @@ export function FlashcardDeck({
         })}
       </ul>
     </div>
-  );
-}
-
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        active
-          ? "border-accent/40 bg-accent/15 text-accent"
-          : "border-border bg-surface text-muted hover:text-text"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

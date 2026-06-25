@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonVariants, Card, cn } from "@gerardocordero/prep-kit";
 import { NAV } from "@/lib/nav";
 
 const STEPS = [
@@ -42,15 +43,12 @@ export default function HomePage() {
           progress backup — comes from the shared kit. You bring the content.
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
-          <Link
-            href="/today"
-            className="rounded-xl bg-gradient-to-r from-accent to-accent-2 px-5 py-2.5 font-semibold text-bg transition-opacity hover:opacity-90"
-          >
+          <Link href="/today" className={buttonVariants({ variant: "primary", size: "lg" })}>
             Try the daily loop
           </Link>
           <Link
             href="/flashcards"
-            className="rounded-xl border border-border bg-surface px-5 py-2.5 font-semibold text-text transition-colors hover:border-accent/50"
+            className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "rounded-xl text-text")}
           >
             See the sample cards
           </Link>
@@ -61,11 +59,11 @@ export default function HomePage() {
         <h2 className="text-xl font-bold">Make it yours in 3 steps</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {STEPS.map((s) => (
-            <div key={s.n} className="card">
+            <Card key={s.n}>
               <div className="text-sm font-bold text-accent-2">Step {s.n}</div>
               <h3 className="mt-1 font-semibold text-white">{s.title}</h3>
               <p className="mt-1.5 text-sm text-muted">{s.body}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
