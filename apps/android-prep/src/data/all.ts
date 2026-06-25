@@ -28,6 +28,7 @@ import { ADVANCED4_STUDY } from "./advanced4";
 import { ADVANCED5_STUDY } from "./advanced5";
 import { ADVANCED6_STUDY } from "./advanced6";
 import { PROMPTS } from "./prompts";
+import { DSA_PROMPTS } from "./dsa";
 
 export const ALL_FLASHCARDS: Flashcard[] = [
   ...FLASHCARDS,
@@ -70,7 +71,7 @@ export const ALL_STUDY = [
   ...ADVANCED7_STUDY,
 ];
 
-export const ALL_PROMPTS = [...PROMPTS, ...ADVANCED7_PROMPTS];
+export const ALL_PROMPTS = [...PROMPTS, ...ADVANCED7_PROMPTS, ...DSA_PROMPTS];
 
 /** Strip HTML tags + decode a few entities for search/preview text. */
 export function plainText(html: string): string {

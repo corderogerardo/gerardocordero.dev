@@ -39,6 +39,7 @@ import { ADVANCED33_FLASHCARDS, ADVANCED33_QUIZ, ADVANCED33_STUDY } from "./adva
 import { QUIZ } from "./quiz";
 import { STUDY_SECTIONS } from "./study";
 import { PROMPTS } from "./prompts";
+import { DSA_PROMPTS } from "./dsa";
 
 export const ALL_FLASHCARDS: Flashcard[] = [
   ...FLASHCARDS,
@@ -153,7 +154,7 @@ export const ALL_STUDY = [
   ...ADVANCED33_STUDY,
 ];
 
-export const ALL_PROMPTS = [...PROMPTS];
+export const ALL_PROMPTS = [...PROMPTS, ...DSA_PROMPTS];
 
 /** Strip HTML tags + decode a few entities for search/preview text. */
 export function plainText(html: string): string {
