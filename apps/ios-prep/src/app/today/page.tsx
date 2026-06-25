@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { DailySession } from "@/components/daily-session";
+import { PageHeader, DailySession } from "@gerardocordero/prep-kit";
+import { ALL_FLASHCARDS, ALL_PROMPTS } from "@/data/all";
 
 export const metadata: Metadata = {
   title: "Today",
@@ -16,7 +16,7 @@ export default function TodayPage() {
         title="Today's Session"
         lead="The 20-minute loop, assembled for you: the cards spaced repetition says you're about to forget, plus a coding and a system-design prompt. Finish it daily and keep the streak alive."
       />
-      <DailySession />
+      <DailySession flashcards={ALL_FLASHCARDS} prompts={ALL_PROMPTS} />
     </div>
   );
 }

@@ -7,7 +7,9 @@
 name: Production release
 
 on:
-  workflow_dispatch:
+  # Empty object (not null): EAS's workflow schema requires `workflow_dispatch`
+  # to be an object, else validation fails with "expected object, received null".
+  workflow_dispatch: {}
 
 jobs:
   build_ios:

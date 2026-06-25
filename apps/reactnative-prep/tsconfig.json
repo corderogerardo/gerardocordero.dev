@@ -20,7 +20,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@gerardocordero/prep-kit": ["../../packages/prep-kit/src/index.ts"]
     }
   },
   "include": [

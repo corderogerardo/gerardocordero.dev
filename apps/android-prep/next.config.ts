@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   // No Next image optimization server in a static export.
   images: { unoptimized: true },
+  transpilePackages: ["@gerardocordero/prep-kit"],
 };
 
 export default nextConfig;

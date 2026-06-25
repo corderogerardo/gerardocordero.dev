@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { Quiz } from "@/components/quiz";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { Quiz } from "@gerardocordero/prep-kit";
 import { QUIZ, QUIZ_FILTERS } from "@/data/quiz";
 import { ADVANCED_QUIZ, ADVANCED_QUIZ_FILTERS } from "@/data/advanced";
 import { ADVANCED2_QUIZ, ADVANCED2_QUIZ_FILTERS } from "@/data/advanced2";

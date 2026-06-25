@@ -11,6 +11,7 @@
     "deploy": "next build && wrangler pages deploy out --project-name android-prep --branch main --commit-dirty=true"
   },
   "dependencies": {
+    "@gerardocordero/prep-kit": "workspace:*",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4"

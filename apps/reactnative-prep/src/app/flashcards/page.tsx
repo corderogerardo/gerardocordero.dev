@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { FlashcardDeck } from "@/components/flashcard-deck";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { FlashcardDeck } from "@gerardocordero/prep-kit";
 import { ALL_FLASHCARDS, ALL_FLASHCARD_FILTERS } from "@/data/all";
 
 const cards = ALL_FLASHCARDS;
