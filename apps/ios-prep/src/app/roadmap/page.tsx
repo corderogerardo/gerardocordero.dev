@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { RichText } from "@/components/rich-text";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { RichText } from "@gerardocordero/prep-kit";
 import { ROADMAP } from "@/data/roadmap";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL } from "@/lib/levels";
 

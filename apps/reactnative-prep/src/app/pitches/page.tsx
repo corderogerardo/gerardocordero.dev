@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { Pitches } from "@/components/pitches";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { Pitches } from "@gerardocordero/prep-kit";
 import { PITCHES, PITCHES_INTRO_HTML } from "@/data/pitches";
 
 export const metadata: Metadata = {

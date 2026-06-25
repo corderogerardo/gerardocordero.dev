@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { RichText } from "@/components/rich-text";
-import { box } from "@/lib/html";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { RichText } from "@gerardocordero/prep-kit";
+import { box } from "@gerardocordero/prep-kit";
 import { STUDY_INTRO_HTML } from "@/data/study";
 import { ALL_STUDY } from "@/data/all";
 

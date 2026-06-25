@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { RichText } from "@/components/rich-text";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { RichText } from "@gerardocordero/prep-kit";
 import {
   ARCH_INTRO,
   ARCH_SECTIONS,

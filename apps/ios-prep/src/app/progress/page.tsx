@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { ProgressChecklist } from "@/components/progress-checklist";
-import { ProgressTools } from "@/components/progress-tools";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { ProgressChecklist } from "@gerardocordero/prep-kit";
+import { ProgressTools } from "@gerardocordero/prep-kit";
 import { CHECKLIST_GROUPS, PROGRESS_INTRO } from "@/data/progress";
 
 export const metadata: Metadata = {

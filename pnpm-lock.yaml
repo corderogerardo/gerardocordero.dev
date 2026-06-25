@@ -35,6 +35,9 @@ importers:
 
   apps/android-prep:
     dependencies:
+      '@gerardocordero/prep-kit':
+        specifier: workspace:*
+        version: link:../../packages/prep-kit
       next:
         specifier: 16.2.9
         version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -78,6 +81,9 @@ importers:
 
   apps/ios-prep:
     dependencies:
+      '@gerardocordero/prep-kit':
+        specifier: workspace:*
+        version: link:../../packages/prep-kit
       next:
         specifier: 16.2.9
         version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -342,6 +348,55 @@ importers:
 
   apps/reactnative-prep:
     dependencies:
+      '@gerardocordero/prep-kit':
+        specifier: workspace:*
+        version: link:../../packages/prep-kit
+      next:
+        specifier: 16.2.9
+        version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@types/react':
+        specifier: ^19
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.17)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.0(postcss@8.5.15)
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.7.0)
+      eslint-config-next:
+        specifier: 16.2.9
+        version: 16.2.9(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      postcss:
+        specifier: ^8.4.49
+        version: 8.5.15
+      tailwindcss:
+        specifier: 3.4.19
+        version: 3.4.19(yaml@2.8.3)
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      wrangler:
+        specifier: ^4
+        version: 4.103.0
+
+  apps/template-prep:
+    dependencies:
+      '@gerardocordero/prep-kit':
+        specifier: workspace:*
+        version: link:../../packages/prep-kit
       next:
         specifier: 16.2.9
         version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -386,6 +441,18 @@ importers:
   packages/courses: {}
 
   packages/interview-prep: {}
+
+  packages/prep-kit:
+    dependencies:
+      next:
+        specifier: '*'
+        version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+      react:
+        specifier: '*'
+        version: 17.0.2
+      react-dom:
+        specifier: '*'
+        version: 17.0.2(react@17.0.2)
 
   packages/server-node-concepts: {}
 
@@ -18928,6 +18995,31 @@ snapshots:
 
   next-tick@1.1.0: {}
 
+  next@16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@17.0.2(react@17.0.2))(react@17.0.2):
+    dependencies:
+      '@next/env': 16.2.9
+      '@swc/helpers': 0.5.15
+      baseline-browser-mapping: 2.10.18
+      caniuse-lite: 1.0.30001787
+      postcss: 8.4.31
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+      styled-jsx: 5.1.6(react@17.0.2)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.2.9
+      '@next/swc-darwin-x64': 16.2.9
+      '@next/swc-linux-arm64-gnu': 16.2.9
+      '@next/swc-linux-arm64-musl': 16.2.9
+      '@next/swc-linux-x64-gnu': 16.2.9
+      '@next/swc-linux-x64-musl': 16.2.9
+      '@next/swc-win32-arm64-msvc': 16.2.9
+      '@next/swc-win32-x64-msvc': 16.2.9
+      babel-plugin-react-compiler: 1.0.0
+      sharp: 0.34.5
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
   next@16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.9
@@ -21483,6 +21575,11 @@ snapshots:
       supports-color: 5.5.0
     transitivePeerDependencies:
       - '@babel/core'
+
+  styled-jsx@5.1.6(react@17.0.2):
+    dependencies:
+      client-only: 0.0.1
+      react: 17.0.2
 
   styled-jsx@5.1.6(react@19.2.4):
     dependencies:

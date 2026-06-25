@@ -6,7 +6,10 @@ import type { Config } from "tailwindcss";
  * (see globals.css) so Tailwind can apply `/<alpha>` opacities.
  */
 const config: Config = {
-  content: ["./src/**/*.{ts,tsx,mdx}"],
+  content: [
+    "./src/**/*.{ts,tsx,mdx}",
+    "../../packages/prep-kit/src/**/*.{ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./rich.css";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { PrepProvider, SiteHeader, SiteFooter } from "@gerardocordero/prep-kit";
+import { prepConfig } from "@/prep.config";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -43,11 +43,13 @@ export default function RootLayout({
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
-          {children}
-        </main>
-        <SiteFooter />
+        <PrepProvider config={prepConfig}>
+          <SiteHeader />
+          <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
+            {children}
+          </main>
+          <SiteFooter />
+        </PrepProvider>
       </body>
     </html>
   );

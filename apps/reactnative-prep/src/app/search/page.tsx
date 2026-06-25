@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { SearchView } from "@/components/search-view";
-import { AiTutor } from "@/components/ai-tutor";
+import { PageHeader, SearchView, AiTutor } from "@gerardocordero/prep-kit";
+import { ALL_FLASHCARDS, ALL_PROMPTS, ALL_QUIZ, ALL_STUDY } from "@/data/all";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -17,7 +16,12 @@ export default function SearchPage() {
         title="Search & Ask"
         lead="Keyword search is instant. Enable AI to search by meaning — a small model runs fully in your browser, nothing leaves your device. And ask the on-device AI tutor a question when your browser supports it."
       />
-      <SearchView />
+      <SearchView
+        flashcards={ALL_FLASHCARDS}
+        prompts={ALL_PROMPTS}
+        quiz={ALL_QUIZ}
+        study={ALL_STUDY}
+      />
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-white">On-device AI tutor</h2>
         <AiTutor />

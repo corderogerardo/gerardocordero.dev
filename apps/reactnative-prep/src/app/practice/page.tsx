@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
-import { PromptDeck } from "@/components/prompt-deck";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { PromptDeck } from "@gerardocordero/prep-kit";
 import { ALL_PROMPTS } from "@/data/all";
 
 export const metadata: Metadata = {
