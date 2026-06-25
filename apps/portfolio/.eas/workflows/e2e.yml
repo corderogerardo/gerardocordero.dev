@@ -1,16 +1,21 @@
-# EAS Workflow: e2e "does the app boot" gate on every PR.
+# EAS Workflow: e2e "does the app boot" gate.
 # Builds a simulator (.app) + emulator (.apk) with the credential-free e2e-test
 # profile, then runs the Maestro smoke flow on Expo-hosted devices for BOTH
-# platforms. This is what validates the app boots on iOS + Android in CI.
+# platforms.
+#
+# MANUAL TRIGGER ONLY: the `maestro` job type requires a paid EAS subscription
+# this account doesn't have, so on PRs it only produced a red "Subscription to
+# EAS is required" check — and the builds it gates feed nothing without maestro.
+# Re-enable per-PR runs by restoring the `pull_request` trigger once subscribed.
+# Until then the gates are: local Maestro (apps/portfolio/.maestro/, run on a
+# booted sim) + the GitHub Actions `verify` job (typecheck / lint / unit).
 #
 # Runs on Expo infra. Requires the EAS GitHub app connected to this repo (no token
-# in CI) OR `eas workflow:run` with EXPO_TOKEN. Lint/typecheck/unit stay in
-# .github/workflows/ci.yml (GitHub Actions).
+# in CI) OR `eas workflow:run` with EXPO_TOKEN.
 name: E2E smoke (app boots)
 
 on:
-  pull_request:
-    branches: [main]
+  workflow_dispatch: {}
 
 jobs:
   build_ios_e2e:

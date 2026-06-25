@@ -115,8 +115,12 @@ flows. Needs JDK 17 + a booted sim with the app installed.
 
 **CI/CD = EAS Workflows** (`apps/portfolio/.eas/workflows/`), run on Expo infra; they coexist
 with the GitHub Actions loop gate:
-- `e2e.yml` (`on: pull_request`) — build the `e2e-test` profile (sim `.app` + emulator `.apk`)
-  → `maestro` job runs `smoke.yml` on **iOS + Android**. The cloud "app boots" gate.
+- `e2e.yml` (`workflow_dispatch` — **manual**) — build the `e2e-test` profile (sim `.app` +
+  emulator `.apk`) → `maestro` job runs `smoke.yml` on **iOS + Android**. The cloud "app boots"
+  gate. Was `on: pull_request`, but the EAS `maestro` job type needs a **paid EAS subscription**
+  the account lacks (it failed PRs with "Subscription to EAS is required"), so it's manual until
+  subscribed — restore the `pull_request` trigger then. Meanwhile boot coverage = **local** Maestro
+  (`.maestro/`, on a booted sim) and the GitHub Actions `verify` gate.
 - `deploy.yml` (`workflow_dispatch`) — production build → `require-approval` → submit to App
   Store / Play (uses the `submit.production.*` profiles in `eas.json`).
 - `ota-update.yml` (`on: push main`) — `eas update` (channel `production`) for JS-only changes.
