@@ -7,8 +7,9 @@
 import type { Category, Subject } from "./types";
 import { reactNativeSubject } from "./content/react-native";
 import { iosSubject } from "./content/ios";
+import { androidSubject } from "./content/android";
 
-export const SUBJECTS: Subject[] = [reactNativeSubject, iosSubject];
+export const SUBJECTS: Subject[] = [reactNativeSubject, iosSubject, androidSubject];
 
 export function subjectById(id: string): Subject | undefined {
   return SUBJECTS.find((s) => s.id === id);

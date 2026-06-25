@@ -141,4 +141,16 @@ export const projects: Project[] = [
     linkLabel: "Web",
     stack: ["Swift", "SwiftUI", "UIKit"],
   },
+  {
+    name: "Android Interview Prep",
+    domain: "Interview Prep",
+    tagline:
+      "A senior Android engineer study guide — Kotlin & Jetpack Compose deep-dives, coding sessions, and Q&A flashcards with a progress tracker.",
+    period: "2026",
+    status: "live",
+    platforms: ["Web"],
+    href: "https://android.gerardocordero.dev/",
+    linkLabel: "Web",
+    stack: ["Kotlin", "Jetpack Compose", "Coroutines"],
+  },
 ];
