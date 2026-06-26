@@ -6,6 +6,17 @@
       "env": {
         "JAVA_HOME": "/opt/homebrew/opt/openjdk@17"
       }
+    },
+    "expo": {
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "expo-mcp",
+        "--dev-server-url",
+        "http://localhost:8081",
+        "--root",
+        "apps/portfolio"
+      ]
     }
   }
 }
