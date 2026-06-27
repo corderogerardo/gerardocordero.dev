@@ -5,6 +5,7 @@ const STATS = [
   { value: "202", label: "Q&A flashcards" },
   { value: "21", label: "Practice prompts" },
   { value: "38", label: "Study-guide topics" },
+  { value: "25", label: "RN & Expo lessons" },
   { value: "On-device", label: "AI search & tutor" },
 ];
 
@@ -46,7 +47,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {STATS.map((s) => (
           <div key={s.label} className="card text-center">
             <div className="text-2xl font-extrabold text-accent">{s.value}</div>

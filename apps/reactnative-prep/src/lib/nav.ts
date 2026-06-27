@@ -18,6 +18,11 @@ export const NAV: NavItem[] = [
     blurb: "Junior → mid → senior → architect. Know where you are, and what's next.",
   },
   {
+    href: "/lessons",
+    label: "Lessons",
+    blurb: "25 structured RN & Expo lessons — core rendering, navigation, state, and performance.",
+  },
+  {
     href: "/study",
     label: "Study Guide",
     blurb: "Every senior RN requirement, explained and tied to real experience.",
