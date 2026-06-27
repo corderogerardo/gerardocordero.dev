@@ -14,6 +14,7 @@ import {
   ADVANCED7_STUDY,
   ADVANCED7_PROMPTS,
 } from "./advanced7";
+import { PERF_LESSONS, PERF_SESSIONS } from "./perf";
 import { QUIZ } from "./quiz";
 import { ADVANCED_QUIZ } from "./advanced";
 import { ADVANCED2_QUIZ } from "./advanced2";
@@ -39,6 +40,7 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...ADVANCED5_FLASHCARDS,
   ...ADVANCED6_FLASHCARDS,
   ...ADVANCED7_FLASHCARDS,
+  ...PERF_LESSONS,
 ].map((c) => ({ ...c, level: resolveLevel(c) }));
 
 export const ALL_FLASHCARD_FILTERS = [
@@ -71,7 +73,7 @@ export const ALL_STUDY = [
   ...ADVANCED7_STUDY,
 ];
 
-export const ALL_PROMPTS = [...PROMPTS, ...ADVANCED7_PROMPTS, ...DSA_PROMPTS];
+export const ALL_PROMPTS = [...PROMPTS, ...ADVANCED7_PROMPTS, ...DSA_PROMPTS, ...PERF_SESSIONS];
 
 /** Strip HTML tags + decode a few entities for search/preview text. */
 export function plainText(html: string): string {
