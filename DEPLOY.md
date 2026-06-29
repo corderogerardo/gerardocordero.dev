@@ -1,14 +1,16 @@
 # Deploying the prep apps to Cloudflare Pages
 
-This covers `apps/ios-prep`, `apps/reactnative-prep`, and `apps/android-prep`
-(all static Next.js exports). The live portfolio (`apps/portfolio`) is handled
-by the existing `deploy-web` job in `ci.yml` and is unchanged.
+This covers `apps/ios-prep`, `apps/reactnative-prep`, `apps/android-prep`, and
+`apps/nest-prep` (all static Next.js exports). The live portfolio
+(`apps/portfolio`) is handled by the existing `deploy-web` job in `ci.yml` and is
+unchanged.
 
 | App | Pages project | Custom domain |
 |---|---|---|
 | `apps/ios-prep` | `ios-prep` | `ios.gerardocordero.dev` |
 | `apps/reactnative-prep` | `reactnative-prep` | `reactnative.gerardocordero.dev` |
 | `apps/android-prep` | `android-prep` | `android.gerardocordero.dev` |
+| `apps/nest-prep` | `nest-prep` | `nestjs.gerardocordero.dev` |
 
 ## How it works now
 
@@ -85,8 +87,15 @@ Cloudflare **creates the DNS record and TLS cert for you**:
 
 **Dashboard:** Workers & Pages → `ios-prep` → **Custom domains** → *Set up a custom
 domain* → `ios.gerardocordero.dev` → Activate. (Repeat on `reactnative-prep` with
-`reactnative.gerardocordero.dev`, and on `android-prep` with
-`android.gerardocordero.dev`.)
+`reactnative.gerardocordero.dev`, on `android-prep` with
+`android.gerardocordero.dev`, and on `nest-prep` with
+`nestjs.gerardocordero.dev`.)
+
+Because `gerardocordero.dev` is on this same Cloudflare account, the wizard creates
+both the proxied `CNAME nestjs → nest-prep.pages.dev` **and** the TLS cert for you —
+that one click is the whole "create the DNS" step. (`wrangler` has no custom-domain
+subcommand, and its OAuth token can register the domain but **cannot** write the DNS
+record, so the dashboard wizard — or a Zone→DNS→Edit-scoped token — is the path.)
 
 **or API** (uses the same token + account id):
 ```bash
