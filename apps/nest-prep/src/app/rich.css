@@ -57,7 +57,7 @@
   color: rgb(var(--accent) / 0.7);
 }
 
-/* tables (e.g. SwiftData vs Core Data) */
+/* tables (e.g. Zustand vs MobX) */
 .rich table {
   width: 100%;
   border-collapse: collapse;
@@ -77,7 +77,7 @@
   background: rgb(var(--surface-2) / 0.5);
 }
 
-/* callouts + "your proof" / context map blocks */
+/* callouts + "your proof" map blocks */
 .rich .callout,
 .rich .map {
   border-radius: 0.75rem;

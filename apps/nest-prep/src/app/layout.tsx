@@ -20,15 +20,15 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://nestjs.gerardocordero.dev"),
   title: {
-    default: "NestJS Interview Prep — Senior Backend Study Guide",
+    default: "NestJS Interview Prep — Senior Study Guide",
     template: "%s · NestJS Interview Prep",
   },
   description:
-    "A senior NestJS / Node backend interview study guide: the request lifecycle, dependency injection, microservices, testing, security, and system design — as flashcards, a quiz, and practice prompts with on-device AI search.",
+    "A senior NestJS + Node.js interview study guide: dependency injection, the request lifecycle, microservices, and backend system-design deep-dives — with flashcards, a quiz, and practice prompts.",
   openGraph: {
-    title: "NestJS Interview Prep — Senior Backend Study Guide",
+    title: "NestJS Interview Prep — Senior Study Guide",
     description:
-      "Request lifecycle, DI & providers, microservices, testing, security, and system-design practice for senior NestJS interviews.",
+      "DI, the request lifecycle, microservices, Node.js internals, architecture deep-dives, flashcards, and a quiz for senior NestJS interviews.",
     type: "website",
     url: "https://nestjs.gerardocordero.dev",
   },

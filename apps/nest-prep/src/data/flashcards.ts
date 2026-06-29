@@ -1,3 +1,5 @@
+// NestJS fundamentals flashcards: core, DI & modules, request lifecycle, config.
+// Shapes mirror @gerardocordero/prep-kit's Flashcard type (structural typing).
 import type { Level } from "@/lib/levels";
 
 export type Flashcard = {
@@ -6,407 +8,396 @@ export type Flashcard = {
   categoryLabel: string;
   question: string;
   answerHtml: string;
-  /** Optional seniority level; defaults are derived per-category in lib/levels. */
   level?: Level;
 };
 
-// Card ids are globally unique (prefix "nest-<category>-N"). Content is authored
-// and fact-checked; rendered as trusted HTML via the kit's RichText renderer.
-export const FLASHCARD_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "fundamentals", label: "Fundamentals" },
-  { value: "lifecycle", label: "Request Lifecycle" },
-  { value: "di-providers", label: "DI & Providers" },
-  { value: "data", label: "Data & Persistence" },
-  { value: "graphql-micro", label: "GraphQL & Microservices" },
-  { value: "testing", label: "Testing" },
-  { value: "security", label: "Security & Auth" },
-  { value: "perf-observ", label: "Performance & Ops" },
+export const FLASHCARDS: Flashcard[] = [
+  // ---------------- CORE ----------------
+  {
+    id: "c1",
+    category: "core",
+    categoryLabel: "Core",
+    level: "junior",
+    question: "What is NestJS, and what problem does it solve?",
+    answerHtml:
+      "<p>NestJS is a <b>progressive, opinionated Node.js framework</b> for building server-side applications, written in TypeScript. It sits on top of an HTTP adapter (<b>Express by default</b>, or Fastify) and adds a first-class <b>IoC/dependency-injection container</b>, a module system, and decorators.</p><p>It solves the <i>architecture</i> problem Express leaves open: Express gives you routing and middleware but no opinion on structure, so large apps drift into spaghetti. Nest borrows Angular's module/provider/decorator model to give you <b>testable, loosely-coupled, consistently-organized</b> code.</p><div class=\"callout tip\"><span class=\"lbl\">How to say it</span> “Nest is structure and DI on top of Node's HTTP layer — it's Express with an architecture, not a replacement for it.”</div>",
+  },
+  {
+    id: "c2",
+    category: "core",
+    categoryLabel: "Core",
+    level: "junior",
+    question: "What are the three core building blocks: module, controller, provider?",
+    answerHtml:
+      "<ul><li><b>Module</b> (<code>@Module</code>) — an organizational unit that groups related controllers and providers; the app is a tree of modules.</li><li><b>Controller</b> (<code>@Controller</code>) — handles incoming requests and returns responses; declares routes with <code>@Get/@Post/...</code>.</li><li><b>Provider</b> (<code>@Injectable</code>) — anything injectable: services, repositories, factories. Holds business logic and is injected into controllers or other providers.</li></ul><div class=\"callout tip\"><span class=\"lbl\">Mental model</span> Controller = thin HTTP layer; Provider/Service = logic; Module = the box that wires them together and decides what's shared.</div>",
+  },
+  {
+    id: "c3",
+    category: "core",
+    categoryLabel: "Core",
+    level: "junior",
+    question: "What does a controller do, and how does Nest serialize the return value?",
+    answerHtml:
+      "<p>A controller maps routes to handler methods. You return a plain value (object, array, string) and Nest <b>auto-serializes it to JSON</b> with status <b>200</b> (or <b>201</b> for <code>@Post</code>). Override with <code>@HttpCode()</code>.</p><div class=\"callout warn\"><span class=\"lbl\">Gotcha</span> Injecting <code>@Res()</code> switches to <b>library-specific (Express) mode</b>: you must send the response yourself and you <i>lose</i> interceptors and <code>@HttpCode</code>. Use <code>@Res({ passthrough: true })</code> if you only need to set a header/cookie but want Nest to still handle the body.</div>",
+  },
+  {
+    id: "c4",
+    category: "core",
+    categoryLabel: "Core",
+    question: "Why must DTOs be classes, not interfaces?",
+    answerHtml:
+      "<p>TypeScript <b>interfaces are erased at compile time</b> — they don't exist at runtime. Nest's <code>ValidationPipe</code> and class-validator need the <b>metatype</b> (the actual class) at runtime to read decorators and validate. A class survives compilation, so the pipe can instantiate and check it.</p><div class=\"callout warn\"><span class=\"lbl\">Trap</span> Using an interface (or <code>import type</code> on a DTO) means validation silently does nothing — no error, just no protection.</div>",
+  },
+  {
+    id: "c5",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What is module encapsulation? How do you share a provider?",
+    answerHtml:
+      "<p>A provider is <b>private to its module</b> by default. To use it elsewhere, the owning module must <b>export</b> it, and the consuming module must <b>import</b> that module. <code>exports</code> is a module's public API.</p><ul><li>Every module is a <b>singleton</b>: export a provider once and all importers share the same instance.</li><li>Re-registering the same class in two modules' <code>providers</code> creates <b>two separate instances</b> — a classic state-sharing bug.</li><li>A module can <b>re-export</b> modules it imports.</li></ul>",
+  },
+  {
+    id: "c6",
+    category: "core",
+    categoryLabel: "Core",
+    question: "When should you use a @Global() module, and why is it discouraged as a default?",
+    answerHtml:
+      "<p><code>@Global()</code> makes a module's exported providers available everywhere without importing it — register once (e.g. a config or DB module).</p><div class=\"callout warn\"><span class=\"lbl\">Senior caveat</span> It <b>hides coupling</b>: every module silently depends on it, which hurts testability and makes the dependency graph implicit. Prefer explicit <code>imports</code>; reserve <code>@Global()</code> for truly cross-cutting infrastructure (config, logging, DB).</div>",
+  },
+  {
+    id: "c7",
+    category: "core",
+    categoryLabel: "Core",
+    question: "Express vs Fastify adapter in NestJS — when does Fastify win, and what breaks?",
+    answerHtml:
+      "<p>Nest is platform-agnostic via an <b>HTTP adapter</b>. Express is the default (huge ecosystem). <b>Fastify</b> (<code>@nestjs/platform-fastify</code>) is roughly <b>2× requests/sec</b> via schema-based serialization (<code>fast-json-stringify</code>) and radix-tree routing.</p><p><b>Choose Fastify</b> for high-throughput, JSON-heavy, latency-sensitive APIs. <b>What breaks:</b> Express middleware gets raw <code>req/res</code> (not Express wrappers), Multer file upload is incompatible (use <code>@fastify/multipart</code>), no subdomain routing, use <code>@fastify/helmet</code>/<code>@fastify/compress</code>, and bind <code>0.0.0.0</code> in containers.</p>",
+  },
+  {
+    id: "c8",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What does the Nest CLI give you, and what is the standard project layout?",
+    answerHtml:
+      "<p>The CLI (<code>@nestjs/cli</code>) scaffolds and builds: <code>nest new</code>, <code>nest generate module|controller|service|resource</code> (the <code>resource</code> schematic generates a full CRUD module). It wraps the build (tsc or <b>SWC</b> for fast builds) and <code>nest start --watch</code>.</p><p>Conventional layout: one folder per feature module (<code>users/</code> with <code>users.module.ts</code>, <code>users.controller.ts</code>, <code>users.service.ts</code>, <code>dto/</code>, <code>entities/</code>), a root <code>AppModule</code>, and <code>main.ts</code> as the bootstrap entry point.</p>",
+  },
+  {
+    id: "c9",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What happens in main.ts (the bootstrap file)?",
+    answerHtml:
+      "<p><code>main.ts</code> creates and starts the app:</p><div class=\"code\">const app = await NestFactory.create(AppModule);\napp.useGlobalPipes(new ValidationPipe({ whitelist: true }));\napp.enableShutdownHooks();\nawait app.listen(3000);</div><p>It's where you register <b>global</b> pipes/filters/interceptors (the non-DI way), enable CORS/versioning/shutdown hooks, set a global prefix, and start listening. For DI-aware globals, use the <code>APP_*</code> provider tokens instead.</p>",
+  },
+  {
+    id: "c10",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What is the AppModule and the application graph?",
+    answerHtml:
+      "<p><code>AppModule</code> is the root module passed to <code>NestFactory.create()</code>. From its metadata Nest builds the <b>application graph</b> — the full tree of modules and the dependency graph of providers within them. At bootstrap Nest walks this graph and instantiates providers <b>bottom-up</b> (dependencies first), caching singletons.</p>",
+  },
+  {
+    id: "c11",
+    category: "core",
+    categoryLabel: "Core",
+    question: "How do you read route params, query, body, and headers?",
+    answerHtml:
+      "<p>Parameter decorators in the handler signature:</p><ul><li><code>@Param('id')</code> — route param (<code>/users/:id</code>)</li><li><code>@Query('q')</code> — query string</li><li><code>@Body()</code> — request body (typed to a DTO)</li><li><code>@Headers('authorization')</code>, <code>@Req()</code>, <code>@Ip()</code>, <code>@Session()</code></li></ul><p>Combine with pipes: <code>@Param('id', ParseIntPipe) id: number</code> validates + coerces.</p>",
+  },
+  {
+    id: "c12",
+    category: "core",
+    categoryLabel: "Core",
+    question: "Why is TypeScript decorator metadata (reflect-metadata) central to Nest?",
+    answerHtml:
+      "<p>Nest reads <b>design-time type metadata</b> emitted by TypeScript (<code>emitDecoratorMetadata</code> + <code>reflect-metadata</code>) to know a constructor parameter's type — that's the <b>injection token</b>. Decorators like <code>@Injectable()</code>, <code>@Controller()</code>, and <code>@Get()</code> attach metadata that Nest later reflects over to build routes and resolve dependencies.</p><div class=\"callout\"><span class=\"lbl\">Why it matters</span> This is why a class type (not an interface) is needed for DI, and why <code>tsconfig</code> must have <code>experimentalDecorators</code> + <code>emitDecoratorMetadata</code>.</div>",
+  },
+  {
+    id: "c13",
+    category: "core",
+    categoryLabel: "Core",
+    question: "How does NestJS relate to Angular, and why does that matter?",
+    answerHtml:
+      "<p>Nest deliberately mirrors <b>Angular's</b> ergonomics on the server: modules, decorators, providers, and a DI container. The payoff is a <b>consistent mental model</b> across full-stack TS teams and a mature pattern for organizing large apps. It's not Angular under the hood — it's an independent framework that borrowed the good ideas.</p>",
+  },
+  {
+    id: "c14",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What's new/important in NestJS 11 (current line)?",
+    answerHtml:
+      "<ul><li><b>Express v5 &amp; Fastify v5</b> are the defaults. Express 5 changes route matching: bare <code>*</code> wildcards must be <b>named</b> — <code>@Get('users/*')</code> → <code>@Get('users/*splat')</code>.</li><li><b>Logger overhaul</b>: <code>ConsoleLogger</code> gains built-in JSON logging (<code>new ConsoleLogger({ json: true })</code>).</li><li><b>Faster startup</b> via reference-based module keys (gotcha: importing the same dynamic module twice with equal config now yields separate instances — assign to a variable and reuse).</li><li><b>cache-manager v6+</b> built on <b>Keyv</b>; microservice transporters gain <code>status</code>, <code>unwrap()</code>, and <code>on(event)</code>.</li><li>Requires <b>Node ≥ 20</b>.</li></ul>",
+  },
+
+  // ---------------- DI & MODULES ----------------
+  {
+    id: "di1",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    level: "mid",
+    question: "What is dependency injection, and how does Nest's IoC container resolve it?",
+    answerHtml:
+      "<p>DI = a class declares what it <i>needs</i> (via constructor params) and the framework <b>provides</b> it, instead of the class <code>new</code>-ing its own dependencies (Inversion of Control). Benefits: loose coupling, easy mocking, single shared instances.</p><p>Resolution: <code>@Injectable()</code> marks a class as managed → a consumer declares the dependency <b>by type (the token)</b> → the module registers a provider for that token → at bootstrap Nest builds the graph transitively and instantiates bottom-up, caching singletons. <code>NEST_DEBUG=1</code> logs resolution.</p>",
+  },
+  {
+    id: "di2",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "Explain the three injection scopes and the cost of REQUEST scope.",
+    answerHtml:
+      "<table><tr><th>Scope</th><th>Lifetime</th></tr><tr><td><b>DEFAULT</b> (singleton)</td><td>One instance app-wide, created at bootstrap. The recommended default.</td></tr><tr><td><b>REQUEST</b></td><td>A new instance per incoming request, GC'd after. For per-request state.</td></tr><tr><td><b>TRANSIENT</b></td><td>A dedicated instance per consumer (not shared).</td></tr></table><div class=\"callout warn\"><span class=\"lbl\">The cost</span> REQUEST scope <b>bubbles up</b>: if a deep provider is request-scoped, every consumer up to the controller becomes request-scoped too, adding per-request allocation/GC and disabling some startup optimizations. A shared DB/logger going request-scoped can convert the whole app. Mitigate with <b>durable providers</b> + a tenant <code>ContextIdStrategy</code>, or use AsyncLocalStorage/CLS for request context.</div>",
+  },
+  {
+    id: "di3",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "Is singleton state safe across requests in Node/Nest?",
+    answerHtml:
+      "<p><b>Yes</b> — Node is single-threaded and <i>not</i> thread-per-request, so a singleton service (DB pool, cache, config) is safe and efficient; concurrent requests interleave on one thread, they don't run a handler in parallel on two cores.</p><div class=\"callout warn\"><span class=\"lbl\">When it isn't</span> Storing <b>user- or request-specific mutable state on a singleton field</b> is a cross-request data-leak bug (request B reads request A's data). Use REQUEST scope or AsyncLocalStorage for genuinely per-request state.</div>",
+  },
+  {
+    id: "di4",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What are the four custom provider types?",
+    answerHtml:
+      "<ul><li><b><code>useClass</code></b> — resolve a token to a class, optionally env-dependent: <code>{ provide: ConfigService, useClass: isProd ? ProdConfig : DevConfig }</code>.</li><li><b><code>useValue</code></b> — inject a constant, mock, or external lib instance. Great for tests.</li><li><b><code>useFactory</code></b> — build dynamically; can inject deps via <code>inject: [...]</code> and may be <b>async</b> (connections, config-derived values).</li><li><b><code>useExisting</code></b> — alias one token to another (both resolve to the <i>same</i> singleton).</li></ul>",
+  },
+  {
+    id: "di5",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "How do you inject a non-class dependency (interface, string, constant)?",
+    answerHtml:
+      "<p>Interfaces vanish at runtime, so you can't use them as tokens. Use a <b>string or symbol token</b> with <code>@Inject()</code>:</p><div class=\"code\">// provider\n{ provide: 'PAYMENTS', useClass: StripePayments }\n// or a Symbol token in a shared constants file\nexport const PAYMENTS = Symbol('PAYMENTS');\n\n// consumer\nconstructor(@Inject(PAYMENTS) private pay: PaymentGateway) {}</div><p>This is the mechanic behind <b>ports &amp; adapters</b>: depend on an interface via a token, bind the concrete implementation in the module.</p>",
+  },
+  {
+    id: "di6",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What is a dynamic module, and what's the forRoot / forFeature / register convention?",
+    answerHtml:
+      "<p>A <b>dynamic module</b> is a configurable module — a static method returns a <code>DynamicModule</code> (module metadata computed at runtime). The plugin pattern.</p><ul><li><b><code>register()</code></b> — configure for <i>this importer only</i> (e.g. an HTTP client with specific options).</li><li><b><code>forRoot()</code></b> — configure <i>once, app-wide</i> (DB, ConfigModule).</li><li><b><code>forFeature()</code></b> — a per-feature tweak of a <code>forRoot</code> config (register entities/repos).</li></ul><p>Each has an <b>async</b> counterpart (<code>registerAsync</code>/<code>forRootAsync</code>) accepting <code>useFactory</code>+<code>inject</code>, <code>useClass</code>, or <code>useExisting</code> for injected options.</p>",
+  },
+  {
+    id: "di7",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What is ConfigurableModuleBuilder and why prefer it?",
+    answerHtml:
+      "<p>It auto-generates the dynamic-module boilerplate — the base class, the options token, and the sync + async (<code>register</code>/<code>registerAsync</code>) signatures:</p><div class=\"code\">export const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } =\n  new ConfigurableModuleBuilder&lt;MyOptions&gt;()\n    .setClassMethodName('forRoot')\n    .build();\n\n@Module({})\nexport class MyModule extends ConfigurableModuleClass {}</div><p>You inject <code>MODULE_OPTIONS_TOKEN</code> to read the passed config. It removes the error-prone hand-written <code>forRootAsync</code> plumbing.</p>",
+  },
+  {
+    id: "di8",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "How do you handle circular dependencies?",
+    answerHtml:
+      "<p>First, treat it as a <b>design smell</b> — it's often caused by <b>barrel <code>index.ts</code> files</b>; importing the concrete file directly frequently fixes it, or you extract a shared provider/module.</p><p>When genuinely needed:</p><ul><li><b><code>forwardRef(() => Other)</code></b> on <b>both</b> sides — <code>@Inject(forwardRef(...))</code> for providers and <code>imports: [forwardRef(...)]</code> for modules.</li><li>Or resolve lazily with <b><code>ModuleRef</code></b> (<code>get()</code> for singletons, <code>resolve()</code> for scoped), often in <code>onModuleInit</code>.</li></ul><div class=\"callout warn\"><span class=\"lbl\">Gotcha</span> With forwardRef, instantiation order is indeterminate — don't rely on it, and beware undefined deps when combined with REQUEST scope.</div>",
+  },
+  {
+    id: "di9",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What is ModuleRef and when do you reach for it?",
+    answerHtml:
+      "<p><code>ModuleRef</code> lets you resolve providers <b>imperatively</b> from the container instead of via constructor injection:</p><ul><li><code>moduleRef.get(Token)</code> — fetch a singleton (whole app or current module with <code>{ strict: false }</code>).</li><li><code>moduleRef.resolve(Token)</code> — resolve a <b>scoped</b> (request/transient) instance; returns a Promise and gives a unique instance per call (pass a <code>contextId</code> to share one).</li><li><code>moduleRef.create(Class)</code> — instantiate a class that isn't a registered provider.</li></ul><p>Use it for dynamic resolution (plugin systems, resolving by runtime key) and to break circular deps.</p>",
+  },
+  {
+    id: "di10",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "When does re-registering a provider create a subtle bug?",
+    answerHtml:
+      "<p>If <code>StateService</code> is listed in <code>providers</code> of <b>two</b> modules, each module gets its <b>own instance</b>. Code that assumes a single shared instance (a cache, a counter, a connection) will see divergent state.</p><div class=\"callout tip\"><span class=\"lbl\">Fix</span> Register it in <b>one</b> module, <code>export</code> it, and <code>import</code> that module wherever needed — that guarantees one shared singleton.</div>",
+  },
+  {
+    id: "di11",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "Can a Module class itself be injected? Can it inject things?",
+    answerHtml:
+      "<p>A module class <b>can inject</b> providers in its constructor (useful to run setup with dependencies), but it <b>cannot itself be injected</b> into other classes — modules are organizational units, not providers.</p>",
+  },
+  {
+    id: "di12",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What is @Optional() injection and property-based injection?",
+    answerHtml:
+      "<p><code>@Optional()</code> marks a dependency as non-required — if no provider is found, Nest injects <code>undefined</code> instead of throwing. Useful for optional plugins/config.</p><p><b>Property-based injection</b> (<code>@Inject(TOKEN) private dep: T</code> as a class field) is an alternative to constructor injection, mainly used when a base class can't easily forward constructor args. Constructor injection is preferred for clarity and testability.</p>",
+  },
+
+  // ---------------- REQUEST LIFECYCLE ----------------
+  {
+    id: "lc1",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Walk through the exact NestJS request lifecycle order.",
+    answerHtml:
+      "<p>Incoming request →</p><ol><li><b>Middleware</b> (global, then module-bound)</li><li><b>Guards</b> (global → controller → route)</li><li><b>Interceptors</b> — pre-controller (global → controller → route)</li><li><b>Pipes</b> (global → controller → route → param)</li><li><b>Controller handler</b> → <b>Service</b></li><li><b>Interceptors</b> — post (route → controller → global, reversed)</li><li><b>Exception filters</b> (route → controller → global) — only on error</li></ol><p>→ Response.</p><div class=\"callout\"><span class=\"lbl\">Senior detail</span> Filters are the <b>only</b> enhancer that resolve lowest-level-first; interceptors form an onion (first-in/last-out on the way back).</div>",
+  },
+  {
+    id: "lc2",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Middleware vs Guard vs Interceptor vs Pipe vs Filter — when to use each?",
+    answerHtml:
+      "<table><tr><th>Block</th><th>Job</th></tr><tr><td><b>Middleware</b></td><td>Pre-routing, raw <code>req/res/next</code> (logging, CORS, helmet, body parsing). No <code>ExecutionContext</code>.</td></tr><tr><td><b>Guard</b></td><td><b>Authorization</b> — returns boolean; has <code>ExecutionContext</code> + <code>Reflector</code> (read metadata).</td></tr><tr><td><b>Interceptor</b></td><td>AOP before/after with RxJS — transform response, cache, timeout, log.</td></tr><tr><td><b>Pipe</b></td><td>Validate + transform handler arguments.</td></tr><tr><td><b>Filter</b></td><td>Catch exceptions and shape the error response.</td></tr></table><div class=\"callout\"><span class=\"lbl\">Key distinction</span> Only guards and interceptors get <code>ExecutionContext</code>; middleware gets neither handler nor class info.</div>",
+  },
+  {
+    id: "lc3",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What is a Guard for, and how does it read route metadata?",
+    answerHtml:
+      "<p>A guard implements <code>CanActivate.canActivate(ctx)</code> returning a boolean (or Promise/Observable of one). Its job is <b>authorization/authentication</b>: returning <code>false</code> → automatic 403.</p><p>Because it has an <code>ExecutionContext</code>, it can use the <b><code>Reflector</code></b> to read metadata set by decorators:</p><div class=\"code\">const roles = this.reflector.getAllAndOverride&lt;string[]&gt;(ROLES_KEY, [\n  ctx.getHandler(), ctx.getClass(),\n]);</div><p><code>getAllAndOverride</code> lets a method-level decorator override a class-level one — the basis of RBAC.</p>",
+  },
+  {
+    id: "lc4",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What can interceptors do that guards and pipes can't?",
+    answerHtml:
+      "<p>Interceptors wrap the handler with an <b>RxJS stream</b> (<code>intercept(ctx, next)</code> returns an Observable), giving before <i>and</i> after logic around <code>next.handle()</code>:</p><ul><li>Transform the response — <code>map(data =&gt; ({ data }))</code></li><li>Log/timing — <code>tap(...)</code></li><li>Timeouts — <code>timeout(5000)</code> + <code>catchError</code></li><li><b>Override</b> the handler entirely (caching: return a cached value instead of calling <code>next.handle()</code>)</li><li>Serialization — <code>ClassSerializerInterceptor</code> applies <code>@Exclude/@Expose</code></li></ul>",
+  },
+  {
+    id: "lc5",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What do whitelist, forbidNonWhitelisted, and transform do on ValidationPipe?",
+    answerHtml:
+      "<ul><li><b><code>whitelist: true</code></b> — strips properties that have no validation decorator (drops unexpected fields).</li><li><b><code>forbidNonWhitelisted: true</code></b> — instead of stripping, <b>throws 400</b> on unknown fields.</li><li><b><code>transform: true</code></b> — uses class-transformer to turn the plain payload into a <b>DTO instance</b> and coerce primitives (e.g. string param → number).</li></ul><div class=\"callout tip\"><span class=\"lbl\">Why it matters</span> <code>whitelist</code>/<code>forbidNonWhitelisted</code> defend against <b>mass-assignment</b> — a user can't sneak <code>isAdmin: true</code> into a body. Register the pipe globally for app-wide safety.</div>",
+  },
+  {
+    id: "lc6",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What are exception filters, and what's the AllExceptionsFilter pattern?",
+    answerHtml:
+      "<p>A filter (<code>@Catch(SomeException)</code> + <code>catch(exception, host)</code>) intercepts thrown exceptions and shapes the response. Nest's built-in filter handles <code>HttpException</code> and subclasses; unknown errors → 500.</p><p><b>AllExceptionsFilter</b>: <code>@Catch()</code> with no args (catches everything) + inject <code>HttpAdapterHost</code> so it works regardless of platform. Use <code>ArgumentsHost</code> to support HTTP/WS/RPC. Extend <code>BaseExceptionFilter</code> and call <code>super.catch()</code> to reuse defaults while adding logging.</p>",
+  },
+  {
+    id: "lc7",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What is a Pipe, and what built-in pipes should you know?",
+    answerHtml:
+      "<p>A pipe implements <code>transform(value, metadata)</code> and runs <b>just before the handler</b>, inside the exceptions zone (a throw skips the handler). Two jobs: <b>validation</b> and <b>transformation</b>.</p><p>Built-ins: <code>ValidationPipe</code>, <code>ParseIntPipe</code>, <code>ParseUUIDPipe</code>, <code>ParseBoolPipe</code>, <code>ParseArrayPipe</code>, <code>ParseEnumPipe</code>, <code>ParseFloatPipe</code>, <code>DefaultValuePipe</code>, <code>ParseFilePipe</code>, and <b><code>ParseDatePipe</code></b> (added in v11).</p><div class=\"callout warn\"><span class=\"lbl\">Order</span> <code>DefaultValuePipe</code> must come <i>before</i> a <code>Parse*</code> pipe, or the parse throws on null.</div>",
+  },
+  {
+    id: "lc8",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "ArgumentsHost vs ExecutionContext — what's the difference?",
+    answerHtml:
+      "<p><code>ExecutionContext extends ArgumentsHost</code>.</p><ul><li><b><code>ArgumentsHost</code></b> — abstracts the transport args; <code>switchToHttp()/switchToRpc()/switchToWs()</code>. Filters get this (no handler info).</li><li><b><code>ExecutionContext</code></b> — adds <code>getHandler()</code> and <code>getClass()</code> for reflection. Guards and interceptors get this.</li></ul><p>This abstraction is why the same guard/interceptor/filter works across HTTP, microservices, and WebSockets.</p>",
+  },
+  {
+    id: "lc9",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Why use APP_GUARD / APP_INTERCEPTOR / APP_PIPE / APP_FILTER instead of app.useGlobalX()?",
+    answerHtml:
+      "<p><code>app.useGlobalGuards(new X())</code> creates the instance <b>outside</b> the DI container, so it <b>can't inject</b> anything. Registering via the <code>APP_*</code> tokens makes the global enhancer a real provider:</p><div class=\"code\">{ provide: APP_GUARD, useClass: AuthGuard }</div><p>Now it can inject <code>Reflector</code>, services, config, etc. Multiple <code>APP_FILTER</code>/<code>APP_INTERCEPTOR</code> registrations are allowed.</p>",
+  },
+  {
+    id: "lc10",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Two ways to write middleware, and the big limitation?",
+    answerHtml:
+      "<p><b>Class middleware</b> (<code>implements NestMiddleware</code>) is DI-capable; <b>functional middleware</b> (<code>(req, res, next) =&gt; ...</code>) has no deps. Apply class middleware in a module via <code>configure(consumer)</code>: <code>consumer.apply(LoggerMiddleware).forRoutes('users')</code> with <code>.exclude(...)</code>.</p><div class=\"callout warn\"><span class=\"lbl\">Limitation</span> Middleware runs <b>before</b> Nest's context exists — it has <b>no <code>ExecutionContext</code></b> and can't read handler metadata. For anything route-aware, use a guard or interceptor. Global <code>app.use()</code> middleware also can't use DI.</div>",
+  },
+  {
+    id: "lc11",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "How do you build a custom param decorator and compose decorators?",
+    answerHtml:
+      "<p><code>createParamDecorator</code> builds a handler-argument decorator:</p><div class=\"code\">export const User = createParamDecorator(\n  (data: string, ctx: ExecutionContext) =&gt; {\n    const req = ctx.switchToHttp().getRequest();\n    return data ? req.user?.[data] : req.user;\n  },\n);\n// usage: @User('email') email: string</div><p>Bundle several decorators with <b><code>applyDecorators</code></b> — e.g. an <code>@Auth(...roles)</code> that combines <code>SetMetadata</code> + <code>UseGuards</code> + Swagger decorators into one.</p>",
+  },
+  {
+    id: "lc12",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "What are the lifecycle hooks and their order?",
+    answerHtml:
+      "<p>Init: <b><code>onModuleInit</code></b> (module's deps resolved) → <b><code>onApplicationBootstrap</code></b> (all modules ready, before listening). Shutdown (only if <code>app.enableShutdownHooks()</code> was called): <b><code>onModuleDestroy</code></b> → <b><code>beforeApplicationShutdown</code></b> → <b><code>onApplicationShutdown(signal)</code></b>.</p><p>All may be async (Nest awaits). Use shutdown hooks to drain: stop new work, finish in-flight, close DB pools/queues, flush logs.</p><div class=\"callout warn\"><span class=\"lbl\">Gotchas</span> Hooks don't fire for request-scoped providers; SIGTERM never fires on Windows; <code>app.close()</code> doesn't kill the process; v11 reversed the termination order.</div>",
+  },
+  {
+    id: "lc13",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "How do binding levels (global/controller/route) and execution order interact?",
+    answerHtml:
+      "<p>You can bind guards/interceptors/pipes/filters at three levels: <b>global</b>, <b>controller</b> (<code>@UseGuards()</code> on the class), and <b>route</b> (<code>@UseGuards()</code> on the method). On the way <i>in</i>, they run global → controller → route. Interceptors then unwind route → controller → global on the way <i>out</i>; filters resolve route → controller → global. Knowing this lets you, e.g., put a broad auth guard globally and a stricter one on a route.</p>",
+  },
+  {
+    id: "lc14",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "How does a global ValidationPipe interact with transformation and implicit conversion?",
+    answerHtml:
+      "<p>With <code>transform: true</code>, the pipe instantiates the DTO and runs class-transformer. Adding <code>transformOptions: { enableImplicitConversion: true }</code> lets it coerce based on the TS type without explicit <code>@Type()</code> decorators (e.g. a query <code>?page=2</code> string becomes <code>number</code>).</p><div class=\"callout warn\"><span class=\"lbl\">Caveat</span> Implicit conversion is convenient but can surprise you (e.g. <code>'true'</code>/<code>'false'</code> coercion); for nested objects/arrays you still need <code>@Type(() =&gt; Dto)</code> + <code>@ValidateNested()</code>.</div>",
+  },
+
+  // ---------------- CONFIG & VALIDATION ----------------
+  {
+    id: "cfg1",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    level: "mid",
+    question: "How does @nestjs/config work, and how do you validate env at boot?",
+    answerHtml:
+      "<p><code>ConfigModule.forRoot({ isGlobal: true })</code> loads <code>.env</code> + merges <code>process.env</code> (real env wins on conflicts) and wraps dotenv. Read with <code>configService.get&lt;T&gt;('KEY', default)</code>.</p><p><b>Validate at boot (fail fast):</b> pass a <code>validationSchema</code> (Joi) or a custom <code>validate</code> function (zod/class-validator) so a missing/invalid var crashes startup instead of erroring at request time:</p><div class=\"code\">validationSchema: Joi.object({\n  NODE_ENV: Joi.string().valid('development','production').default('development'),\n  PORT: Joi.number().default(3000),\n  DATABASE_URL: Joi.string().required(),\n})</div>",
+  },
+  {
+    id: "cfg2",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "What is namespaced config (registerAs) and why use it?",
+    answerHtml:
+      "<p><code>registerAs('db', () =&gt; ({ host: process.env.DB_HOST, ... }))</code> groups related config and gives a typed accessor:</p><div class=\"code\">@Inject(dbConfig.KEY) cfg: ConfigType&lt;typeof dbConfig&gt;</div><p>It keeps config modular and type-safe, and <code>dbConfig.asProvider()</code> plugs directly into <code>TypeOrmModule.forRootAsync</code>. Cleaner than scattering <code>configService.get('DB_HOST')</code> calls everywhere.</p>",
+  },
+  {
+    id: "cfg3",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "How do you validate request DTOs with class-validator?",
+    answerHtml:
+      "<p>Decorate class DTOs and let the global <code>ValidationPipe</code> enforce them:</p><div class=\"code\">export class CreateUserDto {\n  @IsEmail() email: string;\n  @IsString() @MinLength(8) password: string;\n  @IsOptional() @IsInt() @Min(18) age?: number;\n}</div><p>Nested objects need <code>@ValidateNested()</code> + <code>@Type(() =&gt; ChildDto)</code>; arrays of DTOs need <code>@ValidateNested({ each: true })</code>. On failure the pipe throws a 400 with the validation messages.</p>",
+  },
+  {
+    id: "cfg4",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "What are mapped types (PartialType, PickType, OmitType, IntersectionType)?",
+    answerHtml:
+      "<p>Helpers that derive one DTO from another so you don't repeat decorators:</p><ul><li><b><code>PartialType(CreateDto)</code></b> — all fields optional (perfect for an <code>UpdateDto</code>).</li><li><b><code>PickType(Dto, ['email'])</code></b> / <b><code>OmitType(Dto, ['id'])</code></b> — subset.</li><li><b><code>IntersectionType(A, B)</code></b> — merge.</li></ul><div class=\"callout warn\"><span class=\"lbl\">Gotcha</span> Import them from the right package: <code>@nestjs/mapped-types</code> (plain), <code>@nestjs/swagger</code>, or <code>@nestjs/graphql</code> — each preserves that layer's metadata.</div>",
+  },
+  {
+    id: "cfg5",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "What's the difference between config validation and runtime DTO validation?",
+    answerHtml:
+      "<p>Both use schemas, but at different boundaries: <b>config validation</b> runs <b>once at startup</b> over <code>process.env</code> (fail fast if the deploy is misconfigured). <b>DTO validation</b> runs on <b>every request</b> over untrusted input (reject bad payloads with 400). Don't conflate them — a valid env doesn't make a request body safe.</p>",
+  },
+  {
+    id: "cfg6",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "12-factor config: why env vars, not config files in the repo?",
+    answerHtml:
+      "<p>Factor III: config that varies per deploy (DB URLs, secrets, feature flags) belongs in the <b>environment</b>, not in code. Litmus test: <i>could you open-source the repo right now without leaking secrets?</i> Keep <code>.env</code> for local dev only (gitignored + dockerignored); in prod inject via the orchestrator's secret store (k8s Secrets, AWS Secrets Manager, Vault). Node 20+ can load env natively with <code>--env-file</code>.</p>",
+  },
 ];
 
-export const FLASHCARDS: Flashcard[] = [
-  {
-    id: "nest-fundamentals-1",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "What is a provider in NestJS, and how does @Injectable plus constructor injection actually wire it into the DI container?",
-    answerHtml: "<p>A <b>provider</b> is any class (or value/factory) that Nest can instantiate and inject — services, repositories, factories, helpers. <code>@Injectable()</code> marks a class as a candidate the IoC container manages; it doesn't create the instance by itself.</p><p>The wiring is three steps: (1) the class is listed in a module's <code>providers</code> array, which registers a token (the class reference by default); (2) Nest reads the constructor's parameter types via reflected metadata (you need <code>experimentalDecorators</code> + <code>emitDecoratorMetadata</code> in tsconfig so the types are emitted); (3) on first resolution it recursively instantiates each dependency and passes them in. By default providers are <b>singletons</b> (one shared instance for the whole application); the module system controls <i>visibility</i> (a provider is injectable only where it's registered or exported/imported), but the singleton instance itself is shared app-wide once shared.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-fundamentals-2",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "What does each key of @Module — imports, controllers, providers, exports — actually do, and why is exports the one people get wrong?",
-    answerHtml: "<ul><li><code>controllers</code>: classes Nest instantiates to handle inbound requests for this module.</li><li><code>providers</code>: injectables Nest instantiates and makes available <b>within this module</b>.</li><li><code>imports</code>: other modules whose <i>exported</i> providers become injectable here.</li><li><code>exports</code>: the subset of this module's providers (or re-exported modules) made visible to modules that import it.</li></ul><p>The gotcha: declaring a provider in <code>providers</code> makes it injectable <b>only inside that module</b>. If another module imports yours and tries to inject it, you get a <code>Nest can't resolve dependencies</code> error unless you also list it in <code>exports</code>. Encapsulation is per-module, and <code>exports</code> is the explicit public surface.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-fundamentals-3",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "Why is NestJS built around dependency injection rather than letting you just import and new up your classes?",
-    answerHtml: "<p>DI inverts control: classes declare what they need, the container decides how to build and supply it. Practically that buys you (1) <b>testability</b> — swap a real provider for a mock via <code>Test.createTestingModule().overrideProvider()</code> without touching the class under test; (2) <b>lifecycle + singleton management</b> — one shared instance, lifecycle hooks, ordered teardown; (3) <b>loose coupling via tokens</b> — depend on an interface/token, bind the implementation per environment.</p><p>Manually <code>new</code>-ing creates a rigid graph: each class hard-wires its dependencies' construction, so mocking means monkey-patching imports and shared state leaks. DI makes the dependency graph declarative and centrally resolvable, which is what lets guards, interceptors, and providers compose cleanly.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-fundamentals-4",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "A senior asks: walk me through what NestFactory.create actually does at bootstrap, and where the platform adapter fits.",
-    answerHtml: "<p><code>NestFactory.create(AppModule)</code> builds the application context: it scans the root module graph, instantiates the DI container, resolves every provider and controller in dependency order, and registers controller routes against an <b>HTTP adapter</b>. (Lifecycle hooks like <code>onModuleInit</code> and <code>onApplicationBootstrap</code> don't fire here — they run during <code>app.init()</code>, which <code>app.listen()</code> calls internally.)</p><p>The adapter is the seam over the underlying HTTP platform. <code>NestFactory.create(AppModule)</code> defaults to Express; <code>NestFactory.create&lt;NestFastifyApplication&gt;(AppModule, new FastifyAdapter())</code> swaps in Fastify. Your controllers, providers, guards, and pipes are platform-agnostic and unchanged — only adapter-specific concerns (raw <code>req</code>/<code>res</code> access, some middleware, body-parser config) differ. <code>await app.listen(3000)</code> then initializes the app (running the bootstrap hooks) and binds the server. <code>create</code> returns a <code>Promise</code> because adapter setup and route registration are themselves async.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-fundamentals-5",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "Compare the Express and Fastify platform adapters in NestJS. When would you actually reach for Fastify, and what breaks when you do?",
-    answerHtml: "<table><thead><tr><th>Aspect</th><th>Express (default)</th><th>Fastify</th></tr></thead><tbody><tr><td>Throughput</td><td>Baseline</td><td>Higher — faster routing + JSON serialization</td></tr><tr><td>Ecosystem</td><td>Largest; most middleware assumes it</td><td>Smaller; needs <code>@fastify/*</code> plugins</td></tr><tr><td>Adapter</td><td>Implicit</td><td><code>new FastifyAdapter()</code></td></tr></tbody></table><p>Reach for Fastify when raw HTTP throughput and serialization cost dominate (high-RPS JSON APIs). The catch: Express-specific middleware, libraries that grab the raw <code>req</code>/<code>res</code>, and some Swagger/static-serving setups need Fastify equivalents. <b>Your business code shouldn't reference the platform</b> — if controllers reach into <code>@Res()</code> raw responses, you've coupled to the adapter and lose the swap.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-fundamentals-6",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "What's the difference between @Controller, the routing decorators (@Get/@Post/etc.), and how does Nest compose the final route path and bind handler arguments?",
-    answerHtml: "<p><code>@Controller('users')</code> declares a class as a request handler and sets a path <b>prefix</b>. Method decorators like <code>@Get(':id')</code>, <code>@Post()</code>, <code>@Patch()</code> map an HTTP verb + sub-path to a handler; the final route is the controller prefix joined with the method path (<code>GET /users/:id</code>) plus any global prefix from <code>app.setGlobalPrefix()</code>.</p><p>Handler arguments come from <b>parameter decorators</b> — <code>@Param('id')</code>, <code>@Query()</code>, <code>@Body()</code>, <code>@Req()</code> — which extract pieces of the request; pipes (e.g. <code>ParseIntPipe</code>, <code>ValidationPipe</code>) transform/validate those args before the handler runs. The return value is serialized by the adapter unless you opt into the raw <code>@Res()</code> object (which disables Nest's automatic response handling).</p>",
-    level: "junior",
-  },
-  {
-    id: "nest-lifecycle-1",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "Walk me through the exact order of NestJS components a request passes through, from incoming request to response.",
-    answerHtml: "<p>The pipeline executes in a fixed order:</p><ul><li><b>Middleware</b> (global, then module-bound, in registration order)</li><li><b>Guards</b> (global → controller → route)</li><li><b>Interceptors</b> — the <b>pre</b>-controller half (before <code>next.handle()</code>)</li><li><b>Pipes</b> (transform/validate the route-handler params)</li><li><b>Route handler</b> (the controller method)</li><li><b>Interceptors</b> — the <b>post</b>-controller half (the RxJS operators after <code>next.handle()</code>, e.g. response mapping)</li><li><b>Exception filters</b> — only if something throws anywhere above</li></ul><p>The classic trap: pipes run <b>after</b> guards and after interceptors start, not before. So a guard cannot rely on a DTO being transformed/validated yet.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-lifecycle-2",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "A request is rejected before it ever reaches the controller. Which component most likely rejected it, and why does the choice of guard vs. pipe matter here?",
-    answerHtml: "<p>Authorization/authentication rejection is a <b>guard</b>'s job — guards run early (right after middleware, before interceptors and pipes) and return a boolean or throw, short-circuiting with a <code>403</code>/<code>401</code> before any param processing happens. A <b>pipe</b> runs later, only to validate/transform the handler's arguments, and throws a <code>400</code> on bad input.</p><p>It matters because a guard sees the raw request and has DI access but <b>no transformed args</b>; if you need the validated DTO to make an access decision, a guard is too early — you'd push that logic into the handler/service or a method-scoped check.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-lifecycle-3",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "Explain how interceptors wrap the request — and why one interceptor effectively runs at two different points in the lifecycle.",
-    answerHtml: "<p>An interceptor's <code>intercept(context, next)</code> returns an <code>Observable</code>. Everything <b>before</b> <code>return next.handle()</code> runs in the pre-controller phase (after guards, before the handler); the RxJS operators you <code>.pipe()</code> onto <code>next.handle()</code> run in the post-controller phase, after the handler resolves — this is where response mapping (<code>map</code>), timing, and caching live.</p><p>With multiple interceptors the pre halves run in registration order (outer → inner), then the handler, then the post halves unwind in <b>reverse</b> order (inner → outer) — an onion. An interceptor can also fully short-circuit the handler (e.g. a cache hit returns <code>of(cached)</code> and <code>next.handle()</code> is never called).</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-lifecycle-4",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "When you bind a guard at the global, controller, and method level, what's the precedence and execution order — and which binding style supports DI?",
-    answerHtml: "<p>Scope only controls <b>where it applies</b>, not a priority override — for a given route all matching guards run, in order <b>global → controller → method</b>; if any returns false/throws, the request is rejected. (Interceptors and pipes follow the same global→controller→method ordering.)</p><p>On DI: guards/interceptors/pipes/filters registered via <code>app.useGlobalGuards(new X())</code> are instantiated outside the DI container and <b>cannot inject</b>. To get DI for a global, register it as a provider with the <code>APP_GUARD</code> (or <code>APP_INTERCEPTOR</code>/<code>APP_PIPE</code>/<code>APP_FILTER</code>) token in a module:</p><div class=\"code\">{\n  provide: APP_GUARD,\n  useClass: RolesGuard,\n}</div>",
-    level: "senior",
-  },
-  {
-    id: "nest-lifecycle-5",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "Order all of NestJS's lifecycle hooks for startup and shutdown, and state what's required for the shutdown hooks to fire at all.",
-    answerHtml: "<p><b>Startup</b> (per module, then app-wide): <code>onModuleInit()</code> fires for each module once its own deps are ready, then <code>onApplicationBootstrap()</code> fires after <b>all</b> modules have initialized.</p><p><b>Shutdown</b> (on a received signal): <code>onModuleDestroy()</code> → <code>beforeApplicationShutdown(signal)</code> → <code>onApplicationShutdown(signal)</code>.</p><p>Critical gotcha: the shutdown hooks <b>do not run by default</b> — you must call <code>app.enableShutdownHooks()</code> so Nest listens for OS signals (SIGTERM/SIGINT). It's opt-in because attaching signal listeners has a (small) per-process cost. Within each hook phase, dependent modules are torn down before the modules they depend on.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-lifecycle-6",
-    category: "lifecycle",
-    categoryLabel: "Request Lifecycle",
-    question: "Where do exception filters sit in the lifecycle, and how do they interact with an interceptor's response-mapping logic when the handler throws?",
-    answerHtml: "<p>Exception filters are the <b>last-resort</b> catch layer — they activate only when an exception propagates out of the handler, a pipe, a guard, or even an interceptor. Resolution order for a thrown error is method → controller → global filter, with the most specific matching filter (by <code>@Catch(SomeException)</code>) winning.</p><p>Key interaction: if the handler throws, control jumps to the filter and the interceptor's <b>post</b>-phase <code>map()</code> operators are skipped (the success path never runs). To run interceptor logic on errors, you must add an explicit <code>catchError</code> in the interceptor's pipe; otherwise only the filter shapes the error response. Note a filter that throws does <b>not</b> recurse back into filters — it surfaces as an unhandled error.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-di-providers-1",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "What are the four custom provider types in NestJS, and what does each map a token to?",
-    answerHtml: "<p>A provider is a token bound to a value. The four ways to bind:</p><ul><li><code>useClass</code> — instantiate a class (the standard <code>provide</code>/<code>useClass</code>, what shorthand <code>providers: [SvcClass]</code> expands to).</li><li><code>useValue</code> — bind a literal/object/constant (config, a mock in tests).</li><li><code>useFactory</code> — call a function whose return value becomes the instance; dependencies are listed in the <code>inject</code> array and passed as positional args.</li><li><code>useExisting</code> — an <b>alias</b>: resolve the token to an <i>already-registered</i> provider, sharing the same singleton instance (no new instance).</li></ul>",
-    level: "junior",
-  },
-  {
-    id: "nest-di-providers-2",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "Compare useFactory's inject array with useExisting. When would you reach for each?",
-    answerHtml: "<p><code>useFactory</code> builds a value at runtime; its <code>inject</code> array declares dependencies that Nest resolves and passes positionally to the factory — use it when construction needs other providers or async work (e.g. building a client from a config service).</p><div class=\"code\">{\n  provide: 'PG_POOL',\n  useFactory: (cfg: ConfigService) => new Pool({ url: cfg.get('DB_URL') }),\n  inject: [ConfigService],\n}</div><p><code>useExisting</code> creates an <b>alias to one existing token</b> — both resolve to the same instance. Reach for it to expose a service under a second token (e.g. an interface token pointing at a concrete class) without duplicating state. Key difference: <code>useClass</code> with a different class would give two separate instances; <code>useExisting</code> shares one.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-di-providers-3",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "Walk through the three injection scopes and the 'scope bubbling' rule. Why is REQUEST scope a performance concern?",
-    answerHtml: "<p>Three scopes:</p><ul><li><code>DEFAULT</code> (singleton) — one instance for the whole app lifetime; instantiated at bootstrap.</li><li><code>REQUEST</code> — a fresh instance per incoming request, with the request object injectable via <code>REQUEST</code>.</li><li><code>TRANSIENT</code> — a new instance for <i>every consumer</i> that injects it (not shared).</li></ul><p><b>Bubbling:</b> scope is contagious <i>up the injection chain</i>. If a singleton controller injects a REQUEST-scoped service, the controller (and anything depending on it) becomes REQUEST-scoped too.</p><p>The cost: request-scoped providers are <b>instantiated on every request</b>, so Nest must walk and rebuild that part of the DI subtree per request — losing the singleton optimization, adding latency and GC pressure. Keep request scope to a minimal leaf; don't let it bubble into hot paths.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-di-providers-4",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "You have a TRANSIENT-scoped provider you must obtain dynamically at runtime from a singleton service. Why does ModuleRef.get fail, and what's the correct call?",
-    answerHtml: "<p><code>moduleRef.get(token)</code> returns a <b>singleton</b> instance and <b>throws for request/transient-scoped providers</b> — they have no single instance to hand back.</p><p>Use <code>await moduleRef.resolve(token)</code>, which instantiates a fresh scoped instance and returns a Promise. Each <code>resolve()</code> call yields a <i>different</i> transient instance by default; to share one across calls within a logical context, pass a shared <code>ContextId</code> (e.g. from <code>ContextIdFactory</code>):</p><div class=\"code\">const id = ContextIdFactory.create();\nconst a = await this.moduleRef.resolve(Svc, id);\nconst b = await this.moduleRef.resolve(Svc, id); // a === b</div><p>Also: <code>get</code> only sees the current module unless you pass <code>{ strict: false }</code> to reach the whole app.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-di-providers-5",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "Explain how forwardRef resolves a circular dependency, and why a circular dependency is usually a design smell rather than a fix to celebrate.",
-    answerHtml: "<p>When A needs B and B needs A, Nest can't decide construction order and one token is <code>undefined</code> at injection time. <code>forwardRef(() => B)</code> wraps the reference in a thunk so the token is read <i>lazily</i> after both classes are defined, letting Nest stitch the instances together. You apply it on <b>both sides</b> — at the injection point (<code>@Inject(forwardRef(() => B))</code>) and, for cross-module cycles, in the <code>imports</code> (<code>forwardRef(() => BModule)</code>).</p><p>It's a smell because the cycle reflects tangled responsibilities. The cleaner fix is to extract the shared logic into a third provider both depend on, or invert one dependency via an event/interface — <code>forwardRef</code> is the escape hatch, not the goal.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-di-providers-6",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "Design the register / forRoot / forRootAsync pattern for a dynamic module. What does each convention signify, and how does forRootAsync feed config into a useFactory provider?",
-    answerHtml: "<p>A dynamic module is a static method returning a <code>DynamicModule</code> (<code>{ module, providers, exports, imports }</code>), letting callers configure it. Conventions:</p><ul><li><code>register()</code> — per-import, transient config (e.g. <code>HttpModule.register()</code> per feature module).</li><li><code>forRoot()</code> — app-wide, configure-once config (DB connection, mailer); usually combined with <code>@Global()</code> or imported once at the root.</li><li><code>forRootAsync()</code> — same, but config resolved <b>asynchronously</b> via DI (read from <code>ConfigService</code>, fetch a secret).</li></ul><p><code>forRootAsync</code> takes <code>{ imports, useFactory, inject }</code>; it turns the options into a <i>provider</i>: the factory runs through DI with <code>inject</code> dependencies, produces an options object bound to an internal <code>MODULE_OPTIONS</code> token, and the module's real providers depend on that token:</p><div class=\"code\">MyModule.forRootAsync({\n  imports: [ConfigModule],\n  inject: [ConfigService],\n  useFactory: (c: ConfigService) => ({ url: c.get('URL') }),\n})</div><p>(Nest's <code>ConfigurableModuleBuilder</code> generates this boilerplate for you.)</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-data-1",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "In TypeORM, what's the difference between the Active Record and Data Mapper patterns, and which does NestJS steer you toward?",
-    answerHtml: "<p><b>Active Record</b>: persistence lives on the entity itself — <code>user.save()</code>, <code>User.find()</code>. The entity extends <code>BaseEntity</code> and knows how to persist itself.</p><p><b>Data Mapper</b>: the entity is a plain object; a separate <code>Repository&lt;User&gt;</code> does the persistence — <code>userRepo.save(user)</code>. NestJS steers you here via <code>@InjectRepository(User)</code>, because the repo is an injectable boundary you can mock in unit tests and swap behind an interface.</p><p>Pick Data Mapper for anything testable and layered (the senior default); Active Record only for tiny scripts where DI buys you nothing.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-data-2",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "How do you run a multi-statement transaction in a TypeORM-based NestJS service so that all writes commit or roll back together?",
-    answerHtml: "<p>Use a <code>QueryRunner</code> from the injected <code>DataSource</code> so every write shares one connection and one transaction:</p><div class=\"code\">const qr = this.dataSource.createQueryRunner();\nawait qr.connect();\nawait qr.startTransaction();\ntry {\n  await qr.manager.save(order);\n  await qr.manager.decrement(Stock, { id }, 'qty', n);\n  await qr.commitTransaction();\n} catch (e) {\n  await qr.rollbackTransaction();\n  throw e;\n} finally {\n  await qr.release();\n}</div><p>The critical detail: use <code>qr.manager</code> for <i>all</i> writes — calling an injected <code>@InjectRepository</code> instead checks out a different pooled connection and silently escapes the transaction. <code>dataSource.transaction(cb)</code> is the terser sugar over the same mechanism.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-data-3",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "What's the N+1 query problem in an ORM, and how do you eliminate it in TypeORM and Prisma?",
-    answerHtml: "<p>N+1 = one query loads N parent rows, then lazy-loading a relation fires one extra query per row (N more). It's invisible in dev and melts the DB under load.</p><p><b>TypeORM</b>: load the relation in a single join — <code>find({ relations: { posts: true } })</code> or a QueryBuilder <code>leftJoinAndSelect</code>. <b>Prisma</b>: <code>include: { posts: true }</code> (Prisma issues a small constant number of queries, not N).</p><p>Senior framing: avoid lazy relations as a default, and treat a query count that scales with result-set size as a red flag — verify with <code>logging: ['query']</code> or Prisma's query log, not by eyeballing the code.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-data-4",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "How should typed configuration and secrets be loaded and consumed in NestJS, and why inject ConfigService instead of reading process.env directly?",
-    answerHtml: "<p>Register <code>ConfigModule.forRoot({ isGlobal: true, validationSchema })</code> with a <b>Joi</b> schema (the built-in <code>validationSchema</code> option calls the schema's <code>.validate()</code>, so it's Joi-shaped; for Zod, supply a custom <code>validate</code> function instead) so a missing or malformed env var <b>fails fast at boot</b>, not at the first request. Group related values with <code>registerAs('db', () =&gt; ({...}))</code> namespaces.</p><p>Inject <code>ConfigService</code> and read with the generic for type safety: <code>config.getOrThrow&lt;string&gt;('DATABASE_URL')</code>. Reasons over raw <code>process.env</code>:</p><ul><li>Validated + typed, not <code>string | undefined</code> everywhere.</li><li><code>getOrThrow</code> turns a missing secret into a startup crash instead of a runtime <code>undefined</code>.</li><li>Injectable, so it's trivially mockable in tests. Secrets stay out of the repo (env/secret manager), never hardcoded.</li></ul>",
-    level: "mid",
-  },
-  {
-    id: "nest-data-5",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "At the architecture level, how do you decide between TypeORM, Prisma, and Mongoose for a new NestJS service?",
-    answerHtml: "<table><thead><tr><th>Tool</th><th>Choose when</th><th>Cost</th></tr></thead><tbody><tr><td><b>Prisma</b></td><td>SQL + want the strongest type safety and a clean migration story; team values DX</td><td>Generated client, schema-first DSL, less raw control; a separate query engine process historically</td></tr><tr><td><b>TypeORM</b></td><td>SQL + want decorator entities, repository DI, and fine-grained QueryBuilder control</td><td>Looser types, sharper edges (lazy relations, cascade gotchas)</td></tr><tr><td><b>Mongoose</b></td><td>MongoDB / document model with schema validation and middleware hooks</td><td>NoSQL semantics — multi-document transactions require a replica set (or sharded cluster)</td></tr></tbody></table><p>Senior heuristic: relational data + type safety = Prisma is the modern default; reach for TypeORM when you need its QueryBuilder/repository ergonomics; Mongoose only when the data is genuinely document-shaped. Don't run two ORMs in one service.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-data-6",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "Why does connection pool sizing matter for a NestJS API, and what breaks when the pool is too small or too large?",
-    answerHtml: "<p>The pool is a fixed set of reusable DB connections shared across all in-flight requests; opening a connection per request is expensive and the DB caps total connections.</p><ul><li><b>Too small</b>: requests queue waiting for a free connection — latency spikes and pool-timeout errors under load even though the DB is idle.</li><li><b>Too large</b>: you exhaust Postgres's <code>max_connections</code> (each backend costs memory), and concurrent serverless instances multiply the count fast.</li></ul><p>Senior points: keep one DataSource/PrismaClient per process (don't <code>new</code> it per request) so the pool is reused; in serverless, cap pool size low and front it with a server-side pooler like PgBouncer/Hyperdrive, since N lambdas × M pool size overruns the DB. Long transactions hold a connection the whole time, so keep transaction boundaries tight.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-graphql-micro-1",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "What's the difference between code-first and schema-first in NestJS GraphQL, and which would you pick?",
-    answerHtml: "<p>Both drive the same Apollo/Mercurius runtime; they differ in the source of truth for the schema.</p><ul><li><b>Schema-first:</b> you hand-write the SDL <code>.graphql</code> files, and NestJS generates TypeScript typings from them.</li><li><b>Code-first:</b> you write TypeScript classes with decorators (<code>@ObjectType()</code>, <code>@Field()</code>, <code>@Resolver()</code>), and <code>@nestjs/graphql</code> generates the SDL at boot (optionally written out via <code>autoSchemaFile</code>).</li></ul><p>For a TypeScript-heavy NestJS team, code-first is the usual pick: one source of truth, no SDL/decorator drift, types flow naturally. Schema-first wins when the schema is a contract owned by a separate team or shared across non-TS services.</p>",
-    level: "junior",
-  },
-  {
-    id: "nest-graphql-micro-2",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "You expose a Post type with an author field. How do you resolve author without coupling the Post resolver's root query to the User repository, and what does @ResolveField actually do?",
-    answerHtml: "<p>Use a <code>@ResolveField()</code> method on the <code>Post</code> resolver. The root query returns the <code>Post</code> carrying only <code>authorId</code>; the field resolver runs <b>only when the client selects <code>author</code></b> and fetches the user lazily.</p><div class=\"code\">@Resolver(() =&gt; Post)\nexport class PostsResolver {\n  constructor(private users: UsersService) {}\n\n  @ResolveField(() =&gt; User)\n  author(@Parent() post: Post) {\n    return this.users.findById(post.authorId);\n  }\n}</div><p>This co-locates each type's data-fetching and avoids resolving the author when the query doesn't ask for it. The catch: over a list of posts it fires once per row — the classic N+1, which a DataLoader then fixes.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-graphql-micro-3",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "A list query resolves each item's author with a per-row DB call (N+1). How does DataLoader fix it, and why must the loader be request-scoped in NestJS?",
-    answerHtml: "<p>DataLoader batches and de-dupes loads within a single tick. Field resolvers call <code>loader.load(authorId)</code> instead of querying directly; DataLoader collects all the ids requested in that event-loop tick and hands them to one batch function (e.g. <code>findByIds([1,2,3])</code>), collapsing N queries into one. It also caches per key so the same id isn't fetched twice.</p><p>The loader's cache holds resolved entities, so it <b>must not be shared across requests</b> — a singleton would leak one user's data into another's response and serve stale rows. In NestJS the standard pattern is a <code>Scope.REQUEST</code> provider (or a loader created per request and attached to the GraphQL context) so each request gets a fresh loader and cache.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-graphql-micro-4",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "Compare @MessagePattern and @EventPattern in a NestJS microservice. When does choosing the wrong one cause a production incident?",
-    answerHtml: "<p>They are the two message-handler styles on a microservice transport:</p><table><thead><tr><th></th><th>@MessagePattern</th><th>@EventPattern</th></tr></thead><tbody><tr><td>Semantics</td><td>Request–response (RPC)</td><td>Fire-and-forget event</td></tr><tr><td>Client call</td><td><code>client.send()</code> → Observable of a reply</td><td><code>client.emit()</code> → no reply</td></tr><tr><td>Return value</td><td>sent back to caller</td><td>ignored</td></tr></tbody></table><p>Using <code>@MessagePattern</code> for a fan-out event couples the producer to a single consumer and blocks it waiting on a correlated reply — and with multiple instances on a load-balanced transport, only one replies. Using <code>@EventPattern</code> where the caller needs the result silently drops the response: <code>send()</code>'s Observable never emits, so requests appear to hang or time out. Pick <code>send/@MessagePattern</code> when you need an answer, <code>emit/@EventPattern</code> for broadcasts and side effects.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-graphql-micro-5",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "You have an HTTP REST API that also needs to consume Kafka messages in the same NestJS process. How do you wire that up, and what's a hybrid application?",
-    answerHtml: "<p>A <b>hybrid application</b> is a single Nest process running an HTTP server <i>and</i> one or more microservice transports at once. You bootstrap the HTTP app normally, then attach a connected microservice and start both:</p><div class=\"code\">const app = await NestFactory.create(AppModule);\napp.connectMicroservice&lt;MicroserviceOptions&gt;({\n  transport: Transport.KAFKA,\n  options: { client: { brokers: ['kafka:9092'] } },\n});\nawait app.startAllMicroservices();\nawait app.listen(3000);</div><p>Now controllers with <code>@MessagePattern</code>/<code>@EventPattern</code> consume Kafka while <code>@Get</code>/<code>@Post</code> serve HTTP — sharing the same DI container, guards, and pipes. The alternative, <code>createMicroservice()</code>, builds a <i>pure</i> microservice with no HTTP listener at all.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-graphql-micro-6",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "Why is @WebSocketGateway not the same as a Nest microservice transporter, and how do real-time updates from a microservice reach a connected client?",
-    answerHtml: "<p>A <code>@WebSocketGateway</code> is a server-side gateway for <b>client</b> connections (browser/mobile over Socket.IO or ws) — it speaks <code>@SubscribeMessage</code> handlers and pushes via <code>server.emit()</code>. Microservice transporters (TCP, Redis, NATS, Kafka, gRPC, RabbitMQ) are for <b>service-to-service</b> messaging with <code>@MessagePattern</code>/<code>@EventPattern</code>. They are different layers and don't interoperate directly.</p><p>To push a microservice event out to clients, the gateway lives in (or alongside) a service that <i>also</i> consumes the transport: an <code>@EventPattern</code> handler receives the internal event, then calls the injected gateway's <code>server.emit()</code> to the relevant room. With multiple gateway instances you need a shared backplane (e.g. the Socket.IO Redis adapter) so an emit on one node reaches sockets held by another. Note this is distinct from GraphQL <b>subscriptions</b>, which solve real-time over the GraphQL protocol via a PubSub engine, not socket gateways.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-testing-1",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "Walk me through the minimal setup for a NestJS unit test of a service. What's the role of Test.createTestingModule and compile()?",
-    answerHtml: "<p><code>Test.createTestingModule({ providers: [...] })</code> builds an isolated DI container scoped to the test — you declare only the providers under test plus mocks for their dependencies. <code>compile()</code> is the async step that resolves the dependency graph and instantiates the providers, returning a <code>TestingModule</code> (the <code>moduleRef</code>).</p><p>You then pull instances out with <code>moduleRef.get(Service)</code> and assert against them. No HTTP server, no Nest app bootstrap — just the provider wired to fakes.</p><div class=\"code\">const moduleRef = await Test.createTestingModule({\n  providers: [UsersService, { provide: UsersRepo, useValue: mockRepo }],\n}).compile();\nconst service = moduleRef.get(UsersService);</div>",
-    level: "junior",
-  },
-  {
-    id: "nest-testing-2",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "What's the difference between moduleRef.get() and moduleRef.resolve(), and when does get() throw?",
-    answerHtml: "<p><code>get()</code> retrieves a <b>singleton-scoped</b> provider from the root injector synchronously. <code>resolve()</code> is async and returns a <b>new instance</b> for <code>REQUEST</code>- or <code>TRANSIENT</code>-scoped providers, since those don't live in the root container.</p><p>Calling <code>get()</code> on a request/transient-scoped provider throws (it isn't in the static container). Also, <code>get()</code> only sees providers in the current module by default — pass <code>{ strict: false }</code> to reach into imported modules' providers.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-testing-3",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "How does overrideProvider().useValue() work, and what are the gotchas around token identity and overriding non-class providers?",
-    answerHtml: "<p><code>overrideProvider(Token).useValue(mock)</code> swaps a provider <i>before</i> <code>compile()</code> — it's the idiomatic way to replace a real dependency when you're importing the real module rather than hand-listing providers. The <b>token must match exactly</b>: a class for class providers, but the actual injection token (a string/symbol) for things like <code>@Inject('CONFIG')</code> or a repository token (<code>getRepositoryToken(User)</code>).</p><p>Siblings are <code>useClass</code> and <code>useFactory</code>. A classic trap: trying to override a provider by its <i>interface</i> or by a re-exported alias — Nest keys the container on the literal token, so the override silently no-ops and you test the real implementation.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-testing-4",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "When unit-testing a Guard or Pipe in isolation, do you go through the testing module at all? How do you construct the ExecutionContext?",
-    answerHtml: "<p>For a guard/pipe with no injected dependencies, skip the module entirely — <code>new MyGuard()</code> and call <code>canActivate(ctx)</code> directly. The testing module only earns its keep when the guard injects things (e.g. <code>Reflector</code>, a service) that you want resolved or overridden.</p><p>You don't need a real <code>ExecutionContext</code> — fake just the surface the guard touches:</p><div class=\"code\">const ctx = {\n  switchToHttp: () => ({ getRequest: () => ({ headers: { authorization: 'Bearer x' } }) }),\n  getHandler: () => handler,\n} as unknown as ExecutionContext;</div><p>For pipes it's even simpler: call <code>transform(value, metadata)</code> with a hand-built <code>ArgumentMetadata</code> and assert the returned/validated value or the thrown <code>BadRequestException</code>.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-testing-5",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "Describe the structure of a NestJS e2e test with supertest. Why app.getHttpServer() and not a hardcoded port, and what's the lifecycle?",
-    answerHtml: "<p>You compile a module that imports the real <code>AppModule</code> (overriding only true externals — auth, third-party clients), call <code>app = moduleRef.createNestApplication()</code>, then <code>await app.init()</code>. <code>init()</code> runs the full bootstrap <i>except</i> binding to a network port — middleware, guards, pipes and interceptors are all wired.</p><p><code>request(app.getHttpServer())</code> hands supertest the underlying Node <code>http.Server</code>; supertest binds it to an ephemeral port itself. That avoids port collisions in parallel/CI runs and means you never call <code>listen()</code>. Always <code>await app.close()</code> in <code>afterAll</code> to release DB connections and shut down lifecycle hooks.</p><div class=\"code\">await request(app.getHttpServer())\n  .post('/users').send(dto)\n  .expect(201)\n  .expect(res => expect(res.body.id).toBeDefined());</div>",
-    level: "senior",
-  },
-  {
-    id: "nest-testing-6",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "When do you mock the repository versus run against a real test database? How does that map onto the unit-vs-e2e split?",
-    answerHtml: "<p>Mock the repo for <b>unit tests</b>: you're verifying the service's <i>logic</i> — branching, mapping, error handling, that it calls the repo with the right args — not that SQL runs. Mocks are fast, deterministic, and let you force edge cases (conflict, not-found) trivially.</p><p>Use a <b>real test DB</b> (ideally the same engine via Testcontainers/Docker, not SQLite-as-stand-in) for <b>integration/e2e</b>, where the value is precisely what mocks erase: migrations, real constraints, transactions, query-builder correctness, cascade behavior.</p><table><thead><tr><th>Concern</th><th>Mock repo</th><th>Test DB</th></tr></thead><tbody><tr><td>Service logic</td><td>Yes</td><td>Overkill</td></tr><tr><td>Query/migration correctness</td><td>No (mock can't catch it)</td><td>Yes</td></tr><tr><td>Speed / parallelism</td><td>Fast</td><td>Slower, needs isolation</td></tr></tbody></table><p>The anti-pattern is mocking the repo and believing you've covered persistence — a green mock-based test passes even when the real query is malformed.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-security-1",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "In NestJS, what's the difference between a Guard and a Pipe, and which layer owns authorization vs input validation?",
-    answerHtml: "<p>They sit at different points in the request lifecycle and answer different questions.</p><ul><li><b>Guards</b> run <i>after</i> middleware but <i>before</i> interceptors and pipes, and return a boolean (or throw) — they decide <b>can this request proceed at all?</b> That's authentication (<code>AuthGuard</code>) and authorization (roles/permissions). They have access to the full <code>ExecutionContext</code>.</li><li><b>Pipes</b> run later, bound to a specific handler argument, and transform/validate the <i>shape</i> of input (<code>ValidationPipe</code>, <code>ParseIntPipe</code>). They answer <b>is this payload well-formed?</b></li></ul><p>Rule of thumb: authZ belongs in a guard (it's a cross-cutting access decision), data validation belongs in a pipe. Putting role checks inside a pipe or DTO is a smell — the pipe runs too late and lacks the access-control intent.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-security-2",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "Walk me through wiring passport-jwt in NestJS: what does the JwtStrategy actually do, and what is its validate() return value used for?",
-    answerHtml: "<p>You extend <code>PassportStrategy(Strategy)</code> from <code>passport-jwt</code> and configure it in the constructor — typically <code>jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()</code>, the <code>secretOrKey</code> (or a JWKS resolver for asymmetric/RS256), and <code>ignoreExpiration: false</code>.</p><p>Passport handles signature + expiry verification <i>before</i> your code runs. By the time <code>validate(payload)</code> is called, the token is already cryptographically valid; <code>payload</code> is the decoded claims. Whatever <code>validate()</code> returns becomes <code>request.user</code> (Passport attaches it), so this is where you'd do a user lookup or just project the claims:</p><div class=\"code\">async validate(payload: JwtPayload) {\n  return { userId: payload.sub, roles: payload.roles };\n}</div><p>Returning <code>null</code>/throwing yields a 401. The matching <code>AuthGuard('jwt')</code> (or a named default via <code>PassportModule.register</code>) triggers the strategy on protected routes.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-security-3",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "How do you implement role-based access in NestJS with a custom @Roles() decorator, and why is Reflector central to it?",
-    answerHtml: "<p>It's a metadata-plus-guard pattern. <code>@Roles()</code> is a <code>SetMetadata</code>-based decorator that stamps required roles onto the handler/class; a <code>RolesGuard</code> reads them back via <code>Reflector</code> and compares against <code>request.user</code>.</p><div class=\"code\">export const Roles = (...roles: string[]) => SetMetadata('roles', roles);\n\n@Injectable()\nexport class RolesGuard implements CanActivate {\n  constructor(private reflector: Reflector) {}\n  canActivate(ctx: ExecutionContext) {\n    const required = this.reflector.getAllAndOverride&lt;string[]&gt;('roles', [\n      ctx.getHandler(), ctx.getClass(),\n    ]);\n    if (!required) return true;\n    const { user } = ctx.switchToHttp().getRequest();\n    return required.some((r) =&gt; user?.roles?.includes(r));\n  }\n}</div><p><code>getAllAndOverride</code> lets a method-level <code>@Roles()</code> override a class-level one. This guard must run <i>after</i> the auth guard so <code>user</code> is populated — order matters. For richer rules (ownership, field-level), reach for <b>CASL</b> and a policy guard instead of string roles.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-security-4",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "What do whitelist, forbidNonWhitelisted, and transform do on the global ValidationPipe, and why enable them?",
-    answerHtml: "<p>They harden the input boundary using your DTO + class-validator decorators:</p><table><thead><tr><th>Option</th><th>Effect</th></tr></thead><tbody><tr><td><code>whitelist: true</code></td><td>Strips any property not decorated in the DTO — silently drops unknown fields.</td></tr><tr><td><code>forbidNonWhitelisted: true</code></td><td>Instead of stripping, throws 400 if unknown props are present — fail-loud.</td></tr><tr><td><code>transform: true</code></td><td>Runs class-transformer so the payload becomes a real DTO instance, and coerces primitives (e.g. string <code>\"5\"</code> → number) per the TS types.</td></tr></tbody></table><p>Together they block mass-assignment / overposting (an attacker setting <code>isAdmin: true</code> gets it stripped or rejected) and guarantee handlers receive typed instances. Register once globally with <code>app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))</code>. Note <code>transform</code> coercion needs <code>transformOptions: { enableImplicitConversion: true }</code> or explicit <code>@Type()</code> for query/param strings.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-security-5",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "How do you add rate limiting, helmet, and CORS to a NestJS app, and what's the gotcha with @nestjs/throttler behind a proxy or with WebSockets?",
-    answerHtml: "<p>Three different layers:</p><ul><li><b>helmet</b> — sets security headers (CSP, HSTS, etc.). Apply as middleware: <code>app.use(helmet())</code>. With Fastify use <code>@fastify/helmet</code>.</li><li><b>CORS</b> — <code>app.enableCors({ origin: [...], credentials: true })</code>. Never reflect arbitrary origins with credentials enabled.</li><li><b>Rate limiting</b> — <code>@nestjs/throttler</code>: <code>ThrottlerModule.forRoot([{ ttl, limit }])</code> (v5+ takes an array of throttler definitions) plus a global <code>ThrottlerGuard</code>.</li></ul><p>Gotchas: throttler keys on client IP, so behind a load balancer / reverse proxy you must enable trust-proxy (e.g. <code>app.set('trust proxy', 1)</code> on Express) or every request looks like it comes from the proxy IP and shares one bucket. For multi-instance deployments the default in-memory storage doesn't share counts — use the Redis storage provider (<code>ThrottlerStorageRedisService</code>). For WebSockets/GraphQL you override <code>getTracker</code>/<code>getRequestResponse</code> on a custom guard since there's no plain HTTP req. helmet's defaults can also break Swagger UI (CSP) — scope or relax CSP there.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-security-6",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "Where should JWT/DB secrets live in a NestJS app, and how do you validate config at boot instead of crashing at first request?",
-    answerHtml: "<p>Secrets come from the environment, never from committed code. Use <code>ConfigModule.forRoot({ isGlobal: true })</code> and inject <code>ConfigService</code> — and critically, register strategies/modules <i>async</i> so the secret is read at runtime, not import time:</p><div class=\"code\">JwtModule.registerAsync({\n  inject: [ConfigService],\n  useFactory: (c: ConfigService) =&gt; ({\n    secret: c.getOrThrow('JWT_SECRET'),\n    signOptions: { expiresIn: '15m' },\n  }),\n})</div><p>Pass a <code>validationSchema</code> (Joi/Zod) to <code>forRoot</code> so a missing or malformed <code>JWT_SECRET</code> <b>fails the bootstrap</b> with a clear error rather than 500-ing on the first protected request. Use <code>getOrThrow</code> over <code>get</code> to avoid silently signing tokens with <code>undefined</code>. In production, inject secrets via the platform's secret manager (AWS Secrets Manager / SSM Parameter Store, HashiCorp Vault, GCP Secret Manager), keep <code>.env</code> out of the image, and rotate by supporting multiple verification keys (JWKS) so old tokens stay valid during rollover.</p>",
-    level: "architect",
-  },
-  {
-    id: "nest-perf-observ-1",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "What does Nest's default singleton provider scope buy you for performance, and what's the real cost of switching a provider to REQUEST scope?",
-    answerHtml: "<p>Singleton (the default) means Nest instantiates the provider <b>once</b> and reuses it for the lifetime of the app, so DI resolution is free at request time and the instance is shared safely across all requests.</p><p>Marking a provider <code>{ scope: Scope.REQUEST }</code> forces Nest to spin up a <b>new instance of that provider — and every provider that injects it — on every request</b>. That bubbling is the trap: a request-scoped provider taints its whole injection chain, including the controller, so you pay allocation + DI resolution per request and lose the ability to inject it into singletons (a singleton can't hold a per-request instance).</p><p>Prefer singletons; to read per-request data use <code>@Inject(REQUEST)</code> sparingly, or better, pull what you need from the execution context / <code>AsyncLocalStorage</code> instead of going request-scoped.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-perf-observ-2",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "How do you wire Redis into Nest's CacheModule (v10/v11), and what changed in the cache-manager v5/v6 era?",
-    answerHtml: "<p>Register <code>CacheModule</code> with a store. In modern Nest you use <code>@nestjs/cache-manager</code> over <code>cache-manager</code> v5+, where the Redis store is supplied via <b>Keyv</b> (<code>@keyv/redis</code>) rather than the old <code>cache-manager-redis-store</code>. A <code>KeyvRedis</code> instance is itself a Keyv-compatible store, so it goes straight into the <code>stores</code> array:</p><div class=\"code\">CacheModule.registerAsync({\n  isGlobal: true,\n  useFactory: () => ({\n    stores: [new KeyvRedis('redis://localhost:6379')],\n    ttl: 30_000, // ms in cache-manager v5+, not seconds\n  }),\n})</div><p>Two gotchas a senior should call out: <b>TTL is milliseconds</b> now (it was seconds pre-v5), and you inject the cache with <code>@Inject(CACHE_MANAGER) private cache: Cache</code> to call <code>get</code>/<code>set</code>/<code>del</code> manually.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-perf-observ-3",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "When is CacheInterceptor safe, and what are its sharp edges that bite in production?",
-    answerHtml: "<p><code>CacheInterceptor</code> auto-caches <b>GET handlers</b> keyed by the request URL. It only intercepts GETs by design (caching a mutation would be a correctness bug).</p><p>Sharp edges:</p><ul><li><b>Per-user / auth-sensitive responses leak</b> — the default key is just the URL, so two users hitting the same path share a cache entry. Override <code>trackBy()</code> to fold in user/tenant, or don't auto-cache authenticated routes.</li><li>It caches the <b>serialized handler return value</b>, not the HTTP response, so anything you do via the raw <code>res</code> object (headers, streaming) won't be replayed — and a handler that injects <code>@Res()</code> can't use the interceptor at all.</li><li>Bind it globally with <code>APP_INTERCEPTOR</code> for everything, or per-controller; tune per-route with <code>@CacheKey()</code> / <code>@CacheTTL()</code>.</li></ul>",
-    level: "senior",
-  },
-  {
-    id: "nest-perf-observ-4",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "Why might a senior pick the Fastify adapter over Express for a Nest service, and what's the migration cost?",
-    answerHtml: "<p>Fastify's HTTP layer and its schema-based, <b>compiled JSON serialization</b> give meaningfully higher throughput and lower latency than Express under load — the win is mostly in the request/response hot path and serialization, not Nest itself.</p><p>You opt in by bootstrapping with <code>NestFactory.create&lt;NestFastifyApplication&gt;(AppModule, new FastifyAdapter())</code>. The cost is that <b>platform-specific code breaks</b>: middleware, plugins, the raw <code>req</code>/<code>res</code> shapes, file-upload (<code>@fastify/multipart</code> vs multer), and some third-party packages assume Express. Stick to Nest's platform-agnostic abstractions (interceptors, guards, <code>@Res({ passthrough: true })</code>) and you stay portable; reach into the native request and you've coupled to one adapter.</p>",
-    level: "senior",
-  },
-  {
-    id: "nest-perf-observ-5",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "How do you stream a large file from a Nest handler without buffering it in memory, and what does StreamableFile handle for you?",
-    answerHtml: "<p>Return a <code>StreamableFile</code> wrapping a Readable stream (e.g. <code>fs.createReadStream</code>) instead of reading the whole file into a Buffer:</p><div class=\"code\">@Get('report')\ngetReport(): StreamableFile {\n  const file = createReadStream(join(process.cwd(), 'big.pdf'));\n  return new StreamableFile(file, {\n    type: 'application/pdf',\n    disposition: 'attachment; filename=\"big.pdf\"',\n  });\n}</div><p><code>StreamableFile</code> pipes the stream to the response and is <b>adapter-agnostic</b> (works on Express and Fastify), sets <code>Content-Type</code>/<code>Content-Disposition</code> from the options, and wires error handling so a stream error doesn't hang the socket. Memory stays flat (O(chunk)) regardless of file size — versus loading a multi-GB file into RAM. Pair it with HTTP compression off for already-compressed payloads.</p>",
-    level: "mid",
-  },
-  {
-    id: "nest-perf-observ-6",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "Walk through graceful shutdown in Nest: how do you enable it, what fires, and what's the production failure mode if you skip it?",
-    answerHtml: "<p>Call <code>app.enableShutdownHooks()</code> so Nest listens for OS termination signals (SIGTERM/SIGINT). On a signal, Nest runs lifecycle hooks in order — <code>onModuleDestroy</code> → <code>beforeApplicationShutdown</code> → <code>onApplicationShutdown(signal)</code> — across providers, giving you a window to drain in-flight requests, close DB pools, flush a BullMQ worker, and disconnect Redis.</p><p>Two senior notes: hooks are <b>off by default</b> because attaching signal listeners has a small cost, and under Kubernetes you must also handle the <b>preStop / terminationGracePeriod</b> window — k8s sends SIGTERM, removes the pod from endpoints, then SIGKILLs after the grace period. Skip <code>enableShutdownHooks()</code> and a rolling deploy kills pods mid-request, dropping connections and leaking half-finished jobs / unclosed pool connections.</p>",
-    level: "architect",
-  },
+/** Category filters contributed by this file (the aggregator adds "All"). */
+export const FLASHCARD_FILTERS = [
+  { value: "core", label: "Core" },
+  { value: "di", label: "DI & Modules" },
+  { value: "lifecycle", label: "Request Lifecycle" },
+  { value: "config", label: "Config & Validation" },
 ];

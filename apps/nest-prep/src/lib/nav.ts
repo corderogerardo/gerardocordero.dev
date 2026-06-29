@@ -1,7 +1,10 @@
-import type { NavItem } from "@gerardocordero/prep-kit";
+export type NavItem = {
+  href: string;
+  label: string;
+  /** Short description used on the overview page cards. */
+  blurb?: string;
+};
 
-// The routes this app ships. Add/remove entries here; the header, mobile
-// menu, and overview cards all read from this list.
 export const NAV: NavItem[] = [
   { href: "/", label: "Overview", blurb: "Start here — how to use this guide." },
   {
@@ -10,14 +13,34 @@ export const NAV: NavItem[] = [
     blurb: "Your daily drill: due cards + a coding & design prompt, with a streak.",
   },
   {
+    href: "/roadmap",
+    label: "Roadmap",
+    blurb: "Junior → mid → senior → architect. Know where you are, and what's next.",
+  },
+  {
+    href: "/study",
+    label: "Study Guide",
+    blurb: "Every senior NestJS requirement, explained — with Node.js woven in.",
+  },
+  {
+    href: "/architecture",
+    label: "Architecture",
+    blurb: "Backend system-design deep dives, from DI to microservices & queues.",
+  },
+  {
+    href: "/pitches",
+    label: "Pitches",
+    blurb: "Rehearsed intros and STAR stories you can deliver out loud.",
+  },
+  {
     href: "/flashcards",
     label: "Flashcards",
-    blurb: "Drill NestJS Q&A and grade yourself — progress saved in your browser.",
+    blurb: "Drill Q&A and grade yourself — progress saved in your browser.",
   },
   {
     href: "/quiz",
     label: "Quiz",
-    blurb: "Multiple-choice checks on lifecycle, DI, and security — explained feedback.",
+    blurb: "Multiple-choice checks with instant, explained feedback.",
   },
   {
     href: "/practice",
@@ -36,4 +59,5 @@ export const NAV: NavItem[] = [
   },
 ];
 
+/** Primary tabs shown in the header (excludes the Overview/home link label tweak). */
 export const PRIMARY_NAV = NAV;

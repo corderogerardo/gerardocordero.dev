@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { PageHeader, FlashcardDeck } from "@gerardocordero/prep-kit";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { FlashcardDeck } from "@gerardocordero/prep-kit";
 import { ALL_FLASHCARDS, ALL_FLASHCARD_FILTERS } from "@/data/all";
+
+const cards = ALL_FLASHCARDS;
+const filters = ALL_FLASHCARD_FILTERS;
 
 export const metadata: Metadata = {
   title: "Flashcards",
   description:
-    "Q&A flashcards with reveal, self-grading, and spaced repetition. Filter by topic or level; progress is saved in your browser.",
+    "Interview Q&A flashcards across NestJS core, DI, the request lifecycle, data, auth, microservices, GraphQL, Node.js internals, performance, and testing. Reveal, self-grade, and drill what you don't know yet.",
 };
 
 export default function FlashcardsPage() {
@@ -13,10 +17,10 @@ export default function FlashcardsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Drill the Q&A"
-        title="Flashcards"
-        lead="Tap a card to reveal the answer, then grade yourself. Grades are saved in this browser with spaced repetition, so you can come back and drill only what you still need."
+        title="Interview Q&A — Flashcards"
+        lead="Tap a card to reveal the answer, then grade yourself. Your grades are saved in this browser, so you can come back and drill only the ones you still need. Sourced from the official NestJS docs, the Node.js API docs, and widely-cited best-practice guides."
       />
-      <FlashcardDeck cards={ALL_FLASHCARDS} filters={ALL_FLASHCARD_FILTERS} />
+      <FlashcardDeck cards={cards} filters={filters} />
     </div>
   );
 }

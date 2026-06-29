@@ -1,7 +1,7 @@
+// Practice prompts — NestJS / Node.js coding tasks and backend system-design prompts.
 import type { Level } from "@/lib/levels";
 
 export type PromptKind = "coding" | "design";
-
 export type Prompt = {
   id: string;
   kind: PromptKind;
@@ -13,141 +13,343 @@ export type Prompt = {
 };
 
 export const PROMPTS: Prompt[] = [
+  // ---------------- CODING ----------------
   {
-    id: "nest-coding-1",
+    id: "pr-crud",
     kind: "coding",
-    title: "Logging interceptor with request timing",
-    level: "senior",
-    tags: ["interceptor","rxjs","observability","aop"],
-    promptHtml: "<p>Write a global <code>LoggingInterceptor</code> that logs every incoming request and how long it took to handle. For each request log the HTTP method and URL on the way in, and on the way out log the same plus the elapsed milliseconds. It must work for both successful responses and thrown errors, and must not swallow the error.</p><p>Then show how you would register it globally.</p>",
+    title: "Paginated REST endpoint with validation + auth",
+    level: "mid",
+    tags: ["NestJS", "validation", "guards"],
+    promptHtml:
+      "<p>Build <code>GET /users?page=1&amp;limit=20</code> that is JWT-protected, validates query params, and returns a paginated result. Show the controller, the query DTO, and how the guard/pipe are wired.</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li>Implement <code>NestInterceptor</code>; <code>intercept()</code> runs <b>before</b> the handler, and the operator you attach to the returned stream runs <b>after</b>.</li><li>Capture the start time in <code>intercept</code>, then use RxJS <code>tap</code> with both a <i>next</i> and <i>error</i> callback so timing is logged on success <b>and</b> failure. <code>tap</code> is observe-only, so it never alters or swallows the value/error.</li><li>Pull the <code>Request</code> from <code>context.switchToHttp()</code> so the same interceptor degrades cleanly if mounted in a non-HTTP context.</li><li>Register once via the <code>APP_INTERCEPTOR</code> token so it stays a real provider (DI works) rather than <code>app.useGlobalInterceptors(new ...)</code>.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">import {\n  CallHandler,\n  ExecutionContext,\n  Injectable,\n  Logger,\n  NestInterceptor,\n} from '@nestjs/common';\nimport { Observable, tap } from 'rxjs';\n\n@Injectable()\nexport class LoggingInterceptor implements NestInterceptor {\n  private readonly logger = new Logger(LoggingInterceptor.name);\n\n  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {\n    const req = context.switchToHttp().getRequest<{ method: string; url: string }>();\n    const { method, url } = req;\n    const start = Date.now();\n    this.logger.log(`--> ${method} ${url}`);\n\n    return next.handle().pipe(\n      tap({\n        next: () => this.logger.log(`<-- ${method} ${url} ${Date.now() - start}ms`),\n        error: (err: Error) =>\n          this.logger.error(`<-- ${method} ${url} ${Date.now() - start}ms FAILED: ${err.message}`),\n      }),\n    );\n  }\n}</div><p>Register globally as a provider so DI still injects into it:</p><div class=\"code\">import { Module } from '@nestjs/common';\nimport { APP_INTERCEPTOR } from '@nestjs/core';\nimport { LoggingInterceptor } from './logging.interceptor';\n\n@Module({\n  providers: [{ provide: APP_INTERCEPTOR, useClass: LoggingInterceptor }],\n})\nexport class AppModule {}</div>" },
+      {
+        label: "Approach",
+        html:
+          "<ul><li>A <code>PaginationDto</code> with <code>@IsInt()/@Min()/@Max()</code> + <code>@Type(() =&gt; Number)</code> for coercion.</li><li>Global <code>ValidationPipe({ transform: true, whitelist: true })</code>.</li><li><code>@UseGuards(JwtAuthGuard)</code> (or a global APP_GUARD).</li><li>Service returns <code>{ data, total, page, limit }</code>; repository uses <code>skip/take</code>.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">export class PaginationDto {\n  @Type(() =&gt; Number) @IsInt() @Min(1) page = 1;\n  @Type(() =&gt; Number) @IsInt() @Min(1) @Max(100) limit = 20;\n}\n\n@Controller('users')\n@UseGuards(JwtAuthGuard)\nexport class UsersController {\n  constructor(private users: UsersService) {}\n\n  @Get()\n  list(@Query() q: PaginationDto) {\n    return this.users.findPage(q.page, q.limit);\n  }\n}\n\n// service\nasync findPage(page: number, limit: number) {\n  const [data, total] = await this.repo.findAndCount({\n    skip: (page - 1) * limit, take: limit, order: { id: 'DESC' },\n  });\n  return { data, total, page, limit, pages: Math.ceil(total / limit) };\n}</div><p>Prefer <b>cursor</b> pagination for large/infinite feeds (stable under inserts).</p>",
+      },
     ],
   },
   {
-    id: "nest-coding-2",
+    id: "pr-roles-guard",
     kind: "coding",
-    title: "RolesGuard with Reflector + @Roles() metadata",
+    title: "Custom RolesGuard with the Reflector",
     level: "senior",
-    tags: ["guard","reflector","authz","decorator","metadata"],
-    promptHtml: "<p>Implement role-based authorization. Build a <code>@Roles(...)</code> decorator that attaches required roles as metadata, and a <code>RolesGuard</code> that reads that metadata with <code>Reflector</code> and allows the request only if the authenticated user has at least one required role.</p><p>Handle the case where a handler has <b>no</b> <code>@Roles()</code> (it should be public to any authenticated user). Assume an upstream auth guard has already populated <code>request.user</code>.</p>",
+    tags: ["NestJS", "auth", "RBAC"],
+    promptHtml:
+      "<p>Implement a <code>@Roles('admin')</code> decorator and a <code>RolesGuard</code> that reads required roles from route metadata and compares them to <code>request.user.roles</code>. Make method-level roles override class-level.</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li>Define a typed metadata key with <code>Reflector.createDecorator&lt;Role[]&gt;()</code> (the v9+ idiom) instead of a raw <code>SetMetadata</code> string &mdash; it gives the guard a typed, collision-free key. With <code>createDecorator&lt;Role[]&gt;()</code> the value type <i>is</i> the array, so it&rsquo;s applied as <code>@Roles(['admin'])</code>.</li><li>In the guard use <code>reflector.getAllAndOverride(Roles, [handler, class])</code> so a method-level <code>@Roles()</code> overrides a controller-level one.</li><li><b>No metadata =&gt; return <code>true</code></b> (route only requires authentication, not a specific role). Don't default to deny &mdash; that locks out every unannotated route.</li><li>Match with <code>some()</code> (any-of), pulling roles off <code>request.user</code>; throw <code>ForbiddenException</code> rather than returning false if you want a clear 403 message.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">// roles.decorator.ts\nimport { Reflector } from '@nestjs/core';\n\nexport type Role = 'admin' | 'editor' | 'user';\nexport const Roles = Reflector.createDecorator<Role[]>();</div><div class=\"code\">// roles.guard.ts\nimport { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';\nimport { Reflector } from '@nestjs/core';\nimport { Roles, Role } from './roles.decorator';\n\n@Injectable()\nexport class RolesGuard implements CanActivate {\n  constructor(private readonly reflector: Reflector) {}\n\n  canActivate(context: ExecutionContext): boolean {\n    const required = this.reflector.getAllAndOverride(Roles, [\n      context.getHandler(),\n      context.getClass(),\n    ]);\n    if (!required || required.length === 0) return true; // no @Roles() -> any authenticated user\n\n    const { user } = context.switchToHttp().getRequest<{ user?: { roles?: Role[] } }>();\n    const has = user?.roles?.some((r) => required.includes(r)) ?? false;\n    if (!has) throw new ForbiddenException('Insufficient role');\n    return true;\n  }\n}</div><div class=\"code\">// usage — createDecorator&lt;Role[]&gt;() takes a single array arg\n@Roles(['admin'])\n@Delete(':id')\nremove(@Param('id') id: string) { /* ... */ }</div>" },
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Decorator = <code>SetMetadata(ROLES_KEY, roles)</code>.</li><li>Guard injects <code>Reflector</code> and uses <code>getAllAndOverride(ROLES_KEY, [handler, class])</code>.</li><li>No roles required → allow; else check membership.</li><li>Register as <code>APP_GUARD</code> so it's global + DI-enabled.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">export const ROLES_KEY = 'roles';\nexport const Roles = (...roles: string[]) =&gt; SetMetadata(ROLES_KEY, roles);\n\n@Injectable()\nexport class RolesGuard implements CanActivate {\n  constructor(private reflector: Reflector) {}\n  canActivate(ctx: ExecutionContext): boolean {\n    const required = this.reflector.getAllAndOverride&lt;string[]&gt;(\n      ROLES_KEY, [ctx.getHandler(), ctx.getClass()],\n    );\n    if (!required?.length) return true;\n    const { user } = ctx.switchToHttp().getRequest();\n    return required.some((r) =&gt; user?.roles?.includes(r));\n  }\n}</div><p><b>Gotcha:</b> <code>getAllAndOverride</code> (not <code>get</code>) is what makes the method override the class.</p>",
+      },
     ],
   },
   {
-    id: "nest-coding-3",
+    id: "pr-retry",
     kind: "coding",
-    title: "Custom transform & validation pipe (ParseObjectIdPipe)",
+    title: "Retry with exponential backoff + jitter",
     level: "senior",
-    tags: ["pipe","validation","transform","pipetransform"],
-    promptHtml: "<p>Write a custom <code>PipeTransform</code> called <code>ParseObjectIdPipe</code> that takes a route param string, validates it is a well-formed 24-char hex Mongo ObjectId, and <b>transforms</b> it into a real <code>ObjectId</code> instance for the handler. Reject anything invalid with a <code>400</code> that names the offending param.</p><p>Show it applied to a single <code>@Param()</code> rather than globally.</p>",
+    tags: ["Node", "resilience"],
+    promptHtml:
+      "<p>Write <code>retry(fn, { retries, baseMs })</code> that retries a failing async function with exponential backoff and jitter, only retrying transient errors, and gives up after N attempts.</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li>A pipe both <i>validates</i> and <i>transforms</i> — return a value of a <b>different type</b> than you received (string in, <code>ObjectId</code> out), which is the part candidates often miss.</li><li>Use the <code>ArgumentMetadata</code> second arg for a precise error message (<code>metadata.data</code> is the param name).</li><li>Throw <code>BadRequestException</code> on failure so Nest maps it to 400 automatically; never return <code>undefined</code>.</li><li>Apply at the binding site — <code>@Param('id', ParseObjectIdPipe)</code> — so it's scoped to that one argument. Make it <code>@Injectable()</code> so it can be used as a class reference and could take deps later.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">import {\n  ArgumentMetadata,\n  BadRequestException,\n  Injectable,\n  PipeTransform,\n} from '@nestjs/common';\nimport { ObjectId } from 'mongodb';\n\n@Injectable()\nexport class ParseObjectIdPipe implements PipeTransform<string, ObjectId> {\n  transform(value: string, metadata: ArgumentMetadata): ObjectId {\n    if (!ObjectId.isValid(value)) {\n      throw new BadRequestException(\n        `'${metadata.data}' must be a valid ObjectId, got '${value}'`,\n      );\n    }\n    return new ObjectId(value); // string in, ObjectId out\n  }\n}</div><div class=\"code\">// controller — scoped to this one param\n@Get(':id')\nfindOne(@Param('id', ParseObjectIdPipe) id: ObjectId) {\n  return this.service.findOne(id);\n}</div>" },
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Loop up to <code>retries+1</code> times; <code>await fn()</code> in try/catch.</li><li>Delay = <code>min(cap, base × 2^attempt)</code> + random jitter.</li><li>Only retry retryable errors (network, 5xx) — rethrow 4xx immediately.</li><li>Support an <code>AbortSignal</code> to cancel.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">async function retry&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;, opts = {}): Promise&lt;T&gt; {\n  const { retries = 3, baseMs = 100, capMs = 2000, retryable = () =&gt; true } = opts;\n  let attempt = 0;\n  for (;;) {\n    try { return await fn(); }\n    catch (err) {\n      if (attempt &gt;= retries || !retryable(err)) throw err;\n      const backoff = Math.min(capMs, baseMs * 2 ** attempt);\n      const jitter = Math.random() * backoff;\n      await new Promise((r) =&gt; setTimeout(r, backoff / 2 + jitter / 2));\n      attempt++;\n    }\n  }\n}</div><p>Jitter prevents a <b>thundering herd</b> of synchronized retries. Only retry <b>idempotent</b> operations.</p>",
+      },
     ],
   },
   {
-    id: "nest-coding-4",
+    id: "pr-lru",
     kind: "coding",
-    title: "Async useFactory provider in a dynamic module",
-    level: "senior",
-    tags: ["dynamic-module","provider","usefactory","async","di"],
-    promptHtml: "<p>You need to expose a configured client (say a Redis client) as an injectable provider whose connection options come from <code>ConfigService</code> at runtime, and whose construction is <b>async</b>. Build a dynamic module <code>RedisModule.forRootAsync()</code> that provides a connected client under an injection token, and make sure the connection is closed on shutdown.</p>",
+    title: "In-memory LRU cache (O(1))",
+    level: "mid",
+    tags: ["Node", "data structures"],
+    promptHtml:
+      "<p>Implement an LRU cache with O(1) <code>get</code> and <code>set</code> and a max capacity that evicts the least-recently-used entry.</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li>Expose a static <code>forRootAsync()</code> returning a <code>DynamicModule</code>. The provider uses <code>useFactory</code> (async) with <code>inject: [ConfigService]</code> so config is resolved through DI, not read globally.</li><li>Provide the client under a <code>Symbol</code>/string token (clients aren't classes you can type-inject), and add the token to <code>exports</code> so consuming modules can inject it.</li><li><b>Lifecycle:</b> the factory can't clean up by itself — register a small provider implementing <code>onApplicationShutdown</code> to <code>quit()</code> the client, and add it to the module's <code>providers</code> (it won't be instantiated otherwise). Requires <code>app.enableShutdownHooks()</code>.</li><li>Mark the module <code>@Global()</code> only if every module needs it; otherwise keep it explicit and import where needed.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">// redis.tokens.ts — token lives alone so the lifecycle file and the\n// module can both import it without a circular dependency\nexport const REDIS_CLIENT = Symbol('REDIS_CLIENT');</div><div class=\"code\">// redis.lifecycle.ts\nimport { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';\nimport type { RedisClientType } from 'redis';\nimport { REDIS_CLIENT } from './redis.tokens';\n\n@Injectable()\nexport class RedisLifecycle implements OnApplicationShutdown {\n  constructor(@Inject(REDIS_CLIENT) private readonly client: RedisClientType) {}\n  async onApplicationShutdown(): Promise<void> {\n    await this.client.quit();\n  }\n}</div><div class=\"code\">// redis.module.ts\nimport { DynamicModule, Module, Provider } from '@nestjs/common';\nimport { ConfigModule, ConfigService } from '@nestjs/config';\nimport { createClient, RedisClientType } from 'redis';\nimport { REDIS_CLIENT } from './redis.tokens';\nimport { RedisLifecycle } from './redis.lifecycle';\n\n@Module({})\nexport class RedisModule {\n  static forRootAsync(): DynamicModule {\n    const clientProvider: Provider = {\n      provide: REDIS_CLIENT,\n      inject: [ConfigService],\n      useFactory: async (config: ConfigService): Promise<RedisClientType> => {\n        const client: RedisClientType = createClient({\n          url: config.getOrThrow<string>('REDIS_URL'),\n        });\n        client.on('error', (e) => console.error('redis', e));\n        await client.connect();\n        return client;\n      },\n    };\n\n    return {\n      module: RedisModule,\n      imports: [ConfigModule], // ConfigModule.forRoot() must run elsewhere to supply ConfigService\n      providers: [clientProvider, RedisLifecycle],\n      exports: [REDIS_CLIENT],\n    };\n  }\n}\n// call app.enableShutdownHooks() in main.ts so onApplicationShutdown fires</div>" },
+      {
+        label: "Approach",
+        html:
+          "<p>A JS <code>Map</code> preserves insertion order, so you can implement LRU without a hand-rolled linked list: on <code>get</code>, delete + re-set to move the key to the most-recent end; on <code>set</code> over capacity, evict <code>map.keys().next().value</code> (the oldest).</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">class LRU&lt;K, V&gt; {\n  private map = new Map&lt;K, V&gt;();\n  constructor(private cap: number) {}\n  get(key: K): V | undefined {\n    if (!this.map.has(key)) return undefined;\n    const v = this.map.get(key)!;\n    this.map.delete(key); this.map.set(key, v); // mark recent\n    return v;\n  }\n  set(key: K, val: V) {\n    if (this.map.has(key)) this.map.delete(key);\n    else if (this.map.size &gt;= this.cap)\n      this.map.delete(this.map.keys().next().value); // evict oldest\n    this.map.set(key, val);\n  }\n}</div><p>The classic interview version uses a <b>HashMap + doubly linked list</b>; the Map trick is the idiomatic JS shortcut.</p>",
+      },
     ],
   },
   {
-    id: "nest-coding-5",
+    id: "pr-plimit",
     kind: "coding",
-    title: "Global exception filter mapping a domain error to HTTP",
+    title: "Async pool with a concurrency limit",
     level: "senior",
-    tags: ["exception-filter","error-handling","http","domain"],
-    promptHtml: "<p>Your service layer throws plain domain errors (e.g. <code>class EntityNotFoundError extends Error</code>) that know nothing about HTTP. Write an exception filter that catches <code>EntityNotFoundError</code> and turns it into a clean <code>404</code> JSON response, without leaking the stack. Register it globally.</p><p>The domain layer must stay HTTP-agnostic — the mapping lives only in the filter.</p>",
+    tags: ["Node", "async"],
+    promptHtml:
+      "<p>Process 10,000 items by running an async <code>worker(item)</code> with at most <b>N</b> in flight at once (a bounded <code>Promise.all</code>). Why not just <code>Promise.all(items.map(worker))</code>?</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li><code>@Catch(EntityNotFoundError)</code> scopes the filter to exactly that domain error; other errors fall through to Nest's default filter (good — don't catch-all and accidentally swallow real 500s).</li><li>Grab the platform <code>Response</code> from <code>host.switchToHttp()</code>. Keep it platform-aware but here assume Express.</li><li>Build a small, stable response body (statusCode, message, path, timestamp). Do <b>not</b> echo <code>error.stack</code> to clients.</li><li>Register with <code>APP_FILTER</code> so it's a DI-managed provider and applies app-wide; keeps the domain error free of any <code>@nestjs/common</code> import.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">// domain layer — zero HTTP knowledge\nexport class EntityNotFoundError extends Error {\n  constructor(entity: string, id: string) {\n    super(`${entity} ${id} not found`);\n    this.name = 'EntityNotFoundError';\n  }\n}</div><div class=\"code\">// not-found.filter.ts\nimport { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';\nimport type { Request, Response } from 'express';\nimport { EntityNotFoundError } from './entity-not-found.error';\n\n@Catch(EntityNotFoundError)\nexport class EntityNotFoundFilter implements ExceptionFilter<EntityNotFoundError> {\n  catch(exception: EntityNotFoundError, host: ArgumentsHost) {\n    const ctx = host.switchToHttp();\n    const res = ctx.getResponse<Response>();\n    const req = ctx.getRequest<Request>();\n\n    res.status(HttpStatus.NOT_FOUND).json({\n      statusCode: HttpStatus.NOT_FOUND,\n      message: exception.message,\n      path: req.url,\n      timestamp: new Date().toISOString(),\n    });\n  }\n}</div><div class=\"code\">// register globally (DI-managed)\nimport { Module } from '@nestjs/common';\nimport { APP_FILTER } from '@nestjs/core';\nimport { EntityNotFoundFilter } from './not-found.filter';\n\n@Module({\n  providers: [{ provide: APP_FILTER, useClass: EntityNotFoundFilter }],\n})\nexport class AppModule {}</div>" },
+      {
+        label: "Approach",
+        html:
+          "<p>Unbounded <code>Promise.all</code> starts all 10k at once — exhausting sockets/file handles/memory. Instead keep a pool: launch up to N, and when one resolves, pull the next item.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">async function mapLimit&lt;T, R&gt;(items: T[], n: number,\n  worker: (item: T) =&gt; Promise&lt;R&gt;): Promise&lt;R[]&gt; {\n  const results: R[] = new Array(items.length);\n  let i = 0;\n  async function run() {\n    while (i &lt; items.length) {\n      const idx = i++;\n      results[idx] = await worker(items[idx]);\n    }\n  }\n  await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));\n  return results;\n}</div><p>This bounds concurrency to N. Libraries like <code>p-limit</code> do the same — know how to build it from scratch.</p>",
+      },
     ],
   },
   {
-    id: "nest-coding-6",
+    id: "pr-interceptor",
     kind: "coding",
-    title: "Unit-test a service with a mocked repository",
-    level: "senior",
-    tags: ["testing","jest","testingmodule","overrideprovider","mocking"],
-    promptHtml: "<p>Write a unit test for a <code>UsersService.findById(id)</code> that depends on an injected <code>UsersRepository</code>. Using <code>Test.createTestingModule</code>, provide a mocked repository (no real DB), assert the happy path, and assert that the service throws <code>NotFoundException</code> when the repo returns <code>null</code>.</p><p>Show the pattern with both a provider stub and the <code>overrideProvider</code> form.</p>",
+    title: "Response-envelope TransformInterceptor",
+    level: "mid",
+    tags: ["NestJS", "interceptors", "RxJS"],
+    promptHtml:
+      "<p>Write an interceptor that wraps every successful response in <code>{ data, timestamp }</code> without each handler knowing about it.</p>",
     reveal: [
-      { label: "Approach", html: "<ul><li>Build the module with <code>Test.createTestingModule({ providers: [...] })</code> and supply the repo via <code>{ provide: UsersRepository, useValue: mock }</code> — typed with <code>jest.Mocked&lt;Pick&lt;...&gt;&gt;</code> so calls are checkable.</li><li>Resolve the SUT with <code>module.get(UsersService)</code>; reset mocks in <code>beforeEach</code> so tests don't bleed.</li><li>Use <code>rejects.toThrow(NotFoundException)</code> for the error path — assert the <b>type</b>, not the message string.</li><li><code>overrideProvider(...).useValue(...)</code> is the equivalent when you compile a real module and want to swap one dependency; reach for it when you can't (or don't want to) hand-list every provider.</li></ul>" },
-      { label: "Solution", html: "<div class=\"code\">import { NotFoundException } from '@nestjs/common';\nimport { Test } from '@nestjs/testing';\nimport { UsersService } from './users.service';\nimport { UsersRepository } from './users.repository';\n\ndescribe('UsersService', () => {\n  let service: UsersService;\n  const repo = { findById: jest.fn() } as jest.Mocked<Pick<UsersRepository, 'findById'>>;\n\n  beforeEach(async () => {\n    jest.clearAllMocks();\n    const moduleRef = await Test.createTestingModule({\n      providers: [\n        UsersService,\n        { provide: UsersRepository, useValue: repo },\n      ],\n    }).compile();\n    service = moduleRef.get(UsersService);\n  });\n\n  it('returns the user on the happy path', async () => {\n    const user = { id: '1', name: 'Ada' };\n    repo.findById.mockResolvedValue(user);\n    await expect(service.findById('1')).resolves.toEqual(user);\n    expect(repo.findById).toHaveBeenCalledWith('1');\n  });\n\n  it('throws NotFoundException when the repo returns null', async () => {\n    repo.findById.mockResolvedValue(null);\n    await expect(service.findById('1')).rejects.toThrow(NotFoundException);\n  });\n});</div><p>Same swap via <code>overrideProvider</code> when compiling a real module:</p><div class=\"code\">const moduleRef = await Test.createTestingModule({ imports: [UsersModule] })\n  .overrideProvider(UsersRepository)\n  .useValue(repo)\n  .compile();</div>" },
+      {
+        label: "Approach",
+        html:
+          "<p>Implement <code>NestInterceptor</code>; return <code>next.handle().pipe(map(...))</code> to transform the stream after the handler runs. Register globally via <code>APP_INTERCEPTOR</code>.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">@Injectable()\nexport class TransformInterceptor&lt;T&gt;\n  implements NestInterceptor&lt;T, { data: T; timestamp: string }&gt; {\n  intercept(_ctx: ExecutionContext, next: CallHandler) {\n    return next.handle().pipe(\n      map((data) =&gt; ({ data, timestamp: new Date().toISOString() })),\n    );\n  }\n}\n// providers: [{ provide: APP_INTERCEPTOR, useClass: TransformInterceptor }]</div><p>For timeouts add <code>timeout(5000)</code> + <code>catchError</code>; for logging add a <code>tap</code> before the map.</p>",
+      },
     ],
   },
   {
-    id: "nest-design-1",
+    id: "pr-stream",
+    kind: "coding",
+    title: "Stream a large file with backpressure",
+    level: "senior",
+    tags: ["Node", "streams"],
+    promptHtml:
+      "<p>Serve a multi-GB file as a gzipped download without loading it into memory, and make sure errors and resources are handled.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Pipe <code>createReadStream</code> → <code>zlib.createGzip()</code> → the response with <code>stream.pipeline</code> (not <code>.pipe()</code>) so backpressure, error propagation, and stream cleanup are automatic.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">import { pipeline } from 'node:stream/promises';\nimport { createReadStream } from 'node:fs';\nimport { createGzip } from 'node:zlib';\n\n@Get('download')\nasync download(@Res() res: Response) {\n  res.set({ 'Content-Type': 'application/gzip',\n    'Content-Disposition': 'attachment; filename=\"big.json.gz\"' });\n  await pipeline(createReadStream('big.json'), createGzip(), res);\n}</div><p>In Nest, prefer returning a <code>StreamableFile</code> when you don't need raw <code>@Res()</code> — post-controller interceptors still run. Never buffer the whole file.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-token-bucket",
+    kind: "coding",
+    title: "Redis token-bucket rate limiter",
+    level: "senior",
+    tags: ["Node", "Redis", "rate limiting"],
+    promptHtml:
+      "<p>Implement a distributed token-bucket limiter (refill rate R, capacity C) that's correct across multiple app instances. Why must it be atomic?</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Store <code>{tokens, lastRefill}</code> per key in Redis. On each request: refill by <code>elapsed × R</code> (capped at C), allow if ≥1 then decrement. The refill→check→decrement must be <b>atomic</b> or two concurrent requests race and both pass — so run it as a <b>Lua script</b> (Redis executes it atomically).</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">-- KEYS[1]=bucket  ARGV: now, rate, capacity, cost\nlocal b = redis.call('HMGET', KEYS[1], 'tokens', 'ts')\nlocal tokens = tonumber(b[1]) or tonumber(ARGV[3])\nlocal ts = tonumber(b[2]) or tonumber(ARGV[1])\nlocal delta = math.max(0, tonumber(ARGV[1]) - ts)\ntokens = math.min(tonumber(ARGV[3]), tokens + delta * tonumber(ARGV[2]))\nlocal allowed = tokens &gt;= tonumber(ARGV[4])\nif allowed then tokens = tokens - tonumber(ARGV[4]) end\nredis.call('HMSET', KEYS[1], 'tokens', tokens, 'ts', ARGV[1])\nredis.call('PEXPIRE', KEYS[1], 60000)\nreturn allowed and 1 or 0</div><p>Use Redis server time to avoid clock skew; decide fail-open vs fail-closed if Redis is unreachable. In Nest, wrap this in a custom <code>ThrottlerGuard</code> storage.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-dataloader",
+    kind: "coding",
+    title: "Fix GraphQL N+1 with DataLoader",
+    level: "senior",
+    tags: ["NestJS", "GraphQL", "performance"],
+    promptHtml:
+      "<p>A <code>Post.author</code> field resolver runs one query per post over a list of 50 posts (1+50 queries). Fix it with DataLoader and explain the two classic bugs.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Create a per-request DataLoader whose batch fn takes all author ids and returns authors with a single <code>WHERE id IN (...)</code>. Resolve the field via <code>loader.load(post.authorId)</code> — calls coalesce within one tick.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">// in the GraphQL context factory (per request):\nconst authorLoader = new DataLoader&lt;string, Author&gt;(async (ids) =&gt; {\n  const rows = await authorRepo.findBy({ id: In([...ids]) });\n  const byId = new Map(rows.map((a) =&gt; [a.id, a]));\n  return ids.map((id) =&gt; byId.get(id) ?? null); // SAME order + length\n});\n\n@ResolveField('author')\nauthor(@Parent() post: Post, @Context('authorLoader') loader) {\n  return loader.load(post.authorId);\n}</div><div class=\"callout warn\"><span class=\"lbl\">Two bugs to avoid</span> (1) the batch fn must return results in the <b>same order and length</b> as the keys — build a Map and re-map. (2) The loader must be <b>per-request</b> — a singleton leaks one user's cache to another.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-shutdown",
+    kind: "coding",
+    title: "Graceful shutdown for a Nest service",
+    level: "senior",
+    tags: ["NestJS", "ops"],
+    promptHtml:
+      "<p>Implement graceful shutdown so a SIGTERM (k8s rollout) drains in-flight requests and closes resources before exit.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li><code>app.enableShutdownHooks()</code> in <code>main.ts</code>.</li><li>Implement <code>OnApplicationShutdown</code>/<code>OnModuleDestroy</code> to close DB pools, queues, sockets.</li><li>Fail the readiness probe first so the LB stops routing; finish in-flight; then exit.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">// main.ts\nconst app = await NestFactory.create(AppModule);\napp.enableShutdownHooks();\nawait app.listen(3000);\n\n@Injectable()\nexport class DbService implements OnApplicationShutdown {\n  async onApplicationShutdown(signal?: string) {\n    await this.pool.end();      // close connections\n    await this.queue.close();   // stop workers\n  }\n}</div><p><b>k8s detail:</b> endpoint removal and SIGTERM happen concurrently, so add a small <code>preStop</code> sleep (or keep serving briefly) to avoid dropping requests, and set <code>terminationGracePeriodSeconds</code> above worst-case drain.</p>",
+      },
+    ],
+  },
+
+  // ---------------- SYSTEM DESIGN ----------------
+  {
+    id: "pr-multitenant",
     kind: "design",
-    title: "Design a modular monolith that can split into microservices",
-    level: "senior",
-    tags: ["nestjs","modular-monolith","microservices","architecture","ddd"],
-    promptHtml: "<p>You're building the backend for a B2B logistics product. The team is small and you want to ship fast, so a monolith is the right call <b>now</b> — but the founders expect that <code>Shipments</code>, <code>Billing</code>, and <code>Notifications</code> will each need independent scaling and separate teams within a year.</p><p>Design a <b>modular monolith in NestJS</b> that runs as one deployable today, but where any module can be extracted into its own microservice later <b>without rewriting business logic</b>. Walk through module boundaries, how modules talk to each other, the data layer, and what concretely changes the day you extract <code>Billing</code>.</p>",
-    reveal: [
-      { label: "Requirements", html: "<ul><li><b>Functional:</b> domains for Shipments, Billing, Notifications; cross-domain flows (a delivered shipment triggers an invoice + a notification).</li><li><b>Non-functional:</b> single deploy now; clean seams so one module extracts later with no logic rewrite; independent scaling per domain post-split.</li><li><b>Constraints:</b> small team, one Postgres instance to start, must keep the loop (typecheck/lint/test) green throughout.</li><li><b>Out of scope (state it):</b> not building distributed transactions on day one — extraction is a later, deliberate step.</li></ul>" },
-      { label: "Design", html: "<p>One Nest app, one feature module per bounded context (<code>ShipmentsModule</code>, <code>BillingModule</code>, <code>NotificationsModule</code>) plus a <code>SharedModule</code> for cross-cutting infra (config, logging, DB). The discipline that makes the split cheap:</p><ul><li><b>No reaching across modules' internals.</b> A module exposes a thin public service (its API surface) via its module's <code>exports</code> and keeps repositories/entities private. Other modules import that module and depend only on the exported provider — never on another module's repository.</li><li><b>Talk via events, not direct calls, for side effects.</b> Shipments emits a <code>shipment.delivered</code> domain event (Nest's <code>EventEmitter2</code> from <code>@nestjs/event-emitter</code>, in-process); Billing and Notifications subscribe with <code>@OnEvent('shipment.delivered')</code>. The publisher doesn't know who listens — that decoupling is exactly what survives the network boundary later.</li><li><b>Schema-per-module.</b> Same Postgres instance, separate schemas (or at least no cross-module foreign keys / joins). A module owns its tables; others see it only through its service.</li></ul><div class=\"code\">Shipments  --shipment.delivered-->  EventBus\n                                     |--> Billing  (create invoice)\n                                     |--> Notifications (send email)</div>" },
-      { label: "Trade-offs", html: "<p><b>The extraction day:</b> swap the in-process <code>EventEmitter2</code> for a real transport (Nest microservices over Kafka/NATS, with the listener becoming an <code>@EventPattern</code> handler) and move Billing's tables to its own DB. Because callers already went through Billing's public service and consumed events — not its repos — the change is transport + deployment, not a logic rewrite.</p><p><b>What it costs:</b> the boundary discipline is friction up front (no convenient cross-module joins, more events to trace). The risk is <b>fake modularity</b> — modules that import each other's entities and quietly share tables look split but aren't; enforce boundaries with lint rules / a dependency-cruiser check, not good intentions. Synchronous reads that genuinely need another domain's data are the hardest to split — keep those few and explicit, because each becomes a network call with its own failure mode after the split.</p>" },
-    ],
-  },
-  {
-    id: "nest-design-2",
-    kind: "design",
-    title: "Design auth + RBAC for a multi-tenant SaaS",
-    level: "senior",
-    tags: ["nestjs","auth","rbac","multi-tenant","jwt","security"],
-    promptHtml: "<p>You're building auth for a multi-tenant SaaS where each customer organization (tenant) has its own users, and users can have different roles <b>per tenant</b> — someone can be an <code>admin</code> in Org A and a read-only <code>member</code> in Org B. Some endpoints are tenant-scoped (a project), some are platform-wide (billing portal), and you need to support API keys for machine clients.</p><p>Design <b>authentication, tenant isolation, and RBAC</b> in NestJS. Explain how a request proves who it is, which tenant it's acting in, what it's allowed to do, and how you stop tenant A from ever reading tenant B's data.</p>",
-    reveal: [
-      { label: "Requirements", html: "<ul><li><b>AuthN:</b> human users (JWT, refresh tokens) and machine clients (API keys); roles are scoped per tenant, not global.</li><li><b>AuthZ:</b> role-based checks on endpoints; some routes platform-wide, some tenant-scoped; future-proof toward attribute/permission checks.</li><li><b>Isolation:</b> hard guarantee that a query in tenant A's request can never return tenant B's rows — the headline failure mode in multi-tenant SaaS.</li><li><b>Constraints:</b> stateless-ish API, horizontal scaling, auditable access.</li></ul>" },
-      { label: "Design", html: "<p>Layered NestJS guards, run in sequence on every protected route (the order they're listed in <code>@UseGuards()</code>):</p><ul><li><b>AuthGuard</b> — validates the JWT (Passport JWT strategy via <code>@nestjs/passport</code>) or hashes-and-looks-up the API key. Populates <code>request.user</code>.</li><li><b>TenantGuard</b> — resolves the active tenant from the URL/subdomain/header, then confirms <code>request.user</code> has a membership in that tenant. Sets <code>request.tenantId</code>. No membership → throw <code>ForbiddenException</code> (403) before any handler runs.</li><li><b>RolesGuard</b> — reads required roles from a <code>@Roles('admin')</code> decorator (set via <code>SetMetadata</code>) using <code>Reflector</code>, and checks them against the user's role <b>in this tenant</b> (from the membership, not a global field).</li></ul><p><b>Isolation is enforced at the data layer, not the controller.</b> Carry <code>tenantId</code> in a request-scoped context (e.g. <code>AsyncLocalStorage</code>) and apply it automatically — a Prisma client extension that filters every query, a repository/QueryBuilder wrapper in TypeORM, or Postgres Row-Level Security that enforces <code>tenant_id = current_setting(...)</code>. (A TypeORM <i>subscriber</i> can't do this — it fires on entity lifecycle events and can't inject a <code>WHERE</code> clause into reads.) The token model: short-lived access JWT carrying <code>userId</code> + memberships, long-lived rotating refresh token; API keys are stored hashed (treat like passwords) and scoped to one tenant.</p>" },
-      { label: "Trade-offs", html: "<p><b>Where to enforce tenancy:</b> manual <code>WHERE tenant_id</code> in every query is the bug factory — one forgotten clause is a cross-tenant leak. Push it into a layer that can't be forgotten: a Prisma extension / QueryBuilder wrapper or Postgres RLS. RLS is the strongest guarantee (the DB refuses to leak even if app code is buggy) but adds operational complexity and per-connection session setup (<code>SET app.tenant_id</code> per request).</p><p><b>Roles in the JWT vs. fetched per request:</b> embedding memberships in the token is fast but goes stale — revoking access doesn't take effect until the token expires, so keep access tokens short and check critical permissions against the DB. <b>RBAC vs. ABAC:</b> start with roles; if you find yourself adding roles like <code>billing-admin-readonly</code>, that's the signal to move to a permission/policy model (e.g. CASL) before the role list explodes.</p>" },
-    ],
-  },
-  {
-    id: "nest-design-3",
-    kind: "design",
-    title: "Design an event-driven order/payment pipeline with idempotency & retries",
+    title: "Design a multi-tenant SaaS API",
     level: "architect",
-    tags: ["nestjs","event-driven","kafka","rabbitmq","idempotency","saga"],
-    promptHtml: "<p>An order is placed. That has to: reserve inventory, charge a payment provider, and notify the customer — across separate services, over a message broker. Payment providers time out and double-deliver webhooks; the broker guarantees <b>at-least-once</b> delivery, so every consumer will eventually see duplicate messages.</p><p>Design the <b>event-driven order/payment pipeline</b> in NestJS over Kafka or RabbitMQ. Cover the message flow, how you make charging exactly-once <b>in effect</b> despite at-least-once delivery, your retry/backoff strategy, and what happens when payment succeeds but inventory reservation has already failed.</p>",
+    tags: ["architecture", "multi-tenancy"],
+    promptHtml:
+      "<p>Design the backend for a B2B SaaS where each tenant's data must be isolated. Cover the isolation model, tenant resolution, and how you prevent cross-tenant leakage.</p>",
     reveal: [
-      { label: "Requirements", html: "<ul><li><b>Flow:</b> <code>OrderPlaced</code> → reserve inventory → charge payment → <code>OrderConfirmed</code> / notify; steps live in different services.</li><li><b>Idempotency:</b> a customer is never double-charged even if a message is delivered twice or a consumer crashes mid-process and the message is redelivered.</li><li><b>Reliability:</b> transient failures retry with backoff; permanent failures go to a DLQ, not an infinite loop; no event silently lost (no dual-write gap between DB and broker).</li><li><b>Consistency:</b> if a later step fails, earlier steps are compensated — no money taken without an order, no stock held forever.</li></ul>" },
-      { label: "Design", html: "<p>Each service is a Nest microservice consuming from the broker — handlers wired with <code>@EventPattern</code> / <code>@MessagePattern</code>. The backbone:</p><ul><li><b>Idempotency keys.</b> Every command carries a stable key (e.g. <code>orderId</code> + step). Before charging, the payment service does an atomic insert into a <code>processed_events</code> table on that key (unique constraint); if the row already exists, it's a duplicate — skip and re-emit the prior result. This makes at-least-once delivery <b>effectively</b> exactly-once.</li><li><b>Transactional outbox.</b> Don't write the DB and publish to the broker as two separate steps (one can fail) — write the event to an <code>outbox</code> table in the <b>same DB transaction</b> as the state change, and a relay (CDC/Debezium or a poller) publishes it. No lost events, no phantom events.</li><li><b>Retries + DLQ.</b> Transient errors (provider 503, timeout) retry with exponential backoff + jitter, capped. After N attempts the message lands in a dead-letter queue (RabbitMQ DLX, or a dead-letter topic on Kafka) for inspection/replay — never a hot retry loop. Note ack semantics: on Kafka you control the committed offset (don't auto-commit before the work succeeds); on RabbitMQ you <code>nack</code>/<code>ack</code> per message.</li><li><b>Saga for the cross-service flow.</b> If charge succeeds but a downstream step fails, emit compensating events (<code>RefundPayment</code>, <code>ReleaseInventory</code>). The pipeline is eventually consistent, coordinated by events rather than a distributed transaction.</li></ul><div class=\"code\">OrderPlaced -> [reserve stock] -> [charge $] -> OrderConfirmed\n   any step fails -> emit compensation (release stock / refund)</div>" },
-      { label: "Trade-offs", html: "<table><thead><tr><th>Choice</th><th>Why / cost</th></tr></thead><tbody><tr><td>Outbox over direct publish</td><td>Kills the dual-write gap (DB committed, broker publish dropped). Cost: a relay process + slight latency.</td></tr><tr><td>Idempotency key in DB</td><td>Exactly-once <i>effect</i> on at-least-once transport. Cost: the dedupe table needs TTL/cleanup and the check must be atomic with the write.</td></tr><tr><td>Saga (choreography) over 2PC</td><td>2PC across HTTP/payment providers is impractical; sagas scale but accept eventual consistency and you must author every compensation.</td></tr><tr><td>Kafka vs RabbitMQ</td><td>Kafka: ordered partitions + replay/event-sourcing, heavier ops. RabbitMQ: simpler routing/per-message ack/DLX, weaker replay. For an audit-able money pipeline, Kafka's log replay is the tiebreaker.</td></tr></tbody></table><p><b>The classic failure to name out loud:</b> charge succeeds, the <code>OrderConfirmed</code> publish or the ack/offset-commit is lost, the message redelivers — without the idempotency key you charge twice. That key is the whole ballgame.</p>" },
+      {
+        label: "Approach",
+        html:
+          "<p>Clarify scale + compliance first (it drives silo vs pool). Decide isolation model, where the tenant id comes from, how it's propagated, and the guardrail that makes leakage impossible even with a bug.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Isolation:</b> Pool (shared tables + <code>tenant_id</code>) for cost; Silo (DB per tenant) for enterprise/compliance; Bridge (schema per tenant) in between. Mix by tier.</li><li><b>Resolution:</b> tenant from subdomain or a JWT claim → set in request context via <code>nestjs-cls</code> (AsyncLocalStorage).</li><li><b>Guardrail:</b> Postgres <b>Row-Level Security</b> keyed on a session var — a forgotten filter can't leak rows.</li><li><b>Noisy neighbor:</b> per-tenant rate limits/quotas, query timeouts; scope all cache keys by tenant.</li><li><b>Ops:</b> per-tenant migrations (pool=1 run, silo=N), backups, and data residency.</li></ul><div class=\"callout warn\"><span class=\"lbl\">Cardinal sin</span> Cross-tenant leakage — RLS + tenant-scoped cache keys are the defense.</div>",
+      },
     ],
   },
   {
-    id: "nest-design-4",
+    id: "pr-order-pipeline",
     kind: "design",
-    title: "Design caching + rate limiting + resilience for a high-traffic API",
-    level: "senior",
-    tags: ["nestjs","caching","rate-limiting","resilience","redis","circuit-breaker"],
-    promptHtml: "<p>A public-facing NestJS API serves a read-heavy product catalog at tens of thousands of req/s, backed by Postgres and a couple of flaky third-party services (pricing, search). Under load you see DB CPU spikes, abusive clients hammering endpoints, and one slow downstream dragging down everything that calls it.</p><p>Design a <b>caching, rate-limiting, and resilience strategy</b>. Cover what you cache and how you invalidate it, how you protect both the API and your own DB from overload, and how one failing dependency is prevented from taking the whole service down.</p>",
+    title: "Design an event-driven order pipeline",
+    level: "architect",
+    tags: ["architecture", "microservices", "messaging"],
+    promptHtml:
+      "<p>An order flows through payment, inventory, and shipping — separate services. Design it for reliability: no double charges, no lost orders, consistent state.</p>",
     reveal: [
-      { label: "Requirements", html: "<ul><li><b>Throughput:</b> read-heavy, high RPS; most reads are cacheable; writes are comparatively rare.</li><li><b>Protection:</b> per-client rate limits to stop abuse and protect the DB; fair across a horizontally-scaled fleet (limit is global, not per-instance).</li><li><b>Resilience:</b> a slow/down third-party must not exhaust the request pool or cascade; degrade gracefully, don't fall over.</li><li><b>Correctness:</b> cached data is fresh enough; stale reads bounded and invalidated on writes.</li></ul>" },
-      { label: "Design", html: "<p>Three layers, each solving a distinct problem:</p><ul><li><b>Caching (Redis, shared).</b> Cache-aside for catalog reads with a TTL; on write, invalidate (or write-through) the affected keys. Use <code>@nestjs/cache-manager</code> configured with a Redis store (a Keyv/cache-manager Redis adapter — the package itself is in-memory by default) so all instances share one cache. Defend against the <b>cache stampede</b> (TTL expires under load → thundering herd to the DB) with a short lock / single-flight or staggered TTLs.</li><li><b>Rate limiting (distributed).</b> <code>@nestjs/throttler</code> with a <b>Redis storage adapter</b> (e.g. <code>@nest-lab/throttler-storage-redis</code>) — the throttler defaults to in-memory (per-instance), so the Redis store is what makes the limit global across the fleet, keyed by client/API-key. Return <code>429</code> with a <code>Retry-After</code> header. This is also your DB's load shield, not just an anti-abuse tool.</li><li><b>Resilience.</b> Wrap each third-party call in a <b>circuit breaker</b> (e.g. opossum) with a per-call <b>timeout</b> — when pricing starts failing, the breaker opens and you serve a fallback (last-known price / cached value) instead of hanging. <b>Bulkhead</b> the downstream call pools so a saturated pricing client can't starve connections the rest of the API needs.</li></ul><div class=\"code\">client -> rate limiter (Redis) -> cache (Redis) --miss--> DB\n                                          \\-> 3rd party via [timeout + breaker + fallback]</div>" },
-      { label: "Trade-offs", html: "<p><b>TTL vs. invalidation:</b> TTL-only is dead simple but serves stale data up to the TTL; event-based invalidation is fresh but easy to get wrong (missed key on an update path = silent staleness). Most teams run both — short TTL as a backstop, explicit invalidation on the hot write paths.</p><p><b>Failing open vs. closed on the rate limiter:</b> if Redis is down, do you reject all traffic (fail-closed, safe for the DB) or let it through (fail-open, available but unprotected)? Decide deliberately per endpoint. <b>Circuit breaker fallbacks must be correct, not just present</b> — serving a stale cached price is fine; serving a fabricated one is a bug. And every layer here leans on Redis: Redis becomes a tier-0 component, so it needs its own HA, or you've just moved the single point of failure.</p>" },
+      {
+        label: "Approach",
+        html:
+          "<p>No distributed transaction. Use a <b>saga</b> with compensations, reliable event publishing via an <b>outbox</b>, and idempotent consumers. Decide orchestration vs choreography.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Saga:</b> order → reserve inventory → charge payment → schedule shipping; on any failure, run compensations (refund, release inventory).</li><li><b>Transactional outbox:</b> each service writes its state change + an outbox event in the same DB transaction; a relay publishes to Kafka/RabbitMQ (at-least-once).</li><li><b>Idempotency:</b> consumers dedupe on (event_id, type); payment uses an idempotency key so retries don't double-charge.</li><li><b>Observability:</b> a correlation id threads the whole flow; a DLQ + alerts catch poison messages.</li><li><b>Orchestration</b> (a coordinator service) for complex flows; <b>choreography</b> (services react to events) for loose coupling.</li></ul>",
+      },
     ],
   },
   {
-    id: "nest-design-5",
+    id: "pr-gateway-auth",
     kind: "design",
-    title: "Design a testing & CI strategy for a NestJS backend",
-    level: "senior",
-    tags: ["nestjs","testing","ci-cd","test-pyramid","integration-tests"],
-    promptHtml: "<p>A NestJS service has grown to ~40 modules, talks to Postgres, Redis, and a message broker, and the team keeps shipping bugs that unit tests didn't catch — broken DB queries, a guard that didn't actually block, a migration that failed in prod. CI takes 25 minutes and is flaky, so people merge on red.</p><p>Design a <b>testing and CI strategy</b> for this backend. Cover what you test at each layer, how you handle the real dependencies (DB/broker/external APIs), what gates a merge, and how you keep the pipeline fast and trustworthy enough that a red build actually means stop.</p>",
+    title: "Design auth across an API gateway + microservices",
+    level: "architect",
+    tags: ["architecture", "auth", "microservices"],
+    promptHtml:
+      "<p>You have a gateway and several backend services. Where do you authenticate and authorize, and how do downstream services trust the caller?</p>",
     reveal: [
-      { label: "Requirements", html: "<ul><li><b>Coverage that matters:</b> catch the bug classes that actually escape — DB queries, guards/auth, request→response contracts, migrations — not just pure-function unit coverage.</li><li><b>Realistic dependencies:</b> tests that touch Postgres/Redis/broker should run against the real thing, reproducibly, not over-mocked.</li><li><b>Fast + trustworthy:</b> the gate is quick enough to run on every PR and stable enough that red = blocked. Flaky tests are treated as broken.</li><li><b>Safe deploys:</b> migrations and config validated before they hit prod.</li></ul>" },
-      { label: "Design", html: "<p>A weighted test pyramid mapped onto Nest's structure:</p><ul><li><b>Unit (most, fastest):</b> services and pure logic (pricing, validators, mappers) with collaborators mocked via Nest's <code>Test.createTestingModule</code> + <code>.overrideProvider(...).useValue(...)</code>. Milliseconds, no I/O.</li><li><b>Integration (the high-value middle):</b> repositories/guards/pipes against a <b>real Postgres and Redis in Testcontainers</b> (or a docker-compose service in CI). This is where the query bugs and guard bugs get caught — the layer the team is currently missing.</li><li><b>E2E (few, broad):</b> boot the full Nest app (<code>Test.createTestingModule(...).createNestApplication()</code>) and drive it with <code>supertest</code> over the HTTP layer, asserting status + body for critical flows (auth, checkout). External third-parties are stubbed (nock / a mock server) so these stay deterministic.</li><li><b>Migrations:</b> a CI job that runs every migration up (and down) against a fresh DB — a failed migration fails the build, not prod.</li></ul><p><b>CI gating:</b> the PR pipeline runs typecheck + lint + unit + integration as parallel jobs, with the DB/broker as ephemeral service containers; the suite must be green to merge. E2E + migration checks run on the PR too; slower full-matrix / load tests run post-merge or nightly.</p>" },
-      { label: "Trade-offs", html: "<p><b>Real dependencies vs. mocks:</b> Testcontainers gives true confidence (real SQL, real Redis semantics) at the cost of slower, heavier CI; in-memory fakes are fast but let dialect-specific query bugs through — which is precisely this team's pain, so the integration layer earns its cost. <b>Over-mocking is the trap:</b> a test that mocks the repository can't catch a broken query, yet reads as 'covered' — coverage % without integration tests is false comfort.</p><p><b>Speed vs. thoroughness:</b> parallelize jobs and shard the suite to keep the PR gate under ~10 min; push the slow, broad stuff (full E2E matrix, load tests) off the critical path to nightly. <b>Flakiness is a P1, not a nuisance</b> — one flaky test trains the whole team to ignore red, which defeats the entire gate. Quarantine or fix it immediately rather than letting people learn to merge through failures.</p>" },
+      {
+        label: "Approach",
+        html:
+          "<p>Authenticate once at the edge, propagate verified identity inward, and keep services internal. Decide between opaque tokens (introspection) and JWTs (self-verifying).</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Edge:</b> the gateway validates the JWT/refreshes sessions, applies global rate limiting, and rejects bad requests early.</li><li><b>Propagation:</b> pass a verified identity inward (the validated JWT or a signed internal token) so each service can authorize without re-authenticating; services verify the signature (shared JWKS).</li><li><b>Authorization:</b> coarse checks at the gateway, fine-grained (resource-level, RBAC/ABAC) inside each service where the domain lives.</li><li><b>Network:</b> services aren't internet-exposed; mTLS / a service mesh between them; short-lived tokens; centralized JWKS rotation.</li></ul><div class=\"callout\"><span class=\"lbl\">Trade-off</span> JWTs scale (no introspection call) but can't be revoked before expiry — keep them short and pair with a denylist for logout.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-cache-strategy",
+    kind: "design",
+    title: "Design caching for a read-heavy endpoint",
+    level: "senior",
+    tags: ["architecture", "caching", "performance"],
+    promptHtml:
+      "<p>A product-detail endpoint gets 50k RPS, 99% reads, data changes a few times a day. Design the caching so it's fast, fresh enough, and survives a cache miss storm.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Layer caches (CDN/edge → Redis → DB), pick an invalidation strategy that matches the change frequency, and protect against stampede when a hot key expires.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Layers:</b> CDN/edge cache for anonymous reads; shared <b>Redis</b> cache-aside for the app; DB as the source of truth.</li><li><b>Invalidation:</b> since data changes rarely, use a moderate TTL + <b>delete-on-write</b> (or versioned keys) so updates show promptly.</li><li><b>Stampede protection:</b> a single-flight lock (<code>SETNX</code>) or request coalescing so one miss repopulates while others wait; jittered TTLs so keys don't all expire together.</li><li><b>Pattern:</b> stale-while-revalidate — serve stale instantly, refresh in the background.</li><li><b>Consistency:</b> across replicas, Redis (not in-memory) so all instances agree.</li></ul>",
+      },
+    ],
+  },
+  {
+    id: "pr-idempotent-payments",
+    kind: "design",
+    title: "Design idempotent payment processing",
+    level: "architect",
+    tags: ["architecture", "resilience"],
+    promptHtml:
+      "<p>Clients retry on timeout, so a “charge card” request can arrive twice. Design the API + storage so a customer is never double-charged.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Make the operation idempotent with a client-supplied key + a dedup store, and handle the in-flight/duplicate cases explicitly.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Idempotency key:</b> the client sends a unique <code>Idempotency-Key</code> header per logical charge.</li><li><b>Dedup store:</b> on first request, insert the key (unique constraint) with status <code>in_progress</code>; do the charge; store the result. A duplicate finds the key and returns the <b>original result</b> instead of charging again.</li><li><b>Races:</b> the unique constraint makes concurrent duplicates fail-fast; return the stored response or 409 while in-progress.</li><li><b>Provider:</b> pass the same idempotency key to the payment provider (Stripe et al. support it) for end-to-end safety.</li><li><b>Expiry:</b> keep keys long enough to cover client retry windows.</li></ul>",
+      },
+    ],
+  },
+  {
+    id: "pr-observability",
+    kind: "design",
+    title: "Design observability for a Nest service",
+    level: "senior",
+    tags: ["architecture", "observability"],
+    promptHtml:
+      "<p>You're on call for a Nest API and latency just spiked. Design the observability you'd want in place to diagnose it in minutes, not hours.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<p>Cover the four signals (health, metrics, traces, logs), correlate them, and alert on guardrails — including Node-specific metrics like event-loop lag.</p>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<ul><li><b>Metrics (RED + Node):</b> request rate/errors/duration, plus <b>event-loop lag</b>, heap, GC, and pool saturation — a latency spike with high loop lag points at CPU blocking.</li><li><b>Traces:</b> OpenTelemetry auto-instrumentation; the slow span tells you DB vs downstream vs CPU. Propagate <code>traceparent</code> across services.</li><li><b>Logs:</b> structured JSON (pino) with a correlation id per request, trace id injected so you can pivot log↔trace.</li><li><b>Health:</b> liveness/readiness probes (terminus) so a bad instance is removed/restarted.</li><li><b>Alerting:</b> on p99 latency, error rate, and loop lag — tied to SLOs, not raw CPU.</li></ul>",
+      },
     ],
   },
 ];
