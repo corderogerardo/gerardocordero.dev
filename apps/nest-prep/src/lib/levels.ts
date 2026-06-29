@@ -1,19 +1,51 @@
-// Minimal per-app level resolution. The shared label/badge styling lives in the
-// kit; here you only map your categories to a default seniority level (cards can
-// still override with an explicit `level`).
+// Seniority levels used to grade flashcards and drive the /roadmap page.
 export type Level = "junior" | "mid" | "senior" | "architect" | "beyond";
 
-const LEVEL_BY_CATEGORY: Record<string, Level> = {
-  fundamentals: "mid",
-  lifecycle: "senior",
-  "di-providers": "senior",
-  data: "senior",
-  "graphql-micro": "senior",
-  testing: "mid",
-  security: "senior",
-  "perf-observ": "architect",
+export const LEVELS: {
+  value: Level;
+  label: string;
+  short: string;
+  tagline: string;
+}[] = [
+  { value: "junior", label: "Junior", short: "JR", tagline: "Build & ship endpoints with guidance." },
+  { value: "mid", label: "Mid", short: "MID", tagline: "Own modules end-to-end: data, validation, tests." },
+  { value: "senior", label: "Senior", short: "SR", tagline: "DI depth, the request lifecycle, performance & security." },
+  { value: "architect", label: "Architect", short: "ARCH", tagline: "System design, microservices, platform decisions." },
+  { value: "beyond", label: "Beyond", short: "★", tagline: "Frontier: event-driven at scale, edge & serverless Nest." },
+];
+
+export const LEVEL_LABEL: Record<Level, string> = {
+  junior: "Junior",
+  mid: "Mid",
+  senior: "Senior",
+  architect: "Architect",
+  beyond: "Beyond",
 };
 
+/** Default level for each flashcard/quiz category (overridable per card). */
+const LEVEL_BY_CATEGORY: Record<string, Level> = {
+  core: "mid", // modules, controllers, providers, basics
+  di: "senior", // dependency injection, scopes, dynamic modules
+  lifecycle: "senior", // middleware, guards, interceptors, pipes, filters
+  data: "mid", // TypeORM/Prisma/Mongoose, repositories, transactions
+  config: "mid", // config, validation, DTOs
+  auth: "senior", // authn/authz, passport, JWT, RBAC
+  testing: "mid", // unit + e2e testing
+  graphql: "senior", // GraphQL, resolvers, DataLoader
+  ws: "senior", // websockets, gateways
+  micro: "architect", // microservices, transports, patterns
+  queues: "senior", // queues, scheduling, events
+  node: "senior", // Node.js internals — event loop, streams, workers
+  perf: "senior", // performance, caching, profiling
+  security: "senior", // security hardening
+  arch: "architect", // architecture & system design
+  deploy: "senior", // CI/CD, Docker, observability
+  dsa: "mid", // algorithms for backend interviews
+  behavior: "senior", // soft skills & collaboration
+  beyond: "beyond", // frontier
+};
+
+/** Per-card overrides to spread foundational base cards into lower levels. */
 const LEVEL_OVERRIDES: Record<string, Level> = {};
 
 export function resolveLevel(card: {
@@ -25,3 +57,12 @@ export function resolveLevel(card: {
     card.level ?? LEVEL_OVERRIDES[card.id] ?? LEVEL_BY_CATEGORY[card.category] ?? "senior"
   );
 }
+
+/** Tailwind classes for a level badge. */
+export const LEVEL_BADGE: Record<Level, string> = {
+  junior: "border-good/40 bg-good/12 text-good",
+  mid: "border-accent/40 bg-accent/12 text-accent",
+  senior: "border-warn/40 bg-warn/12 text-warn",
+  architect: "border-accent-2/40 bg-accent-2/12 text-accent-2",
+  beyond: "border-bad/40 bg-bad/12 text-bad",
+};

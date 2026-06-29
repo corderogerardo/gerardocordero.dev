@@ -1,168 +1,246 @@
+// Multiple-choice quiz — NestJS fundamentals (core, DI, lifecycle, data, auth, testing).
+import type { Level } from "@/lib/levels";
+
 export type QuizQuestion = {
   id: string;
   category: string;
   categoryLabel: string;
   question: string;
   options: string[];
-  answer: number;
+  answer: number; // index of the correct option
   explanationHtml: string;
+  level?: Level;
 };
-
-export const QUIZ_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "fundamentals", label: "Fundamentals" },
-  { value: "lifecycle", label: "Request Lifecycle" },
-  { value: "di-providers", label: "DI & Providers" },
-  { value: "data", label: "Data & Persistence" },
-  { value: "graphql-micro", label: "GraphQL & Microservices" },
-  { value: "testing", label: "Testing" },
-  { value: "security", label: "Security & Auth" },
-  { value: "perf-observ", label: "Performance & Ops" },
-];
 
 export const QUIZ: QuizQuestion[] = [
   {
-    id: "nest-q-1",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "You define UserService in UsersModule's providers, and AuthModule imports UsersModule and tries to inject UserService in its constructor. Bootstrap fails with \"Nest can't resolve dependencies of AuthService (?)\". What's the fix?",
-    options: ["Add UserService to UsersModule's exports array","Add UserService to AuthModule's providers array","Mark UserService with @Global()","Add AuthModule to UsersModule's imports array"],
-    answer: 0,
-    explanationHtml: "<p>Module encapsulation means a provider is injectable only inside its own module unless explicitly <b>exported</b>. Importing the module isn't enough — you also have to list <code>UserService</code> in UsersModule's <code>exports</code> so it becomes part of that module's public surface.</p><p>Re-declaring it in AuthModule's <code>providers</code> (option 2) would create a <b>second, separate instance</b> rather than sharing the one from UsersModule — a subtle bug. <code>@Global()</code> is a module-level decorator (you'd apply it to UsersModule, not to the provider), and it's a blunt instrument you'd avoid for one shared service. Importing AuthModule into UsersModule inverts the dependency and risks a circular reference.</p>",
+    id: "qz1",
+    category: "core",
+    categoryLabel: "Core",
+    question: "Why must a NestJS DTO be a class rather than a TypeScript interface?",
+    options: [
+      "Classes are faster to instantiate",
+      "Interfaces can't have decorators at all",
+      "Interfaces are erased at runtime, so ValidationPipe has no metatype to validate",
+      "Nest only supports classes for historical reasons",
+    ],
+    answer: 2,
+    explanationHtml:
+      "<p>Interfaces exist only at compile time. <code>ValidationPipe</code> + class-validator need the runtime <b>metatype</b> (the class) to read decorators and validate. An interface DTO means validation silently does nothing.</p>",
   },
   {
-    id: "nest-q-2",
-    category: "fundamentals",
-    categoryLabel: "Fundamentals",
-    question: "Which statement most accurately describes NestJS platform adapters (Express vs Fastify)?",
-    options: ["Switching adapters requires rewriting controllers and providers to match the adapter's request API","The adapter abstracts the HTTP layer, so controllers/providers stay unchanged — only platform-specific concerns like raw req/res access and middleware differ","Fastify is the default adapter and Express must be opted into via an ExpressAdapter","Adapters only affect WebSocket gateways, not HTTP controllers"],
-    answer: 1,
-    explanationHtml: "<p>The HTTP adapter is a seam: Nest's controllers, providers, guards, pipes, and interceptors are written against Nest's abstractions, so you swap Express for Fastify by passing <code>new FastifyAdapter()</code> to <code>NestFactory.create</code> without touching business code. What does differ is platform-specific surface — raw <code>@Req()</code>/<code>@Res()</code> access, body-parsing config, and middleware that assumes one platform.</p><p>Option 1 is the misconception the abstraction exists to prevent. Option 3 is backwards — <b>Express is the default</b>. Option 4 is wrong: the adapter is fundamentally the HTTP layer.</p>",
-  },
-  {
-    id: "nest-q-3",
+    id: "qz2",
     category: "lifecycle",
     categoryLabel: "Request Lifecycle",
-    question: "A guard reads <code>request.body.userId</code> to make an authorization decision, but it's always <code>undefined</code> even though the DTO has it. The handler param is <code>@Body() dto: CreateDto</code> with a transforming ValidationPipe. What's the root cause?",
-    options: ["The guard is registered globally instead of on the route, so it can't see the body","Pipes run after guards, so the body isn't transformed/validated yet when the guard executes","Guards cannot access the request object at all; only interceptors can","The ValidationPipe strips userId because it's not in the DTO whitelist"],
-    answer: 1,
-    explanationHtml: "<p>Guards execute <b>before</b> pipes in the lifecycle (middleware → guards → interceptors(pre) → <b>pipes</b> → handler). So when the guard runs, the DTO hasn't been transformed/validated — the guard sees the raw request and any class transformation hasn't happened yet. Option A is wrong: a global guard still receives the request via <code>ExecutionContext</code>. Option C is false — guards get the request through <code>context.switchToHttp().getRequest()</code>. Option D would manifest in the handler, not as an ordering issue in the guard, and doesn't explain the guard-time <code>undefined</code>.</p>",
+    question: "In the request lifecycle, which runs FIRST?",
+    options: ["Pipes", "Guards", "Interceptors", "Middleware"],
+    answer: 3,
+    explanationHtml:
+      "<p>Order: <b>Middleware → Guards → Interceptors (pre) → Pipes → Handler → Interceptors (post) → Filters</b>. Middleware runs before Nest's execution context even exists.</p>",
   },
   {
-    id: "nest-q-4",
+    id: "qz3",
     category: "lifecycle",
     categoryLabel: "Request Lifecycle",
-    question: "Your NestJS service running in Kubernetes never closes its DB pool on pod termination — <code>onApplicationShutdown</code> never fires. The hook is implemented correctly on the module. What's the most likely fix?",
-    options: ["Move the logic to onModuleDestroy, which always runs on shutdown","Call app.enableShutdownHooks() during bootstrap so Nest listens for SIGTERM","Add APP_FILTER so the shutdown exception is caught","Implement beforeApplicationShutdown instead, since onApplicationShutdown is deprecated"],
-    answer: 1,
-    explanationHtml: "<p>Shutdown lifecycle hooks (<code>onModuleDestroy</code>, <code>beforeApplicationShutdown</code>, <code>onApplicationShutdown</code>) are <b>opt-in</b>: none of them fire unless you call <code>app.enableShutdownHooks()</code>, which attaches the OS signal listeners (SIGTERM/SIGINT). Without it, K8s sends SIGTERM, Node exits, and no hook runs — so Option A is wrong (<code>onModuleDestroy</code> is gated by the same flag). Option C confuses exception filters with lifecycle teardown. Option D is wrong on two counts: <code>onApplicationShutdown</code> isn't deprecated, and <code>beforeApplicationShutdown</code> is equally gated by <code>enableShutdownHooks()</code>.</p>",
-  },
-  {
-    id: "nest-q-5",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "A singleton AuthController injects a REQUEST-scoped AuditService. What happens to AuthController, and what's the runtime cost?",
-    options: ["Nothing changes — AuthController stays a singleton and AuditService is lazily created only when a method calls it","AuthController is promoted to REQUEST scope and is re-instantiated on every incoming request, along with its dependency subtree","Nest throws at bootstrap: a DEFAULT-scoped provider may not depend on a REQUEST-scoped one","AuditService is silently downgraded to DEFAULT scope so the singleton controller can keep a stable reference"],
-    answer: 1,
-    explanationHtml: "<p>Scope bubbles <b>up</b> the injection chain: depending on a REQUEST-scoped provider forces the consumer (and its own dependents) to REQUEST scope. So AuthController is re-instantiated per request — the cost is losing the singleton optimization and rebuilding that DI subtree on every call. Option 0 is the common misconception (scope isn't lazy-per-method). Nest does <i>not</i> throw (the hierarchy is valid) and never silently downgrades a child's scope, ruling out 2 and 3.</p>",
-  },
-  {
-    id: "nest-q-6",
-    category: "di-providers",
-    categoryLabel: "DI & Providers",
-    question: "Inside a singleton service you need to obtain a TRANSIENT-scoped provider at runtime via ModuleRef. Which call is correct?",
-    options: ["this.moduleRef.get(MyTransientSvc)","this.moduleRef.get(MyTransientSvc, { strict: false })","await this.moduleRef.resolve(MyTransientSvc)","this.moduleRef.create(MyTransientSvc)"],
+    question: "Which building block is the right place for authorization (RBAC)?",
+    options: ["Middleware", "Pipe", "Guard", "Interceptor"],
     answer: 2,
-    explanationHtml: "<p><code>resolve()</code> is the method for request/transient-scoped providers — it returns a <b>Promise</b> for a freshly instantiated scoped instance. <code>get()</code> only returns existing singletons and <b>throws</b> for scoped providers, so options 0 and 1 fail (the <code>strict</code> flag only widens the module search scope — it doesn't change instance handling). <code>moduleRef.create()</code> instantiates a class that isn't registered as a provider at all — wrong tool here, since <code>MyTransientSvc</code> <i>is</i> a registered provider.</p>",
+    explanationHtml:
+      "<p>Guards (<code>canActivate</code>) are designed for authorization: they return a boolean and have an <code>ExecutionContext</code>, so they can read route metadata via <code>Reflector</code> for role checks.</p>",
   },
   {
-    id: "nest-q-7",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "A TypeORM service starts a transaction with a QueryRunner, then calls an injected <code>@InjectRepository(Order)</code> repository's <code>save()</code> inside the try block (instead of <code>queryRunner.manager.save()</code>). What happens?",
-    options: ["Both writes are correctly enrolled in the same transaction and roll back together on error","The injected repo's write uses a different pooled connection, so it commits independently and is NOT rolled back","TypeORM throws a runtime error because a repository cannot be used while a QueryRunner transaction is open","The transaction is silently upgraded to SERIALIZABLE isolation for safety"],
+    id: "qz4",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What is the main cost of making a provider REQUEST-scoped?",
+    options: [
+      "It can no longer be exported",
+      "Scope bubbles up the injection chain, making consumers request-scoped too and adding per-request overhead",
+      "It becomes a singleton",
+      "It disables dependency injection for that provider",
+    ],
     answer: 1,
-    explanationHtml: "<p>A transaction in TypeORM is bound to a single connection — the one the <code>QueryRunner</code> checked out. An injected repository pulls a <i>different</i> connection from the pool, so its <code>save()</code> runs outside the transaction and commits on its own; a later rollback won't undo it, leaving partial state. The fix is to route every write through <code>queryRunner.manager</code> (or use <code>dataSource.transaction(manager =&gt; ...)</code> and use the passed-in manager). It's not an error (option 3) — that's exactly what makes the bug dangerous: it works in tests and corrupts data under partial failure.</p>",
+    explanationHtml:
+      "<p>REQUEST scope <b>bubbles up</b>: a request-scoped leaf forces its consumers (up to the controller) to be request-scoped, adding per-request instantiation/GC. A shared logger/DB going request-scoped can convert the whole app.</p>",
   },
   {
-    id: "nest-q-8",
-    category: "data",
-    categoryLabel: "Data & Persistence",
-    question: "Your NestJS + Prisma API runs on serverless and intermittently throws \"too many connections\" against Postgres under traffic spikes. What's the most appropriate fix?",
-    options: ["Instantiate a new PrismaClient inside each request handler so connections are released immediately after the request","Front Postgres with a connection pooler (e.g. PgBouncer/Hyperdrive) and cap each instance's pool size low","Wrap every query in a $transaction so Prisma reuses a single connection across all requests","Increase Postgres max_connections to a very high number to absorb the spikes"],
+    id: "qz5",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "You need to inject a value behind an interface. What do you do?",
+    options: [
+      "Inject the interface directly by name",
+      "Use a string/symbol token with @Inject() and bind a provider to it",
+      "Make the interface a class automatically",
+      "Use @Optional() on the interface",
+    ],
     answer: 1,
-    explanationHtml: "<p>Each serverless instance keeps its own pool, so concurrent instances multiply connections and blow past Postgres's <code>max_connections</code>. The right shape is a <b>server-side pooler</b> (PgBouncer / Cloudflare Hyperdrive) that multiplexes many client connections onto few real backends, plus a small per-instance pool. Option 1 is the classic anti-pattern — a new <code>PrismaClient</code> per request creates and tears down pools constantly, making the problem worse. Option 3 misunderstands <code>$transaction</code> (it's per-call, not a global connection). Cranking <code>max_connections</code> (option 4) just trades connection errors for memory exhaustion on the DB.</p>",
+    explanationHtml:
+      "<p>Interfaces vanish at runtime, so they can't be tokens. Define a string/symbol token, bind it with <code>{ provide: TOKEN, useClass/useValue }</code>, and inject with <code>@Inject(TOKEN)</code>. This is the ports &amp; adapters mechanic.</p>",
   },
   {
-    id: "nest-q-9",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "In a NestJS GraphQL API, a query returns 50 posts and each post resolves its `author` via a `@ResolveField` that calls `usersService.findById(post.authorId)`. The team sees 51 SQL queries per request. What is the idiomatic fix, and what constraint does it carry in NestJS?",
-    options: ["Move the author lookup into the root query with an eager join, eliminating the field resolver entirely","Introduce a DataLoader the field resolver calls via `loader.load(authorId)`, created per request so its cache isn't shared across requests","Mark the resolver provider as `Scope.DEFAULT` (singleton) so the loader is reused for every request and the cache survives","Switch from code-first to schema-first, which batches field resolvers automatically"],
-    answer: 1,
-    explanationHtml: "<p>The N+1 is solved by a <b>DataLoader</b>: the field resolver calls <code>loader.load(authorId)</code>, DataLoader collects every id requested in the tick and runs one batched <code>findByIds([...])</code>, collapsing 51 queries into 2. The constraint is that DataLoader caches resolved entities, so it must be <b>request-scoped</b> — a singleton (option 3) would leak one user's data into another request's response and serve stale rows, which is exactly why that option is wrong. Option 1 works for one field but discards the lazy, only-when-selected nature of field resolvers and doesn't generalize to deeper graphs. Option 4 is a non-sequitur — schema-first vs code-first has no effect on batching.</p>",
-  },
-  {
-    id: "nest-q-10",
-    category: "graphql-micro",
-    categoryLabel: "GraphQL & Microservices",
-    question: "An order-service must (a) ask the inventory-service whether an item is in stock and use the answer to accept or reject the order, and (b) broadcast an `order.created` event that an email-service, an analytics-service, and a shipping-service each react to independently. Which messaging choice is correct?",
-    options: ["Use `client.emit()` with `@EventPattern` for both the stock check and the broadcast","Use `client.send()` with `@MessagePattern` for both the stock check and the broadcast","Use `client.send()`/`@MessagePattern` for the stock check, and `client.emit()`/`@EventPattern` for `order.created`","Use a `@WebSocketGateway` for the stock check and `client.emit()` for `order.created`"],
+    id: "qz6",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "Same service class is listed in two modules' `providers`. What happens?",
+    options: [
+      "Nest throws a duplicate-provider error",
+      "Both modules share one instance",
+      "Each module gets its own separate instance",
+      "Only the first registration wins",
+    ],
     answer: 2,
-    explanationHtml: "<p>The stock check needs a <b>reply</b> the caller acts on — that's request–response: <code>client.send()</code> returning an Observable, handled by <code>@MessagePattern</code>. The <code>order.created</code> broadcast is fire-and-forget to multiple independent consumers — that's <code>client.emit()</code> with <code>@EventPattern</code>, where the return value is ignored and no consumer blocks the producer. Option 1 breaks the stock check: <code>emit()</code> returns no value, so the order-service can never read the in-stock answer. Option 2 abuses RPC for a fan-out — the producer would block on a correlated reply and, on a load-balanced transport, only one consumer would respond. Option 4 misuses <code>@WebSocketGateway</code>, which is for client (browser/mobile) connections, not service-to-service RPC.</p>",
+    explanationHtml:
+      "<p>Each module that lists it in <code>providers</code> gets its <b>own instance</b>. To share one singleton, register it once, <code>export</code> it, and <code>import</code> that module everywhere.</p>",
   },
   {
-    id: "nest-q-11",
+    id: "qz7",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "What does `whitelist: true` on ValidationPipe do?",
+    options: [
+      "Allows only whitelisted IPs",
+      "Strips properties that have no validation decorator",
+      "Throws on any extra property",
+      "Transforms the payload into a class instance",
+    ],
+    answer: 1,
+    explanationHtml:
+      "<p><code>whitelist</code> strips undecorated properties (defends against mass-assignment). <code>forbidNonWhitelisted</code> throws on them instead; <code>transform</code> builds the DTO instance and coerces primitives.</p>",
+  },
+  {
+    id: "qz8",
+    category: "data",
+    categoryLabel: "Data & ORM",
+    question: "Which TypeORM setting should NEVER be true in production?",
+    options: ["logging", "synchronize", "autoLoadEntities", "migrationsRun"],
+    answer: 1,
+    explanationHtml:
+      "<p><code>synchronize: true</code> auto-alters the schema from your entities and can silently drop data. Use migrations with <code>synchronize: false</code> in production.</p>",
+  },
+  {
+    id: "qz9",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Why register a global guard via APP_GUARD instead of app.useGlobalGuards(new X())?",
+    options: [
+      "It's shorter to type",
+      "Only APP_GUARD supports multiple guards",
+      "APP_GUARD makes it a DI provider, so it can inject dependencies",
+      "useGlobalGuards is deprecated",
+    ],
+    answer: 2,
+    explanationHtml:
+      "<p>Instances created with <code>new</code> live outside the container and can't inject anything. Registering via <code>APP_GUARD</code> makes the guard a provider that can inject <code>Reflector</code>, services, config, etc.</p>",
+  },
+  {
+    id: "qz10",
+    category: "auth",
+    categoryLabel: "Auth",
+    question: "When is CSRF protection NOT needed?",
+    options: [
+      "When using session cookies",
+      "For a stateless API authenticated with Bearer tokens",
+      "When the site has forms",
+      "When using HTTPS",
+    ],
+    answer: 1,
+    explanationHtml:
+      "<p>CSRF exploits browser-auto-attached credentials (cookies). A stateless Bearer-token API isn't vulnerable because the attacker can't read or attach the token. CSRF protection matters for cookie/session auth.</p>",
+  },
+  {
+    id: "qz11",
+    category: "auth",
+    categoryLabel: "Auth",
+    question: "Best practice for storing user passwords?",
+    options: [
+      "AES-256 encryption",
+      "SHA-256 hash",
+      "bcrypt or argon2 (salted, slow, one-way)",
+      "Base64 encoding",
+    ],
+    answer: 2,
+    explanationHtml:
+      "<p>Passwords need a <b>slow, salted, one-way</b> hash — bcrypt or argon2. Encryption is reversible (wrong for passwords); fast hashes like SHA-256 are brute-forceable; Base64 is not security at all.</p>",
+  },
+  {
+    id: "qz12",
     category: "testing",
     categoryLabel: "Testing",
-    question: "A service injects its TypeORM repository via @InjectRepository(User). You write a unit test importing the real module and want to substitute a fake repository. Which override is correct?",
-    options: ["overrideProvider(User).useValue(mockRepo)","overrideProvider(getRepositoryToken(User)).useValue(mockRepo)","overrideProvider(Repository).useValue(mockRepo)","overrideProvider('UserRepository').useClass(MockRepository)"],
+    question: "In a Nest unit test, how do you replace a real dependency with a mock?",
+    options: [
+      "Edit the module's providers array directly",
+      "Use Test.createTestingModule(...).overrideProvider(X).useValue(mock)",
+      "Mocks aren't supported; use the real dependency",
+      "Set process.env.MOCK=true",
+    ],
     answer: 1,
-    explanationHtml: "<p><code>@InjectRepository(User)</code> registers the repository under the token produced by <code>getRepositoryToken(User)</code>, so the override must use that exact token. Overriding by the <code>User</code> entity class (option&nbsp;1) or the generic <code>Repository</code> class (option&nbsp;3) targets tokens that aren't the injection key, so Nest silently keeps the real repository. The raw string in option&nbsp;4 isn't guaranteed to match the internal token format and is brittle — <code>getRepositoryToken()</code> is the sanctioned way to derive it.</p>",
+    explanationHtml:
+      "<p><code>Test.createTestingModule({...}).overrideProvider(Token).useValue(mock)</code> (chained before <code>.compile()</code>) swaps the dependency. There are also <code>overrideGuard/Interceptor/Pipe/Filter/Module</code>.</p>",
   },
   {
-    id: "nest-q-12",
-    category: "testing",
-    categoryLabel: "Testing",
-    question: "In a NestJS e2e test you call await app.init() and run requests via request(app.getHttpServer()). Which statement is accurate?",
-    options: ["app.init() binds the app to a TCP port, so you must pick a free port to avoid CI collisions","getHttpServer() returns the underlying http.Server without calling listen(); supertest binds an ephemeral port itself","app.init() skips guards, pipes, and interceptors, so e2e tests only cover controllers and routing","You must call app.listen(0) before getHttpServer() or supertest has no server to drive"],
+    id: "qz13",
+    category: "core",
+    categoryLabel: "Core",
+    question: "What happens when you inject @Res() in a controller without passthrough?",
+    options: [
+      "Nothing changes",
+      "You switch to library-specific mode and must send the response yourself, losing interceptors",
+      "Nest sends the response twice",
+      "It enables streaming automatically",
+    ],
     answer: 1,
-    explanationHtml: "<p><code>app.init()</code> runs the full bootstrap — middleware, guards, pipes, interceptors all bind — but deliberately does <i>not</i> call <code>listen()</code>, which is why option&nbsp;1 and option&nbsp;4 are wrong: nothing occupies a port. <code>getHttpServer()</code> hands supertest the raw <code>http.Server</code>, and supertest binds it to an ephemeral port internally, sidestepping CI port collisions. Option&nbsp;3 is the opposite of reality — the whole point of e2e is that the request-pipeline (including validation and auth) <i>is</i> exercised.</p>",
+    explanationHtml:
+      "<p><code>@Res()</code> hands you the raw response object — you must call <code>res.send()</code> yourself, and the standard Nest response pipeline (interceptors, <code>@HttpCode</code>) no longer applies. Use <code>@Res({ passthrough: true })</code> to keep Nest handling.</p>",
   },
   {
-    id: "nest-q-13",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "Your global ValidationPipe is configured with { whitelist: true, transform: true } but NOT forbidNonWhitelisted. A client POSTs a body containing an extra isAdmin: true field that is not declared in the CreateUserDto. What happens?",
-    options: ["The request is rejected with a 400 Bad Request because the field is unknown","The isAdmin field is silently stripped from the DTO before it reaches the handler","The handler receives isAdmin: true, since whitelist only filters on output","A 500 error is thrown because class-transformer can't map the unknown field"],
-    answer: 1,
-    explanationHtml: "<p><code>whitelist: true</code> <b>strips</b> any property without a validation decorator, so <code>isAdmin</code> is removed silently and the handler never sees it — this is the mass-assignment defense. A 400 (option A) only happens when you <i>also</i> set <code>forbidNonWhitelisted: true</code>, which converts the silent strip into a loud rejection. The field is never passed through (C is wrong), and unknown extra props don't crash class-transformer (D is wrong).</p>",
+    id: "qz14",
+    category: "lifecycle",
+    categoryLabel: "Request Lifecycle",
+    question: "Which enhancer is the ONLY one that resolves lowest-level-first (route → controller → global)?",
+    options: ["Guards", "Pipes", "Interceptors", "Exception filters"],
+    answer: 3,
+    explanationHtml:
+      "<p>Exception filters resolve route → controller → global. Guards and pre-interceptors go global → route; post-interceptors unwind route → global (onion).</p>",
   },
   {
-    id: "nest-q-14",
-    category: "security",
-    categoryLabel: "Security & Auth",
-    question: "You have an AuthGuard('jwt') that populates request.user and a RolesGuard that reads @Roles() metadata and checks request.user.roles. You register them globally as [RolesGuard, AuthGuard('jwt')] in that array order. A request to a @Roles('admin') route fails unexpectedly. What's the most likely cause?",
-    options: ["Reflector can't read @Roles() metadata when the guard is registered globally","RolesGuard runs before AuthGuard, so request.user is undefined when roles are checked","Global guards can't access ExecutionContext, so getHandler() returns null","JWT guards must be applied per-controller; they can't be global"],
+    id: "qz15",
+    category: "di",
+    categoryLabel: "DI & Modules",
+    question: "What's the recommended first response to a circular dependency?",
+    options: [
+      "Always use forwardRef()",
+      "Refactor — often it's caused by barrel index.ts files; import the concrete file or extract a shared provider",
+      "Make both providers global",
+      "Switch them to request scope",
+    ],
     answer: 1,
-    explanationHtml: "<p>Guards bound in the same array execute in registration order, so <code>RolesGuard</code> runs first — before <code>AuthGuard('jwt')</code> has attached <code>request.user</code> — and <code>user.roles</code> is <code>undefined</code>, failing the check. Auth must run before authorization; list <code>AuthGuard</code> first (or compose them). Reflector reads metadata fine on global guards (A wrong), global guards do get a full <code>ExecutionContext</code> with working <code>getHandler()</code> (C wrong), and JWT guards work perfectly well globally (D wrong) — typically with a <code>@Public()</code> metadata escape hatch for open routes.</p>",
+    explanationHtml:
+      "<p>A cycle is usually a design smell, frequently from barrel files. Fix the structure first (import concrete paths, extract a shared module). <code>forwardRef()</code> on both sides or <code>ModuleRef</code> are fallbacks.</p>",
   },
   {
-    id: "nest-q-15",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "A Nest service uses CacheInterceptor bound globally via APP_INTERCEPTOR to speed up reads. After deploy, users start seeing each other's profile data on GET /me. What's the root cause and the correct fix?",
-    options: ["CacheInterceptor caches POST/PUT responses too; restrict it to GET handlers","The default cache key is the request URL only, so all users share one entry for /me; override trackBy() (or don't auto-cache authenticated routes) to key by user","Redis TTL is in seconds not milliseconds, so entries never expire; lower the TTL","Singleton scope shares the interceptor instance across requests; make it REQUEST-scoped"],
+    id: "qz16",
+    category: "config",
+    categoryLabel: "Config & Validation",
+    question: "Best way to catch a missing required env var?",
+    options: [
+      "Check it lazily on first request",
+      "Validate env at boot with a schema (Joi/zod) in ConfigModule so startup fails fast",
+      "Wrap every access in try/catch",
+      "Default everything to empty strings",
+    ],
     answer: 1,
-    explanationHtml: "<p><b>Correct: option 2.</b> <code>CacheInterceptor</code> keys entries by the request URL by default. <code>GET /me</code> is the same URL for everyone, so the first user's response is served to all — a classic cache-key-too-coarse leak. The fix is to override <code>trackBy()</code> to incorporate the authenticated user/tenant, or simply not auto-cache per-user authenticated routes.</p><p>Option 1 is wrong: <code>CacheInterceptor</code> only caches GETs already. Option 3 (ms vs seconds) is a real v5 gotcha but would cause <i>stale</i> or <i>never-expiring</i> data, not cross-user leakage. Option 4 misdiagnoses scope — making the interceptor request-scoped doesn't change the cache key and would just hurt performance.</p>",
+    explanationHtml:
+      "<p>Validate <code>process.env</code> once at startup via <code>validationSchema</code> (or a custom <code>validate</code>). The app crashes immediately on misconfiguration instead of failing unpredictably at request time.</p>",
   },
-  {
-    id: "nest-q-16",
-    category: "perf-observ",
-    categoryLabel: "Performance & Ops",
-    question: "You inject a REQUEST-scoped LoggerContext provider into a service so you can attach the request id to logs. What is the most accurate consequence?",
-    options: ["Only the LoggerContext provider is recreated per request; the service stays a singleton and reads it lazily","Nothing changes at runtime — scope only affects testing, not instantiation","The service and its entire injection chain up to the controller become request-scoped, incurring per-request instantiation","It throws at startup because request-scoped providers cannot be injected at all"],
-    answer: 2,
-    explanationHtml: "<p><b>Correct: option 3.</b> Request scope is <i>contagious</i>: any provider (and controller) that injects a request-scoped provider is itself promoted to request scope, so Nest instantiates that whole sub-chain on every request — the real performance cost of REQUEST scope.</p><p>Option 1 is the common misconception — a singleton can't hold a per-request instance, so the chain must bubble. Option 2 is false (scope governs runtime instantiation). Option 4 is false: request-scoped providers <i>can</i> be injected; they just can't be injected into a singleton without making it request-scoped. The senior move is to avoid the bubble entirely by using <code>AsyncLocalStorage</code> for request context instead of a request-scoped provider.</p>",
-  },
+];
+
+export const QUIZ_FILTERS = [
+  { value: "core", label: "Core" },
+  { value: "di", label: "DI & Modules" },
+  { value: "lifecycle", label: "Request Lifecycle" },
+  { value: "config", label: "Config & Validation" },
+  { value: "data", label: "Data & ORM" },
+  { value: "auth", label: "Auth" },
+  { value: "testing", label: "Testing" },
 ];

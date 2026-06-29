@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { PageHeader, ProgressChecklist, ProgressTools } from "@gerardocordero/prep-kit";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { ProgressChecklist } from "@gerardocordero/prep-kit";
+import { ProgressTools } from "@gerardocordero/prep-kit";
 import { CHECKLIST_GROUPS, PROGRESS_INTRO } from "@/data/progress";
 
 export const metadata: Metadata = {
   title: "Progress Tracker",
   description:
-    "A readiness checklist for your subject. Tick items as you feel solid — progress saved in your browser, with export/import.",
+    "A checklist across every requirement in the job description plus your study topics. Tick items as you feel solid — progress saved in your browser.",
 };
 
 export default function ProgressPage() {

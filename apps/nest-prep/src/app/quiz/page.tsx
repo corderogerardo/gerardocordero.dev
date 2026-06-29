@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { PageHeader, Quiz } from "@gerardocordero/prep-kit";
+import { PageHeader } from "@gerardocordero/prep-kit";
+import { Quiz } from "@gerardocordero/prep-kit";
 import { ALL_QUIZ, ALL_QUIZ_FILTERS } from "@/data/all";
+
+const questions = ALL_QUIZ;
+const filters = ALL_QUIZ_FILTERS;
 
 export const metadata: Metadata = {
   title: "Quiz",
   description:
-    "A multiple-choice quiz with instant, explained feedback. Your answers are saved in this browser so you can finish later.",
+    "A multiple-choice quiz on NestJS and Node.js with instant, explained feedback. Your answers are saved in this browser so you can finish later.",
 };
 
 export default function QuizPage() {
@@ -16,7 +20,7 @@ export default function QuizPage() {
         title="Quiz — Multiple Choice"
         lead="Pick an answer; it instantly marks it right or wrong and explains why. Your answers are saved in this browser, so you can come back and finish."
       />
-      <Quiz questions={ALL_QUIZ} filters={ALL_QUIZ_FILTERS} />
+      <Quiz questions={questions} filters={filters} />
     </div>
   );
 }

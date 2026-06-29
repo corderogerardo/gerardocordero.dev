@@ -5,7 +5,7 @@ import { ALL_FLASHCARDS, ALL_PROMPTS, ALL_QUIZ, ALL_STUDY } from "@/data/all";
 export const metadata: Metadata = {
   title: "Search",
   description:
-    "Search every flashcard, prompt, and quiz by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor.",
+    "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor.",
 };
 
 export default function SearchPage() {
