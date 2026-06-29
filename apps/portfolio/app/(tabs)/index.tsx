@@ -357,8 +357,8 @@ export default function HomeScreen() {
           >
             mobile
           </Text>
-          . 10+ years remote across education, financial education, private
-          markets, home services, telecom, and staff augmentation. Deeply
+          . 10+ years remote across private markets, financial education,
+          telecom, home services, and consumer apps. Deeply
           invested in developer experience — reviews, tests, and shipping
           quality.
         </Text>

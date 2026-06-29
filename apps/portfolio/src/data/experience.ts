@@ -13,7 +13,7 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
-    period: "May 2024 — Present",
+    period: "May 2024 — May 2026",
     company: "Valt Network",
     role: "Sr. Mobile Engineer",
     employmentType: "Contract",
@@ -24,15 +24,14 @@ export const experiences: Experience[] = [
       "Google Sign-In + biometric auth (FaceID/TouchID) and App Store-compliant account deletion flow",
       "Real-time chat via Twilio Conversations — singleton provider, unread tracking, private flows, push notifications",
       "Salesforce auth via External Connected / External Managed Apps for secure token management",
-      "Performance: eliminated re-render flickering, frozen screens, and added optimistic updates across profiles and bookmarks",
+      "Performance: tracked down and eliminated re-render flickering and frozen screens on heavy list and profile views; added optimistic updates across profiles and bookmarks",
       "Unified Discover / Global Directory (groups, events, jobs, articles, opportunities) with consistent search and filters",
       "Built the full favorites / bookmarks system end-to-end — types, UI, tests — for opportunities and deals",
       "Report Abuse flows, internal notifications, version-based cache invalidation, organization management",
-      "Managed production releases and App Store review responses",
+      "Owned end-to-end production releases — builds, store submission, and App Store review responses",
     ],
     projects: ["Valt Connect"],
     skills: ["React Native", "TypeScript", "iOS", "Android", "Twilio", "Salesforce"],
-    isCurrent: true,
   },
   {
     period: "Mar 2023 — Apr 2024",
@@ -64,7 +63,7 @@ export const experiences: Experience[] = [
     highlights: [
       "Delivered frontend with focus on UX, accessibility, responsiveness, performance, and testing",
       "Five successful store releases — app IDs, profile credentials, notifications on Google Cloud and Apple Developer",
-      "Learned AWS + Amplify on the job: SNS, Cognito, OAuth, AppSync, S3, Lambda, DynamoDB, Elasticsearch",
+      "Took the lead on the AWS Amplify backend end-to-end to unblock client delivery — SNS, Cognito + OAuth, AppSync GraphQL, S3, Lambda, DynamoDB, OpenSearch",
       "Acted as PM with clients on feature delivery, bug triage, and dev/design team coordination",
       "Recruiting interviews and mentorship for an entry-level developer on Git, React, and React Native",
     ],
