@@ -153,4 +153,16 @@ export const projects: Project[] = [
     linkLabel: "Web",
     stack: ["Kotlin", "Jetpack Compose", "Coroutines"],
   },
+  {
+    name: "NestJS Interview Prep",
+    domain: "Interview Prep",
+    tagline:
+      "A senior NestJS / Node backend study guide — request-lifecycle and DI deep-dives, microservices and security, plus coding & system-design prompts with Q&A flashcards.",
+    period: "2026",
+    status: "live",
+    platforms: ["Web"],
+    href: "https://nestjs.gerardocordero.dev/",
+    linkLabel: "Web",
+    stack: ["NestJS", "TypeScript", "Node.js"],
+  },
 ];
