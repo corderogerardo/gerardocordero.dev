@@ -6,6 +6,24 @@ import { FLASHCARDS, FLASHCARD_FILTERS } from "./flashcards";
 import { FLASHCARDS2, FLASHCARD2_FILTERS } from "./flashcards2";
 import { FLASHCARDS3, FLASHCARD3_FILTERS } from "./flashcards3";
 import { PERF_LESSONS, PERF_SESSIONS } from "./perf";
+import { ADVANCED1_FLASHCARDS, ADVANCED1_QUIZ } from "./advanced1";
+import { ADVANCED2_FLASHCARDS, ADVANCED2_QUIZ } from "./advanced2";
+import { ADVANCED3_FLASHCARDS, ADVANCED3_QUIZ } from "./advanced3";
+import { ADVANCED4_FLASHCARDS, ADVANCED4_QUIZ } from "./advanced4";
+import { ADVANCED5_FLASHCARDS, ADVANCED5_QUIZ } from "./advanced5";
+import { ADVANCED6_FLASHCARDS, ADVANCED6_QUIZ } from "./advanced6";
+import { ADVANCED7_FLASHCARDS, ADVANCED7_QUIZ } from "./advanced7";
+import { ADVANCED8_FLASHCARDS, ADVANCED8_QUIZ } from "./advanced8";
+import { ADVANCED9_FLASHCARDS, ADVANCED9_QUIZ } from "./advanced9";
+import { ADVANCED10_FLASHCARDS, ADVANCED10_QUIZ } from "./advanced10";
+import { ADVANCED11_FLASHCARDS, ADVANCED11_QUIZ } from "./advanced11";
+import { ADVANCED12_FLASHCARDS, ADVANCED12_QUIZ } from "./advanced12";
+import { ADVANCED13_FLASHCARDS, ADVANCED13_QUIZ } from "./advanced13";
+import { ADVANCED14_FLASHCARDS, ADVANCED14_QUIZ } from "./advanced14";
+import { ADVANCED15_FLASHCARDS, ADVANCED15_QUIZ } from "./advanced15";
+import { ADVANCED16_FLASHCARDS, ADVANCED16_QUIZ } from "./advanced16";
+import { ADVANCED17_FLASHCARDS, ADVANCED17_QUIZ } from "./advanced17";
+import { ADVANCED18_FLASHCARDS, ADVANCED18_QUIZ } from "./advanced18";
 import { QUIZ, QUIZ_FILTERS } from "./quiz";
 import { QUIZ2, QUIZ2_FILTERS } from "./quiz2";
 import { STUDY_SECTIONS } from "./study";
@@ -20,6 +38,24 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...FLASHCARDS2,
   ...FLASHCARDS3,
   ...PERF_LESSONS,
+  ...ADVANCED1_FLASHCARDS,
+  ...ADVANCED2_FLASHCARDS,
+  ...ADVANCED3_FLASHCARDS,
+  ...ADVANCED4_FLASHCARDS,
+  ...ADVANCED5_FLASHCARDS,
+  ...ADVANCED6_FLASHCARDS,
+  ...ADVANCED7_FLASHCARDS,
+  ...ADVANCED8_FLASHCARDS,
+  ...ADVANCED9_FLASHCARDS,
+  ...ADVANCED10_FLASHCARDS,
+  ...ADVANCED11_FLASHCARDS,
+  ...ADVANCED12_FLASHCARDS,
+  ...ADVANCED13_FLASHCARDS,
+  ...ADVANCED14_FLASHCARDS,
+  ...ADVANCED15_FLASHCARDS,
+  ...ADVANCED16_FLASHCARDS,
+  ...ADVANCED17_FLASHCARDS,
+  ...ADVANCED18_FLASHCARDS,
 ].map((c) => ({ ...c, level: resolveLevel(c) }));
 
 export const ALL_FLASHCARD_FILTERS: Filter[] = [
@@ -30,7 +66,26 @@ export const ALL_FLASHCARD_FILTERS: Filter[] = [
   { value: "perf", label: "Performance" },
 ];
 
-export const ALL_QUIZ = [...QUIZ, ...QUIZ2];
+export const ALL_QUIZ = [...QUIZ, ...QUIZ2,
+  ...ADVANCED1_QUIZ,
+  ...ADVANCED2_QUIZ,
+  ...ADVANCED3_QUIZ,
+  ...ADVANCED4_QUIZ,
+  ...ADVANCED5_QUIZ,
+  ...ADVANCED6_QUIZ,
+  ...ADVANCED7_QUIZ,
+  ...ADVANCED8_QUIZ,
+  ...ADVANCED9_QUIZ,
+  ...ADVANCED10_QUIZ,
+  ...ADVANCED11_QUIZ,
+  ...ADVANCED12_QUIZ,
+  ...ADVANCED13_QUIZ,
+  ...ADVANCED14_QUIZ,
+  ...ADVANCED15_QUIZ,
+  ...ADVANCED16_QUIZ,
+  ...ADVANCED17_QUIZ,
+  ...ADVANCED18_QUIZ,
+];
 
 export const ALL_QUIZ_FILTERS: Filter[] = [
   { value: "all", label: "All" },
