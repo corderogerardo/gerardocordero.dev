@@ -36,6 +36,7 @@ import { ADVANCED30_FLASHCARDS, ADVANCED30_QUIZ, ADVANCED30_STUDY } from "./adva
 import { ADVANCED31_FLASHCARDS, ADVANCED31_QUIZ, ADVANCED31_STUDY } from "./advanced31";
 import { ADVANCED32_FLASHCARDS, ADVANCED32_QUIZ, ADVANCED32_STUDY } from "./advanced32";
 import { ADVANCED33_FLASHCARDS, ADVANCED33_QUIZ, ADVANCED33_STUDY } from "./advanced33";
+import { ADVANCED34_FLASHCARDS, ADVANCED34_QUIZ, ADVANCED34_STUDY } from "./advanced34";
 import { QUIZ } from "./quiz";
 import { STUDY_SECTIONS } from "./study";
 import { PROMPTS } from "./prompts";
@@ -76,6 +77,7 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...ADVANCED31_FLASHCARDS,
   ...ADVANCED32_FLASHCARDS,
   ...ADVANCED33_FLASHCARDS,
+  ...ADVANCED34_FLASHCARDS,
 ].map((c) => ({ ...c, level: resolveLevel(c) }));
 
 export const ALL_FLASHCARD_FILTERS = [...FLASHCARD_FILTERS];
@@ -115,6 +117,7 @@ export const ALL_QUIZ = [
   ...ADVANCED31_QUIZ,
   ...ADVANCED32_QUIZ,
   ...ADVANCED33_QUIZ,
+  ...ADVANCED34_QUIZ,
 ];
 
 export const ALL_STUDY = [
@@ -152,6 +155,7 @@ export const ALL_STUDY = [
   ...ADVANCED31_STUDY,
   ...ADVANCED32_STUDY,
   ...ADVANCED33_STUDY,
+  ...ADVANCED34_STUDY,
 ];
 
 export const ALL_PROMPTS = [...PROMPTS, ...DSA_PROMPTS];
