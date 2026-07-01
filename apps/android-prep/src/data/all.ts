@@ -28,6 +28,7 @@ import { ADVANCED18_FLASHCARDS, ADVANCED18_QUIZ } from "./advanced18";
 import { ADVANCED19_FLASHCARDS, ADVANCED19_QUIZ } from "./advanced19";
 import { ADVANCED20_FLASHCARDS, ADVANCED20_QUIZ } from "./advanced20";
 import { ADVANCED21_FLASHCARDS, ADVANCED21_QUIZ } from "./advanced21";
+import { ADVANCED22_FLASHCARDS, ADVANCED22_QUIZ, ADVANCED22_STUDY } from "./advanced22";
 import { QUIZ } from "./quiz";
 import { ADVANCED_QUIZ } from "./advanced";
 import { ADVANCED2_QUIZ } from "./advanced2";
@@ -67,6 +68,7 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...ADVANCED19_FLASHCARDS,
   ...ADVANCED20_FLASHCARDS,
   ...ADVANCED21_FLASHCARDS,
+  ...ADVANCED22_FLASHCARDS,
 ].map((c) => ({ ...c, level: resolveLevel(c) }));
 
 export const ALL_FLASHCARD_FILTERS = [
@@ -100,6 +102,7 @@ export const ALL_QUIZ = [
   ...ADVANCED19_QUIZ,
   ...ADVANCED20_QUIZ,
   ...ADVANCED21_QUIZ,
+  ...ADVANCED22_QUIZ,
 ];
 
 export const ALL_STUDY = [
@@ -111,6 +114,7 @@ export const ALL_STUDY = [
   ...ADVANCED5_STUDY,
   ...ADVANCED6_STUDY,
   ...ADVANCED7_STUDY,
+  ...ADVANCED22_STUDY,
 ];
 
 export const ALL_PROMPTS = [...PROMPTS, ...ADVANCED7_PROMPTS, ...DSA_PROMPTS];
