@@ -165,4 +165,16 @@ export const projects: Project[] = [
     linkLabel: "Web",
     stack: ["NestJS", "TypeScript", "Node.js"],
   },
+  {
+    name: "Next.js Interview Prep",
+    domain: "Interview Prep",
+    tagline:
+      "A senior Next.js / React study guide — App Router, rendering & caching, and Server Actions deep-dives, plus coding & system-design prompts with Q&A flashcards.",
+    period: "2026",
+    status: "live",
+    platforms: ["Web"],
+    href: "https://nextjs.gerardocordero.dev/",
+    linkLabel: "Web",
+    stack: ["Next.js", "React", "TypeScript"],
+  },
 ];
