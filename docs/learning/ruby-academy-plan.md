@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 17-module curriculum progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, deployment, and senior-level query performance (N+1s, indexes, counter caches). The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 66 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
+The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 18-module curriculum progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, deployment, and senior-level query performance and caching (N+1s, indexes, counter caches, HTTP conditional GET, Rails.cache/Solid Cache). The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 68 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cache for the app cache store, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
 
 ## Modules
 
@@ -25,6 +25,7 @@ The Ruby & Rails course teaches backend web development from zero by rebuilding 
 | 14 | `14-testing.js` | Testing the API | Minitest fixtures, request specs, edge cases, 100% coverage |
 | 15 | `15-deploy-graduation.js` | Deploy & Graduation | Dockerfile, Kamal playbooks, VPS deployment, CI/CD |
 | 16 | `16-query-performance.js` | Query Performance | N+1 queries, `includes`/`strict_loading`, EXPLAIN & composite indexes, counter caches |
+| 17 | `17-caching.js` | Caching Layers | HTTP conditional GET (`fresh_when`/ETag), `Rails.cache` key-based expiry (Solid Cache), `touch: true`, thundering herd, cache-privacy bugs |
 
 ## Reference Backend
 

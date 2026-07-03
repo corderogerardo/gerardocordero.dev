@@ -94,8 +94,9 @@ is local; nothing is uploaded.
 **Local prerequisites (one-time, already installed on this machine):** Maestro's CLI needs
 **JDK 17** — without it nothing (CLI or MCP) runs. Installed: `openjdk@17` (Homebrew),
 `idb-companion` (iOS-sim driving), and **Maestro 2.6.1** (`~/.maestro/bin`, symlinked onto
-PATH at `/opt/homebrew/bin/maestro`). Android is **cloud-only** here (no local Android SDK /
-JDK-for-Android). Install note: `get.maestro.dev` may not resolve — install from the official
+PATH at `/opt/homebrew/bin/maestro`). A local **Android SDK exists** at `~/Library/Android/sdk`
+(proven: `apps/android` builds locally with `./gradlew assembleDebug`); Maestro e2e for the
+portfolio app remains cloud-only (no local emulator flows wired up). Install note: `get.maestro.dev` may not resolve — install from the official
 GitHub release (`mobile-dev-inc/Maestro` → `maestro.zip`, checksum-verified) or `get.maestro.mobile.dev`.
 
 **E2E flows** live in `apps/portfolio/.maestro/`:

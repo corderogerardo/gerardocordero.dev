@@ -5,13 +5,15 @@ class WalkersController < ApplicationController
     walkers = Walker.order(rating: :desc)
     walkers = walkers.in_city(params[:city]) if params[:city].present?
 
-    render json: { walkers: walkers.map { |walker| walker_payload(walker) } }
+    fresh_when(etag: walkers, last_modified: walkers.maximum(:updated_at))
+    render json: { walkers: walkers.map { |walker| walker_payload(walker) } } unless performed?
   end
 
   def show
     walker = Walker.find(params[:id])
 
-    render json: { walker: walker_payload(walker) }
+    fresh_when(walker)
+    render json: { walker: walker_payload(walker) } unless performed?
   end
 
   private
