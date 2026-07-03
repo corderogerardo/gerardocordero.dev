@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+mochi:
+  user: demo
+  name: Mochi
+  breed: Shiba Inu
+  size: small
+  notes: Loves puddles.
+
+rex:
+  user: demo
+  name: Rex
+  breed: Labrador
+  size: large
+  notes: Pulls on the leash.
+
+biscuit:
+  user: jane
+  name: Biscuit
+  breed: Beagle
+  size: medium

@@ -44,3 +44,6 @@ yarn-error.log*
 # Claude Code local state and ephemeral worktrees
 .claude/
 .tokensave
+
+# learn-academy throwaway lesson projects
+apps/learn/playground/
