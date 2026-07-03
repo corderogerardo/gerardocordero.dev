@@ -957,5 +957,51 @@
     if (btn) btn.click();
   });
 
+  // ---------- Export / import progress ----------
+  const sideFoot = document.querySelector(".side-foot");
+  const resetBtn = document.getElementById("reset-progress");
+  const exportBtn = el("button", "ghost", "Export progress");
+  exportBtn.onclick = () => {
+    const raw = localStorage.getItem(STORE_KEY) || "{}";
+    const a = el("a");
+    a.href = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+    a.download = `${STORE_KEY}-progress.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const importBtn = el("button", "ghost", "Import progress");
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = "application/json";
+  importInput.style.display = "none";
+  importBtn.onclick = () => importInput.click();
+  importInput.onchange = async () => {
+    const file = importInput.files[0];
+    importInput.value = "";
+    if (!file) return;
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+      if (typeof parsed !== "object" || !parsed) throw new Error("not an object");
+    } catch {
+      alert("Not a valid progress file.");
+      return;
+    }
+    if (confirm("Replace current progress with the imported file?")) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
+      location.reload();
+    }
+  };
+  sideFoot.insertBefore(exportBtn, resetBtn);
+  sideFoot.insertBefore(importBtn, resetBtn);
+  sideFoot.appendChild(importInput);
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.target !== document.body) return;
+    const btn = document.querySelector(".continue-row .btn:not(:disabled)");
+    if (btn) btn.click();
+  });
+
   render(false);
 })();
