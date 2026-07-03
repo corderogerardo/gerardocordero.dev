@@ -71,7 +71,10 @@ data class User(
 @Serializable
 data class AuthResponse(
     val user: User,
-    val token: String,
+    // Wire name is access_token (apps/backend's auth schema; also the key
+    // TokenStore stores it under) — without @SerialName decoding throws
+    // MissingFieldException on every login/signup.
+    @SerialName("access_token") val accessToken: String,
 )
 
 // ponytail: referenced by PawWalkApi.ownerStats() (07-networking.js) but never

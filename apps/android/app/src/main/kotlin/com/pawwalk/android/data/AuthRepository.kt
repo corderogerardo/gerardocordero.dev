@@ -9,13 +9,13 @@ object AuthRepository {
 
     suspend fun signup(email: String, password: String, name: String, role: String): User {
         val response = api.signup(SignupRequest(email, password, name, role))
-        TokenStore.saveToken(response.token)
+        TokenStore.saveToken(response.accessToken)
         return response.user
     }
 
     suspend fun login(email: String, password: String): User {
         val response = api.login(LoginRequest(email, password))
-        TokenStore.saveToken(response.token)
+        TokenStore.saveToken(response.accessToken)
         return response.user
     }
 

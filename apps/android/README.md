@@ -91,6 +91,12 @@ into a compiling app required a few judgment calls. Every one is also marked
 - **`PetRepository` method names disagree across lessons.** Module 07 calls
   it `fetchPets()`; modules 10 and 12 call it `.list()` / `.create()`. Kept
   the later (`.list()`/`.create()`) convention per "latest wins."
+- **`AuthResponse.accessToken` maps the wire name `access_token`** — the
+  first cut of this bootstrap guessed `val token: String`, which would have
+  thrown `MissingFieldException` on every login/signup (the backend's auth
+  schema sends `access_token`, the same name `TokenStore` stores it under,
+  and `Network.kt`'s `Json` has no `coerceInputValues`). Caught in
+  extraction review; fixed to `@SerialName("access_token") val accessToken`.
 - **`Screen.Live` / `HomeScreen.onTrack` carried a dog name, not a booking
   id.** `MainActivity.kt`'s nav fragment (`09-lists-navigation.js`) defines
   `data class Live(val dogName: String? = null)`, fed by
