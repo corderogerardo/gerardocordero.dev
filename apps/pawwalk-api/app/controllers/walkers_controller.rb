@@ -24,7 +24,8 @@ class WalkersController < ApplicationController
       city: walker.city,
       rating: walker.rating,
       price_per_30_min_cents: walker.price_per_30_min_cents,
-      price_label: walker.price_label
+      price_label: walker.price_label,
+      bookings_count: walker.bookings_count
     }
   end
 end
