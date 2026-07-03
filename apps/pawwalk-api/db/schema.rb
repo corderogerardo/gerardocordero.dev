@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_191853) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_234227) do
   create_table "bookings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dog_id", null: false
@@ -39,6 +39,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_191853) do
     t.index ["user_id"], name: "index_dogs_on_user_id"
   end
 
+  create_table "ledger_entries", force: :cascade do |t|
+    t.string "account", null: false
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.integer "payout_id"
+    t.datetime "updated_at", null: false
+    t.index ["payout_id"], name: "index_ledger_entries_on_payout_id"
+  end
+
   create_table "location_pings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.decimal "lat", precision: 9, scale: 6, null: false
@@ -58,6 +67,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_191853) do
     t.datetime "updated_at", null: false
     t.index ["booking_id"], name: "index_payments_on_booking_id", unique: true
     t.index ["stripe_payment_intent_id"], name: "index_payments_on_stripe_payment_intent_id"
+  end
+
+  create_table "payouts", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", null: false
+    t.string "status", default: "pending"
+    t.datetime "updated_at", null: false
+    t.integer "walker_id", null: false
+    t.index ["idempotency_key"], name: "index_payouts_on_idempotency_key", unique: true
+    t.index ["walker_id"], name: "index_payouts_on_walker_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -93,7 +113,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_191853) do
   add_foreign_key "bookings", "users"
   add_foreign_key "bookings", "walkers"
   add_foreign_key "dogs", "users"
+  add_foreign_key "ledger_entries", "payouts"
   add_foreign_key "location_pings", "walk_sessions"
   add_foreign_key "payments", "bookings"
+  add_foreign_key "payouts", "walkers"
   add_foreign_key "walk_sessions", "bookings"
 end

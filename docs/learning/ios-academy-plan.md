@@ -22,8 +22,9 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 11 | `11-live-tracking.js` | Live GPS Tracking | CoreLocation, location updates, WebSocket streaming |
 | 12 | `12-assistant-graduation.js` | The AI Assistant & Graduation | LLM integration, streaming, in-app chat; certificate |
 | 13 | `13-swift-concurrency.js` | Swift Concurrency in Anger | Task trees, actors, data races, isolation, TaskGroup |
-| 14 | `14-persistence.js` | Persistence & Offline-First | CoreData or SwiftData, sync strategies, offline UX |
+| 14 | `14-offline-first.js` | Persistence & Offline-First | CoreData or SwiftData, sync strategies, offline UX |
 | 15 | `15-modularization.js` | Modularize with SPM | Local Swift packages, dependency graph, composition root |
+| 16 | `16-testing-strategy.js` | A Testing Strategy That Scales | Testing pyramid, Swift Testing, fakes, one UI smoke test |
 
 ## Reference App
 
@@ -36,7 +37,7 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 13 | Swift Concurrency in Anger ✅ | Task trees, actors, data races, isolation, TaskGroup — landed |
 | 14 | Persistence & Offline-First ✅ | CoreData/SwiftData, change tracking, conflict resolution — landed |
 | 15 | Modularize with SPM ✅ | Local Swift packages, dependency graph, composition root — landed |
-| 16 | Testing Strategy | XCTest, async testing, mocking, snapshot tests, coverage |
+| 16 | Testing Strategy That Scales ✅ | Testing pyramid, Swift Testing, fakes, one UI smoke test — landed |
 | 17 | Widgets & Live Activities | Lock screen widgets, dynamic islands, background update API |
 | 18 | Push & Background | UserNotifications, background fetch, silent push, VoIP |
 | 19 | Performance & Instruments | Flame graph profiling, memory, disk I/O, battery; Xcode tools |

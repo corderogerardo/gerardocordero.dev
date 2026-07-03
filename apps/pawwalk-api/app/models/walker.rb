@@ -1,5 +1,6 @@
 class Walker < ApplicationRecord
   has_many :bookings
+  has_many :payouts
 
   validates :name, presence: true
   validates :city, presence: true
