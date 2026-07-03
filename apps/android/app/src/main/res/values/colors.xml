@@ -1,0 +1,4 @@
+<resources>
+    <!-- Matches ui/theme/Brand.kt LightBrand.accent — placeholder launcher icon color. -->
+    <color name="ic_launcher_background">#5B4BE0</color>
+</resources>

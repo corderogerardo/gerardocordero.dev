@@ -408,6 +408,48 @@ jobs:
         working-directory: apps/ios
         run: xcodebuild -project PawWalk.xcodeproj -scheme PawWalk -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 
+  # Compiles apps/android (the Jetpack Compose reference app extracted from
+  # the Android course) whenever it changes. This IS the compile gate for that
+  # app — there's no local Android SDK in this dev environment, so `gradlew
+  # assembleDebug` only ever runs here, on a GitHub-hosted ubuntu-latest
+  # runner (which ships the Android SDK). Same change-detection idiom as
+  # validate-learn above.
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/android
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/android/'; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "No changes under apps/android — skipping build."
+            fi
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/android/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/android — skipping build."
+          fi
+      - uses: actions/setup-java@v4
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Build debug APK
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/android
+        run: ./gradlew assembleDebug --no-daemon
+
   # Same pattern for apps/learn -> Pages project academy
   # (academy.gerardocordero.dev). Unlike the prep sites this is a pure static,
   # no-build site, so there's no `pnpm build`/`pnpm install` step — we deploy the

@@ -1,0 +1,6 @@
+<resources>
+    <!-- The real theming lives in Compose (ui/theme/Theme.kt, ui/theme/Brand.kt) —
+         this is just the launch/splash-safe base theme Android needs before
+         Compose takes over in setContent {}. -->
+    <style name="Theme.PawWalk" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
