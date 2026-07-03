@@ -21,9 +21,9 @@
   // forward from the old shared store (course ids scope which keys are "mine").
   function migrateLegacyProgress() {
     try {
-      const empty = !Object.keys(state.done).length && !Object.keys(state.reveal).length &&
-        !Object.keys(state.checks).length && !Object.keys(state.code).length;
-      if (STORE_KEY === "pawwalk-academy-v1" || !empty) return;
+      // Only when this store has never existed — "Reset progress" writes "{}" as a
+      // tombstone so a reset doesn't resurrect progress from the legacy store.
+      if (STORE_KEY === "pawwalk-academy-v1" || localStorage.getItem(STORE_KEY) !== null) return;
       const legacy = JSON.parse(localStorage.getItem("pawwalk-academy-v1"));
       if (!legacy) return;
       const mine = new Set(COURSE.map((m) => m.id));
@@ -517,7 +517,7 @@
   document.getElementById("menu-toggle").onclick = () => document.body.classList.toggle("menu-open");
   document.getElementById("reset-progress").onclick = () => {
     if (confirm("Reset all course progress? This can't be undone.")) {
-      localStorage.removeItem(STORE_KEY);
+      localStorage.setItem(STORE_KEY, "{}"); // tombstone, not removeItem — see migrateLegacyProgress
       location.reload();
     }
   };

@@ -25,9 +25,10 @@ python3 -m http.server 4173
 Open http://localhost:4173 for the iOS course, http://localhost:4173/android.html for the
 Android course, http://localhost:4173/ruby.html for the Ruby course, or http://localhost:4173/python.html
 for the Python course. Progress (including code you type) is saved in the browser's localStorage — the four
-courses use separate store keys (`pawwalk-academy-v1` for iOS, `pawwalk-academy-android-v1` for Android,
+courses use separate store keys (`pawwalk-academy-ios-v1` for iOS, `pawwalk-academy-android-v1` for Android,
 `pawwalk-academy-ruby-v1` for Ruby, `pawwalk-academy-python-v1` for Python), so progress in one never
-touches the other.
+touches the other. Progress from before the Python split (stored under the old shared
+`pawwalk-academy-v1` key) is migrated automatically the first time you open a course.
 
 ## Layout
 

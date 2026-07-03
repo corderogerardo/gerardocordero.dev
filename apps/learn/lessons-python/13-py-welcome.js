@@ -1,7 +1,7 @@
 window.COURSE = window.COURSE || [];
 window.COURSE.push({
   id: "py-welcome",
-  title: "Part II: Python Backend",
+  title: "Welcome to Python",
   emoji: "🐍",
   lang: "python",
   lessons: [
@@ -13,14 +13,14 @@ window.COURSE.push({
           type: "text",
           md: [
             "## You've been talking to a server all along",
-            "In Part I you built the PawWalk iOS app. Every screen you made — the walker list, the booking form, login — worked by **asking a server for data** over HTTP. That server lives in this repo too, in `apps/backend`, and in Part II you learn to build it yourself: the other side of the URL.",
+            "In the iOS course you built the PawWalk app. Every screen you made — the walker list, the booking form, login — worked by **asking a server for data** over HTTP. That server is exactly what this course teaches you to build: the other side of the URL. (Started here without doing the iOS course first? That's fine — this course assumes zero Python and explains the app side as it goes.)",
             "By the graduation module you'll understand — and have typed — the pieces of a complete Python backend: routes, validation, a real database, authentication, payments, tests, and an **AI assistant that uses an LLM and RAG** to answer questions about PawWalk.",
           ],
         },
         {
           type: "text",
           md: [
-            "## The map for Part II",
+            "## The course map",
             "- **Python the language** (modules 14–17) — variables to classes, with Swift comparisons so it clicks fast.\n- **Flask** (18–19) — a *micro*-framework. You wire HTTP by hand and feel exactly what a request is.\n- **Django** (20–22) — the *batteries-included* framework: ORM, migrations, and an admin site for free.\n- **FastAPI** (23–27) — the *typed, modern* framework that powers the real PawWalk backend. Here the repo itself becomes the textbook.\n- **AI: LLMs & RAG** (28–31) — structured LLM output, agents as graphs, and retrieval-augmented generation, ending inside PawWalk's real assistant.",
             "Why learn three frameworks? Because each teaches a different philosophy — and after feeling Flask's manual wiring and Django's magic, FastAPI's design will make *sense* instead of being memorized.",
           ],
@@ -75,7 +75,7 @@ print(f"Welcome, {name}!")`,
           mustNot: [
             { re: /print\("/, hint: "That's a plain string — without the `f` prefix, `{name}` prints literally instead of interpolating." },
           ],
-          success: "That's Python: no let, no braces, and f-strings instead of \\( ). Welcome to Part II.",
+          success: "That's Python: no let, no braces, and f-strings instead of \\( ). Welcome to the course.",
         },
       ],
     },
