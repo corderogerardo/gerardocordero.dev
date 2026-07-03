@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_160738) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_191853) do
   create_table "bookings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dog_id", null: false
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_160738) do
     t.integer "walker_id", null: false
     t.index ["dog_id"], name: "index_bookings_on_dog_id"
     t.index ["status"], name: "index_bookings_on_status"
+    t.index ["user_id", "status", "starts_at"], name: "index_bookings_on_user_id_and_status_and_starts_at"
     t.index ["user_id"], name: "index_bookings_on_user_id"
     t.index ["walker_id"], name: "index_bookings_on_walker_id"
   end
@@ -79,6 +80,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_160738) do
 
   create_table "walkers", force: :cascade do |t|
     t.text "bio"
+    t.integer "bookings_count", default: 0, null: false
     t.string "city"
     t.datetime "created_at", null: false
     t.string "name", null: false

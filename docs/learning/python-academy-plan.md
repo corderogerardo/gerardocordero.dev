@@ -56,7 +56,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 
 | # | Title | Focus |
 |---|---|---|
-| 32 | Async in Production | Event loop, TaskGroups, timeouts/cancellation, async SQLAlchemy pitfalls |
+| 32 | Async in Production ✅ | `32-async-production.js` — event loop honesty, TaskGroups & timeouts, cancellation/graceful shutdown, async SQLAlchemy pitfalls (`MissingGreenlet`, `selectinload`) |
 | 33 | Task Queues & Events | Background workers, outbox pattern, idempotency keys, retries/dead letters |
 | 34 | Caching & Rate Limiting | Redis, invalidation strategies, sliding-window limiter middleware |
 | 35 | Postgres at Scale | EXPLAIN, indexing, ORM N+1, zero-downtime Alembic migrations |
@@ -68,6 +68,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 
 - Modules 13–31: **complete** (19 modules, 68 lessons, 382 steps; validator green).
 - Course split out of the iOS shell: **done** (July 2026).
-- `apps/backend` reference app + senior tier 32–38: **planned** — see the Round 2+ cadence
+- Module 32 (Async in Production): **complete** — first senior-tier module landed.
+- `apps/backend` reference app + senior tier 33–38: **planned** — see the Round 2+ cadence
   in the academy roadmap (one module per track per round, rotating across iOS, Android,
   Python, Ruby).
