@@ -365,6 +365,52 @@ jobs:
         working-directory: apps/learn
         run: node tools/validate.mjs
 
+  # Runs the FastAPI reference app's pytest suite whenever apps/backend
+  # changes — same path-filtered detect idiom as validate-learn above (runs
+  # on PRs too, since it's a check, not a deploy). apps/backend isn't a pnpm
+  # workspace, so it needs its own Python setup instead of piggybacking on
+  # verify.
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/backend
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/backend/'; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "No changes under apps/backend — skipping tests."
+            fi
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/backend/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/backend — skipping tests."
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          python-version: "3.12"
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/backend
+        run: pip install -e ".[dev]"
+      - name: Test
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/backend
+        env:
+          PAWWALK_JWT_SECRET: ci-test-secret-not-for-prod-32-bytes
+        run: pytest
+
   # Same pattern for apps/learn -> Pages project academy
   # (academy.gerardocordero.dev). Unlike the prep sites this is a pure static,
   # no-build site, so there's no `pnpm build`/`pnpm install` step — we deploy the
