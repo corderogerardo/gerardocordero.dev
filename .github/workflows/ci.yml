@@ -370,6 +370,49 @@ jobs:
   # validate-learn — runs on PRs too, since it's a check, not a deploy.
   # macos-latest for Xcode/xcodegen; the project is XcodeGen-based, so CI
   # regenerates PawWalk.xcodeproj rather than committing it.
+  # Tests apps/backend (the FastAPI reference app extracted from the Python
+  # course) whenever it changes. This IS the test gate for that app — it is not
+  # in the pnpm loop. (Re-added: the job was lost in PR #55's mid-flight rebase.)
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/backend
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/backend/'; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "No changes under apps/backend — skipping tests."
+            fi
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/backend/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/backend — skipping tests."
+          fi
+      - name: Set up Python
+        if: steps.detect.outputs.changed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/backend
+        run: pip install -e ".[dev]"
+      - name: Test
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/backend
+        run: pytest
+
   ios-build:
     runs-on: macos-latest
     steps:
