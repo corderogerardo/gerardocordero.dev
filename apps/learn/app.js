@@ -15,6 +15,7 @@
   state.reveal = state.reveal || {};   // "mid/lid" -> number of revealed steps
   state.checks = state.checks || {};   // "stepKey/i" -> true (xcode checklist items)
   state.code = state.code || {};       // stepKey -> learner's editor text
+  state.review = state.review || {};   // stepKey -> SRS card state (see srsSchedule)
   function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 
   // Python was split out of the iOS shell; carry Python learners' progress
@@ -46,6 +47,29 @@
     l.steps.every((s, i) => !gates(s) || stepDone(m, l, i));
   const lessonComplete = (m, l) => (state.reveal[lk(m, l)] || 0) >= l.steps.length && lessonDone(m, l);
   const estMin = (l) => Math.max(2, Math.round(l.steps.length * 1.5));
+
+  // ---------- Spaced repetition (SM-2-lite) ----------
+  // Ported from apps/portfolio/src/study/srs.ts (pure functions, epoch-day due dates).
+  const todayEpochDay = () => Math.floor(Date.now() / 86400000);
+  const srsIsDue = (entry, today) => !entry || entry.due <= (today != null ? today : todayEpochDay());
+  // grade: "again" (wrong) | "good" (correct first try) — this UI only needs pass/fail.
+  function srsSchedule(prev, grade, today) {
+    today = today != null ? today : todayEpochDay();
+    const ease0 = (prev && prev.ease != null) ? prev.ease : 2.3;
+    if (grade === "again") {
+      return { reps: 0, interval: 1, ease: Math.max(1.3, ease0 - 0.2), due: today };
+    }
+    const reps = ((prev && prev.reps) || 0) + 1;
+    const ease = ease0;
+    let interval;
+    if (reps === 1) interval = 2;
+    else if (reps === 2) interval = 4;
+    else {
+      const prevInterval = (prev && prev.interval) || 1;
+      interval = Math.max(prevInterval + 1, Math.round(prevInterval * ease));
+    }
+    return { reps, interval, ease, due: today + interval };
+  }
 
   // ---------- Tiny helpers ----------
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -137,7 +161,97 @@
     const pre = el("pre");
     pre.innerHTML = highlight(source.replace(/^\n+|\s+$/g, ""), lang);
     wrap.appendChild(pre);
+    if (lang === "python" || lang === "ruby") {
+      const bar = title ? wrap.querySelector(".code-title") : el("div", "code-title code-title-run");
+      if (!title) wrap.insertBefore(bar, pre);
+      const runBtn = el("button", "run-btn", "▶ Run");
+      const out = el("pre", "run-out");
+      out.style.display = "none";
+      runBtn.onclick = () => runCode(source, lang, out);
+      bar.appendChild(runBtn);
+      wrap.appendChild(out);
+    }
     return wrap;
+  }
+
+  // ---------- In-browser code execution (Python via Pyodide, Ruby via ruby.wasm) ----------
+  // ponytail: main-thread eval; move to a Worker if long-running user code becomes a thing
+  const PYODIDE_JS = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";
+  const RUBY_WASM_UMD = "https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@2.9.3-2.9.4/dist/browser.umd.js";
+  const RUBY_WASM_BINARY = "https://cdn.jsdelivr.net/npm/@ruby/3.4-wasm-wasi@2.9.3-2.9.4/dist/ruby+stdlib.wasm";
+  let pyodidePromise = null, rubyVMPromise = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("script load failed: " + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  function getPyodide(statusFn) {
+    if (!pyodidePromise) {
+      statusFn("Loading Python runtime… (~10 MB, one-time, cached by the browser)");
+      pyodidePromise = loadScript(PYODIDE_JS)
+        .then(() => window.loadPyodide())
+        .then((py) => {
+          py.setStdout({ batched: (msg) => py.__out.push(msg) });
+          py.setStderr({ batched: (msg) => py.__out.push(msg) });
+          return py;
+        });
+    }
+    return pyodidePromise;
+  }
+
+  function getRubyVM(statusFn) {
+    if (!rubyVMPromise) {
+      statusFn("Loading Ruby runtime… (~10 MB, one-time, cached by the browser)");
+      rubyVMPromise = loadScript(RUBY_WASM_UMD)
+        .then(() => fetch(RUBY_WASM_BINARY))
+        .then((resp) => WebAssembly.compileStreaming(resp))
+        .then((mod) => window["ruby-wasm-wasi"].DefaultRubyVM(mod, { consolePrint: false }))
+        .then(({ vm }) => vm);
+    }
+    return rubyVMPromise;
+  }
+
+  function showRunOut(out, text, isErr) {
+    out.style.display = "";
+    out.textContent = text;
+    out.classList.toggle("err", !!isErr);
+  }
+
+  async function runCode(source, lang, out) {
+    showRunOut(out, "Running…", false);
+    try {
+      if (lang === "python") {
+        const py = await getPyodide((msg) => showRunOut(out, msg, false));
+        py.__out = [];
+        let errText = "";
+        try {
+          await py.runPythonAsync(source);
+        } catch (e) {
+          errText = String((e && e.message) || e);
+        }
+        const stdout = py.__out.join("\n");
+        showRunOut(out, stdout + (errText ? (stdout ? "\n" : "") + errText : "") || "(no output)", !!errText);
+      } else if (lang === "ruby") {
+        const vm = await getRubyVM((msg) => showRunOut(out, msg, false));
+        const wrapped = `require "stringio"\n$captured = StringIO.new\n$stdout = $captured\nbegin\n${source}\nensure\n  $stdout = STDOUT\nend\n$captured.string`;
+        let text, isErr = false;
+        try {
+          text = vm.eval(wrapped).toString();
+        } catch (e) {
+          text = String((e && e.message) || e);
+          isErr = true;
+        }
+        showRunOut(out, text || "(no output)", isErr);
+      }
+    } catch (e) {
+      showRunOut(out, "Couldn't load the runtime (offline?). The Check button works without it.", true);
+    }
   }
 
   // ---------- Code checking ----------
@@ -228,6 +342,133 @@
     return card;
   }
 
+  // ---------- Review pool (spaced-repetition quizzes) ----------
+  // One entry per done quiz step: { m, l, i, key, step }. A done quiz with no
+  // state.review entry yet is implicitly due now — no seed row is written for it.
+  function reviewPool() {
+    const pool = [];
+    COURSE.forEach((m) => m.lessons.forEach((l) => l.steps.forEach((step, i) => {
+      if (step.type !== "quiz") return;
+      const key = sk(m, l, i);
+      if (state.done[key]) pool.push({ m, l, i, key, step });
+    })));
+    return pool;
+  }
+  function reviewDueList() {
+    const today = todayEpochDay();
+    return reviewPool()
+      .filter((c) => srsIsDue(state.review[c.key], today))
+      .sort((a, b) => (state.review[a.key] ? state.review[a.key].due : -Infinity) -
+        (state.review[b.key] ? state.review[b.key].due : -Infinity));
+  }
+
+  function renderReviewCard(c, onAdvance) {
+    const { m, l, step, key } = c;
+    const reps = (state.review[key] && state.review[key].reps) || 0;
+    const card = el("div", "card step");
+    card.appendChild(el("div", "card-tag", `<span class="dot"></span><span class="mono-caption">Review</span>`));
+    const mi = COURSE.indexOf(m);
+    card.appendChild(el("p", "mono-caption review-context",
+      `Module ${String(mi).padStart(2, "0")} · ${esc(m.title)} — ${esc(l.title)}`));
+    card.appendChild(el("h4", null, mdInline(step.q)));
+    const choices = el("div", "choices");
+    const feedback = el("div");
+    let graded = false;
+    const buttons = [];
+    choiceOrder(step.choices.length, key + ":" + reps).forEach((ci) => {
+      const b = el("button", "choice", mdInline(step.choices[ci]));
+      buttons.push(b);
+      b.onclick = () => {
+        if (graded) return;
+        graded = true;
+        buttons.forEach((x, xi) => {
+          x.disabled = true;
+          if (x.__ci === step.answer) x.classList.add("correct");
+        });
+        if (ci === step.answer) {
+          feedback.innerHTML = `<div class="feedback ok">✓ Correct. ${mdInline(step.explain || "")}</div>`;
+          gradeReview(c, true, feedback);
+        } else {
+          b.classList.add("wrong");
+          feedback.innerHTML = `<div class="feedback bad"><span class="fb-label">Not quite</span>${mdInline(step.explain || step.nudge || "")}</div>`;
+          gradeReview(c, false, feedback);
+        }
+      };
+      b.__ci = ci;
+      choices.appendChild(b);
+    });
+    card.appendChild(choices);
+    card.appendChild(feedback);
+
+    function gradeReview(card2, pass, feedbackHost) {
+      state.review[card2.key] = srsSchedule(state.review[card2.key], pass ? "good" : "again");
+      save();
+      renderOverall();
+      const nextBtn = el("button", "btn", "Next →");
+      nextBtn.style.marginTop = "12px";
+      nextBtn.onclick = () => onAdvance(pass);
+      feedbackHost.appendChild(nextBtn);
+    }
+    return card;
+  }
+
+  const REVIEW_SESSION_CAP = 20;
+  function renderReviewView() {
+    const content = document.getElementById("content");
+    content.innerHTML = "";
+    const wrap = el("div", "lesson-wrap review-wrap");
+
+    // Drop review entries whose stepKey no longer resolves to a real quiz step.
+    const validKeys = new Set(reviewPool().map((c) => c.key));
+    let pruned = false;
+    Object.keys(state.review).forEach((k) => { if (!validKeys.has(k)) { delete state.review[k]; pruned = true; } });
+    if (pruned) save();
+
+    let queue = reviewDueList().slice(0, REVIEW_SESSION_CAP);
+    let correct = 0, seen = 0;
+    const total = queue.length;
+
+    wrap.appendChild(el("h2", "lesson-title", "Review"));
+    wrap.appendChild(el("p", "mono-caption",
+      `${total} due · quizzes you've answered come back on a schedule`));
+    const slot = el("div");
+    wrap.appendChild(slot);
+    content.appendChild(wrap);
+
+    function showNext() {
+      slot.innerHTML = "";
+      if (!queue.length) {
+        const summary = el("div", "complete-card");
+        summary.appendChild(el("div", "big", "🐾"));
+        summary.appendChild(el("h3", null, `Reviewed ${seen} · ${correct} correct`));
+        const back = el("a", "btn", "Back to the course");
+        back.href = "#/";
+        summary.appendChild(back);
+        slot.appendChild(summary);
+        return;
+      }
+      const c = queue.shift();
+      slot.appendChild(renderReviewCard(c, (pass) => {
+        seen++;
+        if (pass) correct++;
+        showNext();
+      }));
+    }
+    if (!total) {
+      const summary = el("div", "complete-card");
+      summary.appendChild(el("div", "big", "🐾"));
+      summary.appendChild(el("h3", null, "Nothing due right now"));
+      summary.appendChild(el("p", null, "Come back later, or keep going with the course."));
+      const back = el("a", "btn", "Back to the course");
+      back.href = "#/";
+      summary.appendChild(back);
+      slot.appendChild(summary);
+    } else {
+      showNext();
+    }
+    window.scrollTo(0, 0);
+  }
+
   function renderExercise(step, m, l, i) {
     const key = sk(m, l, i);
     const card = el("div", "card step" + (state.done[key] ? " done" : ""));
@@ -292,7 +533,18 @@
       solutionSlot.appendChild(hint);
       revealBtn.style.display = "none";
     };
-    actions.append(checkBtn, resetBtn, revealBtn);
+    actions.append(checkBtn, resetBtn);
+    const exLang = stepLang(step, m);
+    let runOut = null;
+    if (exLang === "python" || exLang === "ruby") {
+      const runBtn = el("button", "btn secondary", "▶ Run");
+      runBtn.onclick = () => {
+        if (!runOut) { runOut = el("pre", "run-out"); runOut.style.display = "none"; card.appendChild(runOut); }
+        runCode(editor.value, exLang, runOut);
+      };
+      actions.appendChild(runBtn);
+    }
+    actions.appendChild(revealBtn);
     card.append(actions, feedback, solutionSlot);
     if (state.done[key]) {
       feedback.innerHTML = `<div class="feedback ok">✓ Completed${state.done[key] === "help" ? " (with the solution's help)" : ""}.</div>`;
@@ -451,8 +703,89 @@
     }
   }
 
+  // ---------- Search ----------
+  // Lazy index: one entry per lesson, built on first focus. text = lesson title +
+  // every step's searchable fields, joined. textLower drives the substring match;
+  // textOriginal (same join, original case) drives the snippet.
+  let searchIndex = null;
+  function buildSearchIndex() {
+    searchIndex = [];
+    COURSE.forEach((m) => m.lessons.forEach((l) => {
+      const parts = [l.title];
+      l.steps.forEach((step) => {
+        parts.push(step.title, step.caption, step.q, step.label, step.source);
+        parts.push(...(step.md || []), ...(step.prompt || []), ...(step.choices || []), ...(step.items || []));
+      });
+      const textOriginal = parts.filter(Boolean).join(" \n ");
+      searchIndex.push({ m, l, textOriginal, textLower: textOriginal.toLowerCase() });
+    }));
+  }
+  function searchLessons(query) {
+    if (!searchIndex) buildSearchIndex();
+    const q = query.toLowerCase();
+    const hits = [];
+    for (const entry of searchIndex) {
+      const idx = entry.textLower.indexOf(q);
+      if (idx === -1) continue;
+      hits.push({ m: entry.m, l: entry.l, snippet: snippetAround(entry.textOriginal, idx, query.length) });
+      if (hits.length >= 15) break;
+    }
+    return hits;
+  }
+  function snippetAround(text, idx, len) {
+    const radius = 35;
+    let start = Math.max(0, idx - radius);
+    let end = Math.min(text.length, idx + len + radius);
+    let snippet = text.slice(start, end).replace(/\s+/g, " ").trim();
+    if (start > 0) snippet = "…" + snippet;
+    if (end < text.length) snippet += "…";
+    return snippet;
+  }
+
+  function renderSearchResults(host, query) {
+    host.innerHTML = "";
+    searchLessons(query).forEach((hit) => {
+      const a = el("a", "search-result");
+      a.href = `#/${hit.m.id}/${hit.l.id}`;
+      a.innerHTML = `<div>${esc(hit.l.title)}</div>` +
+        `<div class="mono-caption">${esc(hit.m.title)}</div>` +
+        `<div class="search-snippet">${esc(hit.snippet)}</div>`;
+      // Hash change fires renderSidebar() → restores the module list; just clear the query.
+      a.addEventListener("click", () => { searchInput.value = ""; });
+      host.appendChild(a);
+    });
+  }
+
+  let searchInput = null;
+  function ensureSearchInput() {
+    if (searchInput) return;
+    searchInput = document.createElement("input");
+    searchInput.type = "search";
+    searchInput.placeholder = "Search lessons…";
+    searchInput.className = "search-input";
+    searchInput.id = "lesson-search";
+    document.getElementById("module-list").insertAdjacentElement("beforebegin", searchInput);
+
+    let debounceTimer = null;
+    const restoreModuleList = () => renderSidebar(lastActiveM, lastActiveL);
+    searchInput.addEventListener("focus", () => { if (!searchIndex) buildSearchIndex(); });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { searchInput.value = ""; restoreModuleList(); searchInput.blur(); }
+    });
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      const query = searchInput.value.trim();
+      if (query.length < 2) { restoreModuleList(); return; }
+      const host = document.getElementById("module-list");
+      debounceTimer = setTimeout(() => renderSearchResults(host, query), 150);
+    });
+  }
+
   // ---------- Sidebar ----------
+  let lastActiveM = null, lastActiveL = null;
   function renderSidebar(activeM, activeL) {
+    lastActiveM = activeM; lastActiveL = activeL;
+    ensureSearchInput();
     const host = document.getElementById("module-list");
     host.innerHTML = "";
     COURSE.forEach((m, mi) => {
@@ -476,12 +809,58 @@
     });
   }
 
+  // Map link + Review badge, injected once under the overall progress bar.
+  let overallLinksRow = null, mapLink = null, reviewBadge = null;
+  function ensureOverallLinks() {
+    if (overallLinksRow) return;
+    overallLinksRow = el("div", "overall-links");
+    mapLink = el("a", "mono-caption", "Map");
+    mapLink.href = "#/map";
+    reviewBadge = el("a", "mono-caption review-badge");
+    reviewBadge.href = "#/review";
+    overallLinksRow.append(mapLink, reviewBadge);
+    document.querySelector(".overall").insertAdjacentElement("afterend", overallLinksRow);
+  }
+
   function renderOverall() {
     const total = COURSE.reduce((n, m) => n + m.lessons.length, 0);
     const done = COURSE.reduce((n, m) => n + m.lessons.filter((l) => lessonComplete(m, l)).length, 0);
     const pct = total ? Math.round((done / total) * 100) : 0;
     document.getElementById("overall-fill").style.width = pct + "%";
     document.getElementById("overall-label").textContent = `${pct}%`;
+
+    ensureOverallLinks();
+    const dueN = reviewDueList().length;
+    reviewBadge.textContent = `Review · ${dueN} due`;
+    reviewBadge.style.display = dueN ? "" : "none";
+  }
+
+  // ---------- Curriculum map ----------
+  function renderMapView() {
+    const content = document.getElementById("content");
+    content.innerHTML = "";
+    const wrap = el("div", "lesson-wrap");
+    wrap.appendChild(el("h2", "lesson-title", "Curriculum map"));
+    const back = el("a", "linkish", "← Back to the course");
+    back.href = "#/";
+    wrap.appendChild(back);
+    const grid = el("div", "map-grid");
+    COURSE.forEach((m, mi) => {
+      const doneCount = m.lessons.filter((l) => lessonComplete(m, l)).length;
+      const totalMin = m.lessons.reduce((n, l) => n + estMin(l), 0);
+      const complete = doneCount === m.lessons.length;
+      const target = m.lessons.find((l) => !lessonComplete(m, l)) || m.lessons[0];
+      const card = el("a", "map-card" + (complete ? " done" : ""));
+      card.href = `#/${m.id}/${target.id}`;
+      card.innerHTML =
+        `<div class="map-card-emoji">${m.emoji || "📘"}</div>` +
+        `<div class="map-card-title">${String(mi).padStart(2, "0")} · ${esc(m.title)}</div>` +
+        `<div class="mono-caption">${doneCount}/${m.lessons.length} lessons · ~${totalMin} min</div>`;
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    content.appendChild(wrap);
+    window.scrollTo(0, 0);
   }
 
   // ---------- Routing ----------
@@ -506,6 +885,16 @@
       document.getElementById("content").innerHTML = "<p style='padding:40px'>No lessons loaded — check the script tags in index.html.</p>";
       return;
     }
+    // #/review and #/map are their own views — intercept before currentRoute()'s
+    // fallback-to-first-incomplete-lesson logic (it doesn't know these hashes).
+    const hash = location.hash.replace(/^#\/?/, "");
+    if (hash === "review" || hash === "map") {
+      renderSidebar(null, null);
+      renderOverall();
+      if (hash === "review") renderReviewView(); else renderMapView();
+      document.body.classList.remove("menu-open");
+      return;
+    }
     const { m, l } = currentRoute();
     renderSidebar(m, l);
     renderOverall();
@@ -521,6 +910,52 @@
       location.reload();
     }
   };
+
+  // ---------- Export / import progress ----------
+  const sideFoot = document.querySelector(".side-foot");
+  const resetBtn = document.getElementById("reset-progress");
+  const exportBtn = el("button", "ghost", "Export progress");
+  exportBtn.onclick = () => {
+    const raw = localStorage.getItem(STORE_KEY) || "{}";
+    const a = el("a");
+    a.href = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+    a.download = `${STORE_KEY}-progress.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const importBtn = el("button", "ghost", "Import progress");
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = "application/json";
+  importInput.style.display = "none";
+  importBtn.onclick = () => importInput.click();
+  importInput.onchange = async () => {
+    const file = importInput.files[0];
+    importInput.value = "";
+    if (!file) return;
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+      if (typeof parsed !== "object" || !parsed) throw new Error("not an object");
+    } catch {
+      alert("Not a valid progress file.");
+      return;
+    }
+    if (confirm("Replace current progress with the imported file?")) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
+      location.reload();
+    }
+  };
+  sideFoot.insertBefore(exportBtn, resetBtn);
+  sideFoot.insertBefore(importBtn, resetBtn);
+  sideFoot.appendChild(importInput);
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.target !== document.body) return;
+    const btn = document.querySelector(".continue-row .btn:not(:disabled)");
+    if (btn) btn.click();
+  });
 
   // ---------- Export / import progress ----------
   const sideFoot = document.querySelector(".side-foot");

@@ -84,6 +84,29 @@ body {
 .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .bar > div { height: 100%; width: 0%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
 
+/* Sidebar search */
+.search-input {
+  width: 100%; margin-bottom: 12px;
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 9px 12px; font: 500 13.5px var(--sans);
+}
+.search-input::placeholder { color: var(--ink-soft); }
+.search-input:focus { outline: none; border-color: var(--accent); }
+.search-result {
+  display: block; padding: 9px 10px; margin-bottom: 4px; border-radius: 10px;
+  color: var(--ink); text-decoration: none; font-size: 13.5px; font-weight: 600;
+}
+.search-result:hover { background: var(--accent-soft); }
+.search-result .mono-caption { margin: 2px 0; }
+.search-snippet { font-size: 12.5px; font-weight: 400; color: var(--ink-soft); }
+
+/* Overall links row: Map + Review badge */
+.overall-links { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.overall-links a { text-decoration: none; }
+.overall-links a:hover { color: var(--accent); }
+.review-badge { color: var(--amber); }
+
 #module-list { flex: 1; }
 .mod { margin-bottom: 6px; }
 .mod-head {
@@ -162,11 +185,28 @@ pre.md-code {
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--ink-soft);
 }
+.codeblock .code-title.code-title-run { justify-content: flex-end; }
 .codeblock pre {
   margin: 0; padding: 16px 18px; overflow-x: auto;
   background: var(--code-bg); color: var(--code-ink);
   font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
 }
+.run-btn {
+  margin-left: auto; border: 1px solid var(--line); border-radius: 7px;
+  background: transparent; color: var(--ink-soft);
+  font: 600 11px var(--mono); letter-spacing: 0.04em; text-transform: none;
+  padding: 4px 10px; cursor: pointer;
+}
+.run-btn:hover { color: var(--accent); border-color: var(--accent); }
+.run-out {
+  margin: 0; padding: 12px 16px; max-height: 200px; overflow: auto;
+  background: var(--canvas-deep); color: var(--ink);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.5;
+  border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 14px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.run-out.err { color: var(--red); background: var(--red-soft); }
+.card .run-out { border-radius: 10px; border-top: 1px solid var(--line); margin-top: 12px; }
 .tok-kw { color: #FF7AB2; }
 .tok-str { color: #A8E5A3; }
 .tok-num { color: #E3B25E; }
@@ -190,6 +230,9 @@ pre.md-code {
 .card.done .card-tag .dot::after { animation: none; }
 @keyframes pulse { from { transform: scale(1); opacity: 0.4; } to { transform: scale(2.4); opacity: 0; } }
 .card h4 { margin: 0 0 10px; font-size: 17px; }
+
+/* Review (spaced repetition) */
+.review-context { margin: 0 0 10px; }
 
 /* Quiz */
 .choices { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
@@ -260,6 +303,20 @@ pre.md-code {
 }
 .mod-intro .lesson-card:hover { border-color: var(--accent); }
 .mod-intro .lesson-card .num { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+/* Curriculum map */
+.map-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px; margin-top: 22px;
+}
+.map-card {
+  display: block; background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 20px; text-decoration: none; color: var(--ink); transition: border-color 0.15s;
+}
+.map-card:hover { border-color: var(--accent); }
+.map-card.done { border-color: var(--green); }
+.map-card-emoji { font-size: 26px; margin-bottom: 10px; }
+.map-card-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
 
 @media (max-width: 900px) {
   #menu-toggle {
