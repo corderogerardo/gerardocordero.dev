@@ -58,7 +58,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 |---|---|---|
 | 32 | Async in Production ✅ | `32-async-production.js` — event loop honesty, TaskGroups & timeouts, cancellation/graceful shutdown, async SQLAlchemy pitfalls (`MissingGreenlet`, `selectinload`) |
 | 33 | Task Queues & Events ✅ | `33-task-queues.js` — BackgroundTasks vs a real queue, arq workers & retries, idempotency keys, the outbox pattern |
-| 34 | Caching & Rate Limiting | Redis, invalidation strategies, sliding-window limiter middleware |
+| 34 | Caching & Rate Limiting ✅ | `34-caching-rate-limiting.js` — Redis cache-aside, invalidation & key namespacing, fixed-window rate limiting, FastAPI `Depends` limiter |
 | 35 | Postgres at Scale | EXPLAIN, indexing, ORM N+1, zero-downtime Alembic migrations |
 | 36 | Observability | Structured logging, OpenTelemetry traces, Sentry; instrument apps/backend |
 | 37 | LLM Production Hardening | Evals harness, streaming, guardrails, cost/latency budgets |
@@ -70,6 +70,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 - Course split out of the iOS shell: **done** (July 2026).
 - Module 32 (Async in Production): **complete** — first senior-tier module landed.
 - Module 33 (Task Queues & Events): **complete** — arq workers, idempotency, outbox pattern.
-- `apps/backend` reference app + senior tier 34–38: **planned** — see the Round 2+ cadence
+- Module 34 (Caching & Rate Limiting): **complete** — Redis cache-aside, invalidation, fixed-window limiter wired into FastAPI via `Depends`.
+- `apps/backend` reference app + senior tier 35–38: **planned** — see the Round 2+ cadence
   in the academy roadmap (one module per track per round, rotating across iOS, Android,
   Python, Ruby).

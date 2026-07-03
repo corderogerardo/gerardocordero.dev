@@ -21,6 +21,11 @@ class Booking < ApplicationRecord
   scope :upcoming, -> { where(starts_at: Time.current..).where.not(status: :cancelled) }
   scope :for_walker, ->(walker) { where(walker: walker) }
 
+  # Pushes the new booking onto the admin dashboard's live feed (app/views/admin/walkers/index.html.erb
+  # subscribes via turbo_stream_from "admin_bookings"). after_create_commit — not after_create —
+  # so a booking that rolls back never gets broadcast.
+  after_create_commit -> { broadcast_prepend_to "admin_bookings", target: "bookings_feed", partial: "admin/walkers/booking", locals: { booking: self } }
+
   # Price is always derived from the walker's rate, never accepted from the client.
   def compute_price!
     self.price_cents = walker.price_per_30_min_cents * (duration_min / 30)

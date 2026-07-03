@@ -26,6 +26,15 @@ gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
 
+# HTML-over-the-wire for the internal admin dashboard (Turbo Drive/Frames/Streams + Stimulus),
+# living alongside the JSON API — see app/controllers/admin/base_controller.rb
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "importmap-rails"
+# Serves the pinned JS above (and the admin layout's assets) — this app is API-only and
+# never installed an asset pipeline; Propshaft is the modern, no-bundler Rails 8 default.
+gem "propshaft"
+
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 

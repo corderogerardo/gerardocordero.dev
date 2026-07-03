@@ -22,7 +22,8 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 11 | `11-live-tracking.js` | Live Walk Tracking | LocationManager, permissions, coroutine scope, WebSocket updates |
 | 12 | `12-assistant-graduation.js` | The AI Assistant & Graduation | LLM API integration, streaming, UI chat interface; certificate |
 | 13 | `13-coroutines-flow.js` | Coroutines & Flow in Anger | Scope, launch vs async, Flow patterns, cancellation — landed |
-| 14 | Pending | Room & Offline-First | Room database, migrations, offline sync, query optimization |
+| 14 | `14-room-offline.js` | Room & Offline-First | Room database, migrations, offline sync, query optimization |
+| 15 | `15-hilt-di.js` | Dependency Injection with Hilt | Hilt DI, HiltViewModel, scopes, test modules |
 
 ## Reference App
 
@@ -33,8 +34,8 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | # | Title | Focus |
 |---|---|---|
 | 13 | Coroutines & Flow in Anger ✅ | Scope, launch vs async, Flow patterns, structured concurrency — landed |
-| 14 | Room & Offline-First | Room database, migrations, offline sync, conflict resolution — landed |
-| 15 | Hilt DI | Dependency injection graph, scopes, testing fakes, module organization |
+| 14 | Room & Offline-First ✅ | Room database, migrations, offline sync, conflict resolution — landed |
+| 15 | Hilt DI ✅ | Hilt DI, HiltViewModel, scopes, test modules — landed |
 | 16 | Modularize by Feature | Feature modules, navigation contracts, resource namespacing |
 | 17 | Foreground GPS Service | Background location, ServiceState, notification importance, privacy |
 | 18 | Testing Pyramid | Unit tests, integration tests, UI tests (Compose), mocking |
