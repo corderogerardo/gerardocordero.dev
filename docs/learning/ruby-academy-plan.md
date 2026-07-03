@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 16-module curriculum progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, and deployment. The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 66 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
+The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 17-module curriculum progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, deployment, and senior-level query performance (N+1s, indexes, counter caches). The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 66 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
 
 ## Modules
 
@@ -24,6 +24,7 @@ The Ruby & Rails course teaches backend web development from zero by rebuilding 
 | 13 | `13-live-tracking.js` | Live Tracking with Action Cable | WebSocket setup, real-time GPS broadcast, Solid Cable |
 | 14 | `14-testing.js` | Testing the API | Minitest fixtures, request specs, edge cases, 100% coverage |
 | 15 | `15-deploy-graduation.js` | Deploy & Graduation | Dockerfile, Kamal playbooks, VPS deployment, CI/CD |
+| 16 | `16-query-performance.js` | Query Performance | N+1 queries, `includes`/`strict_loading`, EXPLAIN & composite indexes, counter caches |
 
 ## Reference Backend
 
