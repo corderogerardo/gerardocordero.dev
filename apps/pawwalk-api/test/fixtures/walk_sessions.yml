@@ -1,0 +1,10 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+for_past_booking:
+  booking: past
+  started_at: <%= 2.days.ago %>
+  ended_at: <%= 2.days.ago + 60.minutes %>
+
+in_progress:
+  booking: walking_now
+  started_at: <%= 30.minutes.ago %>

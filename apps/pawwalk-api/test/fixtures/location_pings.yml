@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+start:
+  walk_session: for_past_booking
+  lat: 30.267153
+  lng: -97.743057
+  recorded_at: <%= 2.days.ago %>
+
+finish:
+  walk_session: for_past_booking
+  lat: 30.271328
+  lng: -97.740349
+  recorded_at: <%= 2.days.ago + 60.minutes %>
+
+in_progress_ping_1:
+  walk_session: in_progress
+  lat: 30.267153
+  lng: -97.743057
+  recorded_at: <%= 20.minutes.ago %>
+
+in_progress_ping_2:
+  walk_session: in_progress
+  lat: 30.268500
+  lng: -97.742000
+  recorded_at: <%= 10.minutes.ago %>

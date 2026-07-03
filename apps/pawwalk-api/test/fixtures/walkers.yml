@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+luna:
+  name: Luna Martinez
+  bio: Patient with reactive dogs.
+  city: Austin
+  price_per_30_min_cents: 2500
+  rating: 4.8
+
+sam:
+  name: Sam Okafor
+  bio: Marathon runner, great for high-energy dogs.
+  city: Portland
+  price_per_30_min_cents: 2200
+  rating: 5.0

@@ -1,0 +1,61 @@
+# Kamal 2 config for a single-server deploy of PawWalk Academy's reference API.
+# Docs: https://kamal-deploy.org — "5 commands" version is in the app README.
+
+# Name of your application. Used to uniquely configure containers.
+service: pawwalk-api
+
+# Name of the container image on Docker Hub (or any registry) — set to your own repo.
+image: YOUR_DOCKERHUB_USER/pawwalk-api
+
+# Deploy to these servers. One entry = one $5 VPS (Hetzner, DigitalOcean, etc.) — put its IP here.
+servers:
+  web:
+    - YOUR_SERVER_IP
+
+# Enable SSL auto-certification via Let's Encrypt through Kamal's built-in proxy (kamal-proxy).
+# Point your domain's DNS A record at YOUR_SERVER_IP first; the proxy requests and renews the
+# cert automatically on first boot. Requires config.assume_ssl + config.force_ssl in production.rb
+# (already set below for this single-server setup).
+proxy:
+  ssl: true
+  host: api.pawwalk.example
+
+# Where you keep your container images. Docker Hub is the free default; swap `server:` for
+# ghcr.io or registry.digitalocean.com if you prefer another registry.
+registry:
+  username: YOUR_DOCKERHUB_USER
+
+  # Always use an access token rather than your real password.
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Inject ENV variables into the container. `secret` values are read from .kamal/secrets at
+# deploy time and never stored in this file; `clear` values are plain config, safe to commit.
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - STRIPE_SECRET_KEY
+    - STRIPE_WEBHOOK_SECRET
+  clear:
+    # Single-server setup: run the Solid Queue supervisor inside Puma instead of a separate
+    # job container. Split this out (see the "job" server block below) once you outgrow one box.
+    SOLID_QUEUE_IN_PUMA: true
+
+# Aliases are triggered with "bin/kamal <alias>".
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# SQLite lives on disk, not in a separate DB server, so it must survive container recreation.
+# This volume is mounted at the same path on every deploy — back it up off-server (e.g. litestream,
+# a nightly `kamal app exec "bin/rails db:dump"` + rsync, whatever fits your budget).
+volumes:
+  - "pawwalk_api_storage:/rails/storage"
+
+# Configure the image builder.
+builder:
+  # Almost every $5 VPS is x86 (amd64). Building here on Apple Silicon (arm64) still produces
+  # an amd64 image — Docker cross-builds via QEMU — it's just slower than a native build.
+  arch: amd64
