@@ -17,6 +17,27 @@
   state.code = state.code || {};       // stepKey -> learner's editor text
   function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 
+  // Python was split out of the iOS shell; carry Python learners' progress
+  // forward from the old shared store (course ids scope which keys are "mine").
+  function migrateLegacyProgress() {
+    try {
+      const empty = !Object.keys(state.done).length && !Object.keys(state.reveal).length &&
+        !Object.keys(state.checks).length && !Object.keys(state.code).length;
+      if (STORE_KEY === "pawwalk-academy-v1" || !empty) return;
+      const legacy = JSON.parse(localStorage.getItem("pawwalk-academy-v1"));
+      if (!legacy) return;
+      const mine = new Set(COURSE.map((m) => m.id));
+      let copied = false;
+      for (const map of ["done", "reveal", "checks", "code"]) {
+        for (const [key, val] of Object.entries(legacy[map] || {})) {
+          if (mine.has(key.split("/")[0])) { state[map][key] = val; copied = true; }
+        }
+      }
+      if (copied) save();
+    } catch { /* ignore malformed legacy store */ }
+  }
+  migrateLegacyProgress();
+
   const sk = (m, l, s) => `${m.id}/${l.id}/${s}`;
   const lk = (m, l) => `${m.id}/${l.id}`;
   const gates = (step) => step.type === "quiz" || step.type === "exercise" || step.type === "xcode";
@@ -24,6 +45,7 @@
   const lessonDone = (m, l) => (state.reveal[lk(m, l)] || 0) > l.steps.length - 1 &&
     l.steps.every((s, i) => !gates(s) || stepDone(m, l, i));
   const lessonComplete = (m, l) => (state.reveal[lk(m, l)] || 0) >= l.steps.length && lessonDone(m, l);
+  const estMin = (l) => Math.max(2, Math.round(l.steps.length * 1.5));
 
   // ---------- Tiny helpers ----------
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -223,6 +245,9 @@
         const { selectionStart: s, selectionEnd: en } = editor;
         editor.value = editor.value.slice(0, s) + "    " + editor.value.slice(en);
         editor.selectionStart = editor.selectionEnd = s + 4;
+      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        checkBtn.click();
       }
     });
     editor.addEventListener("input", () => { state.code[key] = editor.value; save(); });
@@ -382,7 +407,22 @@
     content.innerHTML = "";
     const wrap = el("div", "lesson-wrap");
     const mi = COURSE.indexOf(m), li = m.lessons.indexOf(l);
-    wrap.appendChild(el("div", "crumbs mono-caption", `Module ${String(mi).padStart(2, "0")} · ${esc(m.title)} — Lesson ${li + 1} of ${m.lessons.length}`));
+    const crumbRow = el("div", "crumb-row");
+    crumbRow.appendChild(el("div", "crumbs mono-caption",
+      `Module ${String(mi).padStart(2, "0")} · ${esc(m.title)} — Lesson ${li + 1} of ${m.lessons.length} · ~${estMin(l)} min`));
+    const lessonResetBtn = el("button", "linkish lesson-reset", "↺ reset lesson");
+    lessonResetBtn.onclick = () => {
+      if (!confirm("Reset this lesson's progress?")) return;
+      const prefix = `${m.id}/${l.id}/`;
+      for (const map of [state.done, state.checks, state.code]) {
+        for (const key of Object.keys(map)) if (key.startsWith(prefix)) delete map[key];
+      }
+      delete state.reveal[lk(m, l)];
+      save();
+      render(false);
+    };
+    crumbRow.appendChild(lessonResetBtn);
+    wrap.appendChild(crumbRow);
     wrap.appendChild(el("h2", "lesson-title", esc(l.title)));
 
     const revealed = Math.max(1, Math.min(state.reveal[lk(m, l)] || 1, l.steps.length));
@@ -427,7 +467,8 @@
       m.lessons.forEach((l) => {
         const a = el("a", "lesson-link" + ((activeL && activeM && m.id === activeM.id && l.id === activeL.id) ? " active" : ""));
         a.href = `#/${m.id}/${l.id}`;
-        a.innerHTML = `<span class="tick">${lessonComplete(m, l) ? "✓" : ""}</span><span>${esc(l.title)}</span>`;
+        a.innerHTML = `<span class="tick">${lessonComplete(m, l) ? "✓" : ""}</span><span>${esc(l.title)}</span>` +
+          `<span class="est">~${estMin(l)}m</span>`;
         list.appendChild(a);
       });
       mod.appendChild(list);
@@ -480,6 +521,52 @@
       location.reload();
     }
   };
+
+  // ---------- Export / import progress ----------
+  const sideFoot = document.querySelector(".side-foot");
+  const resetBtn = document.getElementById("reset-progress");
+  const exportBtn = el("button", "ghost", "Export progress");
+  exportBtn.onclick = () => {
+    const raw = localStorage.getItem(STORE_KEY) || "{}";
+    const a = el("a");
+    a.href = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+    a.download = `${STORE_KEY}-progress.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const importBtn = el("button", "ghost", "Import progress");
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = "application/json";
+  importInput.style.display = "none";
+  importBtn.onclick = () => importInput.click();
+  importInput.onchange = async () => {
+    const file = importInput.files[0];
+    importInput.value = "";
+    if (!file) return;
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+      if (typeof parsed !== "object" || !parsed) throw new Error("not an object");
+    } catch {
+      alert("Not a valid progress file.");
+      return;
+    }
+    if (confirm("Replace current progress with the imported file?")) {
+      localStorage.setItem(STORE_KEY, JSON.stringify(parsed));
+      location.reload();
+    }
+  };
+  sideFoot.insertBefore(exportBtn, resetBtn);
+  sideFoot.insertBefore(importBtn, resetBtn);
+  sideFoot.appendChild(importInput);
+
+  // ---------- Keyboard shortcuts ----------
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.target !== document.body) return;
+    const btn = document.querySelector(".continue-row .btn:not(:disabled)");
+    if (btn) btn.click();
+  });
 
   render(false);
 })();

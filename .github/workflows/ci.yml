@@ -324,6 +324,47 @@ jobs:
           packageManager: pnpm
           command: pages deploy out --project-name=nextjs-prep --branch=main
 
+  # Validates apps/learn's lesson content (syntax, schema, and that every
+  # exercise's own solution passes its own checks) whenever it changes. Same
+  # change-detection pattern as the deploy-* jobs below, but also runs on PRs
+  # (unlike deploy) since it's a check, not a deploy — PRs use the PR base SHA
+  # as the diff point instead of `github.event.before`. Zero-dependency
+  # script, so no pnpm install — just Node to run it.
+  validate-learn:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/learn
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/learn/'; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "No changes under apps/learn — skipping validation."
+            fi
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/learn/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/learn — skipping validation."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          node-version: 20
+      - name: Validate lessons
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/learn
+        run: node tools/validate.mjs
+
   # Same pattern for apps/learn -> Pages project academy
   # (academy.gerardocordero.dev). Unlike the prep sites this is a pure static,
   # no-build site, so there's no `pnpm build`/`pnpm install` step — we deploy the
