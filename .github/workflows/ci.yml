@@ -323,3 +323,45 @@ jobs:
           workingDirectory: apps/nextjs-prep
           packageManager: pnpm
           command: pages deploy out --project-name=nextjs-prep --branch=main
+
+  # Same pattern for apps/learn -> Pages project academy
+  # (academy.gerardocordero.dev). Unlike the prep sites this is a pure static,
+  # no-build site, so there's no `pnpm build`/`pnpm install` step — we deploy the
+  # directory itself. Pages auto-ignores dotfiles (`.claude`) and node_modules,
+  # so nothing extra needs excluding.
+  deploy-learn:
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changes under apps/learn
+        id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/learn/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes under apps/learn — skipping deploy."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.changed == 'true'
+        with:
+          node-version: 20
+      # No package.json in apps/learn, so wrangler-action installs wrangler via
+      # npm here — safe because there are no workspace:* deps to choke on (that's
+      # the failure the portfolio deploy above avoids by forcing pnpm).
+      - name: Deploy to Cloudflare Pages
+        if: steps.detect.outputs.changed == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/learn
+          command: pages deploy . --project-name=academy --branch=main
