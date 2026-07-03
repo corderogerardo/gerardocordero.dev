@@ -37,4 +37,14 @@ class WalkersTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_equal "not found", JSON.parse(response.body)["error"]
   end
+
+  test "index returns a 304 on a repeat request with the same ETag" do
+    get "/walkers"
+    assert_response :success
+    etag = response.headers["ETag"]
+    assert_not_nil etag
+
+    get "/walkers", headers: { "If-None-Match" => etag }
+    assert_response :not_modified
+  end
 end

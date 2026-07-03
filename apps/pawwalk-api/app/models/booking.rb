@@ -1,6 +1,6 @@
 class Booking < ApplicationRecord
   belongs_to :user
-  belongs_to :walker, counter_cache: true
+  belongs_to :walker, counter_cache: true, touch: true
   belongs_to :dog
   has_one :walk_session
   has_one :payment, dependent: :destroy

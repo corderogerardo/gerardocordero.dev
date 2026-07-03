@@ -166,7 +166,7 @@ NavHost(navController, startDestination = "walkers") {
           title: "MainActivity.kt — the real navigation model",
           source: String.raw`private sealed interface Screen {
     data object Home : Screen
-    data class Live(val dogName: String? = null) : Screen
+    data class Live(val bookingId: String? = null) : Screen
     data object Walkers : Screen
     data class CreateBooking(val walker: Walker) : Screen
     data object Bookings : Screen
@@ -184,7 +184,7 @@ Crossfade(targetState = screen, label = "screen") { current ->
     when (current) {
         is Screen.Home -> HomeScreen(
             user = currentUser,
-            onTrack = { dog -> screen = Screen.Live(dog) },
+            onTrack = { bookingId -> screen = Screen.Live(bookingId) },
             onBook = { screen = Screen.Walkers },
         )
         is Screen.Walkers -> WalkersScreen(
@@ -427,7 +427,7 @@ private fun RowScope.Tab(
           source: String.raw`@Composable
 fun HomeScreen(
     user: User?,
-    onTrack: (dogName: String?) -> Unit,
+    onTrack: (bookingId: String?) -> Unit,
     onBook: () -> Unit = {},
     onProfile: () -> Unit = {},
     onAssistant: () -> Unit = {},
@@ -439,7 +439,7 @@ fun HomeScreen(
     Box(Modifier.fillMaxSize().background(c.canvas)) {
         Column(/* … scrolling content … */) { /* … */ }
         HudTabBar(
-            c, { onTrack(state.upcoming?.booking?.dogName ?: state.pets.firstOrNull()?.name) },
+            c, { onTrack(state.upcoming?.booking?.id) },
             onBook, onProfile,
             Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(16.dp)
         )
