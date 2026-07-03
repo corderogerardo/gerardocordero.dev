@@ -1,6 +1,9 @@
 // Validates every *.js file in a lessons directory: syntax, schema, and — critically —
 // that each exercise's own solution passes its own checks (so every exercise is solvable).
-// Usage: node tools/validate.mjs [dir]   (from apps/learn/; dir defaults to "lessons")
+// Usage: node tools/validate.mjs [dir]   (from apps/learn/)
+//   - with a dir arg: validates just that directory
+//   - with no arg: validates all four course dirs (lessons, lessons-android,
+//     lessons-ruby, lessons-python) and exits non-zero if any of them has errors
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,9 +13,7 @@ import vm from "node:vm";
 const isRegExp = (v) => types.isRegExp(v); // instanceof fails across the vm realm
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const dir = process.argv[2] || "lessons";
-const lessonsDir = join(root, dir);
-const files = readdirSync(lessonsDir).filter((f) => f.endsWith(".js")).sort();
+const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python"];
 
 const errors = [];
 const err = (file, msg) => errors.push(`${file}: ${msg}`);
@@ -81,63 +82,88 @@ function checkStep(file, where, s, i, moduleLang) {
   }
 }
 
-const seenModuleIds = new Set();
-let moduleCount = 0, lessonCount = 0, stepCount = 0, exerciseCount = 0, quizCount = 0;
+// Validates one lessons directory. Returns true if it had zero errors. Appends
+// to the shared `errors` array (each message is dir-prefixed so multi-dir runs
+// stay attributable).
+function validateDir(dir) {
+  const startErrors = errors.length;
+  const lessonsDir = join(root, dir);
+  const files = readdirSync(lessonsDir).filter((f) => f.endsWith(".js")).sort();
 
-for (const file of files) {
-  const src = readFileSync(join(lessonsDir, file), "utf8");
+  const seenModuleIds = new Set();
+  let moduleCount = 0, lessonCount = 0, stepCount = 0, exerciseCount = 0, quizCount = 0;
 
-  // Heuristic: a plain (non-String.raw) template literal containing \( means
-  // corrupted Swift interpolation — the backslash silently disappears. Strip
-  // quoted strings and regex literals first so their backticks/\( don't false-positive.
-  const stripped = src
-    .replace(/re:\s*\/(?:[^\/\\\n[]|\\.|\[(?:[^\]\\]|\\.)*\])+\/[a-z]*/g, "re: /re/") // regex literals first — they may contain quotes
-    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
-    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
-  const badTemplate = /(?<!String\.raw)`(?:[^`\\]|\\.)*?\\\((?:[^`\\]|\\.)*?`/s;
-  if (badTemplate.test(stripped)) err(file, "contains \\( inside a plain template literal — use String.raw for Swift code");
+  for (const file of files) {
+    const src = readFileSync(join(lessonsDir, file), "utf8");
+    const tag = file;
 
-  const sandbox = { window: { COURSE: [] } };
-  try {
-    vm.runInNewContext(src, sandbox, { filename: file, timeout: 5000 });
-  } catch (e) {
-    err(file, `does not execute: ${e.message}`);
-    continue;
+    // Heuristic: a plain (non-String.raw) template literal containing \( means
+    // corrupted Swift interpolation — the backslash silently disappears. Strip
+    // quoted strings and regex literals first so their backticks/\( don't false-positive.
+    const stripped = src
+      .replace(/re:\s*\/(?:[^\/\\\n[]|\\.|\[(?:[^\]\\]|\\.)*\])+\/[a-z]*/g, "re: /re/") // regex literals first — they may contain quotes
+      .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+      .replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
+    const badTemplate = /(?<!String\.raw)`(?:[^`\\]|\\.)*?\\\((?:[^`\\]|\\.)*?`/s;
+    if (badTemplate.test(stripped)) err(tag, "contains \\( inside a plain template literal — use String.raw for Swift code");
+
+    const sandbox = { window: { COURSE: [] } };
+    try {
+      vm.runInNewContext(src, sandbox, { filename: file, timeout: 5000 });
+    } catch (e) {
+      err(tag, `does not execute: ${e.message}`);
+      continue;
+    }
+    const mods = sandbox.window.COURSE;
+    if (mods.length !== 1) { err(tag, `must push exactly 1 module (pushed ${mods.length})`); continue; }
+    const m = mods[0];
+    moduleCount++;
+    if (!m.id || !/^[a-z0-9-]+$/.test(m.id)) err(tag, `module id ${JSON.stringify(m.id)} must be kebab-case`);
+    if (seenModuleIds.has(m.id)) err(tag, `duplicate module id ${m.id}`);
+    seenModuleIds.add(m.id);
+    if (!m.title) err(tag, "module.title missing");
+    if (m.lang && !KNOWN_LANGS.has(m.lang)) err(tag, `module.lang ${JSON.stringify(m.lang)} must be one of ${[...KNOWN_LANGS].join(", ")}`);
+    if (!Array.isArray(m.lessons) || !m.lessons.length) { err(tag, "module.lessons missing"); continue; }
+
+    const seenLessons = new Set();
+    for (const l of m.lessons) {
+      lessonCount++;
+      const where = `lesson "${l.id}"`;
+      if (!l.id || seenLessons.has(l.id)) err(tag, `${where}: missing or duplicate lesson id`);
+      seenLessons.add(l.id);
+      if (!l.title) err(tag, `${where}: title missing`);
+      if (!Array.isArray(l.steps) || !l.steps.length) { err(tag, `${where}: steps missing`); continue; }
+      l.steps.forEach((s, i) => {
+        stepCount++;
+        if (s && s.type === "exercise") exerciseCount++;
+        if (s && s.type === "quiz") quizCount++;
+        checkStep(tag, where, s, i, m.lang);
+      });
+      const last = l.steps[l.steps.length - 1];
+      if (last && last.type === "text") err(tag, `${where}: ends with a text step — end on a quiz, exercise, or xcode step`);
+    }
   }
-  const mods = sandbox.window.COURSE;
-  if (mods.length !== 1) { err(file, `must push exactly 1 module (pushed ${mods.length})`); continue; }
-  const m = mods[0];
-  moduleCount++;
-  if (!m.id || !/^[a-z0-9-]+$/.test(m.id)) err(file, `module id ${JSON.stringify(m.id)} must be kebab-case`);
-  if (seenModuleIds.has(m.id)) err(file, `duplicate module id ${m.id}`);
-  seenModuleIds.add(m.id);
-  if (!m.title) err(file, "module.title missing");
-  if (m.lang && !KNOWN_LANGS.has(m.lang)) err(file, `module.lang ${JSON.stringify(m.lang)} must be one of ${[...KNOWN_LANGS].join(", ")}`);
-  if (!Array.isArray(m.lessons) || !m.lessons.length) { err(file, "module.lessons missing"); continue; }
 
-  const seenLessons = new Set();
-  for (const l of m.lessons) {
-    lessonCount++;
-    const where = `lesson "${l.id}"`;
-    if (!l.id || seenLessons.has(l.id)) err(file, `${where}: missing or duplicate lesson id`);
-    seenLessons.add(l.id);
-    if (!l.title) err(file, `${where}: title missing`);
-    if (!Array.isArray(l.steps) || !l.steps.length) { err(file, `${where}: steps missing`); continue; }
-    l.steps.forEach((s, i) => {
-      stepCount++;
-      if (s && s.type === "exercise") exerciseCount++;
-      if (s && s.type === "quiz") quizCount++;
-      checkStep(file, where, s, i, m.lang);
-    });
-    const last = l.steps[l.steps.length - 1];
-    if (last && last.type === "text") err(file, `${where}: ends with a text step — end on a quiz, exercise, or xcode step`);
+  console.log(`Checked ${files.length} files: ${moduleCount} modules, ${lessonCount} lessons, ${stepCount} steps (${exerciseCount} exercises, ${quizCount} quizzes).`);
+  const dirErrors = errors.length - startErrors;
+  if (dirErrors) {
+    console.error(`\n${dirErrors} error(s):`);
+    for (const e of errors.slice(startErrors)) console.error("  ✗ " + e);
+  } else {
+    console.log("✓ All lesson files valid.");
   }
+  return dirErrors === 0;
 }
 
-console.log(`Checked ${files.length} files: ${moduleCount} modules, ${lessonCount} lessons, ${stepCount} steps (${exerciseCount} exercises, ${quizCount} quizzes).`);
-if (errors.length) {
-  console.error(`\n${errors.length} error(s):`);
-  for (const e of errors) console.error("  ✗ " + e);
-  process.exit(1);
+const argDir = process.argv[2];
+if (argDir) {
+  validateDir(argDir);
+} else {
+  let allOk = true;
+  for (const dir of ALL_DIRS) {
+    console.log(`\n=== ${dir} ===`);
+    if (!validateDir(dir)) allOk = false;
+  }
+  if (!allOk) process.exit(1);
 }
-console.log("✓ All lesson files valid.");
+if (errors.length) process.exit(1);

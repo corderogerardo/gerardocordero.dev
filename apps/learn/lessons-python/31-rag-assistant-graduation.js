@@ -1,4 +1,4 @@
-// Module 31 — RAG in the Assistant + Graduation. See FORMAT.md for the schema.
+// Module 31 — RAG in the Assistant + Graduation. See ../lessons/FORMAT.md and ./FORMAT-PYTHON.md for the schema.
 window.COURSE = window.COURSE || [];
 window.COURSE.push({
   id: "rag-assistant-graduation",
