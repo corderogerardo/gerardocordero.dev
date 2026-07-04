@@ -22,6 +22,10 @@ gem "stripe"
 # [https://github.com/rack/rack-attack] — see config/initializers/rack_attack.rb
 gem "rack-attack"
 
+# Collapses each request's multi-line default Rails log into one structured line, easy for a
+# log aggregator to query [https://github.com/roidrage/lograge] — see config/initializers/lograge.rb
+gem "lograge"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
