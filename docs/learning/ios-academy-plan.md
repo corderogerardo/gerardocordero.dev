@@ -25,6 +25,7 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 14 | `14-offline-first.js` | Persistence & Offline-First | CoreData or SwiftData, sync strategies, offline UX |
 | 15 | `15-modularization.js` | Modularize with SPM | Local Swift packages, dependency graph, composition root |
 | 16 | `16-testing-strategy.js` | A Testing Strategy That Scales | Testing pyramid, Swift Testing, fakes, one UI smoke test |
+| 17 | `17-widgets-live-activities.js` | Widgets & Live Activities | WidgetKit timelines, App Groups, ActivityKit Live Activities |
 
 ## Reference App
 
@@ -38,7 +39,7 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 14 | Persistence & Offline-First ✅ | CoreData/SwiftData, change tracking, conflict resolution — landed |
 | 15 | Modularize with SPM ✅ | Local Swift packages, dependency graph, composition root — landed |
 | 16 | Testing Strategy That Scales ✅ | Testing pyramid, Swift Testing, fakes, one UI smoke test — landed |
-| 17 | Widgets & Live Activities | Lock screen widgets, dynamic islands, background update API |
+| 17 | Widgets & Live Activities ✅ | WidgetKit timelines, App Groups, ActivityKit Live Activities — landed |
 | 18 | Push & Background | UserNotifications, background fetch, silent push, VoIP |
 | 19 | Performance & Instruments | Flame graph profiling, memory, disk I/O, battery; Xcode tools |
 | 20 | Release Engineering & Graduation | TestFlight automation, version bumps, App Store review cycle |

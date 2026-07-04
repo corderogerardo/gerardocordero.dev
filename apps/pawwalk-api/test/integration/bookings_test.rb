@@ -28,6 +28,26 @@ class BookingsTest < ActionDispatch::IntegrationTest
     assert_equal [ bookings(:pending_cancel).id ], body["bookings"].map { |b| b["id"] }
   end
 
+  test "index respects per_page" do
+    # demo has 3 bookings in fixtures (upcoming, pending_cancel, walking_now)
+    get "/bookings", params: { per_page: 2 }, headers: auth_headers(users(:demo))
+
+    assert_response :success
+    body = JSON.parse(response.body)
+
+    assert_equal 2, body["bookings"].size
+    assert_equal 2, body["per_page"]
+  end
+
+  test "index clamps an oversized per_page to the max" do
+    get "/bookings", params: { per_page: 99_999 }, headers: auth_headers(users(:demo))
+
+    assert_response :success
+    body = JSON.parse(response.body)
+
+    assert_equal 100, body["per_page"]
+  end
+
   test "create computes price server-side from the walker's rate" do
     post "/bookings",
       params: {
