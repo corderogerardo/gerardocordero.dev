@@ -24,6 +24,7 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 13 | `13-coroutines-flow.js` | Coroutines & Flow in Anger | Scope, launch vs async, Flow patterns, cancellation — landed |
 | 14 | `14-room-offline.js` | Room & Offline-First | Room database, migrations, offline sync, query optimization |
 | 15 | `15-hilt-di.js` | Dependency Injection with Hilt | Hilt DI, HiltViewModel, scopes, test modules |
+| 16 | `16-feature-modules.js` | Modularize by Feature | Gradle multi-module, api vs implementation, convention plugins |
 
 ## Reference App
 
@@ -36,7 +37,7 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 13 | Coroutines & Flow in Anger ✅ | Scope, launch vs async, Flow patterns, structured concurrency — landed |
 | 14 | Room & Offline-First ✅ | Room database, migrations, offline sync, conflict resolution — landed |
 | 15 | Hilt DI ✅ | Hilt DI, HiltViewModel, scopes, test modules — landed |
-| 16 | Modularize by Feature | Feature modules, navigation contracts, resource namespacing |
+| 16 | Modularize by Feature ✅ | Gradle multi-module, api vs implementation, convention plugins — landed |
 | 17 | Foreground GPS Service | Background location, ServiceState, notification importance, privacy |
 | 18 | Testing Pyramid | Unit tests, integration tests, UI tests (Compose), mocking |
 | 19 | Performance (Baseline Profiles) | Startup profiling, baseline profiles, macrobenchmark, R8 optimization |

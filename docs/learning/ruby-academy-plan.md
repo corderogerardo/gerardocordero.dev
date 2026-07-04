@@ -27,6 +27,7 @@ The Ruby & Rails course teaches backend web development from zero by rebuilding 
 | 16 | `16-query-performance.js` | Query Performance | N+1 queries, `includes`/`strict_loading`, EXPLAIN & composite indexes, counter caches |
 | 17 | `17-caching.js` | Caching Layers | HTTP conditional GET (`fresh_when`/ETag), `Rails.cache` key-based expiry (Solid Cache), `touch: true`, thundering herd, cache-privacy bugs |
 | 18 | `18-hotwire-admin.js` | A Hotwire Admin Dashboard | Turbo Drive/Frames/Streams over Solid Cable, Stimulus controllers, adding an HTML admin surface alongside an `api_only` JSON app |
+| 19 | `19-money-ledger.js` | Money: Payouts & a Ledger | Integer cents vs `Float`/`BigDecimal`, idempotent payouts (unique idempotency key), a double-entry ledger (`ledger_entries`), reconciliation (balance = sum, never a cached counter) |
 
 ## Reference Backend
 
