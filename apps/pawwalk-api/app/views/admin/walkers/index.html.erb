@@ -1,0 +1,24 @@
+<h1>Walkers</h1>
+
+<table>
+  <thead>
+    <tr><th>Name</th><th>City</th><th>Rate</th><th>Rating</th><th>Bookings</th></tr>
+  </thead>
+  <tbody>
+    <% @walkers.each do |walker| %>
+      <tr>
+        <td><%= walker.name %></td>
+        <td><%= walker.city %></td>
+        <td><%= walker.price_label %></td>
+        <td><%= walker.rating %></td>
+        <td><%= walker.bookings_count %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h2>Live bookings</h2>
+<%= turbo_stream_from "admin_bookings" %>
+<ul id="bookings_feed">
+  <%= render partial: "admin/walkers/booking", collection: @recent_bookings %>
+</ul>
