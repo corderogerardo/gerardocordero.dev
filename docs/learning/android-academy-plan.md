@@ -27,6 +27,7 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 16 | `16-feature-modules.js` | Modularize by Feature | Gradle multi-module, api vs implementation, convention plugins |
 | 17 | `17-foreground-gps.js` | Foreground Location Service | Foreground service, FusedLocationProvider, permissions, Doze |
 | 18 | `18-testing-pyramid.js` | The Testing Pyramid | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots |
+| 19 | `19-performance.js` | Performance & Baseline Profiles | Recomposition, Baseline Profiles, Macrobenchmark, R8 |
 
 ## Reference App
 
@@ -42,5 +43,5 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 16 | Modularize by Feature ✅ | Gradle multi-module, api vs implementation, convention plugins — landed |
 | 17 | Foreground Location Service ✅ | Foreground service, FusedLocationProvider, permissions, Doze — landed |
 | 18 | The Testing Pyramid ✅ | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots — landed |
-| 19 | Performance (Baseline Profiles) | Startup profiling, baseline profiles, macrobenchmark, R8 optimization |
+| 19 | Performance & Baseline Profiles ✅ | Recomposition, Baseline Profiles, Macrobenchmark, R8 — landed |
 | 20 | Play Release & Graduation | Version bumping, Play Console submission, staged rollout mechanics |
