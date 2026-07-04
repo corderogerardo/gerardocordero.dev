@@ -26,6 +26,7 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 15 | `15-hilt-di.js` | Dependency Injection with Hilt | Hilt DI, HiltViewModel, scopes, test modules |
 | 16 | `16-feature-modules.js` | Modularize by Feature | Gradle multi-module, api vs implementation, convention plugins |
 | 17 | `17-foreground-gps.js` | Foreground Location Service | Foreground service, FusedLocationProvider, permissions, Doze |
+| 18 | `18-testing-pyramid.js` | The Testing Pyramid | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots |
 
 ## Reference App
 
@@ -40,6 +41,6 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 15 | Hilt DI ✅ | Hilt DI, HiltViewModel, scopes, test modules — landed |
 | 16 | Modularize by Feature ✅ | Gradle multi-module, api vs implementation, convention plugins — landed |
 | 17 | Foreground Location Service ✅ | Foreground service, FusedLocationProvider, permissions, Doze — landed |
-| 18 | Testing Pyramid | Unit tests, integration tests, UI tests (Compose), mocking |
+| 18 | The Testing Pyramid ✅ | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots — landed |
 | 19 | Performance (Baseline Profiles) | Startup profiling, baseline profiles, macrobenchmark, R8 optimization |
 | 20 | Play Release & Graduation | Version bumping, Play Console submission, staged rollout mechanics |
