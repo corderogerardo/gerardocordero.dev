@@ -28,6 +28,7 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 17 | `17-foreground-gps.js` | Foreground Location Service | Foreground service, FusedLocationProvider, permissions, Doze |
 | 18 | `18-testing-pyramid.js` | The Testing Pyramid | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots |
 | 19 | `19-performance.js` | Performance & Baseline Profiles | Recomposition, Baseline Profiles, Macrobenchmark, R8 |
+| 20 | `20-play-release-graduation.js` | Play Release & Graduation | App bundles, Play tracks, staged rollout, Android vitals, system-design interview |
 
 ## Reference App
 
@@ -44,4 +45,6 @@ The Android course teaches Kotlin & Jetpack Compose from zero by building the Pa
 | 17 | Foreground Location Service ✅ | Foreground service, FusedLocationProvider, permissions, Doze — landed |
 | 18 | The Testing Pyramid ✅ | JUnit, Turbine, Robolectric, Compose UI + Roborazzi screenshots — landed |
 | 19 | Performance & Baseline Profiles ✅ | Recomposition, Baseline Profiles, Macrobenchmark, R8 — landed |
-| 20 | Play Release & Graduation | Version bumping, Play Console submission, staged rollout mechanics |
+| 20 | Play Release & Graduation ✅ | App bundles, Play tracks, staged rollout, Android vitals, system-design interview — landed |
+
+**Android Senior Tier Complete** (modules 13–20 all shipped).

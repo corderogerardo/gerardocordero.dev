@@ -28,6 +28,7 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 17 | `17-widgets-live-activities.js` | Widgets & Live Activities | WidgetKit timelines, App Groups, ActivityKit Live Activities |
 | 18 | `18-push-background.js` | Push & Background Work | APNs, UserNotifications, notification service extension, BGTaskScheduler |
 | 19 | `19-performance.js` | Performance & Instruments | Time Profiler, hangs, retain cycles, MetricKit |
+| 20 | `20-release-graduation.js` | Shipping & Graduation | Signing, TestFlight, phased release, crash triage, system-design interview |
 
 ## Reference App
 
@@ -44,4 +45,6 @@ The iOS course teaches Swift & SwiftUI from zero by building the PawWalk dog-wal
 | 17 | Widgets & Live Activities ✅ | WidgetKit timelines, App Groups, ActivityKit Live Activities — landed |
 | 18 | Push & Background Work ✅ | APNs, UserNotifications, notification service extension, BGTaskScheduler — landed |
 | 19 | Performance & Instruments ✅ | Time Profiler, hangs, retain cycles, MetricKit — landed |
-| 20 | Release Engineering & Graduation | TestFlight automation, version bumps, App Store review cycle |
+| 20 | Shipping & Graduation ✅ | Signing, TestFlight, phased release, crash triage, system-design interview — landed |
+
+**iOS Senior Tier Complete** (modules 13–20 all shipped).
