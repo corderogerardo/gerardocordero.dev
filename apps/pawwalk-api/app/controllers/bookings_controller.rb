@@ -1,5 +1,6 @@
 class BookingsController < ApplicationController
-  PAGE_SIZE = 20
+  DEFAULT_PAGE_SIZE = 20
+  MAX_PAGE_SIZE = 100
 
   def index
     # includes(:walker, :dog) avoids an N+1 query when rendering booking_payload for each row.
@@ -7,9 +8,10 @@ class BookingsController < ApplicationController
     bookings = bookings.where(status: params[:status]) if params[:status].present?
 
     page = params[:page].to_i.clamp(1, Float::INFINITY).to_i
-    bookings = bookings.limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE)
+    per_page = params[:per_page].present? ? [ [ params[:per_page].to_i, 1 ].max, MAX_PAGE_SIZE ].min : DEFAULT_PAGE_SIZE
+    bookings = bookings.limit(per_page).offset((page - 1) * per_page)
 
-    render json: { bookings: bookings.map { |booking| booking_payload(booking) } }
+    render json: { bookings: bookings.map { |booking| booking_payload(booking) }, page: page, per_page: per_page }
   end
 
   def show

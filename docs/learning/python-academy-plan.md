@@ -60,7 +60,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 | 33 | Task Queues & Events ✅ | `33-task-queues.js` — BackgroundTasks vs a real queue, arq workers & retries, idempotency keys, the outbox pattern |
 | 34 | Caching & Rate Limiting ✅ | `34-caching-rate-limiting.js` — Redis cache-aside, invalidation & key namespacing, fixed-window rate limiting, FastAPI `Depends` limiter |
 | 35 | Postgres at Scale ✅ | `35-postgres-at-scale.js` — EXPLAIN/EXPLAIN ANALYZE, composite & partial indexes, ORM N+1 via selectinload, zero-downtime Alembic migrations |
-| 36 | Observability | Structured logging, OpenTelemetry traces, Sentry; instrument apps/backend |
+| 36 | Observability ✅ | `36-observability.js` — structured logging (structlog) + request ids via contextvars, FastAPI request-id middleware, OpenTelemetry auto-instrumentation + manual spans, Sentry init, liveness vs readiness health endpoints |
 | 37 | LLM Production Hardening | Evals harness, streaming, guardrails, cost/latency budgets |
 | 38 | Ship It & Graduation | Docker multi-stage with uv, CI, Locust load test, case studies |
 
@@ -72,6 +72,7 @@ Django internals — each landing alongside the real `apps/backend` code it teac
 - Module 33 (Task Queues & Events): **complete** — arq workers, idempotency, outbox pattern.
 - Module 34 (Caching & Rate Limiting): **complete** — Redis cache-aside, invalidation, fixed-window limiter wired into FastAPI via `Depends`.
 - Module 35 (Postgres at Scale): **complete** — reading EXPLAIN/EXPLAIN ANALYZE, composite/partial indexes, fixing the ORM N+1 with selectinload, zero-downtime Alembic migrations.
-- `apps/backend` reference app + senior tier 36–38: **planned** — see the Round 2+ cadence
+- Module 36 (Observability): **complete** — structured logs vs print, request-scoped logging via structlog contextvars, OpenTelemetry auto-instrumentation and manual spans, Sentry init, liveness/readiness health endpoints and alerting on symptoms.
+- `apps/backend` reference app + senior tier 37–38: **planned** — see the Round 2+ cadence
   in the academy roadmap (one module per track per round, rotating across iOS, Android,
   Python, Ruby).
