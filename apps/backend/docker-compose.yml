@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PAWWALK_JWT_SECRET: ${PAWWALK_JWT_SECRET:?set PAWWALK_JWT_SECRET in .env}
+      PAWWALK_DATABASE_URL: postgresql://pawwalk:pawwalk@db:5432/pawwalk
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pawwalk
+      POSTGRES_PASSWORD: pawwalk
+      POSTGRES_DB: pawwalk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pawwalk-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pawwalk"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pawwalk-db:
