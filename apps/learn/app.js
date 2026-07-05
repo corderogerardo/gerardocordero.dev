@@ -118,6 +118,9 @@
   const RUBY_KW = new Set(("def end if elsif else unless case when then while until for in do return yield break next redo retry " +
     "begin rescue ensure raise class module self super nil true false and or not alias defined? require require_relative " +
     "include extend prepend private public protected attr_accessor attr_reader attr_writer new lambda proc loop puts p print gets").split(" "));
+  const GO_KW = new Set(("package import func var const type struct interface map chan go defer select return if else for range switch " +
+    "case default break continue fallthrough goto nil true false iota make new len cap append copy delete panic recover " +
+    "string int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 uintptr byte rune float32 float64 complex64 complex128 bool error").split(" "));
   // Each language: keyword set + token regex with groups (comment)(string)(attr)(number)(word).
   // Swift and Kotlin share C-style comments/strings/annotations, so they share a token regex.
   const C_STYLE_RE = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\.)*")|(@\w+|#\w+)|\b(\d[\d_]*(?:\.\d[\d_]*)?)\b|\b([A-Za-z_]\w*)\b/g;
@@ -131,6 +134,10 @@
     ruby: {
       kw: RUBY_KW,
       re: /(#(?!\{)[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(@@?\w+|\$\w+|:\w+[?!]?)|\b(\d[\d_]*(?:\.\d[\d_]*)?)\b|([A-Za-z_]\w*[?!]?)/g,
+    },
+    go: {
+      kw: GO_KW,
+      re: /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\.)*"|`[^`]*`|'(?:[^'\\]|\\.)*')|(@\w+)|\b(\d[\d_]*(?:\.\d[\d_]*)?)\b|\b([A-Za-z_]\w*)\b/g,
     },
   };
   function highlight(src, lang) {

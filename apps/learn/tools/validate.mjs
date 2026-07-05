@@ -13,7 +13,7 @@ import vm from "node:vm";
 const isRegExp = (v) => types.isRegExp(v); // instanceof fails across the vm realm
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python"];
+const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go"];
 
 const errors = [];
 const err = (file, msg) => errors.push(`${file}: ${msg}`);
@@ -29,7 +29,7 @@ function normalize(code, lang) {
     .trim();
 }
 
-const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby"]);
+const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby", "go"]);
 
 const isBlocks = (v) => Array.isArray(v) && v.length > 0 && v.every((b) => typeof b === "string" && b.trim());
 
