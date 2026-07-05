@@ -30,6 +30,8 @@ window.COURSE.push({
           title: "internal/walker/walker.go (a taste)",
           source: String.raw`package walker
 
+import "fmt"
+
 type Walker struct {
 	ID                string
 	Name              string
