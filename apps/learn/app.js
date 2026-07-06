@@ -919,7 +919,7 @@
   };
 
   // ---------- Export / import progress ----------
-  const sideFoot = document.querySelector(".side-foot");
+  let sideFoot = document.querySelector(".side-foot");
   const resetBtn = document.getElementById("reset-progress");
   const exportBtn = el("button", "ghost", "Export progress");
   exportBtn.onclick = () => {
@@ -965,7 +965,7 @@
   });
 
   // ---------- Export / import progress ----------
-  const sideFoot = document.querySelector(".side-foot");
+  sideFoot = document.querySelector(".side-foot");
   const resetBtn = document.getElementById("reset-progress");
   const exportBtn = el("button", "ghost", "Export progress");
   exportBtn.onclick = () => {
