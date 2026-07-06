@@ -501,12 +501,12 @@
     editor.addEventListener("input", () => { state.code[key] = editor.value; save(); });
     card.appendChild(editor);
 
-    const actions = el("div", "ex-actions");
-    const feedback = el("div");
-    const solutionSlot = el("div", "solution-reveal");
-    const checkBtn = el("button", "btn", "Check my code");
-    const resetBtn = el("button", "btn secondary", "Reset");
-    const revealBtn = el("button", "linkish", "I'm stuck — show the solution");
+    let actions = el("div", "ex-actions");
+    let feedback = el("div");
+    let solutionSlot = el("div", "solution-reveal");
+    let checkBtn = el("button", "btn", "Check my code");
+    let resetBtn = el("button", "btn secondary", "Reset");
+    let revealBtn = el("button", "linkish", "I'm stuck — show the solution");
     revealBtn.style.display = "none";
     let fails = 0;
 
@@ -919,9 +919,9 @@
   };
 
   // ---------- Export / import progress ----------
-  let sideFoot = document.querySelector(".side-foot");
-  const resetBtn = document.getElementById("reset-progress");
-  const exportBtn = el("button", "ghost", "Export progress");
+  sideFoot = document.querySelector(".side-foot");
+  resetBtn = document.getElementById("reset-progress");
+  exportBtn = el("button", "ghost", "Export progress");
   exportBtn.onclick = () => {
     const raw = localStorage.getItem(STORE_KEY) || "{}";
     const a = el("a");
@@ -966,8 +966,8 @@
 
   // ---------- Export / import progress ----------
   sideFoot = document.querySelector(".side-foot");
-  const resetBtn = document.getElementById("reset-progress");
-  const exportBtn = el("button", "ghost", "Export progress");
+  resetBtn = document.getElementById("reset-progress");
+  exportBtn = el("button", "ghost", "Export progress");
   exportBtn.onclick = () => {
     const raw = localStorage.getItem(STORE_KEY) || "{}";
     const a = el("a");
