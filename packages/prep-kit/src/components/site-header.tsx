@@ -13,20 +13,21 @@ function isActive(pathname: string, href: string) {
 
 export function SiteHeader() {
   const { brand, nav } = usePrepConfig();
-  const { t, locale } = useI18n();
+  const { t, locale, localizedRoutes } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const otherLocale = locale === "en" ? "es" : "en";
   const otherLabel = locale === "en" ? "ES" : "EN";
   const otherPath = pathname.replace(/^\/[^/]+/, `/${otherLocale}`);
-  const localeHref = (href: string) => (href === "/" ? `/${locale}` : `/${locale}${href}`);
+  const localeHref = (href: string) =>
+    localizedRoutes ? (href === "/" ? `/${locale}` : `/${locale}${href}`) : href;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-bg/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-content items-center gap-3 px-4 py-3 sm:px-6">
         <Link
-          href={`/${locale}`}
+          href={localizedRoutes ? `/${locale}` : "/"}
           className="flex items-center gap-2 font-bold tracking-tight text-white"
           onClick={() => setOpen(false)}
         >
@@ -55,13 +56,15 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <Link
-            href={otherPath}
-            className="ml-2 rounded-full border border-accent/40 bg-accent/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-bg"
-            title={locale === "en" ? "Español" : "English"}
-          >
-            {otherLabel}
-          </Link>
+          {localizedRoutes && (
+            <Link
+              href={otherPath}
+              className="ml-2 rounded-full border border-accent/40 bg-accent/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-bg"
+              title={locale === "en" ? "Español" : "English"}
+            >
+              {otherLabel}
+            </Link>
+          )}
         </nav>
 
         <button
@@ -94,13 +97,15 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <Link
-            href={otherPath}
-            onClick={() => setOpen(false)}
-            className="mt-2 block rounded-lg border border-accent/40 bg-accent/12 px-3 py-2 text-center text-sm font-bold tracking-wide text-accent"
-          >
-            {locale === "en" ? "🌐 Español" : "🌐 English"}
-          </Link>
+          {localizedRoutes && (
+            <Link
+              href={otherPath}
+              onClick={() => setOpen(false)}
+              className="mt-2 block rounded-lg border border-accent/40 bg-accent/12 px-3 py-2 text-center text-sm font-bold tracking-wide text-accent"
+            >
+              {locale === "en" ? "🌐 Español" : "🌐 English"}
+            </Link>
+          )}
         </nav>
       )}
     </header>

@@ -34,23 +34,33 @@ class I18n {
   }
 }
 
-const I18nContext = createContext<I18n | null>(null);
+const I18nContext = createContext<{ i18n: I18n; localizedRoutes: boolean } | null>(null);
 
 export function I18nProvider({
   locale,
+  localizedRoutes = true,
   children,
 }: {
   locale: Locale;
+  /** False for single-locale apps without `/[locale]/` routes: nav links stay unprefixed and the language toggle is hidden. */
+  localizedRoutes?: boolean;
   children: React.ReactNode;
 }) {
-  const i18n = useMemo(() => new I18n(locale), [locale]);
-  return <I18nContext.Provider value={i18n}>{children}</I18nContext.Provider>;
+  const value = useMemo(
+    () => ({ i18n: new I18n(locale), localizedRoutes }),
+    [locale, localizedRoutes],
+  );
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
-export function useI18n(): { t: I18n["t"]; locale: Locale } {
-  const i18n = useContext(I18nContext);
-  if (!i18n) {
+export function useI18n(): { t: I18n["t"]; locale: Locale; localizedRoutes: boolean } {
+  const ctx = useContext(I18nContext);
+  if (!ctx) {
     throw new Error("useI18n must be used within an <I18nProvider>");
   }
-  return { t: i18n.t.bind(i18n), locale: i18n.locale };
+  return {
+    t: ctx.i18n.t.bind(ctx.i18n),
+    locale: ctx.i18n.locale,
+    localizedRoutes: ctx.localizedRoutes,
+  };
 }

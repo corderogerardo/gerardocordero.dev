@@ -44,7 +44,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         {/* ponytail: English-only provider; migrate to [locale] routing when this app goes bilingual */}
-        <I18nProvider locale="en">
+        <I18nProvider locale="en" localizedRoutes={false}>
           <PrepProvider config={prepConfig}>
             <SiteHeader />
             <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
