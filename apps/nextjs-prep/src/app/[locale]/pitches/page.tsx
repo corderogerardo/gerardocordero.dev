@@ -10,11 +10,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Practice Pitches",
-  description:
-    'Spoken answers — intros, "why Next.js", a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Pitches de Práctica", description: "Respuestas habladas e historias STAR con un teleprompter para ensayar en cámara." }
+    : { title: "Practice Pitches", description: 'Spoken answers — intros, "why Next.js", a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera.' };
+}
 
 export default async function PitchesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

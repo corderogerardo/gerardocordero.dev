@@ -21,6 +21,8 @@ export function SiteHeader() {
   const otherLabel = locale === "en" ? "ES" : "EN";
   const otherPath = pathname.replace(/^\/[^/]+/, `/${otherLocale}`);
   const localeHref = (href: string) => (href === "/" ? `/${locale}` : `/${locale}${href}`);
+  const navLabel = (item: { label: string; labelEs?: string }) =>
+    locale === "es" ? item.labelEs ?? item.label : item.label;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-bg/80 backdrop-blur">
@@ -51,7 +53,7 @@ export function SiteHeader() {
                     : "text-muted hover:bg-surface hover:text-text"
                 }`}
               >
-                {item.label}
+                {navLabel(item)}
               </Link>
             );
           })}
@@ -90,7 +92,7 @@ export function SiteHeader() {
                   active ? "bg-accent/15 text-accent" : "text-muted hover:text-text"
                 }`}
               >
-                {item.label}
+                {navLabel(item)}
               </Link>
             );
           })}

@@ -11,11 +11,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Study Guide",
-  description:
-    "The whole iOS stack explained from scratch — Swift, SwiftUI, UIKit, concurrency, data, performance, testing, CI/CD, the App Store, security, and on-device AI — with a level note on each topic.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
+    : { title: "Study Guide", description: "The whole iOS stack explained from scratch — Swift, SwiftUI, UIKit, concurrency, data, performance, testing, CI/CD, the App Store, security, and on-device AI — with a level note on each topic." };
+}
 
 export default async function StudyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -23,9 +24,11 @@ export default async function StudyPage({ params }: { params: Promise<{ locale: 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Learn the whole stack"
-        title="Study Guide"
-        lead="Every core iOS topic, explained from first principles and framed the way interviews ask. Read the concept, then the level note so you know whether it is table-stakes or differentiating."
+        eyebrow={locale === "es" ? "Aprende todo el stack" : "Learn the whole stack"}
+        title={locale === "es" ? "Guía de Estudio" : "Study Guide"}
+        lead={locale === "es"
+          ? "Cada tema central de iOS, explicado desde los primeros principios y planteado como lo pide una entrevista. Lee el concepto, luego la nota de nivel para saber si es lo mínimo indispensable o algo que te diferencia."
+          : "Every core iOS topic, explained from first principles and framed the way interviews ask. Read the concept, then the level note so you know whether it is table-stakes or differentiating."}
       />
 
       <RichText html={box("callout warn", getStudyIntroHtml(locale as Locale))} />

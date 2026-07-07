@@ -9,11 +9,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Practice",
-  description:
-    "Active problem-solving: interview-style Next.js / React coding prompts and frontend system-design prompts, with progressive hints and a self-graded reveal.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Práctica", description: "Prompts de código y diseño de sistemas estilo entrevista, con pistas progresivas y revelado autoevaluado." }
+    : { title: "Practice", description: "Active problem-solving: interview-style Next.js / React coding prompts and frontend system-design prompts, with progressive hints and a self-graded reveal." };
+}
 
 export default async function PracticePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

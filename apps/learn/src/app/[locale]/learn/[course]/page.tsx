@@ -19,7 +19,7 @@ export default async function CourseOverviewPage({
 }) {
   const { locale, course: courseId } = await params;
   const course = getCourseData(courseId, locale);
-  if (!course) return <p>Course not found</p>;
+  if (!course) return <p>{locale === "es" ? "Curso no encontrado" : "Course not found"}</p>;
 
   const t = (key: string, params?: Record<string, string | number>) => {
     const bundles: Record<string, Record<string, string>> = {

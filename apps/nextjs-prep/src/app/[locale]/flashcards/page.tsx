@@ -9,11 +9,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Flashcards",
-  description:
-    "Interview Q&A flashcards across the App Router, rendering & caching, data fetching, routing, performance, auth, testing, and security. Reveal, self-grade, and drill what you don't know yet.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    : { title: "Flashcards", description: "Interview Q&A flashcards across the App Router, rendering & caching, data fetching, routing, performance, auth, testing, and security. Reveal, self-grade, and drill what you don't know yet." };
+}
 
 export default async function FlashcardsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

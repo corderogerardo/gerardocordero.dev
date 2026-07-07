@@ -11,11 +11,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Study Guide",
-  description:
-    "Every requirement a senior NestJS / Node.js role asks for, explained at senior depth — with a 'how to say it' line so you can answer with confidence.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
+    : { title: "Study Guide", description: "Every requirement a senior NestJS / Node.js role asks for, explained at senior depth — with a 'how to say it' line so you can answer with confidence." };
+}
 
 export default async function StudyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -23,9 +24,11 @@ export default async function StudyPage({ params }: { params: Promise<{ locale: 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Master the job description"
-        title="Study Guide"
-        lead="Every requirement a senior NestJS / Node.js role commonly asks for — explained at senior depth. Read the concept, then the “how to say it” line so you can deliver a crisp, correct answer out loud."
+        eyebrow={locale === "es" ? "Domina la descripción del puesto" : "Master the job description"}
+        title={locale === "es" ? "Guía de Estudio" : "Study Guide"}
+        lead={locale === "es"
+          ? "Cada requisito que un rol senior de NestJS / Node.js comúnmente pide — explicado a profundidad senior. Lee el concepto, luego la línea de “cómo decirlo” para que puedas dar una respuesta precisa y concisa en voz alta."
+          : "Every requirement a senior NestJS / Node.js role commonly asks for — explained at senior depth. Read the concept, then the “how to say it” line so you can deliver a crisp, correct answer out loud."}
       />
 
       <RichText html={box("callout warn", getStudyIntroHtml(locale as Locale))} />

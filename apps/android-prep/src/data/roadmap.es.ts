@@ -86,7 +86,7 @@ export const ROADMAP: RoadmapStage[] = [
       "Presupuestos de costo/rendimiento, SLOs, y evaluación de tecnología emergente (AI en el dispositivo).",
     ],
     drillHtml:
-      'Filtra flashcards a <b>Architect</b> y la categoría <b>Arquitectura</b>. Trabaja la <a href="/architecture">guía de Arquitectura + Inmersiones profundas</a> y los temas de estudio <a href="/study#st-8">08</a>, <a href="/study#st-12">12</a>, <a href="/study#st-18">18</a>.',
+      'Filtra flashcards a <b>Arquitecto</b> y la categoría <b>Arquitectura</b>. Trabaja la <a href="/architecture">guía de Arquitectura + Inmersiones profundas</a> y los temas de estudio <a href="/study#st-8">08</a>, <a href="/study#st-12">12</a>, <a href="/study#st-18">18</a>.',
   },
   {
     level: "beyond",

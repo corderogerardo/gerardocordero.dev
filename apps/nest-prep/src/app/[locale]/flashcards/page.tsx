@@ -7,11 +7,12 @@ export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "es" }];
 }
 
-export const metadata: Metadata = {
-  title: "Flashcards",
-  description:
-    "Interview Q&A flashcards across NestJS core, DI, the request lifecycle, data, auth, microservices, GraphQL, Node.js internals, performance, and testing. Reveal, self-grade, and drill what you don't know yet.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    : { title: "Flashcards", description: "Interview Q&A flashcards across NestJS core, DI, the request lifecycle, data, auth, microservices, GraphQL, Node.js internals, performance, and testing. Reveal, self-grade, and drill what you don't know yet." };
+}
 
 export default async function FlashcardsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -20,9 +21,11 @@ export default async function FlashcardsPage({ params }: { params: Promise<{ loc
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Drill the Q&A"
-        title="Interview Q&A — Flashcards"
-        lead="Tap a card to reveal the answer, then grade yourself. Your grades are saved in this browser, so you can come back and drill only the ones you still need. Sourced from the official NestJS docs, the Node.js API docs, and widely-cited best-practice guides."
+        eyebrow={locale === "es" ? "Practica las preguntas" : "Drill the Q&A"}
+        title={locale === "es" ? "Preguntas de entrevista — Tarjetas" : "Interview Q&A — Flashcards"}
+        lead={locale === "es"
+          ? "Toca una tarjeta para revelar la respuesta, luego evalúate. Tus calificaciones se guardan en este navegador, para que puedas volver y practicar solo las que aún necesitas. Basado en la documentación oficial de NestJS, la documentación de la API de Node.js y guías de mejores prácticas ampliamente citadas."
+          : "Tap a card to reveal the answer, then grade yourself. Your grades are saved in this browser, so you can come back and drill only the ones you still need. Sourced from the official NestJS docs, the Node.js API docs, and widely-cited best-practice guides."}
       />
       <FlashcardDeck cards={cards} filters={filters} />
     </div>

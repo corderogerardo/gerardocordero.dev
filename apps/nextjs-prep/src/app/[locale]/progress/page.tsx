@@ -11,11 +11,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Progress Tracker",
-  description:
-    "A checklist across every part of this guide — pitches, study topics, flashcard categories, and senior readiness signals. Tick items as you feel solid — progress saved in your browser.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Seguimiento de Progreso", description: "Marca hitos de preparación hasta que todo esté en verde — el progreso se guarda en tu navegador." }
+    : { title: "Progress Tracker", description: "A checklist across every part of this guide — pitches, study topics, flashcard categories, and senior readiness signals. Tick items as you feel solid — progress saved in your browser." };
+}
 
 export default async function ProgressPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "@gerardocordero/prep-kit";
+import { PageHeader, Quiz } from "@gerardocordero/prep-kit";
 import { getQuiz, getQuizFilters } from "@/lib/locale-data";
-import { PageHeader } from "@gerardocordero/prep-kit";
-import { Quiz } from "@gerardocordero/prep-kit";
-import { QUIZ, QUIZ_FILTERS } from "@/data/quiz";
-import { ADVANCED_QUIZ, ADVANCED_QUIZ_FILTERS } from "@/data/advanced";
-import { ADVANCED2_QUIZ, ADVANCED2_QUIZ_FILTERS } from "@/data/advanced2";
-import { ADVANCED3_QUIZ, ADVANCED3_QUIZ_FILTERS } from "@/data/advanced3";
-import { ADVANCED4_QUIZ, ADVANCED4_QUIZ_FILTERS } from "@/data/advanced4";
-import { ADVANCED5_QUIZ, ADVANCED5_QUIZ_FILTERS } from "@/data/advanced5";
 
 
 export function generateStaticParams() {
@@ -16,36 +9,25 @@ export function generateStaticParams() {
 }
 
 
-const questions = [
-  ...QUIZ,
-  ...ADVANCED_QUIZ,
-  ...ADVANCED2_QUIZ,
-  ...ADVANCED3_QUIZ,
-  ...ADVANCED4_QUIZ,
-  ...ADVANCED5_QUIZ,
-];
-const filters = [
-  ...QUIZ_FILTERS,
-  ...ADVANCED_QUIZ_FILTERS,
-  ...ADVANCED2_QUIZ_FILTERS,
-  ...ADVANCED3_QUIZ_FILTERS,
-  ...ADVANCED4_QUIZ_FILTERS,
-  ...ADVANCED5_QUIZ_FILTERS,
-];
-
-export const metadata: Metadata = {
-  title: "Quiz",
-  description:
-    "A multiple-choice quiz with instant, explained feedback. Your answers are saved in this browser so you can finish later.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Quiz", description: "Un quiz de opción múltiple con retroalimentación instantánea y explicada. Tus respuestas se guardan en este navegador." }
+    : { title: "Quiz", description: "A multiple-choice quiz with instant, explained feedback. Your answers are saved in this browser so you can finish later." };
+}
 
 export default async function QuizPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const questions = getQuiz(locale as Locale);
+  const filters = getQuizFilters(locale as Locale);
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Test yourself"
-        title="Quiz — Multiple Choice"
-        lead="Pick an answer; it instantly marks it right or wrong and explains why. Your answers are saved in this browser, so you can come back and finish."
+        eyebrow={locale === "es" ? "Pon a prueba tus conocimientos" : "Test yourself"}
+        title={locale === "es" ? "Quiz — Opción Múltiple" : "Quiz — Multiple Choice"}
+        lead={locale === "es"
+          ? "Elige una respuesta; marca instantáneamente si es correcta o incorrecta y explica por qué. Tus respuestas se guardan en este navegador para que puedas volver y terminar."
+          : "Pick an answer; it instantly marks it right or wrong and explains why. Your answers are saved in this browser, so you can come back and finish."}
       />
       <Quiz questions={questions} filters={filters} />
     </div>

@@ -7,11 +7,12 @@ export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "es" }];
 }
 
-export const metadata: Metadata = {
-  title: "Architecture",
-  description:
-    "How iOS apps are designed at scale — patterns, modularization, data flow, concurrency, and release — plus concept/example/problem/solution deep-dives.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Arquitectura", description: "Inmersiones de diseño de sistemas — conceptos, ejemplos, problemas y soluciones explicados a profundidad senior." }
+    : { title: "Architecture", description: "How iOS apps are designed at scale — patterns, modularization, data flow, concurrency, and release — plus concept/example/problem/solution deep-dives." };
+}
 
 export default async function ArchitecturePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -19,8 +20,8 @@ export default async function ArchitecturePage({ params }: { params: Promise<{ l
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="System design"
-        title="iOS Architecture Guide"
+        eyebrow={locale === "es" ? "Diseño de sistemas" : "System design"}
+        title={locale === "es" ? "Guía de Arquitectura de iOS" : "iOS Architecture Guide"}
         lead={intro}
       />
 
@@ -35,7 +36,7 @@ export default async function ArchitecturePage({ params }: { params: Promise<{ l
 
       <section className="space-y-4 pt-4">
         <div className="space-y-1.5">
-          <h2 className="text-2xl font-extrabold">Deep dives</h2>
+          <h2 className="text-2xl font-extrabold">{locale === "es" ? "Inmersiones" : "Deep dives"}</h2>
           {deepDivesIntro && <p className="text-muted">{deepDivesIntro}</p>}
         </div>
         {deepDives.map((d) => (

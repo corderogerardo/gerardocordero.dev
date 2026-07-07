@@ -25,14 +25,15 @@ export function AiTutor({
   placeholder?: string;
 }) {
   const { ai } = usePrepConfig();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [status, setStatus] = useState<AiAvailability | "checking">("checking");
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [answer, setAnswer] = useState("");
   const [progress, setProgress] = useState(0);
   const sessionRef = useRef<unknown>(null);
-  const ph = placeholder ?? ai.placeholder;
+  const ph =
+    placeholder ?? (locale === "es" ? ai.placeholderEs ?? ai.placeholder : ai.placeholder);
 
   useEffect(() => {
     let live = true;
