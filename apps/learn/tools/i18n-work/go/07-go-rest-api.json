@@ -1,0 +1,310 @@
+{
+ "course": "go",
+ "module": 7,
+ "units": [
+  {
+   "path": "modules[7].title",
+   "text": "Construyendo una API REST"
+  },
+  {
+   "path": "modules[7].lessons[0].title",
+   "text": "Códigos de estado y respuestas"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[0].md[0]",
+   "text": "## Qué significa REST en realidad"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[0].md[1]",
+   "text": "Hasta ahora tus handlers solo escribían texto de vuelta. Una **API REST** es una disciplina para darle forma a esos handlers: expones **recursos** (paseadores, reservas) y actúas sobre ellos con **verbos** HTTP."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[0].md[2]",
+   "text": "- `GET /walkers` — leer la lista de paseadores\n- `POST /bookings` — crear una reserva\n- `GET /bookings/42` — leer la reserva 42\n- `DELETE /bookings/42` — cancelarla"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[0].md[3]",
+   "text": "El verbo dice *qué hacer*; el path nombra *la cosa*. La app de iOS de PawWalk que construiste hablaba exactamente este idioma — cada pantalla era un `GET` o un `POST` a un path como estos."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[1].md[0]",
+   "text": "## La otra mitad de una respuesta: el código de estado"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[1].md[1]",
+   "text": "Toda respuesta HTTP lleva un **código de estado** — un número de tres dígitos que le dice al cliente *cómo salió* antes incluso de mirar el body. La app decidía si mostrar tus reservas o una pantalla de error según este número."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[1].md[2]",
+   "text": "- **2xx — éxito.** `200 OK`, `201 Created`.\n- **4xx — culpa del cliente.** `400 Bad Request`, `404 Not Found`.\n- **5xx — culpa del servidor.** `500 Internal Server Error`."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[1].md[3]",
+   "text": "Go nombra estos como constantes en `net/http` para que nunca memorices los dígitos: `http.StatusOK` es `200`, `http.StatusCreated` es `201`, `http.StatusBadRequest` es `400`, `http.StatusNotFound` es `404`."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[2].title",
+   "text": "internal/booking/handler.go"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[2].caption",
+   "text": "`w.WriteHeader(code)` envía la línea de estado. Llámalo ANTES de escribir cualquier body — una vez que los bytes empiezan a fluir, el estado queda fijo. Si nunca lo llamas, Go envía 200 por ti."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].q",
+   "text": "La creación de una reserva de un paseador tiene éxito y guardaste una reserva completamente nueva. ¿Qué código de estado debería enviar el handler?"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].choices[0]",
+   "text": "http.StatusCreated (201)"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].choices[1]",
+   "text": "http.StatusOK (200)"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].choices[2]",
+   "text": "http.StatusNotFound (404)"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].choices[3]",
+   "text": "http.StatusBadRequest (400)"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].explain",
+   "text": "`201 Created` es la señal precisa de que un POST creó un recurso nuevo. `200 OK` está bien para una simple lectura, pero `201` le dice al cliente 'ahora existe algo nuevo' — a menudo junto con su URL en un header `Location`."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[3].nudge",
+   "text": "La petición no solo tuvo éxito — hizo que un recurso nuevo pasara a existir. Hay un código de estado exacto para eso."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[4].md[0]",
+   "text": "## Un helper de error JSON"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[4].md[1]",
+   "text": "Las APIs reales responden en JSON, no en texto plano — así que tanto los bodies de éxito como los de error son legibles por máquina. Escribir las mismas tres líneas (configurar header, escribir estado, codificar) en cada handler se vuelve tedioso rápido, así que los equipos escriben un helper y lo llaman en todas partes:"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[4].md[2]",
+   "text": "```go\nfunc writeJSON(w http.ResponseWriter, status int, v any) {\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(status)\n\tjson.NewEncoder(w).Encode(v)\n}\n```"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[4].md[3]",
+   "text": "Fíjate en el orden: configurar el header `Content-Type`, luego `WriteHeader(status)`, luego codificar el body. Los headers deben configurarse antes que el estado; el estado, antes que el body. `any` es el alias de Go para `interface{}` — 'un valor de cualquier tipo,' lo que permite que un solo helper serialice un paseador, una reserva o un mapa de error."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[5].title",
+   "text": "Escribe el helper writeJSON"
+  },
+  {
+   "path": "modules[7].lessons[0].steps[5].prompt[0]",
+   "text": "Completa `writeJSON`. Configura el header `Content-Type` a `application/json`, llama a `w.WriteHeader(status)`, luego codifica `v` con `json.NewEncoder(w).Encode(v)`."
+  },
+  {
+   "path": "modules[7].lessons[0].steps[5].success",
+   "text": "Ese es el helper en el que se va a apoyar cada handler de la API de PawWalk — una línea para responder en JSON con el estado correcto."
+  },
+  {
+   "path": "modules[7].lessons[1].title",
+   "text": "Middleware"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[0].md[0]",
+   "text": "## Código que envuelve cada petición"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[0].md[1]",
+   "text": "Algo de trabajo le pertenece a *todos* los endpoints: registrar cada petición, verificar un token de login, medir cuánto tardó un handler. No quieres copiar eso en los veinte handlers. El **middleware** es la respuesta — una función que envuelve un handler, hace su trabajo y pasa el control."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[0].md[2]",
+   "text": "En Go, un handler es cualquier cosa que satisface la interface `http.Handler` (tiene un método `ServeHTTP(w, r)`). Un middleware es una función que **recibe un handler y retorna un handler nuevo**:"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[0].md[3]",
+   "text": "```go\nfunc(next http.Handler) http.Handler\n```"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[0].md[4]",
+   "text": "El handler `next` es el trabajo real; el handler retornado es tu envoltorio alrededor de él."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[1].md[0]",
+   "text": "## La forma, pieza por pieza"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[1].md[1]",
+   "text": "El envoltorio que retornas se construye con `http.HandlerFunc` — un adaptador que convierte un simple `func(w, r)` en un `http.Handler`:"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[1].md[2]",
+   "text": "- `func logging(next http.Handler) http.Handler {` — recibe el siguiente handler, promete retornar uno.\n- `return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ... })` — envuelve un closure para que cuente como un handler.\n- Dentro del closure, haz tu trabajo, luego **llama a `next.ServeHTTP(w, r)`** para ejecutar el handler envuelto."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[1].md[3]",
+   "text": "> Si olvidas `next.ServeHTTP(w, r)`, la cadena queda en un callejón sin salida: tu middleware se ejecuta pero el handler real nunca lo hace. Esa línea faltante es el bug clásico de middleware."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[2].title",
+   "text": "internal/server/middleware.go"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[2].caption",
+   "text": "El closure captura `next`. El trabajo antes de la llamada a `ServeHTTP` corre al entrar; el trabajo después corre al salir — aquí, midiendo el tiempo de todo el handler."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[3].md[0]",
+   "text": "## Encadenando varios"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[3].md[1]",
+   "text": "Como el middleware recibe un handler y retorna un handler, los anidas como muñecas rusas. Cada uno envuelve al siguiente, y el más interno es tu handler real:"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[3].md[2]",
+   "text": "```go\nmux := http.NewServeMux()\nmux.HandleFunc(\"/walkers\", listWalkers)\nhandler := logging(auth(mux))\nhttp.ListenAndServe(\":8080\", handler)\n```"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[3].md[3]",
+   "text": "Una petición ahora fluye `logging → auth → mux → listWalkers`, y las respuestas se desenrollan de vuelta por el mismo camino. El orden importa: `logging(auth(mux))` registra *alrededor* de la verificación de auth; `auth(logging(mux))` verificaría la auth primero."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].q",
+   "text": "Tu middleware de logging se ejecuta e imprime su línea, pero la página real nunca se renderiza — la respuesta está vacía. ¿Qué probablemente olvidaste?"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].choices[0]",
+   "text": "Llamar a next.ServeHTTP(w, r) dentro del envoltorio"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].choices[1]",
+   "text": "Importar el paquete log"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].choices[2]",
+   "text": "Retornar http.StatusOK"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].choices[3]",
+   "text": "Cerrar el body de la petición"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].explain",
+   "text": "El único trabajo del envoltorio es, eventualmente, entregarle el control a `next`. Sin `next.ServeHTTP(w, r)`, tu middleware se ejecuta pero el handler envuelto nunca lo hace — así que nada escribe el body."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[4].nudge",
+   "text": "El middleware se ejecuta, pero el handler real no. ¿Cuál es la única línea que pasa el control?"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[5].title",
+   "text": "Escribe un middleware de logging"
+  },
+  {
+   "path": "modules[7].lessons[1].steps[5].prompt[0]",
+   "text": "Escribe `logging`. Recibe `next http.Handler` y retorna un `http.Handler`. Retorna `http.HandlerFunc(...)` envolviendo un `func(w http.ResponseWriter, r *http.Request)` que registra el método, y luego llama a `next.ServeHTTP(w, r)`."
+  },
+  {
+   "path": "modules[7].lessons[1].steps[5].success",
+   "text": "Eso es middleware real y componible. Envuelve tu mux en él y cada petición queda registrada gratis."
+  },
+  {
+   "path": "modules[7].lessons[2].title",
+   "text": "Decodificando y validando peticiones"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[0].md[0]",
+   "text": "## Leer el body de la petición"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[0].md[1]",
+   "text": "Un `POST /bookings` lleva un body JSON — el id del paseador, la fecha, cuánto dura. En el servidor, ese body es `r.Body`, un stream de bytes. Lo decodificas en un struct de Go con `encoding/json`:"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[0].md[2]",
+   "text": "```go\ntype createBookingReq struct {\n\tWalkerID string `json:\"walker_id\"`\n\tMinutes  int    `json:\"minutes\"`\n}\n```"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[0].md[3]",
+   "text": "El **struct tag** `json:\"walker_id\"` le dice al decodificador qué clave JSON llena qué campo. (Los tags viven dentro de comillas invertidas de Go, así que solo los vas a ver en fragmentos de solo lectura como este — nunca escribas uno dentro de un ejercicio.)"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[1].md[0]",
+   "text": "## Decodifica, y luego siempre cierra"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[1].md[1]",
+   "text": "`json.NewDecoder(r.Body).Decode(&req)` lee el stream y llena tu struct. Pasas `&req` — un **puntero** — para que `Decode` pueda escribir en tu variable. Retorna un `error`: distinto de nil significa que el body faltaba o estaba malformado, lo cual es culpa del cliente, así que respondes `400`."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[1].md[2]",
+   "text": "Y siempre cierras el body cuando terminas — `defer r.Body.Close()` programa esa limpieza en el momento en que la función retorna, sin importar qué camino tomó."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[2].title",
+   "text": "internal/booking/handler.go"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[2].caption",
+   "text": "Tres verificaciones en orden: ¿pudimos parsearlo? ¿está presente el campo requerido? Si ambas pasan, respondemos 201 con la reserva parseada. Fíjate en `writeJSON` — el helper que escribiste en la lección 1."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[3].md[0]",
+   "text": "## ¿Por qué validar siquiera?"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[3].md[1]",
+   "text": "`Decode` atrapa JSON *malformado* — una coma perdida, un stream truncado. **No** atrapa valores *vacíos* o *sin sentido*: un `walker_id` vacío, `minutes: -5`, una reserva para un paseador que no existe. Ese es tu trabajo."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[3].md[2]",
+   "text": "Valida cada campo del que dependas y retorna `400` con un mensaje claro cuando algo esté mal. Un buen body de error le ahorra al desarrollador de la app — tú, en el curso anterior — una tarde entera de adivinar."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[3].md[3]",
+   "text": "> Regla general: nunca confíes en el body. Decodifícalo, y luego verifica cada campo antes de tocar la base de datos."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].q",
+   "text": "¿Por qué `Decode` recibe `&req` (la dirección de tu struct) en vez de `req` directamente?"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].choices[0]",
+   "text": "Para que Decode pueda escribir los valores parseados de vuelta en tu variable"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].choices[1]",
+   "text": "Los punteros hacen que la decodificación corra más rápido"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].choices[2]",
+   "text": "Porque las claves JSON siempre son punteros"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].choices[3]",
+   "text": "Para hacer una copia de req que Decode pueda descartar de forma segura"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].explain",
+   "text": "Go pasa argumentos por valor — un simple `req` le entregaría a `Decode` una copia, y tu original quedaría vacío. Pasar `&req` le da a `Decode` la dirección, así que llena el struct que realmente conservas."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[4].nudge",
+   "text": "Si Decode solo recibiera una copia de tu struct, ¿dónde terminarían los datos parseados?"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[5].title",
+   "text": "Decodifica y valida una reserva"
+  },
+  {
+   "path": "modules[7].lessons[2].steps[5].prompt[0]",
+   "text": "Dentro de `createBooking`, decodifica el body en `req` con `json.NewDecoder(r.Body).Decode(&req)`. Si hay error, retorna `400` vía `writeJSON`. Luego verifica que `req.WalkerID` no esté vacío (`req.WalkerID == \"\"`), retornando `400` si lo está."
+  },
+  {
+   "path": "modules[7].lessons[2].steps[5].success",
+   "text": "Acabas de escribir la puerta de entrada de un endpoint POST real: decodificar, validar y rechazar entradas incorrectas antes de que lleguen a tus datos."
+  }
+ ]
+}

@@ -1,0 +1,330 @@
+{
+ "course": "go",
+ "module": 6,
+ "units": [
+  {
+   "path": "modules[6].title",
+   "text": "HTTP con net/http"
+  },
+  {
+   "path": "modules[6].lessons[0].title",
+   "text": "Handlers y el servidor"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[0].md[0]",
+   "text": "## El servidor con el que hablaba la app"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[0].md[1]",
+   "text": "En el curso de iOS, la lista de paseadores de PawWalk venía de una petición HTTP a una URL. Algo del otro lado **recibía** esa petición y **escribía de vuelta** una respuesta. Eso es lo que vas a construir ahora — y Go trae un servidor HTTP de nivel de producción en su **biblioteca estándar**. Sin framework que instalar, sin Express, sin Rails: `net/http` alcanza para servir tráfico real."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[0].md[2]",
+   "text": "Todo el modelo se resume en dos ideas: un **handler** es una función que recibe una petición y escribe una respuesta, y el **servidor** escucha en un puerto y llama al handler correcto para cada petición entrante. Eso es todo — el resto son detalles."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[1].md[0]",
+   "text": "## La forma de un handler"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[1].md[1]",
+   "text": "Un handler es cualquier función con esta firma exacta:"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[1].md[2]",
+   "text": "```\nfunc(w http.ResponseWriter, r *http.Request)\n```"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[1].md[3]",
+   "text": "- **`w http.ResponseWriter`** es donde *escribes la respuesta* — los bytes que viajan de vuelta a la app. Llama a `w.Write([]byte(...))` para enviar bytes crudos, o `fmt.Fprintf(w, ...)` para escribir texto formateado directamente en él.\n- **`r *http.Request`** es la *petición entrante* — la URL, el método, los headers y el body que envió el cliente. El `*` significa que es un **puntero** a la petición (viste punteros antes: una copia compartida, no un duplicado)."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[1].md[4]",
+   "text": "> `http.ResponseWriter` es una **interface** (módulo 04): cualquier cosa que sepa escribir bytes de respuesta la satisface. En los tests vas a pasar un writer falso; en producción, la conexión de red real. Al handler no le importa cuál sea."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[2].title",
+   "text": "main.go — un handler y un servidor"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[2].caption",
+   "text": "`http.HandleFunc(\"/\", hello)` registra `hello` para el path `/`. `http.ListenAndServe(\":8080\", nil)` arranca el servidor en el puerto 8080 y bloquea para siempre, llamando a tu handler en cada petición. Ejecútalo, abre http://localhost:8080, y recibes tu texto de vuelta."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[3].md[0]",
+   "text": "## Escribir la respuesta"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[3].md[1]",
+   "text": "Hay dos formas comunes de enviar bytes de vuelta:"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[3].md[2]",
+   "text": "- **`w.Write([]byte(\"ok\"))`** — el método crudo. `w.Write` recibe un `[]byte` (un slice de bytes), así que conviertes tu string con `[]byte(...)`.\n- **`fmt.Fprintf(w, \"count: %d\", n)`** — el conveniente. `Fprintf` es `Printf` que escribe a un destino en vez de a la pantalla; el destino es `w`. Excelente cuando estás formateando valores dentro de la respuesta."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[3].md[3]",
+   "text": "Ambos hacen fundamentalmente lo mismo: agregar bytes al body de la respuesta. Usa `w.Write` para texto fijo y simple, `fmt.Fprintf` cuando estás interpolando."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].q",
+   "text": "¿Cuál es la firma correcta para una función handler de `http`?"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].choices[0]",
+   "text": "func(w http.ResponseWriter, r *http.Request)"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].choices[1]",
+   "text": "func(r *http.Request) http.ResponseWriter"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].choices[2]",
+   "text": "func(req Request, res Response) error"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].choices[3]",
+   "text": "func(w http.ResponseWriter, r http.Request) string"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].explain",
+   "text": "Todo handler de net/http recibe primero el response writer y segundo un puntero a la petición, y no retorna nada. Escribes la respuesta a través de `w`; nunca la retornas."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[4].nudge",
+   "text": "El writer va primero, la petición es un puntero, y un handler no retorna nada."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[5].title",
+   "text": "Un handler de health-check"
+  },
+  {
+   "path": "modules[6].lessons[0].steps[5].prompt[0]",
+   "text": "Todo backend necesita un endpoint `/healthz` que los load balancers consultan para preguntar \"¿estás vivo?\". Escribe un handler llamado `healthz` con la firma estándar que escriba los bytes `ok` de vuelta al cliente."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[5].prompt[1]",
+   "text": "Convierte el string a un slice de bytes con `[]byte(\"ok\")` y pásalo a `w.Write`."
+  },
+  {
+   "path": "modules[6].lessons[0].steps[5].success",
+   "text": "Eso es un health check de verdad. Regístralo con `http.HandleFunc(\"/healthz\", healthz)` y todo monitor de uptime del mundo sabe cómo hablarle."
+  },
+  {
+   "path": "modules[6].lessons[1].title",
+   "text": "JSON"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[0].md[0]",
+   "text": "## Structs adentro, JSON afuera"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[0].md[1]",
+   "text": "La app no quería el texto `Hello` — quería **datos**: una lista de paseadores con nombres y precios, en JSON. El paquete `encoding/json` de Go convierte entre tus structs de Go y JSON, y viene integrado en la biblioteca estándar como todo lo demás."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[0].md[2]",
+   "text": "La regla general: tu servidor guarda los datos como **structs** (tipados, verificados por el compilador) y habla **JSON** en el cable. `encoding/json` es el traductor en el medio."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[1].md[0]",
+   "text": "## Marshal y Unmarshal"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[1].md[1]",
+   "text": "Las dos funciones centrales:"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[1].md[2]",
+   "text": "- **`json.Marshal(v)`** convierte un valor de Go en bytes JSON — struct → `[]byte`. Esta es la dirección que un servidor usa más: tienes un `Walker`, quieres enviarlo.\n- **`json.Unmarshal(data, &v)`** va en el otro sentido — bytes JSON → struct. Pasas un **puntero** (`&v`) para que pueda llenar tu valor in situ. Así es como lees un body de petición que envió el cliente."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[1].md[3]",
+   "text": "Ambas retornan un `error` que deberías verificar (`err != nil`) — Marshal puede fallar con valores que JSON no puede representar, y Unmarshal falla con entrada malformada."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[2].md[0]",
+   "text": "## Nombres de campos y json tags"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[2].md[1]",
+   "text": "Go exporta los campos de un struct con nombres **capitalizados** (`Name`, `PricePer30MinCents`), pero JSON usa por convención claves en minúscula o snake_case. Un **struct tag** conecta ambos mundos: un poco de metadata después del tipo del campo que le dice a `encoding/json` qué clave usar."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[2].md[2]",
+   "text": "```\ntype Walker struct {\n\tID                 string `json:\"id\"`\n\tName               string `json:\"name\"`\n\tPricePer30MinCents int    `json:\"price_per_30min_cents\"`\n}\n```"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[2].md[3]",
+   "text": "Con esos tags, `json.Marshal` de un `Walker` produce `{\"id\":\"w1\",\"name\":\"Ana\",\"price_per_30min_cents\":2000}` — exactamente la forma que la app decodifica. Solo los campos exportados (capitalizados) se serializan; un campo no exportado como `password` es invisible para JSON, lo cual es un default de seguridad muy útil."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[2].md[4]",
+   "text": "> Las comillas invertidas alrededor de `json:\"name\"` lo convierten en un **raw string** de Go. Vas a escribir esos tags en tu editor real — pero nunca dentro de estos ejercicios en el navegador, donde las comillas invertidas tienen un significado especial."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[3].title",
+   "text": "main.go — codificar directo a la respuesta"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[3].caption",
+   "text": "El patrón idiomático: en vez de Marshal-y-luego-Write, `json.NewEncoder(w).Encode(walkers)` transmite el JSON directamente al response writer en un solo paso — menos código, sin slice de bytes intermedio."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[4].md[0]",
+   "text": "## Dos cosas que toda respuesta JSON necesita"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[4].md[1]",
+   "text": "1. **Configura el content type.** `w.Header().Set(\"Content-Type\", \"application/json\")` le dice al cliente \"este body es JSON.\" Configúralo **antes** de escribir cualquier byte del body — una vez que el body empieza, los headers quedan fijos.\n2. **Codifica el valor.** `json.NewEncoder(w).Encode(v)` construye un encoder que escribe a `w`, y luego serializa `v` en él. `Encode` se encarga de la conversión a `[]byte` y de la escritura por ti."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[4].md[2]",
+   "text": "Ese patrón de dos líneas — configurar header, codificar — es cómo termina casi cada endpoint JSON en el backend de PawWalk."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].q",
+   "text": "¿Por qué llamar a `json.NewEncoder(w).Encode(walkers)` en vez de `json.Marshal` seguido de `w.Write`?"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].choices[0]",
+   "text": "Codifica el valor directamente en el response writer en un solo paso — sin slice de bytes intermedio"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].choices[1]",
+   "text": "Es la única función que puede codificar un slice"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].choices[2]",
+   "text": "Marshal no puede manejar structs, solo Encode puede"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].choices[3]",
+   "text": "Encode configura automáticamente el header Content-Type por ti"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].explain",
+   "text": "`NewEncoder(w).Encode(v)` transmite el JSON directamente al writer, ahorrándote la danza de Marshal-a-un-slice-y-luego-Write. (No configura headers — igual tienes que poner el Content-Type tú mismo.)"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[5].nudge",
+   "text": "Piensa en a qué escribe el encoder, y qué paso te permite saltarte."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[6].title",
+   "text": "Devuelve la lista de paseadores como JSON"
+  },
+  {
+   "path": "modules[6].lessons[1].steps[6].prompt[0]",
+   "text": "Termina el cuerpo del handler. Primero configura el content type de la respuesta a `application/json`, luego codifica el slice `walkers` directamente en la respuesta con `json.NewEncoder(w).Encode(walkers)`."
+  },
+  {
+   "path": "modules[6].lessons[1].steps[6].success",
+   "text": "Eso es un endpoint JSON completo. La forma exacta que la app de PawWalk decodifica en su lista de paseadores salió de un handler que se ve exactamente así."
+  },
+  {
+   "path": "modules[6].lessons[2].title",
+   "text": "Ruteo (mux de Go 1.22)"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[0].md[0]",
+   "text": "## Un handler no es un servidor"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[0].md[1]",
+   "text": "Una API real tiene muchos endpoints: `GET /walkers` para listar, `GET /walkers/{id}` para un paseador, `POST /bookings` para reservar. Necesitas algo que mire el **método y el path** de cada petición y la despache al handler correcto. Ese router se llama un **mux** (multiplexor), y Go trae uno integrado: `http.ServeMux`."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[0].md[2]",
+   "text": "Has estado usando el mux *por defecto* de forma implícita — pasando `nil` a `ListenAndServe` y llamando al `http.HandleFunc` a nivel de paquete. Ahora vas a crear el tuyo propio para que el ruteo sea explícito y testeable."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[1].md[0]",
+   "text": "## Tu propio mux"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[1].md[1]",
+   "text": "`http.NewServeMux()` retorna un router nuevo. Registras rutas en él, y luego se lo pasas *a él* al servidor en vez de `nil`:"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[1].md[2]",
+   "text": "```\nmux := http.NewServeMux()\nmux.HandleFunc(\"/healthz\", healthz)\nhttp.ListenAndServe(\":8080\", mux)\n```"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[1].md[3]",
+   "text": "Pasar `mux` como segundo argumento le dice al servidor \"rutea cada petición a través de este.\" El mismo `HandleFunc` que ya conoces — ahora es un método de *tu* mux, no del global oculto."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[2].md[0]",
+   "text": "## Patrones de método + path (nuevo en Go 1.22)"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[2].md[1]",
+   "text": "Los muxes más antiguos de Go solo hacían match por prefijo de path — el método lo verificabas tú mismo dentro del handler. **Go 1.22** actualizó `ServeMux` para entender patrones como `\"GET /walkers\"`: el **método** HTTP y el path, juntos, en el string del patrón."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[2].md[2]",
+   "text": "- `mux.HandleFunc(\"GET /walkers\", listWalkers)` — solo peticiones `GET` a `/walkers`.\n- `mux.HandleFunc(\"POST /bookings\", createBooking)` — solo `POST` a `/bookings`. Un `GET` al mismo path no hará match, y el mux devuelve `405 Method Not Allowed` gratis."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[2].md[3]",
+   "text": "Esto es un gran cambio: la tabla de rutas ahora se lee como la documentación de tu API, y dejas de escribir el boilerplate `if r.Method != \"GET\"` en cada handler."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[3].md[0]",
+   "text": "## Wildcards de path y `PathValue`"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[3].md[1]",
+   "text": "Los patrones pueden capturar un segmento con `{name}`: `\"GET /walkers/{id}\"` hace match con `/walkers/w1`, `/walkers/w2`, cualquier cosa en esa posición. Dentro del handler lees el valor capturado con **`r.PathValue(\"id\")`** — retorna el string que llenó `{id}`."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[3].md[2]",
+   "text": "```\nmux.HandleFunc(\"GET /walkers/{id}\", func(w http.ResponseWriter, r *http.Request) {\n\tid := r.PathValue(\"id\")\n\tfmt.Fprintf(w, \"walker %s\", id)\n})\n```"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[3].md[3]",
+   "text": "Así que una petición a `/walkers/w1` escribe de vuelta `walker w1`. Antes de Go 1.22 tenías que parsear el string de la URL a mano para sacar ese `id`; ahora el mux lo hace y te entrega el valor."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].q",
+   "text": "En Go 1.22, ¿qué hace el patrón `\"GET /walkers/{id}\"`?"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].choices[0]",
+   "text": "Hace match con peticiones GET cuyo path es /walkers/<cualquier-cosa>, capturando ese segmento como `id`"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].choices[1]",
+   "text": "Hace match solo con el path literal /walkers/{id} con llaves en la URL"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].choices[2]",
+   "text": "Hace match con cualquier método en /walkers e ignora el id"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].choices[3]",
+   "text": "Redirige /walkers a /walkers/{id}"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].explain",
+   "text": "El método (`GET`) restringe qué verbo hace match, y `{id}` es un wildcard que captura un segmento del path. Lees el valor capturado dentro del handler con `r.PathValue(\"id\")`."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[4].nudge",
+   "text": "La palabra antes del espacio es el método HTTP; el `{id}` entre llaves es una captura, no texto literal."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[5].title",
+   "text": "Rutea un paseador por id"
+  },
+  {
+   "path": "modules[6].lessons[2].steps[5].prompt[0]",
+   "text": "Conecta una ruta de un solo paseador en `mux`. Registra el patrón para una petición `GET` a `/walkers/{id}` apuntando al handler `getWalker`, y luego dentro de `getWalker` lee el id capturado con `r.PathValue(\"id\")` en una variable llamada `id`."
+  },
+  {
+   "path": "modules[6].lessons[2].steps[5].success",
+   "text": "Eso es ruteo real de Go 1.22: un patrón de path con alcance de método y una captura tipada. Las rutas de paseadores, reservas y GPS del backend de PawWalk están construidas exactamente con esta forma."
+  }
+ ]
+}

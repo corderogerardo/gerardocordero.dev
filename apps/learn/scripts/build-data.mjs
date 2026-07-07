@@ -72,6 +72,37 @@ function loadCourse(courseDef, locale) {
   return { id, title, emoji, storeKey, modules };
 }
 
+// Apply committed translation overlays (tools/i18n-work/<course>/*.json,
+// produced by tools/i18n-extract.mjs and translated in place) onto a course
+// built from the English lessons. Lets es ship translated JSON without
+// duplicating the lesson .js sources; untranslated modules stay English.
+function applyTranslationOverlay(course, locale) {
+  if (locale === "en") return 0;
+  const workDir = join(root, "tools", "i18n-work", course.id);
+  if (!existsSync(workDir)) return 0;
+  let applied = 0;
+  const setByPath = (obj, path, value) => {
+    const segs = path.match(/[^.[\]]+/g);
+    let node = obj;
+    for (let i = 0; i < segs.length - 1; i++) {
+      node = node[/^\d+$/.test(segs[i]) ? Number(segs[i]) : segs[i]];
+      if (node === undefined) throw new Error(`bad path: ${path}`);
+    }
+    const last = segs[segs.length - 1];
+    const key = /^\d+$/.test(last) ? Number(last) : last;
+    if (node[key] === undefined) throw new Error(`bad path: ${path}`);
+    node[key] = value;
+  };
+  for (const f of readdirSync(workDir).filter((f) => f.endsWith(".json")).sort()) {
+    const work = JSON.parse(readFileSync(join(workDir, f), "utf8"));
+    for (const u of work.units) {
+      setByPath(course, u.path, u.text);
+      applied++;
+    }
+  }
+  return applied;
+}
+
 function main() {
   for (const locale of LOCALES) {
     const localeDataDir = join(dataDir, locale);
@@ -83,13 +114,14 @@ function main() {
         console.warn(`Skipping ${courseDef.dir} — directory not found`);
         continue;
       }
+      const applied = applyTranslationOverlay(course, locale);
       const filePath = join(localeDataDir, `${course.id}.json`);
       writeFileSync(filePath, JSON.stringify(course, null, 2));
       const moduleCount = course.modules.length;
       const lessonCount = course.modules.reduce((n, m) => n + (m.lessons || []).length, 0);
       const sourceDir = localeDir(courseDef.dir, locale);
       const actualDir = existsSync(join(root, sourceDir)) ? sourceDir : courseDef.dir;
-      console.log(`✓ ${locale}/${course.id}: ${moduleCount} modules, ${lessonCount} lessons ← ${actualDir}`);
+      console.log(`✓ ${locale}/${course.id}: ${moduleCount} modules, ${lessonCount} lessons ← ${actualDir}${applied ? ` (+${applied} translated units)` : ""}`);
     }
   }
 }

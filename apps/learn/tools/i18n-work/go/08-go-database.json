@@ -1,0 +1,462 @@
+{
+ "course": "go",
+ "module": 8,
+ "units": [
+  {
+   "path": "modules[8].title",
+   "text": "Bases de datos con database/sql"
+  },
+  {
+   "path": "modules[8].lessons[0].title",
+   "text": "Conectando y consultando"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[0]",
+   "text": "## Dónde viven realmente los paseadores"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[1]",
+   "text": "Hasta ahora tus handlers han devuelto datos que codificaste a mano en Go. Un backend real de PawWalk guarda paseadores, reservas y ubicaciones GPS en una **base de datos** — usualmente PostgreSQL — que sobrevive reinicios y sirve muchas peticiones a la vez."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[2]",
+   "text": "Go habla con bases de datos SQL a través de un paquete de la biblioteca estándar: **`database/sql`**. Te da una API común (`Query`, `Exec`, `Scan`) y tú conectas un **driver** para tu base de datos específica. Importa el paquete de la forma usual, y trae el driver por su efecto colateral de registrarse a sí mismo:"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[3]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[4]",
+   "text": "import ("
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[5]",
+   "text": "    \"database/sql\""
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[6]",
+   "text": "    _ \"github.com/lib/pq\"   // registers the postgres driver"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[7]",
+   "text": ")"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[8]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[0].md[9]",
+   "text": "El guion bajo `_` significa *importa esto solo por sus efectos colaterales* — el driver registra el nombre `\"postgres\"` en su `init()`, y tú nunca lo llamas directamente."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[1].title",
+   "text": "internal/db/db.go"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[1].caption",
+   "text": "`sql.Open` en realidad no se conecta — solo valida los argumentos y prepara un pool. `db.Ping()` fuerza una conexión real para que te enteres de inmediato si la base de datos es inalcanzable. El `dsn` (data source name) es el string de conexión, por ejemplo \"postgres://user:pass@localhost/pawwalk\"."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[0]",
+   "text": "## Leer una fila: `QueryRow` + `Scan`"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[1]",
+   "text": "La lectura más común es *traer una sola fila y copiar sus columnas en variables de Go*. Eso es `QueryRow` seguido de `Scan`:"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[2]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[3]",
+   "text": "var name string"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[4]",
+   "text": "err := db.QueryRow(\"SELECT name FROM walkers WHERE id = $1\", id).Scan(&name)"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[5]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[2].md[6]",
+   "text": "`QueryRow` ejecuta la consulta; `Scan` copia cada columna seleccionada en la variable cuya **dirección** pasas (`&name`). Una columna seleccionada, un puntero a `Scan` — se alinean de izquierda a derecha."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[3].md[0]",
+   "text": "## Placeholders, nunca concatenación de strings"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[3].md[1]",
+   "text": "Fíjate en el `$1` de la consulta. Eso es un **placeholder**: pasas el valor real como un argumento separado, y el driver lo envía aparte del texto SQL. PostgreSQL los numera `$1`, `$2`, `$3` en el orden de los argumentos."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[3].md[2]",
+   "text": "Esto no es solo prolijidad — es cómo evitas la **inyección SQL**. Nunca construyas una consulta con `\"... WHERE id = \" + id`; un `id` malicioso podría reescribir tu consulta. Usa siempre placeholders y deja que el driver maneje el valor."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[3].md[3]",
+   "text": "> Regla general: si un valor vino de afuera de tu programa (una petición, un formulario, una URL), pertenece a un argumento placeholder, nunca pegado dentro del string de la consulta."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].q",
+   "text": "¿Por qué escribir `db.QueryRow(\"... WHERE id = $1\", id)` en vez de concatenar `id` dentro del string SQL?"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].choices[0]",
+   "text": "Los placeholders mantienen el valor separado del texto SQL, previniendo la inyección SQL"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].choices[1]",
+   "text": "La concatenación no compila en Go"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].choices[2]",
+   "text": "`$1` hace que la consulta corra más rápido en cualquier base de datos"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].choices[3]",
+   "text": "Es solo una preferencia de estilo sin diferencia real"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].explain",
+   "text": "El driver envía el SQL y el argumento por separado, así que un valor como `\"1; DROP TABLE walkers\"` se trata como dato, no como código. Los placeholders son la defensa principal contra la inyección SQL — siempre prefiérelos sobre construir strings."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[4].nudge",
+   "text": "Piensa en qué pasaría si `id` contuviera un fragmento de SQL en vez de un número."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[0]",
+   "text": "## El caso de 'no encontrado': `sql.ErrNoRows`"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[1]",
+   "text": "¿Qué pasa si ningún paseador tiene ese id? `QueryRow(...).Scan(...)` retorna un error centinela especial, **`sql.ErrNoRows`**. No es una falla de la base de datos — es la forma que tiene Go de decir *la consulta corrió bien y no encontró nada*."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[2]",
+   "text": "Lo verificas explícitamente con `==`, porque 'no existe ese paseador' usualmente significa un `404`, mientras que cualquier otro error significa que algo realmente se rompió:"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[3]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[4]",
+   "text": "if err == sql.ErrNoRows {"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[5]",
+   "text": "    // no walker with that id -> 404"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[6]",
+   "text": "}"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[7]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[5].md[8]",
+   "text": "Este es el mismo patrón que vas a conectar en un handler HTTP: `ErrNoRows` se convierte en una respuesta not-found, otros errores se convierten en un 500."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[6].title",
+   "text": "Busca el nombre de un paseador"
+  },
+  {
+   "path": "modules[8].lessons[0].steps[6].prompt[0]",
+   "text": "Dentro de `LookupName`, lee la columna `name` para el paseador con el `id` dado. Usa `db.QueryRow` con la consulta `\"SELECT name FROM walkers WHERE id = $1\"`, pasa `id` como argumento, y haz `.Scan(&name)` del resultado en `name`."
+  },
+  {
+   "path": "modules[8].lessons[0].steps[6].success",
+   "text": "Ese es el camino de lectura para un solo paseador: una consulta con placeholder, un Scan en una variable, y un error que propagar. Ahora vas a escribir filas y leer varias."
+  },
+  {
+   "path": "modules[8].lessons[1].title",
+   "text": "Escribiendo y múltiples filas"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[0]",
+   "text": "## Cambiando datos: `Exec`"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[1]",
+   "text": "`QueryRow` y `Query` son para lecturas. Cuando una sentencia cambia la base de datos — `INSERT`, `UPDATE`, `DELETE` — usas **`db.Exec`**. No retorna filas; retorna un `sql.Result` con metadata como cuántas filas cambiaron."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[2]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[3]",
+   "text": "res, err := db.Exec(\"INSERT INTO walkers (name) VALUES ($1)\", name)"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[4]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[0].md[5]",
+   "text": "Misma regla del placeholder que antes: el nuevo `name` entra como argumento `$1`, nunca concatenado. Si no te importa la metadata del resultado, puedes ignorarla con `_, err := db.Exec(...)`."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[1].title",
+   "text": "internal/walker/repo.go"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[1].caption",
+   "text": "Dos escrituras. `Insert` agrega un paseador; `Rename` actualiza uno, usando dos placeholders `$1` y `$2` llenados por `name` y luego `id` — el orden de los argumentos coincide con los números, no con las columnas."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[2].title",
+   "text": "Agrega un paseador"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[2].prompt[0]",
+   "text": "Dentro de `AddWalker`, inserta una fila nueva en la tabla `walkers`. Usa `db.Exec` con la consulta `\"INSERT INTO walkers (name) VALUES ($1)\"`, pasa `name` como argumento, y descarta el resultado con `_`, conservando el error."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[2].success",
+   "text": "Esa es una escritura completa: un INSERT parametrizado con el resultado ignorado y el error retornado. Ahora la parte difícil — leer muchas filas."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[0]",
+   "text": "## Leer muchas filas: `Query` + `rows.Next()`"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[1]",
+   "text": "Para una lista — todos los paseadores, todas las reservas de un perro — usa **`db.Query`**. A diferencia de `QueryRow`, retorna un `*sql.Rows` que recorres una fila a la vez con `rows.Next()`, llamando a `rows.Scan` dentro del loop:"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[2]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[3]",
+   "text": "rows, err := db.Query(\"SELECT id, name FROM walkers\")"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[4]",
+   "text": "if err != nil { return nil, err }"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[5]",
+   "text": "defer rows.Close()"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[6]",
+   "text": "for rows.Next() {"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[7]",
+   "text": "    var w Walker"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[8]",
+   "text": "    rows.Scan(&w.ID, &w.Name)"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[9]",
+   "text": "    walkers = append(walkers, w)"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[10]",
+   "text": "}"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[11]",
+   "text": "return walkers, rows.Err()"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[12]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[3].md[13]",
+   "text": "`rows.Next()` retorna `false` cuando ya no hay más filas *o* cuando un error detuvo la iteración — por eso terminas con `rows.Err()`."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[4].md[0]",
+   "text": "## Dos cosas que no debes saltarte"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[4].md[1]",
+   "text": "- **`defer rows.Close()`** — justo después de verificar el error. Cada `*sql.Rows` abierto retiene una conexión de base de datos del pool; no cerrarlo filtra conexiones hasta que el pool se agota y tu servidor se traba. `defer` garantiza que se ejecute sin importar cómo salga la función."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[4].md[2]",
+   "text": "- **`rows.Err()`** al final — que el `rows.Next()` del loop retorne `false` oculta si la iteración terminó limpiamente o se cayó. Verificar `rows.Err()` saca a la luz cualquier error que haya cortado el loop antes de tiempo."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[4].md[3]",
+   "text": "> El orden siempre es: `Query`, verificar err, `defer rows.Close()`, loop con `Scan`, y luego retornar `rows.Err()`. Memoriza esa forma — cada consulta de lista en el código base la sigue."
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].q",
+   "text": "En un loop de `db.Query` + `for rows.Next()`, ¿por qué llamar a `rows.Err()` después de que el loop termina?"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].choices[0]",
+   "text": "`rows.Next()` retorna false tanto al final de los datos como ante un error — `rows.Err()` distingue entre ambos casos"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].choices[1]",
+   "text": "Vuelve a ejecutar la consulta para verificar los resultados dos veces"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].choices[2]",
+   "text": "Es lo que en realidad cierra las filas y libera la conexión"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].choices[3]",
+   "text": "Convierte las filas a JSON automáticamente"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].explain",
+   "text": "El loop termina cuando `Next()` retorna false, lo cual ocurre tanto al completarse normalmente COMO cuando un error detiene la iteración. `rows.Err()` es la única forma de saber que una falla a mitad de loop no truncó tus resultados en silencio. (Cerrar es un trabajo separado — eso es `rows.Close()`, usualmente diferido con defer.)"
+  },
+  {
+   "path": "modules[8].lessons[1].steps[5].nudge",
+   "text": "Tanto 'no hay más filas' como 'algo se rompió' hacen que `Next()` retorne false. ¿Cómo distingues cuál pasó?"
+  },
+  {
+   "path": "modules[8].lessons[2].title",
+   "text": "Patrón repositorio y pooling"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[0].md[0]",
+   "text": "## `*sql.DB` es un pool, no una conexión"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[0].md[1]",
+   "text": "Una idea le cambia la forma a cómo usas `database/sql`: un `*sql.DB` **no** es una sola conexión — es un **pool** de conexiones que Go administra por ti. Es seguro compartirlo entre goroutines, así que lo abres **una vez** al arrancar y le entregas el mismo `*sql.DB` a todo lo que toque la base de datos."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[0].md[2]",
+   "text": "No abres un `*sql.DB` nuevo por petición. Cada `Query`/`Exec` toma prestada una conexión del pool, la usa, y la devuelve. Eso es lo que le permite a un solo servidor Go manejar miles de peticiones concurrentes contra un puñado de conexiones reales a la base de datos."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[1].md[0]",
+   "text": "## Deja de pasar `db` por todos lados: el repositorio"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[1].md[1]",
+   "text": "Pasar `db *sql.DB` a cada función libre (como `LookupName(db, id)`) se vuelve ruidoso rápido. El **patrón repositorio** agrupa el pool y todas las consultas de un tipo de cosa en un struct. Un `WalkerRepo` *tiene un* `*sql.DB` y expone métodos como `FindByID` y `Create`."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[1].md[2]",
+   "text": "El resto de tu app entonces depende del repo, no de `database/sql` directamente — los handlers llaman a `repo.FindByID(ctx, id)` y nunca ven SQL. Cambiar el almacenamiento o simularlo (mock) en tests se vuelve cuestión de cambiar el repo."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[2].title",
+   "text": "internal/walker/repo.go"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[2].caption",
+   "text": "El struct guarda el pool (`db` en minúscula — no exportado, privado al paquete). `NewWalkerRepo` es el constructor: lo construyes una vez al arrancar con el `*sql.DB` compartido y pasas el repo por ahí."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[3].title",
+   "text": "Define el repositorio"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[3].prompt[0]",
+   "text": "Declara el tipo del repositorio. Escribe `type WalkerRepo struct { ... }` con un único campo no exportado `db` de tipo `*sql.DB`."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[3].success",
+   "text": "Ese struct es el hogar de cada consulta de paseadores. Ahora dale un método que use el pool."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[0]",
+   "text": "## Los métodos reciben un `context.Context`, usa `QueryRowContext`"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[1]",
+   "text": "Los métodos del repositorio reciben un **`context.Context`** como primer argumento. El context lleva plazos límite y cancelación — si la petición HTTP se abandona, el context se cancela y la consulta a la base de datos puede cortarse en vez de correr para nada."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[2]",
+   "text": "Así que en vez de `QueryRow`, llamas a la variante **consciente del context** **`QueryRowContext(ctx, ...)`**. Cada método refleja esto: `QueryContext`, `ExecContext`, `QueryRowContext`. Mismo comportamiento que antes, más el hecho de que respetan el context:"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[3]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[4]",
+   "text": "func (r *WalkerRepo) FindByID(ctx context.Context, id string) (Walker, error) {"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[5]",
+   "text": "    var w Walker"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[6]",
+   "text": "    err := r.db.QueryRowContext(ctx,"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[7]",
+   "text": "        \"SELECT id, name FROM walkers WHERE id = $1\", id).Scan(&w.ID, &w.Name)"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[8]",
+   "text": "    ..."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[9]",
+   "text": "}"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[4].md[10]",
+   "text": "```"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[5].title",
+   "text": "Busca un paseador por id"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[5].prompt[0]",
+   "text": "Completa `FindByID`. Ejecuta `r.db.QueryRowContext(ctx, \"SELECT id, name FROM walkers WHERE id = $1\", id)` y `.Scan(&w.ID, &w.Name)`. Luego, si `err == sql.ErrNoRows`, retorna un `Walker{}` vacío con ese error para que el handler pueda convertirlo en un 404."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[5].success",
+   "text": "Ese es un método de repositorio idiomático: consciente del context, con pool, y con el caso de no-encontrado manejado. Esta es exactamente la forma que usa el backend real de PawWalk para cada búsqueda."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].q",
+   "text": "Un `*sql.DB` se describe mejor como:"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].choices[0]",
+   "text": "Un pool de conexiones, seguro para uso concurrente — abierto una vez y compartido en todas partes"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].choices[1]",
+   "text": "Una única conexión activa que debes abrir por petición"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].choices[2]",
+   "text": "Una conexión que solo una goroutine puede tocar a la vez"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].choices[3]",
+   "text": "Un caché en memoria de resultados de consultas"
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].explain",
+   "text": "`*sql.DB` administra un pool de conexiones detrás de un handle seguro para compartir. Llamas a `sql.Open` una vez al arrancar, guardas el resultado (a menudo dentro de un repositorio), y cada goroutine toma prestadas y devuelve conexiones a través de él — sin abrir por petición, sin bloqueo manual."
+  },
+  {
+   "path": "modules[8].lessons[2].steps[6].nudge",
+   "text": "Piensa en por qué nunca llamas a `sql.Open` dentro de un handler."
+  }
+ ]
+}

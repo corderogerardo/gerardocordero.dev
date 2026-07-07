@@ -1,0 +1,346 @@
+{
+ "course": "go",
+ "module": 11,
+ "units": [
+  {
+   "path": "modules[11].title",
+   "text": "Reservas"
+  },
+  {
+   "path": "modules[11].lessons[0].title",
+   "text": "El dominio Booking"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[0].md[0]",
+   "text": "## El corazón de la app"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[0].md[1]",
+   "text": "PawWalk vende una sola cosa: un paseo. Una **reserva** (booking) es el registro de uno — *este usuario* contrató a *este walker* por *este tiempo*, a *esta hora*, por *este precio*. Todas las demás funciones (pagos, tracking GPS, el chat) cuelgan de una reserva. Así que el tipo que la modela es el struct más importante de todo el backend."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[0].md[2]",
+   "text": "En el curso de iOS ya viste esta forma desde el lado de la app — un formulario de reserva que enviaba un id de walker, una duración y una fecha. Ahora construyes lo que la recibe y le da una vida: un status, un precio, un id."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[1].md[0]",
+   "text": "## Los campos, uno por uno"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[1].md[1]",
+   "text": "Una reserva es solo datos, pero cada campo se gana su lugar:"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[1].md[2]",
+   "text": "- **`ID`** — el identificador propio de la reserva, para que la app pueda pedir `GET /bookings/42`.\n- **`WalkerID` / `UserID`** — quién pasea, quién paga. Ambos son ids que apuntan a otros registros.\n- **`DurationMinutes`** — 30, 45 o 60. PawWalk vende tres duraciones.\n- **`PriceCents`** — dinero en **centavos**, siempre un `int`. Nunca guardes dinero como float — `0.1 + 0.2` no es `0.3` en punto flotante, y ese error de redondeo es una demanda.\n- **`Status`** — en qué punto de su vida está la reserva: pendiente, confirmada, cancelada.\n- **`ScheduledAt`** — *cuándo* ocurre el paseo, como un timestamp real."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[2].md[0]",
+   "text": "## El tiempo es su propio tipo"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[2].md[1]",
+   "text": "Ese último campo no es un string. La librería estándar de Go trae un tipo de tiempo apropiado en el paquete **`time`** — `time.Time` — que sabe de zonas horarias, comparación y aritmética. Guardar una fecha como texto `\"2026-07-05\"` te obligaría a parsearla cada vez que quisieras preguntar \"¿esto ya pasó?\". Un `time.Time` responde eso con `t.Before(time.Now())`."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[2].md[2]",
+   "text": "Lo importas como cualquier paquete: `import \"time\"`, y luego usas `time.Time` como el tipo del campo."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[3].title",
+   "text": "internal/booking/booking.go"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[3].caption",
+   "text": "Todo el dominio en un solo struct. Fíjate en `Status` — el tipo del campo es otro tipo que estás a punto de definir, no un string plano. Y `ScheduledAt` es un `time.Time` real, así que las comparaciones están a una llamada de método de distancia."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[4].md[0]",
+   "text": "## En el cable lleva tags JSON"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[4].md[1]",
+   "text": "Cuando este struct se codifica a JSON para la app, cada campo recibe un **struct tag** que nombra su clave JSON — los mismos tags que viste al decodificar peticiones:"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[4].md[2]",
+   "text": "```go\ntype Booking struct {\n\tID              string    `json:\"id\"`\n\tWalkerID        string    `json:\"walker_id\"`\n\tUserID          string    `json:\"user_id\"`\n\tDurationMinutes int       `json:\"duration_minutes\"`\n\tPriceCents      int       `json:\"price_cents\"`\n\tStatus          Status    `json:\"status\"`\n\tScheduledAt     time.Time `json:\"scheduled_at\"`\n}\n```"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[4].md[3]",
+   "text": "Esos tags viven dentro de backticks de Go, así que solo los verás en fragmentos de solo lectura como este — nunca escribas uno en un ejercicio. Los ejercicios de abajo usan la forma sin tags."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[5].md[0]",
+   "text": "## Por qué `Status` es su propio tipo"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[5].md[1]",
+   "text": "Podrías tipar `Status` como un `string` plano y pasar `\"pending\"` por todos lados. No lo hagas. En vez de eso, Go te deja crear un **tipo con nombre sobre un string**:"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[5].md[2]",
+   "text": "```go\ntype Status string\n```"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[5].md[3]",
+   "text": "Ahora `Status` es un tipo distinto. Declaras sus valores permitidos como **constantes tipadas** — `const StatusPending Status = \"pending\"` — y usas esos nombres en todas partes. Dos beneficios: un typo como `\"pendign\"` se convierte en un error de compilación en vez de un bug silencioso, y cada lugar que lee un `Status` se documenta a sí mismo. Es el mismo instinto que un `enum` en Swift, expresado a la manera de Go."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[5].md[4]",
+   "text": "> Un tipo string con nombre sigue siendo un string por debajo — se imprime como `\"pending\"`, se codifica a JSON como `\"pending\"` — pero ahora el compilador vigila qué strings pueden serlo."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].q",
+   "text": "¿Por qué declarar `type Status string` y constantes tipadas en vez de simplemente pasar el string plano `\"pending\"` por todo el código?"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].choices[0]",
+   "text": "El compilador atrapa los typos y cada valor de Status está nombrado en un solo lugar"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].choices[1]",
+   "text": "Los tipos con nombre hacen que el programa corra más rápido en tiempo de ejecución"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].choices[2]",
+   "text": "Un string plano no se puede guardar en un campo de un struct"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].choices[3]",
+   "text": "JSON solo puede codificar tipos con nombre, no strings planos"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].explain",
+   "text": "Un tipo con nombre convierte una categoría de valores en algo que el compilador entiende. `StatusPending` se define una vez; si lo escribes mal, la compilación falla. Un `\"pending\"` suelto y repetido por el código es un typo esperando a colarse."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[6].nudge",
+   "text": "Piensa en qué sale mal cuando alguien escribe `\"pendign\"` a mano en el handler número veinte."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[7].title",
+   "text": "Define el tipo Status"
+  },
+  {
+   "path": "modules[11].lessons[0].steps[7].prompt[0]",
+   "text": "Declara `type Status string`, y luego declara dos constantes de ese tipo: `StatusPending` igual a `\"pending\"` y `StatusConfirmed` igual a `\"confirmed\"`. Cada constante es `const NAME Status = \"value\"`."
+  },
+  {
+   "path": "modules[11].lessons[0].steps[7].success",
+   "text": "Ese es el vocabulario de la vida de una reserva. Agrega StatusCancelled y StatusCompleted de la misma manera y toda la máquina de estados queda nombrada y tipada."
+  },
+  {
+   "path": "modules[11].lessons[1].title",
+   "text": "Creando una reserva"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[0].md[0]",
+   "text": "## De la petición al registro"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[0].md[1]",
+   "text": "Un `POST /bookings` llega con un id de walker, un id de usuario, una duración y una hora. El trabajo de tu handler es convertir esa petición cruda en un `Booking` real: decodificar el body, calcular el **precio**, marcarla como **pending**, y responder `201 Created` con el registro terminado."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[0].md[2]",
+   "text": "Ya conoces la primera mitad — decodifica con `json.NewDecoder(r.Body).Decode(&req)` y rechaza el JSON malo con un `400`. Esta lección trata sobre la parte de en medio: calcular los campos que le pertenecen al *servidor*, no los que envió el cliente."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[1].md[0]",
+   "text": "## El cliente no fija el precio"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[1].md[1]",
+   "text": "Nunca confíes en un precio enviado por el cliente — un walker podría enviar `price_cents: 1` y conseguir una hora gratis. El **servidor** es dueño del precio. Es una función pura de la duración:"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[1].md[2]",
+   "text": "- 30 minutos → **1500** centavos ($15)\n- 45 minutos → **2000** centavos ($20)\n- 60 minutos → **2500** centavos ($25)"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[1].md[3]",
+   "text": "Ese mapeo pide un pequeño helper, `priceForDuration(minutes int) int`. Un `switch` sobre los minutos es la forma más clara de escribirlo — un `case` por duración, devolviendo los centavos. El status también es decisión del servidor: una reserva recién creada siempre está **pending** hasta que un walker la confirma, así que el handler mismo marca `StatusPending`."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[2].title",
+   "text": "internal/booking/handler.go"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[2].caption",
+   "text": "El servidor llena lo que le pertenece: un `ID` nuevo, el `PriceCents` que calculó, y `StatusPending`. El cliente solo proporcionó quién, cuánto tiempo y cuándo. Luego `201 Created` con la reserva completa."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[3].md[0]",
+   "text": "## Un switch que devuelve valores"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[3].md[1]",
+   "text": "El `switch` de Go es prolijo para esto. No hay fall-through por defecto — cada `case` corre y se detiene — y un `case` puede simplemente hacer `return`. Un `default` atrapa cualquier duración que no vendas (devuelve `0`, y la validación de la próxima lección la rechazará antes de que llegue aquí):"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[3].md[2]",
+   "text": "```go\nswitch minutes {\ncase 30:\n\treturn 1500\ncase 45:\n\treturn 2000\ncase 60:\n\treturn 2500\ndefault:\n\treturn 0\n}\n```"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[3].md[3]",
+   "text": "> Un `switch` con `return` en cada rama no necesita `break` ni una variable de resultado explícita — cada case responde y sale. Se lee como una lista de precios."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].q",
+   "text": "¿Por qué debería el servidor calcular `PriceCents` a partir de la duración en vez de leer un precio enviado en el body de la petición?"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].choices[0]",
+   "text": "Un cliente podría enviar cualquier precio que quisiera; el servidor debe ser la fuente de verdad para el dinero"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].choices[1]",
+   "text": "Calcularlo en el servidor es la única forma de guardar un int"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].choices[2]",
+   "text": "JSON no puede codificar un campo de precio"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].choices[3]",
+   "text": "El cliente no tiene forma de conocer la duración"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].explain",
+   "text": "Cualquier cosa que envíe el cliente, un cliente malicioso puede falsificarla. El precio es dinero, así que el servidor es su dueño — deriva los centavos a partir de la duración en la que confía. La misma regla aplica al status, los ids y los timestamps que tú generas."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[4].nudge",
+   "text": "Imagina que el body de la petición decía `price_cents: 0`. ¿Quién decide cuánto cuesta un paseo?"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[5].title",
+   "text": "Escribe priceForDuration"
+  },
+  {
+   "path": "modules[11].lessons[1].steps[5].prompt[0]",
+   "text": "Escribe `func priceForDuration(minutes int) int` usando un `switch minutes`. Devuelve `1500` para `case 30`, `2000` para `case 45`, `2500` para `case 60`, y `0` en el `default`."
+  },
+  {
+   "path": "modules[11].lessons[1].steps[5].success",
+   "text": "Esa es la lista de precios convertida en código — pura, fácil de testear, y el único lugar donde se decide cuánto cuesta un paseo."
+  },
+  {
+   "path": "modules[11].lessons[2].title",
+   "text": "Reglas de negocio"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[0].md[0]",
+   "text": "## Decodificar no es validar"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[0].md[1]",
+   "text": "`Decode` demuestra que el JSON *se parseó*. No dice nada sobre si la reserva tiene *sentido*. Tres reglas se interponen entre una petición decodificada y una reserva real:"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[0].md[2]",
+   "text": "- **Duración conocida** — PawWalk vende 30, 45, 60. Una petición de 37 minutos no tiene sentido; recházala.\n- **No en el pasado** — no puedes reservar un paseo para ayer.\n- **Sin doble reserva** — un walker no puede estar en dos lugares a la vez, así que su horario debe estar libre."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[0].md[3]",
+   "text": "Cada regla que falla es un tipo específico de error, y la app merece saber *cuál*. Para eso están los errores de dominio."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[1].md[0]",
+   "text": "## Los errores de dominio son valores con nombre"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[1].md[1]",
+   "text": "En Go un error es cualquier valor con un método `Error() string`, y el más simple viene de `errors.New`. Declara el fallo de cada regla como un `var` a nivel de paquete para que todo el paquete — y sus tests — puedan referirse al *mismo* valor de error por nombre:"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[1].md[2]",
+   "text": "```go\nvar (\n\tErrInvalidDuration = errors.New(\"invalid duration\")\n\tErrPastBooking     = errors.New(\"scheduled time is in the past\")\n\tErrSlotTaken       = errors.New(\"walker already booked for that slot\")\n)\n```"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[1].md[3]",
+   "text": "Como `ErrInvalidDuration` es un único valor compartido, quien lo llame puede preguntar \"¿es *ese* error?\" con `errors.Is(err, ErrInvalidDuration)` — en vez de comparar contra el texto del mensaje, lo cual se rompería en el momento en que alguien lo reescriba."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[2].title",
+   "text": "internal/booking/rules.go"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[2].caption",
+   "text": "Cada validador devuelve `nil` cuando la regla se cumple y un error con nombre cuando no. `validateDuration` agrupa tres casos buenos en un solo `case 30, 45, 60`. `validateScheduledAt` se apoya en el propio `Before` de `time.Time` — la razón por la que guardaste un timestamp real desde la lección 1."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[3].md[0]",
+   "text": "## Mapeando errores a códigos de estado"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[3].md[1]",
+   "text": "El handler atrapa estos errores y responde con el status HTTP *correcto*. Un input malo del cliente es un **`400 Bad Request`**. Pero una doble reserva es diferente — la petición estaba bien formada, solo **entra en conflicto** con una reserva que ya existe. Eso es un **`409 Conflict`** (`http.StatusConflict`)."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[3].md[2]",
+   "text": "Una pequeña función convierte un error de dominio en un código de estado, usando `errors.Is` para que compare el valor, no el texto:"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[3].md[3]",
+   "text": "```go\nfunc statusForError(err error) int {\n\tswitch {\n\tcase errors.Is(err, ErrInvalidDuration), errors.Is(err, ErrPastBooking):\n\t\treturn http.StatusBadRequest\n\tcase errors.Is(err, ErrSlotTaken):\n\t\treturn http.StatusConflict\n\tdefault:\n\t\treturn http.StatusInternalServerError\n\t}\n}\n```"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[3].md[4]",
+   "text": "Un `switch` sin valor después de la palabra clave es la cadena limpia de `if/else if` de Go — cada `case` es un booleano. El `default` mapea cualquier cosa inesperada a un `500`, porque un error que no planeaste es *tu* bug, no del cliente."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[4].md[0]",
+   "text": "## Dónde se verifica la doble reserva"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[4].md[1]",
+   "text": "La duración y la hora las puedes verificar solo con la petición. Si el horario está libre necesita mirar las *otras* reservas — así que esa verificación vive donde viven los datos, en el store: busca las reservas del walker para esa hora y devuelve `ErrSlotTaken` si ya hay una ahí. Al handler no le importa *cómo* se decidió; solo mapea el error que le devuelvan a través de `statusForError` y responde."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[4].md[2]",
+   "text": "> Esta es la forma de todo endpoint real: valida lo que puedas desde la petición, pregúntale al store el resto, y traduce cualquier error al status HTTP que el cliente entiende."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].q",
+   "text": "Llega una petición de reserva perfectamente válida, pero ese walker ya está reservado para el mismo horario. ¿Cuál status HTTP encaja mejor?"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].choices[0]",
+   "text": "409 Conflict (http.StatusConflict)"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].choices[1]",
+   "text": "400 Bad Request (http.StatusBadRequest)"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].choices[2]",
+   "text": "404 Not Found (http.StatusNotFound)"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].choices[3]",
+   "text": "201 Created (http.StatusCreated)"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].explain",
+   "text": "La petición estaba bien formada, así que no es un `400`. Falló porque *entra en conflicto* con un estado que ya existe — una reserva en ese horario. `409 Conflict` dice exactamente eso: intenta de nuevo con otra hora."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[5].nudge",
+   "text": "Nada estaba malformado. El problema es que la petición choca con una reserva que ya está ahí."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[6].title",
+   "text": "Escribe validateDuration"
+  },
+  {
+   "path": "modules[11].lessons[2].steps[6].prompt[0]",
+   "text": "Escribe `func validateDuration(m int) error`. Usa un `switch m` que devuelva `nil` para `case 30, 45, 60`, y devuelva `ErrInvalidDuration` en el `default`. Asume que `ErrInvalidDuration` ya está declarado en el paquete."
+  },
+  {
+   "path": "modules[11].lessons[2].steps[6].success",
+   "text": "Esa es una regla de negocio convertida en función pura — fácil de testear, y devuelve exactamente el error que el handler ya sabe convertir en un 400."
+  }
+ ]
+}
