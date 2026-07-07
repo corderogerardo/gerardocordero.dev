@@ -85,6 +85,9 @@ export default function LessonPageClient() {
     setReveal(key, nextReveal);
   }, [found, reveal, setReveal]);
 
+  const handleStepProgress = useCallback(() => {
+  }, []);
+
   if (found && !reveal[`${found.m.id}/${found.l.id}`]) {
     setReveal(`${found.m.id}/${found.l.id}`, 1);
   }
@@ -100,9 +103,6 @@ export default function LessonPageClient() {
   const lastStep = l.steps[lastIdx];
   const blocked = lastStep && isGated(lastStep) && !isStepDone(m.id, l.id, lastIdx, lastStep, done);
   const allRevealed = revealed >= l.steps.length;
-
-  const handleStepProgress = useCallback(() => {
-  }, []);
 
   return (
     <div className="lesson-wrap" ref={scrollRef}>

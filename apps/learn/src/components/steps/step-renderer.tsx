@@ -38,7 +38,7 @@ export function StepRenderer({
     default:
       return (
         <div className="step">
-          <p>{t("step.unknown", { type: (step as any).type })}</p>
+          <p>{t("step.unknown", { type: (step as { type: string }).type })}</p>
         </div>
       );
   }

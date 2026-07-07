@@ -23,8 +23,8 @@ interface Hit {
 
 function snippetAround(text: string, idx: number, len: number): string {
   const radius = 35;
-  let start = Math.max(0, idx - radius);
-  let end = Math.min(text.length, idx + len + radius);
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(text.length, idx + len + radius);
   let snippet = text.slice(start, end).replace(/\s+/g, " ").trim();
   if (start > 0) snippet = "…" + snippet;
   if (end < text.length) snippet += "…";

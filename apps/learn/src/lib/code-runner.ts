@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- untyped CDN wasm runtimes (Pyodide, ruby.wasm) */
 // In-browser code execution (Python via Pyodide, Ruby via ruby.wasm).
 // Singleton runtimes loaded lazily.
 

@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Course } from "@/lib/course-data";
 
@@ -22,7 +22,6 @@ export function getCourseData(id: string, locale = "en"): Course {
 }
 
 export function getAllCourseIds(): string[] {
-  const { readdirSync } = require("node:fs");
   return readdirSync(join(dataDir, "en"))
     .filter((f: string) => f.endsWith(".json"))
     .map((f: string) => f.replace(/\.json$/, ""));

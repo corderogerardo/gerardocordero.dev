@@ -40,22 +40,6 @@ export default function ExerciseStep({
     [setCode, stepKey],
   );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const ta = e.currentTarget;
-      const { selectionStart, selectionEnd } = ta;
-      const next = ta.value.slice(0, selectionStart) + "    " + ta.value.slice(selectionEnd);
-      setCode(stepKey, next);
-      requestAnimationFrame(() => {
-        ta.selectionStart = ta.selectionEnd = selectionStart + 4;
-      });
-    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleCheck();
-    }
-  }, []);
-
   const handleCheck = useCallback(() => {
     const result = runChecks(step, val, lang);
     if (result.pass) {
@@ -70,6 +54,22 @@ export default function ExerciseStep({
       setFeedbackType("bad");
     }
   }, [step, val, lang, fails, showSolution, setDone, stepKey, onProgress, t]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const ta = e.currentTarget;
+      const { selectionStart, selectionEnd } = ta;
+      const next = ta.value.slice(0, selectionStart) + "    " + ta.value.slice(selectionEnd);
+      setCode(stepKey, next);
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = selectionStart + 4;
+      });
+    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleCheck();
+    }
+  }, [handleCheck, setCode, stepKey]);
 
   const handleReset = useCallback(() => {
     setCode(stepKey, step.starter ?? "");

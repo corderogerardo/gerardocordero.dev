@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { createLearnStore, type LearnState } from "@/stores/learn-store";
@@ -24,12 +24,9 @@ export function CourseProvider({
   course: Course;
   children: ReactNode;
 }) {
-  const storeRef = useRef<ReturnType<typeof createLearnStore> | null>(null);
-  if (!storeRef.current) {
-    storeRef.current = createLearnStore(course.storeKey);
-  }
+  const [store] = useState(() => createLearnStore(course.storeKey));
   return (
-    <CourseContext.Provider value={{ course, store: storeRef.current }}>
+    <CourseContext.Provider value={{ course, store }}>
       {children}
     </CourseContext.Provider>
   );
