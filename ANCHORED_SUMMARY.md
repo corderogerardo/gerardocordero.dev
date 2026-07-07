@@ -58,6 +58,10 @@ Make the learn app and 4 prep-study apps bilingual (English/Spanish) with locale
 - ✅ `pnpm test` — 5 test suites, 34 tests pass
 - ✅ Learn app build — 971 static pages
 
+### Language Switchers
+- ✅ **Learn app**: `LanguageSwitcher` component in sidebar footer — styled accent pill, uses `<Link>` for client-side nav. CSS added to `styles.css` (`.lang-switch`). Switches between `/en/...` and `/es/...` paths.
+- ✅ **Prep-kit SiteHeader**: Language toggle pill in the desktop nav (shows "ES" or "EN") + mobile menu link. Uses the current locale from `useI18n()` to compute the opposite locale path.
+
 ### Next Steps (manual, per app)
 1. **Run the conversion script**: `node scripts/bilingualify-prep.mjs apps/nextjs-prep`
 2. **Translate content data** in `src/data/*.es.ts` files (flashcard Q&A, prompts, quiz questions, etc.)

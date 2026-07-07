@@ -13,9 +13,13 @@ function isActive(pathname: string, href: string) {
 
 export function SiteHeader() {
   const { brand, nav } = usePrepConfig();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  const otherLocale = locale === "en" ? "es" : "en";
+  const otherLabel = locale === "en" ? "ES" : "EN";
+  const otherPath = pathname.replace(/^\/[^/]+/, `/${otherLocale}`);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-bg/80 backdrop-blur">
@@ -49,6 +53,13 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <Link
+            href={otherPath}
+            className="ml-2 rounded-full border border-accent/40 bg-accent/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-bg"
+            title={locale === "en" ? "Español" : "English"}
+          >
+            {otherLabel}
+          </Link>
         </nav>
 
         <button
@@ -80,6 +91,13 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <Link
+            href={otherPath}
+            onClick={() => setOpen(false)}
+            className="mt-2 block rounded-lg border border-accent/40 bg-accent/12 px-3 py-2 text-center text-sm font-bold tracking-wide text-accent"
+          >
+            {locale === "en" ? "🌐 Español" : "🌐 English"}
+          </Link>
         </nav>
       )}
     </header>
