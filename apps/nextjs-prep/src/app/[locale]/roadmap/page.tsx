@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader, RichText, prefixContentLinks } from "@gerardocordero/prep-kit";
-import { ROADMAP } from "@/data/roadmap";
+import type { Locale } from "@gerardocordero/prep-kit";
+import { getRoadmap } from "@/lib/locale-data";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL } from "@/lib/levels";
 
 
@@ -17,12 +18,15 @@ export const metadata: Metadata = {
 
 export default async function RoadmapPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const roadmap = getRoadmap(locale as Locale);
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Junior → Architect → Beyond"
-        title="Frontend Engineer Roadmap"
-        lead="A level-graded path through everything in this guide. Each stage lists what you can already do and what to learn next — and every flashcard is tagged with its level so you can drill exactly where you are."
+        eyebrow={locale === "es" ? "Junior → Arquitecto → Más allá" : "Junior → Architect → Beyond"}
+        title={locale === "es" ? "Hoja de Ruta del Ingeniero Frontend" : "Frontend Engineer Roadmap"}
+        lead={locale === "es"
+          ? "Un camino de aprendizaje graduado por nivel a través de todo en esta guía. Cada etapa lista lo que ya puedes hacer y qué aprender接下来 — y cada tarjeta está etiquetada con su nivel para que puedas practicar exactamente donde estás."
+          : "A level-graded path through everything in this guide. Each stage lists what you can already do and what to learn next — and every flashcard is tagged with its level so you can drill exactly where you are."}
       />
 
       <nav className="flex flex-wrap gap-2">
@@ -38,7 +42,7 @@ export default async function RoadmapPage({ params }: { params: Promise<{ locale
       </nav>
 
       <ol className="space-y-4">
-        {ROADMAP.map((stage, i) => (
+        {roadmap.map((stage, i) => (
           <li
             key={stage.level}
             id={stage.level}
@@ -65,7 +69,7 @@ export default async function RoadmapPage({ params }: { params: Promise<{ locale
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-good">
-                  You can already
+                  {locale === "es" ? "Ya puedes" : "You can already"}
                 </h3>
                 <ul className="space-y-1.5 text-sm text-text/90">
                   {stage.can.map((item) => (
@@ -78,7 +82,7 @@ export default async function RoadmapPage({ params }: { params: Promise<{ locale
               </div>
               <div>
                 <h3 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-accent">
-                  Level up by
+                  {locale === "es" ? "Mejora con" : "Level up by"}
                 </h3>
                 <ul className="space-y-1.5 text-sm text-text/90">
                   {stage.next.map((item) => (

@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader, RichText, prefixContentLinks } from "@gerardocordero/prep-kit";
-import {
-  ARCH_INTRO,
-  ARCH_SECTIONS,
-  DEEP_DIVES,
-  DEEPDIVES_INTRO,
-} from "@/data/architecture";
+import type { Locale } from "@gerardocordero/prep-kit";
+import { getArchitecture } from "@/lib/locale-data";
 
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "es" }];
@@ -19,16 +15,17 @@ export const metadata: Metadata = {
 
 export default async function ArchitecturePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const arch = getArchitecture(locale as Locale);
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="System design"
-        title="Frontend Architecture Guide"
-        lead={ARCH_INTRO}
+        eyebrow={locale === "es" ? "Diseño de sistemas" : "System design"}
+        title={locale === "es" ? "Guía de Arquitectura Frontend" : "Frontend Architecture Guide"}
+        lead={arch.intro}
       />
 
       <div className="space-y-4">
-        {ARCH_SECTIONS.map((s) => (
+        {arch.sections.map((s) => (
           <section key={s.id} id={s.id} className="card scroll-mt-24">
             <h2 className="mb-3 text-lg font-bold text-white">{s.title}</h2>
             <RichText html={prefixContentLinks(s.html, locale)} />
@@ -38,10 +35,10 @@ export default async function ArchitecturePage({ params }: { params: Promise<{ l
 
       <section className="space-y-4 pt-4">
         <div className="space-y-1.5">
-          <h2 className="text-2xl font-extrabold">Deep dives</h2>
-          {DEEPDIVES_INTRO && <p className="text-muted">{DEEPDIVES_INTRO}</p>}
+          <h2 className="text-2xl font-extrabold">{locale === "es" ? "Inmersiones" : "Deep dives"}</h2>
+          {arch.deepDivesIntro && <p className="text-muted">{arch.deepDivesIntro}</p>}
         </div>
-        {DEEP_DIVES.map((d) => (
+        {arch.deepDives.map((d) => (
           <article key={d.id} className="card">
             <div className="mb-3 flex items-center gap-2">
               <span className="rounded-full border border-accent/40 bg-accent/12 px-2.5 py-0.5 text-xs font-bold text-accent">

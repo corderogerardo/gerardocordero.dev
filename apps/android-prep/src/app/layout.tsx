@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "./rich.css";
-import { PrepProvider, I18nProvider, SiteHeader, SiteFooter } from "@gerardocordero/prep-kit";
-import { prepConfig } from "@/prep.config";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -18,20 +16,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://android.gerardocordero.dev"),
-  title: {
-    default: "Android Interview Prep — Senior Kotlin & Compose Study Guide",
-    template: "%s · Android Interview Prep",
-  },
-  description:
-    "A senior Android interview study guide: Kotlin coroutines & Flow, Jetpack Compose, architecture deep-dives, Jetpack libraries, performance, testing, practice pitches, flashcards, and a multiple-choice quiz.",
-  openGraph: {
-    title: "Android Interview Prep — Senior Kotlin & Compose Study Guide",
-    description:
-      "Kotlin, Jetpack Compose, architecture deep-dives, practice pitches, flashcards, and a quiz for senior/staff Android interviews.",
-    type: "website",
-    url: "https://android.gerardocordero.dev",
-  },
+  metadataBase: new URL("https://android-prep.gerardocordero.dev"),
+  title: "Android Interview Prep",
 };
 
 export default function RootLayout({
@@ -39,20 +25,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en"
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <I18nProvider locale="en">
-          <PrepProvider config={prepConfig}>
-            <SiteHeader />
-            <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
-              {children}
-            </main>
-            <SiteFooter />
-          </PrepProvider>
-        </I18nProvider>
-      </body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

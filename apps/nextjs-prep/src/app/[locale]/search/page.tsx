@@ -19,9 +19,11 @@ export default async function SearchPage({ params }: { params: Promise<{ locale:
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Find anything · ask anything"
-        title="Search & Ask"
-        lead="Keyword search is instant. Enable AI to search by meaning — a small model runs fully in your browser, nothing leaves your device. And ask the on-device AI tutor a question when your browser supports it."
+        eyebrow={locale === "es" ? "Busca cualquier cosa · Pregunta cualquier cosa" : "Find anything · ask anything"}
+        title={locale === "es" ? "Buscar y Preguntar" : "Search & Ask"}
+        lead={locale === "es"
+          ? "La búsqueda por palabra clave es instantánea. Activa IA para buscar por significado — un modelo pequeño se ejecuta completamente en tu navegador, nada sale de tu dispositivo. Y pregunta al tutor IA cuando tu navegador lo soporte."
+          : "Keyword search is instant. Enable AI to search by meaning — a small model runs fully in your browser, nothing leaves your device. And ask the on-device AI tutor a question when your browser supports it."}
       />
       <SearchView
         flashcards={ALL_FLASHCARDS}
