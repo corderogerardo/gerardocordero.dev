@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { QuizQuestion } from "../types";
 import { usePersisted } from "../config";
+import { useI18n } from "../lib/i18n";
 import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 
@@ -19,6 +20,7 @@ export function Quiz({
   const { value: answers, set: setAnswers, reset } = usePersisted<
     Record<string, number>
   >("quiz", {});
+  const { t } = useI18n();
   const [filter, setFilter] = useState("all");
   const [unansweredOnly, setUnansweredOnly] = useState(false);
 
@@ -46,8 +48,7 @@ export function Quiz({
           </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
-          Score <b className="text-good">{correct}</b> / {answeredIds.length}{" "}
-          answered · {questions.length} total
+          <span dangerouslySetInnerHTML={{__html: t("quiz.score", {correct, answered: answeredIds.length, total: questions.length})}} />
         </span>
       </div>
 
@@ -61,15 +62,15 @@ export function Quiz({
               : "border-border bg-surface text-muted hover:text-text"
           }`}
         >
-          ◯ Unanswered ({remaining})
+          {t("quiz.unanswered", {n: remaining})}
         </button>
         <button
           onClick={() => {
-            if (confirm("Reset all quiz answers?")) reset();
+            if (confirm(t("quiz.reset.confirm"))) reset();
           }}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-bad"
         >
-          ↺ Reset my answers
+          {t("quiz.reset")}
         </button>
       </div>
 
@@ -82,7 +83,7 @@ export function Quiz({
             <li key={q.id} className="card">
               <div className="mb-3 flex flex-wrap items-baseline gap-2">
                 <span className="font-mono font-bold text-accent">
-                  Q{i + 1}
+                  {t("quiz.q", {i: i + 1})}
                 </span>
                 <span className="font-semibold text-white">{q.question}</span>
                 <span className="ml-auto rounded-full border border-border bg-surface px-2 py-0.5 text-[0.7rem] font-medium text-muted">
@@ -137,7 +138,7 @@ export function Quiz({
                       isCorrect ? "text-good" : "text-warn"
                     }`}
                   >
-                    {isCorrect ? "✓ Correct" : "✗ Not quite — see why:"}
+                    {isCorrect ? t("quiz.correct") : t("quiz.wrong")}
                   </p>
                   <RichText html={q.explanationHtml} />
                 </div>

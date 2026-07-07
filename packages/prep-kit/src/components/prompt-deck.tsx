@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Prompt, PromptKind } from "../types";
 import { usePersisted } from "../config";
+import { useI18n } from "../lib/i18n";
 import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "../lib/levels";
@@ -20,10 +21,10 @@ import {
 
 type Status = "solved" | "revisit";
 
-const KINDS: { value: PromptKind | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "coding", label: "Coding" },
-  { value: "design", label: "System design" },
+const KINDS: { value: PromptKind | "all"; localeKey: string }[] = [
+  { value: "all", localeKey: "prompt.all" },
+  { value: "coding", localeKey: "prompt.coding" },
+  { value: "design", localeKey: "prompt.design" },
 ];
 
 export function PromptDeck({
@@ -47,6 +48,7 @@ export function PromptDeck({
     set: setSolvedToday,
     reset: resetSolvedToday,
   } = usePersisted<DayLog>("prompts-solved-today", { day: 0, ids: [] });
+  const { t } = useI18n();
   const [kind, setKind] = useState<PromptKind | "all">("all");
   const [level, setLevel] = useState<Level | "all">("all");
   const [dueOnly, setDueOnly] = useState(false);
@@ -80,32 +82,28 @@ export function PromptDeck({
       <div className="flex flex-wrap items-center gap-2">
         {KINDS.map((k) => (
           <Chip key={k.value} active={kind === k.value} onClick={() => setKind(k.value)}>
-            {k.label}
+            {t(k.localeKey)}
           </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
           {dailyCounter ? (
-            <>
-              Solved today <b className="text-good">{countToday(solvedToday, today)}</b>
-            </>
+            <span dangerouslySetInnerHTML={{__html: t("prompt.solvedToday", {n: countToday(solvedToday, today)})}} />
           ) : (
-            <>
-              Solved <b className="text-good">{solved}</b> / {prompts.length}
-            </>
+            <span dangerouslySetInnerHTML={{__html: t("prompt.solved", {solved, total: prompts.length})}} />
           )}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-          Level
+          {t("prompt.level")}
         </span>
         <Chip active={level === "all"} onClick={() => setLevel("all")}>
-          All
+          {t("flashcard.all")}
         </Chip>
         {LEVELS.map((l) => (
           <Chip key={l.value} active={level === l.value} onClick={() => setLevel(l.value)}>
-            {l.label}
+            {t(l.localeKey)}
           </Chip>
         ))}
         <button
@@ -117,11 +115,11 @@ export function PromptDeck({
               : "border-border bg-surface text-muted hover:text-text"
           }`}
         >
-          ⏱ Due ({due})
+          {t("prompt.due", {n: due})}
         </button>
         <button
           onClick={() => {
-            if (confirm("Reset your practice progress?")) {
+            if (confirm(t("prompt.reset.confirm"))) {
               reset();
               resetSrs();
               resetSolvedToday();
@@ -129,13 +127,14 @@ export function PromptDeck({
           }}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-bad"
         >
-          ↺ Reset
+          {t("prompt.reset")}
         </button>
       </div>
 
       <ol className="space-y-4">
         {visible.map((p) => {
           const st = status[p.id];
+          const promptNext = nextLabel(srs[p.id], today);
           return (
             <li key={p.id} className="card space-y-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -146,12 +145,12 @@ export function PromptDeck({
                       : "border-accent-2/40 bg-accent-2/12 text-accent-2"
                   }`}
                 >
-                  {p.kind === "coding" ? "Code" : "Design"}
+                  {p.kind === "coding" ? t("prompt.code") : t("prompt.designBadge")}
                 </span>
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-bold uppercase ${LEVEL_BADGE[p.level]}`}
-                >
-                  {LEVEL_LABEL[p.level]}
+                  <span
+                      className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-bold uppercase ${LEVEL_BADGE[p.level]}`}
+                    >
+                      {t(LEVEL_LABEL[p.level])}
                 </span>
                 <h2 className="text-base font-bold text-white">{p.title}</h2>
                 {st && (
@@ -160,7 +159,7 @@ export function PromptDeck({
                       st === "solved" ? "text-good" : "text-warn"
                     }`}
                   >
-                    {st === "solved" ? "✓ Solved" : "↻ Revisit"}
+                    {st === "solved" ? t("prompt.solvedLabel") : t("prompt.revisitLabel")}
                   </span>
                 )}
               </div>
@@ -210,16 +209,16 @@ export function PromptDeck({
                   onClick={() => gradePrompt(p.id, "solved")}
                   className="rounded-lg bg-good/15 px-3 py-1.5 text-sm font-bold text-good transition-colors hover:bg-good/25"
                 >
-                  ✓ Solved it
+                  {t("prompt.solvedBtn")}
                 </button>
                 <button
                   onClick={() => gradePrompt(p.id, "revisit")}
                   className="rounded-lg bg-warn/15 px-3 py-1.5 text-sm font-bold text-warn transition-colors hover:bg-warn/25"
                 >
-                  ↻ Revisit
+                  {t("prompt.revisitBtn")}
                 </button>
                 <span className="ml-auto text-xs text-muted">
-                  next: {nextLabel(srs[p.id], today)}
+                  <span dangerouslySetInnerHTML={{__html: t("prompt.next", {label: t(promptNext.key, promptNext.params)})}} />
                 </span>
               </div>
             </li>

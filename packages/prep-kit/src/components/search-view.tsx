@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Flashcard, Prompt, QuizQuestion, StudySection } from "../types";
 import { plainText } from "../lib/plain-text";
+import { useI18n } from "../lib/i18n";
 
 export type SearchContent = {
   flashcards: Flashcard[];
@@ -89,6 +90,7 @@ type AiState = "off" | "loading" | "ready" | "error";
 type Ranked = { i: number; score: number }[];
 
 export function SearchView({ flashcards, prompts, quiz, study }: SearchContent) {
+  const { t } = useI18n();
   const index = useMemo(
     () => buildIndex({ flashcards, prompts, quiz, study }),
     [flashcards, prompts, quiz, study],
@@ -195,7 +197,7 @@ export function SearchView({ flashcards, prompts, quiz, study }: SearchContent) 
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by keyword — or enable AI for hybrid meaning + keyword search…"
+        placeholder={t("search.placeholder")}
         className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text outline-none placeholder:text-muted focus:border-accent/60"
       />
 
@@ -205,32 +207,31 @@ export function SearchView({ flashcards, prompts, quiz, study }: SearchContent) 
             onClick={enableAi}
             className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-3.5 py-1.5 font-semibold text-bg transition-opacity hover:opacity-90"
           >
-            🧠 Enable AI hybrid search (on-device)
+            {t("search.enableAi")}
           </button>
         )}
         {ai === "loading" && (
           <span className="text-muted">
             {indexMsg
-              ? `Embedding content on-device · ${indexMsg}…`
-              : `Loading model in a worker${progress ? ` · ${progress}%` : " (first run downloads the model; then cached)"}…`}
+              ? t("search.embedding", {msg: indexMsg})
+              : t("search.loading", {progress: progress ? t("search.loading.pct", {pct: progress}) : t("search.loading.first")})}
           </span>
         )}
         {ai === "ready" && (
           <span className="rounded-full border border-good/40 bg-good/12 px-3 py-1 font-medium text-good">
-            🧠 Hybrid AI search · {device === "webgpu" ? "WebGPU" : "WASM"} · on
-            your device
+            <span dangerouslySetInnerHTML={{__html: t("search.hybrid", {device: device === "webgpu" ? "WebGPU" : "WASM"})}} />
           </span>
         )}
         {ai === "error" && (
           <span className="rounded-full border border-warn/40 bg-warn/12 px-3 py-1 font-medium text-warn">
-            On-device AI isn&apos;t supported here — keyword search active
+            {t("search.error")}
           </span>
         )}
-        <span className="ml-auto text-muted">{results.length} results</span>
+        <span className="ml-auto text-muted">{t("search.results", {n: results.length})}</span>
       </div>
 
       {query && results.length === 0 && (
-        <p className="text-sm text-muted">No matches. Try fewer or broader words.</p>
+        <p className="text-sm text-muted">{t("search.noMatches")}</p>
       )}
 
       <ul className="space-y-2">

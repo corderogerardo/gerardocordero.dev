@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Flashcard } from "../types";
 import { usePersisted } from "../config";
+import { useI18n } from "../lib/i18n";
 import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 import { AiTutor } from "./ai-tutor";
@@ -56,6 +57,7 @@ export function FlashcardDeck({
   const [dueOnly, setDueOnly] = useState(false);
   const [order, setOrder] = useState<string[]>(() => cards.map((c) => c.id));
 
+  const { t } = useI18n();
   const today = todayEpochDay();
   const byId = useMemo(
     () => new Map(cards.map((c) => [c.id, c])),
@@ -110,28 +112,24 @@ export function FlashcardDeck({
             active={filter === f.value}
             onClick={() => setFilter(f.value)}
           >
-            {f.label}
+            {f.value === "all" ? t("flashcard.all") : f.label}
           </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
-          {dailyCounter ? (
-            <>
-              Known today <b className="text-good">{countToday(knownToday, today)}</b>
-            </>
+            {dailyCounter ? (
+            <span dangerouslySetInnerHTML={{__html: t("flashcard.knownToday", {n: countToday(knownToday, today)})}} />
           ) : (
-            <>
-              Known <b className="text-good">{known}</b> / {cards.length}
-            </>
+            <span dangerouslySetInnerHTML={{__html: t("flashcard.known", {known, total: cards.length})}} />
           )}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-          Level
+          {t("flashcard.level")}
         </span>
         <Chip active={level === "all"} onClick={() => setLevel("all")}>
-          All
+          {t("flashcard.all")}
         </Chip>
         {LEVELS.map((l) => (
           <Chip
@@ -139,11 +137,11 @@ export function FlashcardDeck({
             active={level === l.value}
             onClick={() => setLevel(l.value)}
           >
-            {l.label}
+            {t(l.localeKey)}
           </Chip>
         ))}
         <span className="ml-auto text-sm text-muted">
-          Showing <b className="text-text">{visible.length}</b>
+          <span dangerouslySetInnerHTML={{__html: t("flashcard.showing", {n: visible.length})}} />
         </span>
       </div>
 
@@ -157,17 +155,17 @@ export function FlashcardDeck({
               : "border-border bg-surface text-muted hover:text-text"
           }`}
         >
-          ⏱ Due ({due})
+          {t("flashcard.due", {n: due})}
         </button>
         <button
           onClick={shuffle}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-text"
         >
-          🔀 Shuffle
+          {t("flashcard.shuffle")}
         </button>
         <button
           onClick={() => {
-            if (confirm("Reset grades and spaced-repetition schedule?")) {
+            if (confirm(t("flashcard.reset.confirm"))) {
               reset();
               resetSrs();
               resetKnownToday();
@@ -175,17 +173,16 @@ export function FlashcardDeck({
           }}
           className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-bad"
         >
-          ↺ Reset progress
+          {t("flashcard.reset")}
         </button>
         <span className="ml-auto text-xs text-muted">
-          Grade a card → it reschedules. Drill <b className="text-accent-2">Due</b> daily.
+          <span dangerouslySetInnerHTML={{__html: t("flashcard.hint")}} />
         </span>
       </div>
 
       {dueOnly && visible.length === 0 && (
         <div className="card text-center text-sm text-muted">
-          🎉 Nothing due in this filter. Come back tomorrow, or turn off{" "}
-          <b className="text-accent-2">Due</b> to keep drilling.
+          <span dangerouslySetInnerHTML={{__html: t("flashcard.none")}} />
         </div>
       )}
 
@@ -193,6 +190,7 @@ export function FlashcardDeck({
         {visible.map((card) => {
           const isOpen = !!revealed[card.id];
           const gradeState = grades[card.id];
+          const cardNext = nextLabel(srs[card.id], today);
           return (
             <li
               key={card.id}
@@ -219,7 +217,7 @@ export function FlashcardDeck({
                     <span
                       className={`rounded-full border px-2 py-0.5 text-center text-[0.62rem] font-bold uppercase ${LEVEL_BADGE[card.level]}`}
                     >
-                      {LEVEL_LABEL[card.level]}
+                      {t(LEVEL_LABEL[card.level])}
                     </span>
                   )}
                 </span>
@@ -241,7 +239,7 @@ export function FlashcardDeck({
                 <div className="border-t border-border px-5 pb-5 pt-4">
                   <RichText html={card.answerHtml} />
                   <p className="mt-4 mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
-                    How well did you know it?
+                    {t("flashcard.gradeLabel")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     {GRADES.map((g) => (
@@ -250,11 +248,11 @@ export function FlashcardDeck({
                         onClick={() => grade(card.id, g.value)}
                         className={`rounded-lg px-3 py-1.5 text-sm font-bold transition-colors ${g.badge}`}
                       >
-                        {g.label}
+                        {t(g.localeKey)}
                       </button>
                     ))}
                     <span className="ml-auto text-xs text-muted">
-                      next review: {nextLabel(srs[card.id], today)}
+                      <span dangerouslySetInnerHTML={{__html: t("flashcard.next", {label: t(cardNext.key, cardNext.params)})}} />
                     </span>
                   </div>
                   <div className="mt-3">
@@ -264,13 +262,13 @@ export function FlashcardDeck({
                       }
                       className="text-xs font-semibold text-accent transition-colors hover:text-accent-2"
                     >
-                      🤖 {aiOpen[card.id] ? "Hide AI tutor" : "Explain with AI"}
+                      {aiOpen[card.id] ? t("flashcard.ai.hide") : t("flashcard.ai.show")}
                     </button>
                     {aiOpen[card.id] && (
                       <div className="mt-2">
                         <AiTutor
                           context={`Q: ${card.question}\nA: ${plainText(card.answerHtml)}`}
-                          placeholder="Ask about this card…"
+                          placeholder={t("flashcard.ai.placeholder")}
                         />
                       </div>
                     )}

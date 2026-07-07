@@ -2,8 +2,10 @@
 
 import type { ChecklistGroup } from "../types";
 import { usePersisted } from "../config";
+import { useI18n } from "../lib/i18n";
 
 export function ProgressChecklist({ groups }: { groups: ChecklistGroup[] }) {
+  const { t } = useI18n();
   const { value: checked, set: setChecked, reset } = usePersisted<
     Record<string, boolean>
   >("chk", {});
@@ -23,15 +25,15 @@ export function ProgressChecklist({ groups }: { groups: ChecklistGroup[] }) {
         </div>
         <div className="mt-1.5 flex items-center justify-between text-sm text-muted">
           <span>
-            {done} of {all.length} complete · {pct}%
+            <span dangerouslySetInnerHTML={{__html: t("progress.complete", {done, total: all.length, pct})}} />
           </span>
           <button
             onClick={() => {
-              if (confirm("Reset progress checklist?")) reset();
+              if (confirm(t("progress.reset.confirm"))) reset();
             }}
             className="font-medium transition-colors hover:text-bad"
           >
-            ↺ Reset
+            {t("progress.reset")}
           </button>
         </div>
       </div>

@@ -6,21 +6,22 @@ export type Level = "junior" | "mid" | "senior" | "architect" | "beyond";
 export const LEVELS: {
   value: Level;
   label: string;
+  localeKey: string;
   short: string;
 }[] = [
-  { value: "junior", label: "Junior", short: "JR" },
-  { value: "mid", label: "Mid", short: "MID" },
-  { value: "senior", label: "Senior", short: "SR" },
-  { value: "architect", label: "Architect", short: "ARCH" },
-  { value: "beyond", label: "Beyond", short: "★" },
+  { value: "junior", label: "Junior", localeKey: "level.junior", short: "JR" },
+  { value: "mid", label: "Mid", localeKey: "level.mid", short: "MID" },
+  { value: "senior", label: "Senior", localeKey: "level.senior", short: "SR" },
+  { value: "architect", label: "Architect", localeKey: "level.architect", short: "ARCH" },
+  { value: "beyond", label: "Beyond", localeKey: "level.beyond", short: "★" },
 ];
 
 export const LEVEL_LABEL: Record<Level, string> = {
-  junior: "Junior",
-  mid: "Mid",
-  senior: "Senior",
-  architect: "Architect",
-  beyond: "Beyond",
+  junior: "level.junior",
+  mid: "level.mid",
+  senior: "level.senior",
+  architect: "level.architect",
+  beyond: "level.beyond",
 };
 
 /** Tailwind classes for a level badge. */

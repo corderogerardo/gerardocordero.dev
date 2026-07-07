@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { usePersisted } from "../config";
+import { useI18n } from "../lib/i18n";
 import type { Flashcard, Prompt } from "../types";
 import { FlashcardDeck } from "./flashcard-deck";
 import { PromptDeck } from "./prompt-deck";
@@ -30,6 +30,7 @@ export function DailySession({
     "streak",
     undefined,
   );
+  const { t } = useI18n();
   const today = todayEpochDay();
 
   // Deterministic daily set: due/new cards capped, scheduled-due first.
@@ -63,17 +64,15 @@ export function DailySession({
           </span>
           <div>
             <div className="text-2xl font-extrabold text-white">
-              {streakN} day{streakN === 1 ? "" : "s"}
+              <span dangerouslySetInnerHTML={{__html: t("daily.streak", {n: streakN, s: streakN === 1 ? "" : "s"})}} />
             </div>
             <div className="text-xs text-muted">
-              current streak · best {streak?.best ?? 0}
+              <span dangerouslySetInnerHTML={{__html: t("daily.streakCurrent", {best: streak?.best ?? 0})}} />
             </div>
           </div>
         </div>
         <div className="text-sm text-muted">
-          <b className="text-accent-2">{dueTotal}</b> cards due · today&apos;s set:{" "}
-          <b className="text-text">{sessionCards.length}</b> cards +{" "}
-          <b className="text-text">{todayPrompts.length}</b> prompts
+          <span dangerouslySetInnerHTML={{__html: t("daily.cardsDue", {n: dueTotal, cards: sessionCards.length, prompts: todayPrompts.length})}} />
         </div>
         <button
           onClick={() => setStreak((s) => bumpStreak(s, today))}
@@ -84,28 +83,20 @@ export function DailySession({
               : "bg-gradient-to-r from-accent to-accent-2 text-bg hover:opacity-90"
           }`}
         >
-          {done ? "✓ Done today" : "Mark today complete"}
+          {done ? t("daily.done") : t("daily.markDone")}
         </button>
       </div>
 
       {sessionCards.length === 0 ? (
         <div className="card text-center text-muted">
-          🎉 No cards due right now — you&apos;re ahead. Browse the full{" "}
-          <Link href="/flashcards" className="text-accent hover:underline">
-            flashcard deck
-          </Link>{" "}
-          or do a{" "}
-          <Link href="/practice" className="text-accent hover:underline">
-            practice prompt
-          </Link>
-          .
+          <span dangerouslySetInnerHTML={{__html: t("daily.noCards")}} />
         </div>
       ) : (
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">
-            Today&apos;s cards{" "}
+            {t("daily.cardsTitle")}{" "}
             <span className="text-sm font-normal text-muted">
-              — grade each by confidence
+              {t("daily.cardsSub")}
             </span>
           </h2>
           <FlashcardDeck cards={sessionCards} filters={SESSION_FILTERS} dailyCounter />
@@ -115,9 +106,9 @@ export function DailySession({
       {todayPrompts.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">
-            Today&apos;s prompts{" "}
+            {t("daily.promptsTitle")}{" "}
             <span className="text-sm font-normal text-muted">
-              — try before you reveal
+              {t("daily.promptsSub")}
             </span>
           </h2>
           <PromptDeck prompts={todayPrompts} dailyCounter />

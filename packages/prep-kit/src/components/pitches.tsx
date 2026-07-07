@@ -5,6 +5,7 @@ import type { Pitch } from "../types";
 import { RichText } from "./rich-text";
 import { Teleprompter } from "./teleprompter";
 import { box } from "../lib/html";
+import { useI18n } from "../lib/i18n";
 
 export function Pitches({
   pitches,
@@ -13,6 +14,7 @@ export function Pitches({
   pitches: Pitch[];
   introHtml: string;
 }) {
+  const { t } = useI18n();
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = pitches.find((p) => p.id === activeId) ?? null;
 
@@ -37,7 +39,7 @@ export function Pitches({
                 onClick={() => setActiveId(pitch.id)}
                 className="shrink-0 rounded-lg bg-gradient-to-r from-accent to-accent-2 px-3.5 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
               >
-                ▶ Teleprompter
+                {t("pitch.teleprompter")}
               </button>
             )}
           </div>

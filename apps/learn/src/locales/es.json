@@ -1,0 +1,82 @@
+{
+  "app.title": "PawWalk Academy",
+  "app.subtitle": "Cursos interactivos — construye la app PawWalk paso a paso",
+  "app.lang.en": "Inglés",
+  "app.lang.es": "Español",
+
+  "course.picker.title": "PawWalk Academy",
+  "course.picker.subtitle": "Cursos interactivos — construye la app PawWalk paso a paso",
+
+  "sidebar.brand": "PawWalk Academy",
+  "sidebar.export": "Exportar progreso",
+  "sidebar.import": "Importar progreso",
+  "sidebar.reset": "Reiniciar progreso",
+  "sidebar.reset.confirm": "¿Reiniciar todo el progreso del curso? Esta acción no se puede deshacer.",
+  "sidebar.import.confirm": "¿Reemplazar el progreso actual con el archivo importado?",
+  "sidebar.import.error": "No es un archivo de progreso válido.",
+
+  "overall.map": "Mapa",
+  "overall.review": "Repaso",
+  "overall.review.due": "Repaso · {count} pendientes",
+
+  "search.placeholder": "Buscar lecciones…",
+
+  "lesson.notfound": "Lección no encontrada",
+  "lesson.module": "Módulo",
+  "lesson.of": "de",
+  "lesson.min": "min",
+  "lesson.continue": "Continuar ↓",
+  "lesson.blocked": "Completa el paso de arriba para continuar",
+  "lesson.complete.title": "Lección completada: {title}",
+  "lesson.complete.body": "Buen trabajo. Sigue así.",
+  "lesson.crumbs": "Módulo {mi} · {module} — Lección {li} de {total} · ~{est} min",
+  "lesson.reset": "Reiniciar esta lección",
+
+  "review.title": "Repaso",
+  "review.none": "Nada pendiente ahora",
+  "review.none.body": "Vuelve más tarde o continúa con el curso.",
+  "review.back": "Volver al curso",
+  "review.due.count": "{count} pendientes · las preguntas respondidas vuelven con un cronograma",
+  "review.seen": "Repasadas {seen} · {correct} correctas",
+  "review.done": "Repasadas {seen} · {correct} correctas",
+  "review.tag": "Repaso",
+  "review.context": "Módulo {mi} · {module} — {lesson}",
+  "review.correct": "✓ Correcto. {explain}",
+  "review.wrong": "No es correcto",
+
+  "step.quiz.tag": "Verificación rápida",
+  "step.quiz.correct": "✓ {explain}",
+  "step.quiz.wrong.title": "No es correcto",
+  "step.quiz.wrong.hint": "Piénsalo e intenta otra respuesta.",
+
+  "step.exercise.tag": "Escribe el código",
+  "step.exercise.check": "Revisar mi código",
+  "step.exercise.reset": "Reiniciar",
+  "step.exercise.run": "▶ Ejecutar",
+  "step.exercise.running": "Ejecutando…",
+  "step.exercise.stuck": "Estoy atascado — mostrar solución",
+  "step.exercise.success": "¡Exactamente correcto! Al siguiente paso.",
+  "step.exercise.fail": "Compara tu código con las instrucciones de nuevo.",
+  "step.exercise.feedback.ok": "✓ {hint}",
+  "step.exercise.feedback.bad": "Todavía no",
+  "step.exercise.solution.title": "Solución",
+  "step.exercise.solution.hint": "Escríbelo tú mismo (no lo pegues) — luego presiona <strong>Revisar mi código</strong>. Escribir es cómo se aprende.",
+  "step.exercise.done": "✓ Completado",
+  "step.exercise.done.help": "✓ Completado (con ayuda de la solución).",
+
+  "step.xcode.tag": "En Xcode",
+  "step.xcode.skip": "Lo haré en mi Mac después — continuar de todos modos",
+
+  "step.unknown": "Tipo de paso desconocido: {type}",
+
+  "error.title": "Algo salió mal",
+  "error.body": "Ocurrió un error inesperado. Actualiza la página o inténtalo de nuevo.",
+  "error.refresh": "Actualizar",
+
+  "map.title": "Plan de estudios",
+  "map.back": "← Volver al curso",
+  "map.lessons": "lecciones",
+  "map.min": "~{n} min",
+
+  "course.notfound": "Curso no encontrado"
+}

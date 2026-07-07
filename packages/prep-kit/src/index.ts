@@ -35,6 +35,8 @@ export { Chip } from "./components/chip";
 export * from "./lib/srs";
 export * from "./lib/streak";
 export * from "./lib/levels";
+export { I18nProvider, useI18n } from "./lib/i18n";
+export type { Locale, LocaleInfo } from "./lib/i18n-config";
 export { box } from "./lib/html";
 export { plainText } from "./lib/plain-text";
 export { useLocalStorage } from "./lib/use-local-storage";

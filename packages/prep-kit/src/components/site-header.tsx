@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { usePrepConfig } from "../config";
+import { useI18n } from "../lib/i18n";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -12,6 +13,7 @@ function isActive(pathname: string, href: string) {
 
 export function SiteHeader() {
   const { brand, nav } = usePrepConfig();
+  const { t } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -51,7 +53,7 @@ export function SiteHeader() {
 
         <button
           type="button"
-          aria-label="Toggle navigation"
+          aria-label={t("nav.toggle")}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
           className="ml-auto grid h-9 w-9 place-items-center rounded-lg border border-border text-muted md:hidden"

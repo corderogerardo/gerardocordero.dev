@@ -28,11 +28,11 @@ export function countToday(log: DayLog, today = todayEpochDay()): number {
   return log.day === today ? log.ids.length : 0;
 }
 
-export const GRADES: { value: Grade; label: string; badge: string; key: string }[] = [
-  { value: "again", label: "Again", badge: "bg-bad/15 text-bad hover:bg-bad/25", key: "1" },
-  { value: "hard", label: "Hard", badge: "bg-warn/15 text-warn hover:bg-warn/25", key: "2" },
-  { value: "good", label: "Good", badge: "bg-good/15 text-good hover:bg-good/25", key: "3" },
-  { value: "easy", label: "Easy", badge: "bg-accent/15 text-accent hover:bg-accent/25", key: "4" },
+export const GRADES: { value: Grade; localeKey: string; badge: string; key: string }[] = [
+  { value: "again", localeKey: "flashcard.grade.again", badge: "bg-bad/15 text-bad hover:bg-bad/25", key: "1" },
+  { value: "hard", localeKey: "flashcard.grade.hard", badge: "bg-warn/15 text-warn hover:bg-warn/25", key: "2" },
+  { value: "good", localeKey: "flashcard.grade.good", badge: "bg-good/15 text-good hover:bg-good/25", key: "3" },
+  { value: "easy", localeKey: "flashcard.grade.easy", badge: "bg-accent/15 text-accent hover:bg-accent/25", key: "4" },
 ];
 
 export function todayEpochDay(): number {
@@ -88,11 +88,11 @@ export function dueCount(
   return ids.filter((id) => isDue(srs[id], today)).length;
 }
 
-/** Human label for when an item next comes up. */
-export function nextLabel(entry: SrsEntry | undefined, today = todayEpochDay()): string {
-  if (!entry) return "new";
+/** Locale-aware label for when an item next comes up. Returns a key + optional param. */
+export function nextLabel(entry: SrsEntry | undefined, today = todayEpochDay()): { key: string; params?: Record<string, number> } {
+  if (!entry) return { key: "srs.new" };
   const d = entry.due - today;
-  if (d <= 0) return "due now";
-  if (d === 1) return "in 1 day";
-  return `in ${d} days`;
+  if (d <= 0) return { key: "srs.dueNow" };
+  if (d === 1) return { key: "srs.in1day" };
+  return { key: "srs.inDays", params: { n: d } };
 }

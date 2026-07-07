@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import { usePrepConfig } from "../config";
+import { useI18n } from "../lib/i18n";
 
 export function ProgressTools() {
   const { storagePrefix, appId } = usePrepConfig();
+  const { t } = useI18n();
   const prefix = `${storagePrefix}:`;
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function ProgressTools() {
     a.download = `${appId}-progress.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setMsg("Exported your progress.");
+    setMsg(t("progress.tools.exported"));
   }
 
   function importProgress(file: File) {
@@ -51,10 +53,10 @@ export function ProgressTools() {
             n++;
           }
         }
-        setMsg(`Imported ${n} item(s) — reloading…`);
+        setMsg(t("progress.tools.imported", {n}));
         setTimeout(() => window.location.reload(), 600);
       } catch {
-        setMsg("That file didn't look like a valid progress export.");
+        setMsg(t("progress.tools.invalid"));
       }
     };
     reader.readAsText(file);
@@ -63,11 +65,9 @@ export function ProgressTools() {
   return (
     <div className="card space-y-3">
       <div>
-        <h2 className="font-bold text-white">Back up your progress</h2>
+        <h2 className="font-bold text-white">{t("progress.tools.title")}</h2>
         <p className="mt-1 text-sm text-muted">
-          Everything (grades, spaced-repetition schedule, quiz answers, practice,
-          streak) lives in this browser. Export it to move devices or before
-          clearing site data.
+          {t("progress.tools.body")}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -75,13 +75,13 @@ export function ProgressTools() {
           onClick={exportProgress}
           className="rounded-lg border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-text transition-colors hover:border-accent/50"
         >
-          ⬇ Export progress
+          {t("progress.tools.export")}
         </button>
         <button
           onClick={() => fileRef.current?.click()}
           className="rounded-lg border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-text transition-colors hover:border-accent/50"
         >
-          ⬆ Import progress
+          {t("progress.tools.import")}
         </button>
         <input
           ref={fileRef}

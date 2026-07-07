@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePrepConfig } from "../config";
+import { useI18n } from "../lib/i18n";
 import { Input } from "./ui/input";
 import {
   type AiAvailability,
@@ -11,9 +12,9 @@ import {
 } from "../lib/chrome-ai";
 
 const PRESETS = [
-  { label: "Explain simply", q: "Explain this like I'm a junior engineer, in 3 sentences." },
-  { label: "Follow-up Q", q: "Ask me one tough follow-up interview question about this, then wait." },
-  { label: "Why it matters", q: "Why does this matter in a senior interview? One short paragraph." },
+  { localeKey: "ai.preset.explain", q: "Explain this like I'm a junior engineer, in 3 sentences." },
+  { localeKey: "ai.preset.followup", q: "Ask me one tough follow-up interview question about this, then wait." },
+  { localeKey: "ai.preset.why", q: "Why does this matter in a senior interview? One short paragraph." },
 ];
 
 export function AiTutor({
@@ -24,6 +25,7 @@ export function AiTutor({
   placeholder?: string;
 }) {
   const { ai } = usePrepConfig();
+  const { t } = useI18n();
   const [status, setStatus] = useState<AiAvailability | "checking">("checking");
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
@@ -56,30 +58,22 @@ export function AiTutor({
       await streamPrompt(sessionRef.current, full, setAnswer);
     } catch (e) {
       console.error(e);
-      setAnswer(
-        "Sorry — the on-device model couldn't respond. It may still be downloading, or this device isn't supported.",
-      );
+      setAnswer(t("ai.error"));
     } finally {
       setBusy(false);
     }
   }
 
   if (status === "checking") {
-    return <div className="card text-sm text-muted">Checking for on-device AI…</div>;
+    return <div className="card text-sm text-muted">{t("ai.checking")}</div>;
   }
 
   if (status === "unsupported" || status === "unavailable") {
     return (
       <div className="card space-y-2 text-sm">
-        <p className="font-semibold text-white">
-          On-device AI tutor isn&apos;t available in this browser.
-        </p>
+        <p className="font-semibold text-white">{t("ai.unavailable.title")}</p>
         <p className="text-muted">
-          It uses Chrome&apos;s built-in <b>Prompt API</b> (Gemini Nano), which
-          runs the model fully on your device — no key, no cloud. It needs a
-          recent <b>desktop Chrome</b> with supported hardware. The{" "}
-          <b className="text-accent">AI semantic search</b> above works in any
-          modern browser.
+          <span dangerouslySetInnerHTML={{__html: t("ai.unavailable.body")}} />
         </p>
       </div>
     );
@@ -89,11 +83,11 @@ export function AiTutor({
     <div className="card space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-good/40 bg-good/12 px-2.5 py-0.5 text-[0.7rem] font-bold text-good">
-          ● On-device · Gemini Nano
+          {t("ai.gemini")}
         </span>
         {status === "downloadable" && (
           <span className="text-xs text-muted">
-            first question downloads the model{progress ? ` · ${progress}%` : ""}
+            {t("ai.downloading", {pct: progress ? ` · ${progress}%` : ""})}
           </span>
         )}
       </div>
@@ -101,12 +95,12 @@ export function AiTutor({
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((p) => (
           <button
-            key={p.label}
+            key={p.localeKey}
             disabled={busy}
             onClick={() => ask(p.q)}
             className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-medium text-text transition-colors hover:border-accent/50 disabled:opacity-50"
           >
-            {p.label}
+            {t(p.localeKey)}
           </button>
         ))}
       </div>
@@ -133,7 +127,7 @@ export function AiTutor({
           }}
           className="rounded-lg bg-gradient-to-r from-accent to-accent-2 px-4 py-2 text-sm font-bold text-bg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {busy ? "…" : "Ask"}
+          {busy ? t("ai.busy") : t("ai.ask")}
         </button>
       </div>
 

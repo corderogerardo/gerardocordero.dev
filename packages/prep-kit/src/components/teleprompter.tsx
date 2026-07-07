@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "../lib/i18n";
 
 function fmt(total: number) {
   const m = Math.floor(total / 60)
@@ -19,6 +20,7 @@ export function Teleprompter({
   scriptHtml: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [running, setRunning] = useState(false);
   const [speed, setSpeed] = useState(1.1);
@@ -89,7 +91,7 @@ export function Teleprompter({
           onClick={onClose}
           className="ml-auto rounded-lg border border-border px-3 py-1.5 text-sm text-muted hover:text-text"
         >
-          ✕ Close
+          {t("teleprompter.close")}
         </button>
       </div>
 
@@ -102,23 +104,23 @@ export function Teleprompter({
 
       <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border px-4 py-3">
         <Ctrl onClick={() => setRunning((r) => !r)} primary>
-          {running ? "⏸ Pause" : "▶ Play"}
+          {running ? t("teleprompter.pause") : t("teleprompter.play")}
         </Ctrl>
-        <Ctrl onClick={reset}>↺ Reset</Ctrl>
+        <Ctrl onClick={reset}>{t("teleprompter.reset")}</Ctrl>
         <Ctrl onClick={() => setSpeed((s) => Math.max(0.3, +(s - 0.3).toFixed(2)))}>
-          – Slower
+          {t("teleprompter.slower")}
         </Ctrl>
         <Ctrl onClick={() => setSpeed((s) => +(s + 0.3).toFixed(2))}>
-          + Faster
+          {t("teleprompter.faster")}
         </Ctrl>
         <Ctrl onClick={() => setFont((f) => Math.max(1.2, +(f - 0.3).toFixed(2)))}>
-          A−
+          {t("teleprompter.smaller")}
         </Ctrl>
         <Ctrl onClick={() => setFont((f) => Math.min(4, +(f + 0.3).toFixed(2)))}>
-          A+
+          {t("teleprompter.bigger")}
         </Ctrl>
         <span className="ml-1 hidden text-xs text-muted sm:inline">
-          Space = play/pause · Esc = close
+          {t("teleprompter.hint")}
         </span>
       </div>
     </div>
