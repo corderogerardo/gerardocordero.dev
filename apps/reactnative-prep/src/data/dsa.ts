@@ -18,12 +18,16 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: two pointers.</b> Because the array is sorted, put one pointer at each end.</li>
-          <li>If the pair sums too low, the only way to grow it is to move the left pointer right; too high, move
-            the right pointer left.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> the array is already sorted — that's the signal to reach for two
+            pointers instead of a hash map.</li>
+          <li>Place one pointer at each end. The sum moves predictably as either pointer moves.</li>
+          <li>Sum too low → the only way to grow it is moving the left pointer right; too high → move the right
+            pointer left.</li>
           <li>Each step discards an element that can't be part of any answer — O(n) time, O(1) space, no hash map.</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> reaching for a hash map here — that's O(n) extra space when the sorted input already
+          buys you O(1) space via two pointers.</p>`,
       },
       {
         label: "Solution",
@@ -36,7 +40,8 @@ export const DSA_PROMPTS: Prompt[] = [
   }
   return [];
 }</div>
-        <p>O(n) time, O(1) space. The sorted order is what makes the two-pointer move provably safe.</p>`,
+        <p>O(n) time, O(1) space. <b>The sorted order is what makes the two-pointer move provably safe — that's
+          the tell for reaching for this pattern.</b></p>`,
       },
     ],
   },
@@ -51,12 +56,17 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: sliding window with a last-seen map.</b> Expand the window one character at a time.</li>
-          <li>Keep each character's most recent index. When you hit a repeat that sits inside the window, jump the
-            window's start to just past it.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "longest substring/subarray under a constraint" is the sliding-window
+            signal — not a nested-loop brute force.</li>
+          <li>Expand the window one character at a time, keeping each character's most recent index in a map.</li>
+          <li>On a repeat that sits inside the current window, jump the window's start to just past that repeat's
+            last position — never shrink one character at a time.</li>
           <li>Track the best width as you go — O(n) time, O(min(n, alphabet)) space.</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> forgetting to check that the last-seen index is still inside the window
+          (<code>j &gt;= start</code>) — without that bound, <code>start</code> can jump backwards and overcount
+          the window.</p>`,
       },
       {
         label: "Solution",
@@ -71,7 +81,7 @@ export const DSA_PROMPTS: Prompt[] = [
   }
   return best;
 }</div>
-        <p>The window never shrinks blindly — <code>start</code> only jumps forward, so it stays O(n).</p>`,
+        <p><b>The window never shrinks blindly — <code>start</code> only jumps forward, so it stays O(n).</b></p>`,
       },
     ],
   },
@@ -87,11 +97,14 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: hash map for O(1) complement lookup.</b> The sorted-array two-pointer trick can't apply.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> the array isn't sorted, so the O(1)-space two-pointer trick doesn't
+            apply — trade space for time with a hash map instead.</li>
           <li>Walk once; for each number ask the map whether its complement <code>target − n</code> was already seen.</li>
           <li>If yes you're done; otherwise record <code>n → index</code> and continue — O(n) time, O(n) space.</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> sorting the array first to reuse the two-pointer trick — sorting destroys the original
+          indices the problem asks for, and costs O(n log n) instead of O(n).</p>`,
       },
       {
         label: "Solution",
@@ -104,7 +117,7 @@ export const DSA_PROMPTS: Prompt[] = [
   }
   return [];
 }</div>
-        <p>Trading O(n) memory for time is the canonical move when the input isn't sorted.</p>`,
+        <p><b>Trading O(n) memory for time is the canonical move when the input isn't sorted.</b></p>`,
       },
     ],
   },
@@ -120,12 +133,16 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: binary search on a boundary.</b> Search the half-open range <code>[lo, hi)</code>.</li>
-          <li>Invariant: the answer always lies in <code>[lo, hi]</code>. Shrink toward the first index whose
-            value is ≥ target.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> a sorted array plus "find the position" is a boundary binary search,
+            not a linear scan.</li>
+          <li>Search the half-open range <code>[lo, hi)</code>. Invariant: the answer always lies in
+            <code>[lo, hi]</code>.</li>
+          <li>Shrink toward the first index whose value is ≥ target.</li>
           <li>When <code>lo == hi</code> the window is empty and <code>lo</code> is the insert point — O(log n).</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> reaching for a closed interval (<code>hi = length - 1</code>) out of habit — it's what
+          causes the classic off-by-one/infinite-loop bugs in binary search; the half-open form sidesteps them.</p>`,
       },
       {
         label: "Solution",
@@ -137,7 +154,8 @@ export const DSA_PROMPTS: Prompt[] = [
   }
   return lo;
 }</div>
-        <p>Half-open <code>[lo, hi)</code> avoids the off-by-one bugs that plague <code>hi = length - 1</code> variants.</p>`,
+        <p><b>Half-open <code>[lo, hi)</code> avoids the off-by-one bugs that plague <code>hi = length - 1</code>
+          variants.</b></p>`,
       },
     ],
   },
@@ -152,11 +170,15 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: breadth-first search, processed one level at a time.</b></li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "group by depth" is breadth-first search processed one level at a
+            time, not a single flat queue with per-node depth tracking.</li>
           <li>Hold the current level in a list; build the next level from every node's children before going deeper.</li>
+          <li>Swap the whole queue for the next level's nodes once the current level is fully drained.</li>
           <li>Each full sweep of the queue is exactly one tree level — O(n) time and space.</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> using one shared queue without snapshotting its length up front — pushing children into
+          the same array you're iterating merges levels together instead of keeping them separate.</p>`,
       },
       {
         label: "Solution",
@@ -179,7 +201,8 @@ function levelOrder(root: TreeNode | null): number[][] {
   }
   return result;
 }</div>
-        <p>Swapping <code>queue = next</code> wholesale keeps each level cleanly separated — no per-node depth tracking.</p>`,
+        <p><b>Swapping <code>queue = next</code> wholesale keeps each level cleanly separated — no per-node depth
+          tracking.</b></p>`,
       },
     ],
   },
@@ -195,11 +218,14 @@ function levelOrder(root: TreeNode | null): number[][] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: flood-fill DFS.</b> Scan the grid; each unvisited land cell starts a new island.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "count connected groups in a grid" is flood-fill DFS — scan the grid,
+            and each unvisited land cell starts a new island.</li>
           <li>From it, recursively sink every connected land cell (set it to water) so you never recount an island.</li>
           <li>The grid itself records progress — no separate visited set — O(rows × cols).</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> assuming recursion depth is free — a large enough grid can blow the call stack. Worth
+          naming an iterative DFS/BFS with an explicit stack as the production-safe follow-up.</p>`,
       },
       {
         label: "Solution",
@@ -216,7 +242,7 @@ function levelOrder(root: TreeNode | null): number[][] {
       if (grid[r][c] === "1") { count++; sink(r, c); }
   return count;
 }</div>
-        <p>Mutating the grid in place is the trick that makes "visited" free.</p>`,
+        <p><b>Mutating the grid in place is the trick that makes "visited" free.</b></p>`,
       },
     ],
   },
@@ -232,11 +258,14 @@ function levelOrder(root: TreeNode | null): number[][] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: 1-D dynamic programming — it's Fibonacci.</b> ways(i) = ways(i−1) + ways(i−2).</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "how many distinct ways" with a step choice of 1 or 2 is 1-D dynamic
+            programming — it's Fibonacci in disguise: ways(i) = ways(i−1) + ways(i−2).</li>
           <li>You only ever need the last two values, so keep two rolling variables instead of a full array.</li>
           <li>O(n) time, O(1) space.</li>
-        </ul>`,
+        </ol>
+        <p><b>Red flag:</b> writing the naive recursive recurrence without memoization — it recomputes the same
+          subproblems and blows up to exponential time.</p>`,
       },
       {
         label: "Solution",
@@ -246,7 +275,8 @@ function levelOrder(root: TreeNode | null): number[][] {
   for (let i = 3; i &lt;= n; i++) [a, b] = [b, a + b];
   return b;
 }</div>
-        <p>Recognising the recurrence <i>is</i> the interview — the rolling-variable rewrite is just the O(1) polish.</p>`,
+        <p><b>Recognising the recurrence <i>is</i> the interview — the rolling-variable rewrite is just the O(1)
+          polish.</b></p>`,
       },
     ],
   },
@@ -262,11 +292,14 @@ function levelOrder(root: TreeNode | null): number[][] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: stack for matching pairs.</b> Push every opening bracket.</li>
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "matching nested pairs" is a stack problem — push every opening
+            bracket as you go.</li>
           <li>On a closing bracket, the top of the stack must be its matching opener — otherwise it's invalid.</li>
-          <li>Valid iff the stack is empty at the end — O(n).</li>
-        </ul>`,
+          <li>Valid iff the stack is empty at the end — a non-empty stack means unclosed openers — O(n).</li>
+        </ol>
+        <p><b>Red flag:</b> checking only that brackets pair up without also checking the stack is empty at the
+          end — a string like <code>"(("</code> has every pair matching but an unclosed opener.</p>`,
       },
       {
         label: "Solution",
@@ -282,7 +315,7 @@ function levelOrder(root: TreeNode | null): number[][] {
   }
   return stack.length === 0;
 }</div>
-        <p>Mapping each closer to its opener turns the match into a single record lookup.</p>`,
+        <p><b>Mapping each closer to its opener turns the match into a single record lookup.</b></p>`,
       },
     ],
   },
@@ -297,12 +330,18 @@ function levelOrder(root: TreeNode | null): number[][] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: count, then select the top K.</b> First tally frequencies in a hash map.</li>
-          <li>A size-K heap gives O(n log k); here we use <b>bucket sort by frequency</b> — index buckets by count
-            — for O(n).</li>
-          <li>Walk buckets from highest count down, collecting until you have K.</li>
-        </ul>`,
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "top K by frequency" is count-then-select — first tally frequencies
+            in a hash map.</li>
+          <li><b>Two tools, different roles:</b> a size-K min-heap is the general-purpose selector — O(n log k),
+            correct for any comparator and for streaming input. Bucket sort by frequency is the specialized tool
+            for this problem — frequency is bounded by <code>nums.length</code>, so you can index buckets by count
+            directly for O(n).</li>
+          <li>Walk buckets from the highest count down, collecting values until you have K.</li>
+        </ol>
+        <p><b>Red flag:</b> jumping straight to bucket sort without first naming the heap approach — the heap is
+          the general-purpose answer interviewers expect; bucket sort is the follow-up optimization once bounded
+          frequency is established.</p>`,
       },
       {
         label: "Solution",
@@ -319,7 +358,9 @@ function levelOrder(root: TreeNode | null): number[][] {
     }
   return result;
 }</div>
-        <p>Frequencies are bounded by <code>nums.length</code>, so indexing buckets by count beats sorting.</p>`,
+        <p>Frequencies are bounded by <code>nums.length</code>, so indexing buckets by count beats sorting. The
+          heap costs an extra log k factor but stays correct if counts were ever unbounded — <b>bucket sort is the
+          optimization worth naming once bounded frequency is confirmed, not the default to reach for blind.</b></p>`,
       },
     ],
   },
@@ -334,12 +375,16 @@ function levelOrder(root: TreeNode | null): number[][] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li><b>Pattern: backtracking / decision tree.</b> At each index decide: include it or not.</li>
-          <li>Record the current partial subset at every node, recurse on the remaining suffix, then undo (pop) —
-            the classic choose / explore / un-choose loop.</li>
-          <li>O(n · 2ⁿ): there are 2ⁿ subsets.</li>
-        </ul>`,
+        html: `<ol>
+          <li><b>Recognize the pattern:</b> "return every subset" is backtracking over a decision tree — at each
+            index, decide to include it or not.</li>
+          <li>Record the current partial subset at every node (not just at leaves), recurse on the remaining
+            suffix, then undo (pop) — the classic choose / explore / un-choose loop.</li>
+          <li>O(n · 2ⁿ): there are 2ⁿ subsets, each costing O(n) to copy.</li>
+        </ol>
+        <p><b>Red flag:</b> pushing a reference to <code>current</code> instead of a copy — since it keeps
+          mutating after being pushed, every stored subset silently ends up empty by the time backtracking
+          finishes.</p>`,
       },
       {
         label: "Solution",
@@ -357,7 +402,8 @@ function levelOrder(root: TreeNode | null): number[][] {
   backtrack(0);
   return result;
 }</div>
-        <p>Pushing a <i>copy</i> of <code>current</code> at every call (not just leaves) collects all 2ⁿ subsets.</p>`,
+        <p><b>Pushing a <i>copy</i> of <code>current</code> at every call (not just leaves) is what collects all
+          2ⁿ subsets.</b></p>`,
       },
     ],
   },

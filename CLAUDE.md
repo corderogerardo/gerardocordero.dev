@@ -65,6 +65,15 @@ cd apps/portfolio && maestro test .maestro/smoke.yml
 - **Unit test stack (portfolio):** `jest-expo ~56` (Jest 29) + `@testing-library/react-native ^14` + `test-renderer ^1.2`. Two SDK-56 gotchas: RN 0.85 extracted the Jest preset into `@react-native/jest-preset` (a required peer), and **RNTL v14 is async-by-default** — `await render(...)`, `await fireEvent...`. Do **not** add `react-test-renderer` (jest-expo bundles its own) or `@testing-library/jest-native` (deprecated; matchers are built in). Reanimated 4 is mocked via `react-native-worklets/src/mock` in `jest-setup.ts`.
 - **Secrets:** store submission credentials **on EAS**, not in the repo. iOS submit uses an App Store Connect API key and Android uses a Google Play service account, both uploaded once via `eas credentials -p ios|android` — so `eas.json`'s `submit.production` carries no `appleId`/`serviceAccountKeyPath` and CI needs only the `EXPO_TOKEN` GitHub secret. Never commit credentials; the `credentials/` dir stays gitignored for any local key files.
 
+## Content voice (interview prep + learn)
+
+All study/prep/learn content (prep-kit apps, `apps/learn` lessons, portfolio
+study cards) is authored in the **senior-coach voice** — why-first framing,
+quotable pitch lines, `Red flag:` callouts, numbered frameworks, 3-beat
+trade-off pitches. The rules live in
+`.claude/skills/senior-coach-content/SKILL.md`; apply them when writing or
+reviewing any content, and use its checklist on content diffs.
+
 ## Study engine (interview prep)
 
 The `Study` tab (`app/(tabs)/study.tsx`) is the app's interactive, repeat-use
