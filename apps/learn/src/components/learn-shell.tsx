@@ -47,12 +47,15 @@ function LearnShellContent({ course, children }: { course: Course; children: Rea
           </a>
         </header>
 
+        <div className="side-lang-row">
+          <LanguageSwitcher />
+        </div>
+
         <OverallProgress />
         <SearchInput />
         <Sidebar />
 
         <div className="side-foot">
-          <LanguageSwitcher />
           <button className="ghost" onClick={exportProgress}>{t("sidebar.export")}</button>
           <button className="ghost" onClick={importProgress}>{t("sidebar.import")}</button>
           <button id="reset-progress" ref={resetRef}>{t("sidebar.reset")}</button>

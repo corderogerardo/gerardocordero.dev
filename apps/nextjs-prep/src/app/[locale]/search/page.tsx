@@ -2,13 +2,20 @@ import type { Metadata } from "next";
 import { PageHeader, SearchView, AiTutor } from "@gerardocordero/prep-kit";
 import { ALL_FLASHCARDS, ALL_PROMPTS, ALL_QUIZ, ALL_STUDY } from "@/data/all";
 
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
+
 export const metadata: Metadata = {
   title: "Search",
   description:
     "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor.",
 };
 
-export default function SearchPage() {
+export default async function SearchPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-8">
       <PageHeader

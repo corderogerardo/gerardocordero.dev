@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@gerardocordero/prep-kit";
-import { RichText } from "@gerardocordero/prep-kit";
+import { PageHeader, RichText, prefixContentLinks } from "@gerardocordero/prep-kit";
 import {
   ARCH_INTRO,
   ARCH_SECTIONS,
@@ -8,13 +7,18 @@ import {
   DEEPDIVES_INTRO,
 } from "@/data/architecture";
 
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
 export const metadata: Metadata = {
   title: "Architecture",
   description:
     "A senior-level tour of frontend system design mapped onto Next.js — rendering strategy, caching, data flow, and delivery — plus concept/example/problem/solution deep-dives.",
 };
 
-export default function ArchitecturePage() {
+export default async function ArchitecturePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -27,7 +31,7 @@ export default function ArchitecturePage() {
         {ARCH_SECTIONS.map((s) => (
           <section key={s.id} id={s.id} className="card scroll-mt-24">
             <h2 className="mb-3 text-lg font-bold text-white">{s.title}</h2>
-            <RichText html={s.html} />
+            <RichText html={prefixContentLinks(s.html, locale)} />
           </section>
         ))}
       </div>
@@ -45,7 +49,7 @@ export default function ArchitecturePage() {
               </span>
               <h3 className="font-bold text-white">{d.title}</h3>
             </div>
-            <RichText html={d.html} />
+            <RichText html={prefixContentLinks(d.html, locale)} />
           </article>
         ))}
       </section>

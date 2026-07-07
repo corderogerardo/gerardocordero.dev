@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@gerardocordero/prep-kit";
-import { RichText } from "@gerardocordero/prep-kit";
+import { PageHeader, RichText, prefixContentLinks } from "@gerardocordero/prep-kit";
 import { ROADMAP } from "@/data/roadmap";
 import { LEVELS, LEVEL_BADGE, LEVEL_LABEL } from "@/lib/levels";
+
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
 
 export const metadata: Metadata = {
   title: "Roadmap",
@@ -10,7 +15,8 @@ export const metadata: Metadata = {
     "A level-graded Next.js / React learning path — junior, mid, senior, architect, and beyond — with what you can do at each level and what to learn next.",
 };
 
-export default function RoadmapPage() {
+export default async function RoadmapPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -86,7 +92,7 @@ export default function RoadmapPage() {
             </div>
 
             <RichText
-              html={stage.drillHtml}
+              html={prefixContentLinks(stage.drillHtml, locale)}
               className="rounded-xl border-l-[3px] border-accent-2 bg-surface-2/50 px-3.5 py-2.5 text-sm"
             />
           </li>

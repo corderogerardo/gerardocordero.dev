@@ -3,6 +3,12 @@ import { PageHeader } from "@gerardocordero/prep-kit";
 import { FlashcardDeck } from "@gerardocordero/prep-kit";
 import { ALL_FLASHCARDS, ALL_FLASHCARD_FILTERS } from "@/data/all";
 
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
+
 const cards = ALL_FLASHCARDS;
 const filters = ALL_FLASHCARD_FILTERS;
 
@@ -12,7 +18,8 @@ export const metadata: Metadata = {
     "Interview Q&A flashcards across the App Router, rendering & caching, data fetching, routing, performance, auth, testing, and security. Reveal, self-grade, and drill what you don't know yet.",
 };
 
-export default function FlashcardsPage() {
+export default async function FlashcardsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader

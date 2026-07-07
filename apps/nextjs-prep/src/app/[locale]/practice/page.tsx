@@ -3,13 +3,20 @@ import { PageHeader } from "@gerardocordero/prep-kit";
 import { PromptDeck } from "@gerardocordero/prep-kit";
 import { ALL_PROMPTS } from "@/data/all";
 
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
+
 export const metadata: Metadata = {
   title: "Practice",
   description:
     "Active problem-solving: interview-style Next.js / React coding prompts and frontend system-design prompts, with progressive hints and a self-graded reveal.",
 };
 
-export default function PracticePage() {
+export default async function PracticePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader

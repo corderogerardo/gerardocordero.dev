@@ -3,13 +3,20 @@ import { PageHeader } from "@gerardocordero/prep-kit";
 import { Pitches } from "@gerardocordero/prep-kit";
 import { PITCHES, PITCHES_INTRO_HTML } from "@/data/pitches";
 
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
+
 export const metadata: Metadata = {
   title: "Practice Pitches",
   description:
     "Spoken answers — intros, “why Next.js”, a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera.",
 };
 
-export default function PitchesPage() {
+export default async function PitchesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader

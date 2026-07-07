@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@gerardocordero/prep-kit";
-import { RichText } from "@gerardocordero/prep-kit";
-import { box } from "@gerardocordero/prep-kit";
+import { PageHeader, RichText, box, prefixContentLinks } from "@gerardocordero/prep-kit";
 import { STUDY_INTRO_HTML } from "@/data/study";
 import { ALL_STUDY } from "@/data/all";
+
+
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
 
 const sections = ALL_STUDY;
 
@@ -13,7 +17,8 @@ export const metadata: Metadata = {
     "Every requirement a senior Next.js / React role asks for, explained at senior depth — with a 'how to say it' line so you can answer with confidence.",
 };
 
-export default function StudyPage() {
+export default async function StudyPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader
@@ -22,7 +27,7 @@ export default function StudyPage() {
         lead="Every requirement a senior Next.js / React role commonly asks for — explained at senior depth. Read the concept, then the “how to say it” line so you can deliver a crisp, correct answer out loud."
       />
 
-      <RichText html={box("callout warn", STUDY_INTRO_HTML)} />
+      <RichText html={prefixContentLinks(box("callout warn", STUDY_INTRO_HTML), locale)} />
 
       <nav className="card grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
         {sections.map((s) => (
@@ -43,7 +48,7 @@ export default function StudyPage() {
         {sections.map((s) => (
           <section key={s.id} id={s.id} className="card scroll-mt-24">
             <h2 className="mb-3 text-lg font-bold text-white">{s.title}</h2>
-            <RichText html={s.html} />
+            <RichText html={prefixContentLinks(s.html, locale)} />
           </section>
         ))}
       </div>

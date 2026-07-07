@@ -38,6 +38,7 @@ export * from "./lib/levels";
 export { I18nProvider, useI18n } from "./lib/i18n";
 export type { Locale, LocaleInfo } from "./lib/i18n-config";
 export { box } from "./lib/html";
+export { prefixContentLinks } from "./lib/link-prefix";
 export { plainText } from "./lib/plain-text";
 export { useLocalStorage } from "./lib/use-local-storage";
 export * from "./lib/chrome-ai";

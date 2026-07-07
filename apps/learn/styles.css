@@ -133,6 +133,7 @@ body {
 .lesson-link.active .tick { color: #fff; }
 .lesson-link .est { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-soft); opacity: 0.75; }
 .lesson-link.active .est { color: #fff; }
+.side-lang-row { padding: 10px 0; display: flex; }
 .side-foot { padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .ghost {
   background: none; border: 1px solid var(--line); border-radius: 8px;
@@ -155,6 +156,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   transition: background 0.15s;
+  width: 100%;
 }
 .lang-switch:hover { background: var(--accent); color: #fff; }
 .lang-globe { font-size: 13px; line-height: 1; }
