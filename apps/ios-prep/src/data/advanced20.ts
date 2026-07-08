@@ -11,10 +11,11 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "arch",
     categoryLabel: "Architecture",
     question: "What's the structure of a Package.swift manifest?",
-    answerHtml: `<p>It's Swift code using <code>PackageDescription</code>: a <code>Package</code> with a
-      <code>name</code>, <b>products</b> (what consumers import), <b>targets</b> (your modules/test targets), and
-      <b>dependencies</b> (other packages). Targets list their own dependencies, forming the package's internal
-      graph.</p>
+    answerHtml: `<p>The manifest exists to make a package's public surface and internal graph explicit and
+      machine-resolvable — that's what lets SPM build, cache, and version it like any other dependency. It's Swift
+      code using <code>PackageDescription</code>: a <code>Package</code> with a <code>name</code>, <b>products</b>
+      (what consumers import), <b>targets</b> (your modules/test targets), and <b>dependencies</b> (other packages).
+      Targets list their own dependencies, forming the package's internal graph.</p>
     <div class="code">let package = Package(
   name: "Feature",
   products: [.library(name: "Feature", targets: ["Feature"])],
@@ -23,7 +24,9 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     .target(name: "Feature"),
     .testTarget(name: "FeatureTests", dependencies: ["Feature"]),
   ]
-)</div>`,
+)</div>
+    <p><b>Products are the contract, targets are the implementation — I keep that distinction explicit so consumers
+      only ever see what I intend to expose.</b></p>`,
     level: "senior",
   },
   {
@@ -31,10 +34,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What target types does SPM support?",
-    answerHtml: `<p><code>.target</code> (library code), <code>.testTarget</code>, <code>.executableTarget</code>
-      (a CLI/<code>@main</code>), <code>.binaryTarget</code> (a prebuilt XCFramework), <code>.plugin</code> (build
-      tool / command plugins), and <code>.macro</code> (a compiler-plugin macro implementation). Pick the type to
-      match what the code is.</p>`,
+    answerHtml: `<p>SPM needs to know what a target <i>is</i> before it can decide how to build, link, and expose it —
+      that's what the target type encodes. Options: <code>.target</code> (library code), <code>.testTarget</code>,
+      <code>.executableTarget</code> (a CLI/<code>@main</code>), <code>.binaryTarget</code> (a prebuilt XCFramework),
+      <code>.plugin</code> (build tool / command plugins), and <code>.macro</code> (a compiler-plugin macro
+      implementation).</p>
+    <p><b>I pick the target type to match what the code actually is, not what's convenient to declare — that's what
+      keeps the build graph honest.</b></p>`,
     level: "senior",
   },
   {
@@ -42,10 +48,15 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What are products, and static vs dynamic libraries?",
-    answerHtml: `<p>A <b>product</b> is what other packages/apps consume — a <code>.library</code> or
-      <code>.executable</code>. A library can be <code>.static</code>, <code>.dynamic</code>, or <b>automatic</b>
-      (let SPM decide — usually best). Too many dynamic frameworks slow app launch; prefer automatic/static unless
-      you need dynamic.</p>`,
+    answerHtml: `<p>Linkage type is a launch-time performance decision disguised as a build setting — it's worth
+      understanding, not just copying defaults. A <b>product</b> is what other packages/apps consume — a
+      <code>.library</code> or <code>.executable</code>. A library can be <code>.static</code>,
+      <code>.dynamic</code>, or <b>automatic</b> (let SPM decide). Too many dynamic frameworks add per-launch dyld
+      loading cost; prefer automatic/static unless you specifically need dynamic (e.g. a shared framework loaded by
+      multiple targets/extensions).</p>
+    <p>Red flag: defaulting every internal module to <code>.dynamic</code> "to be safe" — that's the opposite of
+      safe once the app has a dozen local packages. <b>I default to automatic and only reach for dynamic when I have
+      a concrete sharing requirement.</b></p>`,
     level: "senior",
   },
   {
@@ -53,10 +64,14 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "How do you declare dependency version requirements?",
-    answerHtml: `<p><code>.package(url:, from: "1.2.0")</code> allows up to the next major (SemVer-compatible);
-      other rules include <code>.upToNextMinor</code>, <code>exact</code>, a range, or a <code>branch</code>/
-      <code>revision</code>. For local modules use <code>.package(path: "../Core")</code>. SPM resolves and pins
-      everything in <code>Package.resolved</code>.</p>`,
+    answerHtml: `<p>Version rules are how you trade update freedom for stability — too loose and a transitive
+      dependency's breaking change ships silently; too strict and you never get security fixes. <code>.package(url:,
+      from: "1.2.0")</code> allows up to the next major (SemVer-compatible); other rules include
+      <code>.upToNextMinor</code>, <code>exact</code>, a range, or a <code>branch</code>/<code>revision</code>. For
+      local modules use <code>.package(path: "../Core")</code>. SPM resolves and pins everything in
+      <code>Package.resolved</code>.</p>
+    <p><b>I commit Package.resolved so the whole team and CI build against the exact same dependency graph, not
+      whatever SemVer resolved to today.</b></p>`,
     level: "senior",
   },
   {
@@ -64,9 +79,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "How do you bundle and access resources in a package?",
-    answerHtml: `<p>Declare them on the target: <code>.process(...)</code> (optimizes/relocates, the default) or
-      <code>.copy(...)</code> (verbatim, e.g. a folder you index yourself). Access them at runtime via
-      <code>Bundle.module</code> (SPM generates it), not <code>Bundle.main</code>.</p>`,
+    answerHtml: `<p>Packages don't share the app's main bundle, so SPM gives each target its own resource bundle and
+      accessor — mixing that up is the most common package-resource bug. Declare resources on the target:
+      <code>.process(...)</code> (optimizes/relocates, the default) or <code>.copy(...)</code> (verbatim, e.g. a
+      folder you index yourself). Access them at runtime via <code>Bundle.module</code> (SPM generates it), not
+      <code>Bundle.main</code>.</p>
+    <p>Red flag: reaching for <code>Bundle.main</code> inside a package and getting "resource not found" at runtime
+      — <b>package resources live in Bundle.module, always.</b></p>`,
     level: "senior",
   },
   {
@@ -74,10 +93,12 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "How do you set the deployment target / platforms for a package?",
-    answerHtml: `<p>The <code>platforms:</code> parameter on <code>Package</code>, e.g.
-      <code>.iOS(.v16)</code>, declares the minimum OS versions the package supports. Combine with
-      <code>#available</code> in code for finer runtime gating. Keep the minimum sensible — too new excludes
-      users, too old blocks modern APIs.</p>`,
+    answerHtml: `<p>The package's minimum OS is a business trade-off between reach and API access, declared once so
+      the compiler enforces it everywhere the package is used. The <code>platforms:</code> parameter on
+      <code>Package</code>, e.g. <code>.iOS(.v16)</code>, declares the minimum OS versions the package supports.
+      Combine with <code>#available</code> in code for finer runtime gating.</p>
+    <p><b>I set the deployment target from the adoption data, not from "whatever's newest" — too new excludes real
+      users, too old blocks APIs the rest of the team already assumes.</b></p>`,
     level: "senior",
   },
   {
@@ -85,10 +106,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "arch",
     categoryLabel: "Architecture",
     question: "How do local packages enable modular architecture?",
-    answerHtml: `<p><code>.package(path:)</code> brings a <b>local</b> package into the app. Splitting features
+    answerHtml: `<p>Modularization is the highest-leverage structural decision in a large app — it's how you get
+      compiler-enforced boundaries and parallel builds instead of relying on convention and code review to keep
+      layers separate. <code>.package(path:)</code> brings a <b>local</b> package into the app. Splitting features
       and shared layers into local packages enforces boundaries (a feature can't import another), parallelizes and
-      caches builds, and lets each module be tested/previewed in isolation — the "modular monolith". This is the
-      highest-leverage structural decision in a large app.</p>`,
+      caches builds, and lets each module be tested/previewed in isolation — the "modular monolith".</p>
+    <p><b>I split by feature and shared-layer boundaries, not by file type — the goal is a dependency graph the
+      compiler enforces, not folders that just look organized.</b></p>`,
     level: "architect",
   },
   {
@@ -96,10 +120,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What is a binary target / XCFramework?",
-    answerHtml: `<p>A <code>.binaryTarget</code> ships a prebuilt <b>XCFramework</b> (multi-platform/arch
-      bundle) instead of source — used to distribute closed-source SDKs or speed up builds. Reference it by path or
-      a URL + <b>checksum</b> (SPM verifies integrity). You lose source debuggability and must rebuild for new
-      toolchains.</p>`,
+    answerHtml: `<p>Binary targets exist for the cases where you can't or don't want to ship source — closed-source
+      SDKs, or a large module you'd rather distribute prebuilt to cut CI build time. A <code>.binaryTarget</code>
+      ships a prebuilt <b>XCFramework</b> (multi-platform/arch bundle) instead of source. Reference it by path or a
+      URL + <b>checksum</b> (SPM verifies integrity).</p>
+    <p>Red flag: treating a binary target as a free build-speed win with no trade-off — you lose source
+      debuggability and must rebuild/re-publish for every new toolchain. <b>I reach for binary targets only when
+      the source can't be shared or the build-time win is measured, not assumed.</b></p>`,
     level: "architect",
   },
   {
@@ -107,9 +134,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What are SPM plugins?",
-    answerHtml: `<p><b>Build tool plugins</b> run during the build (e.g. code generation, linting like SwiftLint,
-      protobuf) wired into a target; <b>command plugins</b> are invoked on demand (<code>swift package &lt;cmd&gt;</code>)
-      for tasks like formatting or docs. They standardize tooling without manual run-script setup.</p>`,
+    answerHtml: `<p>Plugins exist so tooling (codegen, linting, formatting) is declared alongside the code it acts on
+      instead of living as fragile, undocumented run-script phases only one person understands. <b>Build tool
+      plugins</b> run during the build (e.g. code generation, linting like SwiftLint, protobuf) wired into a target;
+      <b>command plugins</b> are invoked on demand (<code>swift package &lt;cmd&gt;</code>) for tasks like
+      formatting or docs.</p>
+    <p><b>I move ad-hoc run-script tooling into plugins so it's versioned with the package and runs the same way
+      for every consumer, not just whoever set up the Xcode project.</b></p>`,
     level: "architect",
   },
   {
@@ -117,9 +148,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What differs between Debug and Release builds?",
-    answerHtml: `<p>Debug: no optimization (<code>-Onone</code>), assertions on, debug symbols, faster builds —
-      for development. Release: optimized (<code>-O</code>), assertions stripped, dead-code stripping, slower to
-      build, fast to run — for shipping and <b>profiling</b>. Never benchmark a Debug build.</p>`,
+    answerHtml: `<p>The two configurations optimize for opposite things — fast iteration vs. fast execution — and
+      conflating them is how "it's slow" bugs get chased in the wrong build entirely. Debug: no optimization
+      (<code>-Onone</code>), assertions on, debug symbols, faster builds — for development. Release: optimized
+      (<code>-O</code>), assertions stripped, dead-code stripping, slower to build, fast to run — for shipping and
+      <b>profiling</b>.</p>
+    <p>Red flag: profiling or benchmarking a Debug build — unoptimized code makes every measurement meaningless.
+      <b>I always profile Release (or a Release-like configuration), never Debug.</b></p>`,
     level: "senior",
   },
   {
@@ -127,9 +162,12 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What is a scheme and why share it?",
-    answerHtml: `<p>A <b>scheme</b> defines what gets built and how each action (Run, Test, Profile, Archive)
-      behaves — which targets, build configuration, environment variables, launch arguments, and test plan.
-      <b>Share</b> schemes (check them into git) so CI and teammates build the app identically.</p>`,
+    answerHtml: `<p>A scheme is what makes "it builds on my machine" reproducible across the team and CI — without a
+      shared one, every action is implicitly configured by whoever last touched their local Xcode settings. A
+      <b>scheme</b> defines what gets built and how each action (Run, Test, Profile, Archive) behaves — which
+      targets, build configuration, environment variables, launch arguments, and test plan.</p>
+    <p><b>I share schemes and check them into git on day one — an unshared scheme is a silent source of "works for
+      me" bugs.</b></p>`,
     level: "senior",
   },
   {
@@ -137,10 +175,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What do xcconfig files give you?",
-    answerHtml: `<p>They externalize build settings into versioned text files (per configuration), so settings
-      live in readable diffs instead of the binary <code>.pbxproj</code> — far fewer merge conflicts. You can
-      <code>#include</code> a base config and override per environment (Debug/Staging/Release), and reference
-      other settings with <code>$(SETTING)</code>.</p>`,
+    answerHtml: `<p>xcconfig exists to get build settings out of the binary, merge-conflict-prone
+      <code>.pbxproj</code> and into something a team can actually review in a diff. They externalize build
+      settings into versioned text files (per configuration), so settings live in readable diffs. You can
+      <code>#include</code> a base config and override per environment (Debug/Staging/Release), and reference other
+      settings with <code>$(SETTING)</code>.</p>
+    <p><b>I push settings out of the project file into xcconfig as soon as a config diverges per environment —
+      that's what turns a merge conflict into a one-line diff.</b></p>`,
     level: "senior",
   },
   {
@@ -148,9 +189,12 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What are build phases and run-script phases?",
-    answerHtml: `<p>An ordered list per target: Compile Sources, Link, Copy Bundle Resources, plus custom
-      <b>Run Script</b> phases (SwiftLint, codegen, dSYM upload). Declare each script's <b>input/output files</b>
-      so Xcode can skip it when nothing changed — otherwise it runs every build and slows you down.</p>`,
+    answerHtml: `<p>Build phases exist so extra steps (linting, codegen, dSYM upload) happen deterministically as
+      part of the build instead of as a manual "don't forget to run X" step. It's an ordered list per target:
+      Compile Sources, Link, Copy Bundle Resources, plus custom <b>Run Script</b> phases.</p>
+    <p>Red flag: a run-script phase with no declared input/output files — Xcode can't tell it's up to date, so it
+      re-runs on every single build and quietly taxes every developer's iteration speed. <b>I always declare
+      input/output files so a script only runs when its inputs actually changed.</b></p>`,
     level: "senior",
   },
   {
@@ -158,9 +202,12 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "How does conditional compilation work?",
-    answerHtml: `<p><code>#if DEBUG ... #endif</code> compiles code only in a configuration that defines the flag.
-      Flags come from <b>Active Compilation Conditions</b> (Swift) / preprocessor macros, set per build config.
-      Use it for debug-only tooling, staging endpoints, or feature toggles baked at build time.</p>`,
+    answerHtml: `<p>Conditional compilation lets you bake environment-specific behavior into the binary itself, so
+      debug tooling or staging endpoints can never accidentally ship to production — there's no code path for them
+      to take. <code>#if DEBUG ... #endif</code> compiles code only in a configuration that defines the flag. Flags
+      come from <b>Active Compilation Conditions</b> (Swift) / preprocessor macros, set per build config.</p>
+    <p><b>I use build-time flags for anything that must never exist in a shipping binary — a runtime feature flag
+      can be flipped by mistake, a compile-time one physically isn't there.</b></p>`,
     level: "senior",
   },
   {
@@ -168,10 +215,12 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "What knobs affect optimized build size/speed?",
-    answerHtml: `<p>Swift optimization level (<code>-O</code> for speed, <code>-Osize</code> for size),
+    answerHtml: `<p>These knobs trade build time for runtime speed/size, so tuning them blind can slow your CI for a
+      win you can't prove. Swift optimization level (<code>-O</code> for speed, <code>-Osize</code> for size),
       whole-module optimization, <b>dead-code stripping</b>, and link-time optimization. App size also benefits
-      from asset catalogs, on-demand resources, and app thinning. Measure before tuning — defaults are sane for
-      most apps.</p>`,
+      from asset catalogs, on-demand resources, and app thinning.</p>
+    <p><b>I measure before tuning any of these — the defaults are sane for most apps, and I only touch a knob once
+      a profiler or size report points at it.</b></p>`,
     level: "senior",
   },
   {
@@ -179,10 +228,13 @@ export const ADVANCED20_FLASHCARDS: Flashcard[] = [
     category: "cicd",
     categoryLabel: "CI/CD & Tooling",
     question: "How do build settings and Info.plist relate?",
-    answerHtml: `<p>Build settings are variables (e.g. <code>PRODUCT_BUNDLE_IDENTIFIER</code>,
-      <code>MARKETING_VERSION</code>) referenced from the <code>Info.plist</code> with <code>$(VARIABLE)</code>,
-      so one setting (often per-config via xcconfig) drives the generated plist. Entitlements work similarly via a
-      <code>.entitlements</code> file referenced by a build setting.</p>`,
+    answerHtml: `<p>This indirection exists so one source of truth (often an xcconfig) can drive values across every
+      config instead of hand-editing the plist per environment. Build settings are variables (e.g.
+      <code>PRODUCT_BUNDLE_IDENTIFIER</code>, <code>MARKETING_VERSION</code>) referenced from the
+      <code>Info.plist</code> with <code>$(VARIABLE)</code>, so one setting drives the generated plist. Entitlements
+      work similarly via a <code>.entitlements</code> file referenced by a build setting.</p>
+    <p><b>I keep bundle id and version as build settings, not hardcoded plist values — that's what lets Debug,
+      Staging, and Release point at different bundle ids from the same source.</b></p>`,
     level: "senior",
   },
 ];

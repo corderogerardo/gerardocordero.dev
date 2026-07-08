@@ -18,7 +18,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "What's the most common JS memory leak in React Native, and the fix?",
     answerHtml:
-      "Subscriptions / timers / listeners that are never cleaned up. Return a cleanup from <code>useEffect</code>: <code>const sub = emitter.addListener(...); return () =&gt; sub.remove();</code>. A tell-tale sign is memory climbing each time you navigate between screens. Hunt it with the React Native DevTools memory profiler.",
+      "On React Native, memory leaks are almost always JS-side, not native — a subscription, timer, or event listener that outlives its screen keeps its closure (and everything it references) alive, so memory climbs every time the user navigates back until the app slows or gets killed. Fix: return a cleanup from <code>useEffect</code>: <code>const sub = emitter.addListener(...); return () =&gt; sub.remove();</code>. Hunt it with the React Native DevTools memory profiler, watching for a step pattern that never comes back down. <b>I always pair a subscription with its cleanup in the same effect, so it can't outlive the component that created it.</b>",
   },
   {
     id: "cs-perf-2",
@@ -26,7 +26,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "How should a heavy Turbo Module method avoid blocking the app?",
     answerHtml:
-      "Never do heavy work in a <b>sync</b> method — it blocks the JS thread. Make it <b>async</b> and run on a background thread, e.g. iOS <code>DispatchQueue.global().async { resolve(self.compute()) }</code> with resolve/reject. Reserve sync for tiny, instant reads.",
+      "A synchronous Turbo Module method runs to completion on the JS thread before returning — so heavy work there freezes every touch, animation, and re-render in the app, not just the caller. Make it <b>async</b> and run the work on a background thread, e.g. iOS <code>DispatchQueue.global().async { resolve(self.compute()) }</code> with resolve/reject; reserve sync for tiny, instant reads. <b>If a native method can take more than a millisecond, I make it async — the JS thread has no room to block.</b>",
   },
   {
     id: "cs-perf-3",
@@ -34,7 +34,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "Name JS libraries worth replacing with native ones, and why.",
     answerHtml:
-      "Drop <code>@formatjs</code> Intl polyfills (~430KB) — <b>Hermes ships native Intl</b> (audit your exact APIs first). Swap <code>crypto-js</code> for <code>react-native-quick-crypto</code> (~58× faster, JSI-backed). And use <code>native-stack</code> over the JS <code>@react-navigation/stack</code>.",
+      "Every pure-JS library you can replace with a native or JSI-backed one cuts both bundle size and runtime cost, since the work moves off the JS thread. Drop <code>@formatjs</code> Intl polyfills (~430KB) — <b>Hermes ships native Intl</b> (audit your exact APIs first). Swap <code>crypto-js</code> for <code>react-native-quick-crypto</code> (~58× faster, JSI-backed). And use <code>native-stack</code> over the JS <code>@react-navigation/stack</code>. <b>My default is: if a JSI-backed or native equivalent exists, prefer it over a pure-JS library.</b>",
   },
   {
     id: "cs-perf-4",
@@ -42,7 +42,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "How do you enable tree-shaking in a modern Expo app?",
     answerHtml:
-      "On Expo SDK 52+, set <code>EXPO_UNSTABLE_TREE_SHAKING=1</code> and <code>EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH=1</code> (with <code>experimentalImportSupport</code>). It eliminates dead exports — the real payoff that makes avoiding barrel imports matter.",
+      "Tree-shaking matters because bundle size directly drives cold-start and download time — every unused export you ship is pure cost. On Expo SDK 52+, set <code>EXPO_UNSTABLE_TREE_SHAKING=1</code> and <code>EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH=1</code> (with <code>experimentalImportSupport</code>). It eliminates dead exports — the real payoff that makes avoiding barrel imports matter. <b>Tree-shaking is why I avoid barrel-file re-exports in shared packages — they defeat dead-code elimination.</b>",
   },
   {
     id: "cs-perf-5",
@@ -50,7 +50,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "What does enabling R8 do for an Android release build?",
     answerHtml:
-      "R8 <b>shrinks, optimizes, and obfuscates</b> Java/Kotlin native code. Turn on <code>minifyEnabled true</code> + <code>shrinkResources true</code> in the release buildType — smaller AAB and a bit of obfuscation for free.",
+      "Enabling R8 shrinks install size — better conversion on slow connections and less pressure on app-store size limits — and raises the bar against casual reverse-engineering, two wins for one flag. Mechanically, R8 <b>shrinks, optimizes, and obfuscates</b> Java/Kotlin code; turn it on with <code>minifyEnabled true</code> + <code>shrinkResources true</code> in the release buildType. <b>I turn on R8 for every release build — there's no reason to ship an unshrunk, unobfuscated AAB.</b>",
   },
   {
     id: "cs-perf-6",
@@ -58,7 +58,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "How do atomic stores (Zustand/Jotai) cut re-renders vs Context?",
     answerHtml:
-      "A React <b>Context</b> re-renders <b>every</b> consumer on any change. Zustand/Jotai use <b>selector subscriptions</b> — <code>useStore(s =&gt; s.filter)</code> re-renders only when that slice changes — avoiding widespread re-renders without manual memoization.",
+      "Context is a <b>dependency-injection mechanism</b>, not a state manager — every consumer re-renders on any change to the provided value, regardless of which field it reads. Zustand/Jotai are state managers that live outside the render tree and use <b>selector subscriptions</b> — <code>useStore(s =&gt; s.filter)</code> re-renders only when that slice changes — avoiding widespread re-renders without manual memoization. <p><b>Red flag:</b> treating Context as a general-purpose state manager for frequently-changing state — it re-renders the whole subtree on every update, which is exactly the problem selector-based stores solve.</p> <b>I use Context for low-frequency values like theme or locale, and a selector-based store for anything that changes often.</b>",
   },
   {
     id: "cs-perf-7",
@@ -66,7 +66,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "When can a controlled TextInput flicker, and what's the fix?",
     answerHtml:
-      "On the <b>legacy architecture</b>, the JS↔native round-trip for <code>value</code> can drop fast keystrokes or show stale characters. Use the <b>uncontrolled</b> form — <code>defaultValue</code> + <code>onChangeText</code> — so native owns the text and stays responsive.",
+      "A controlled <code>TextInput</code> ties every keystroke to a JS round-trip before the character appears — on the <b>legacy architecture</b> that round-trip can drop fast keystrokes or briefly show stale text, which reads to the user as a broken, laggy input. Use the <b>uncontrolled</b> form — <code>defaultValue</code> + <code>onChangeText</code> — so native owns the text buffer and stays responsive regardless of JS thread load. <b>For text inputs I default to uncontrolled with onChangeText, and only go controlled when I actually need to transform or validate the value as it's typed.</b>",
   },
   {
     id: "cs-perf-8",
@@ -74,7 +74,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "What is view flattening, and when do you opt out?",
     answerHtml:
-      "RN's renderer removes <b>layout-only</b> views to shrink the native hierarchy. That can break a native component that counts its children. Force the view to survive with <code>collapsable={false}</code> on those children.",
+      "View flattening is a perf optimization — RN's renderer removes <b>layout-only</b> views to keep the native view hierarchy smaller and layout faster. The trade-off shows up when a native component counts or measures its children directly: a flattened view disappears from that count. Force the view to survive with <code>collapsable={false}</code> on those specific children. <b>If a native component's children count looks wrong, my first check is whether view flattening removed one.</b>",
   },
   {
     id: "cs-perf-9",
@@ -82,7 +82,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "What is the Android 16 KB page-size requirement?",
     answerHtml:
-      "Google Play requires apps targeting Android 15+ to support <b>16 KB memory pages</b> (deadline Nov 1, 2025). RN supports it since 0.79; the risk is <b>third-party native libraries</b> (<code>.so</code> files) that aren't aligned. Verify with <code>zipalign -c -P 16 …</code>.",
+      "Miss this and your app can't be updated on Google Play after the deadline — Play requires apps targeting Android 15+ to support <b>16 KB memory pages</b> (deadline Nov 1, 2025). RN itself supports it since 0.79, but the real risk is <b>third-party native libraries</b> (<code>.so</code> files) built without page-size-agnostic alignment. Verify with <code>zipalign -c -P 16 …</code>. <p><b>Red flag:</b> assuming you're covered because your RN version supports 16 KB pages — the failure usually comes from a third-party native dependency, not your own code.</p> <b>Before every release I check every native dependency's .so alignment, not just the RN version.</b>",
   },
   {
     id: "cs-perf-10",
@@ -90,7 +90,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "How do you keep a bottom sheet at 60fps during a drag?",
     answerHtml:
-      "Keep the gesture/scroll state on the <b>UI thread</b>. Bind <code>@gorhom/bottom-sheet</code>'s <code>animatedIndex</code> to a <code>useSharedValue</code> and drive overlays with <code>useAnimatedStyle</code> — instead of an <code>onAnimate</code> callback that <code>setState</code>s and re-renders the whole subtree each frame.",
+      "Hitting 60fps during a drag means every frame's work has to finish before the next one is due — bouncing back to JS via <code>setState</code> on each frame blows that budget. Keep the gesture/scroll state on the <b>UI thread</b> instead: bind <code>@gorhom/bottom-sheet</code>'s <code>animatedIndex</code> to a <code>useSharedValue</code> and drive overlays with <code>useAnimatedStyle</code>, rather than an <code>onAnimate</code> callback that <code>setState</code>s and re-renders the whole subtree each frame. <b>Any animation driven by drag needs to live entirely on the UI thread — the moment it round-trips through setState, dropped frames are a when, not an if.</b>",
   },
   {
     id: "cs-perf-11",
@@ -98,7 +98,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "How do you measure TTI, and which launches count?",
     answerHtml:
-      "Mark interactivity with <code>react-native-performance</code> (<code>performance.mark('screenInteractive')</code>) and compare across releases. Only measure <b>cold starts</b> — exclude warm/hot/prewarmed launches, which don't reflect first-run cost.",
+      "TTI only means something if you're comparing the same kind of launch release over release — mixing in warm or prewarmed launches hides regressions behind faster numbers. Mark interactivity with <code>react-native-performance</code> (<code>performance.mark('screenInteractive')</code>) and track it across releases. Only measure <b>cold starts</b> — exclude warm/hot/prewarmed launches, which don't reflect first-run cost. <p><b>Red flag:</b> reporting a TTI average across mixed launch types — a handful of warm launches will make a regressed cold start look fine.</p> <b>I only trust TTI numbers when I know they're cold-start-only.</b>",
   },
   {
     id: "cs-perf-12",
@@ -106,7 +106,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "PERF",
     question: "When does code splitting (React.lazy / Re.Pack) actually help RN?",
     answerHtml:
-      "Lazy-load rarely-used screens with <code>React.lazy(() =&gt; import(...))</code> + <code>&lt;Suspense&gt;</code>, or remote chunks via Re.Pack. It helps most <b>without Hermes</b> (JSC/V8 pay a parse cost); with Hermes' mmap'd bytecode the win shrinks — so measure first.",
+      "Code splitting only pays off when there's a real parse cost to defer — lazy-load rarely-used screens with <code>React.lazy(() =&gt; import(...))</code> + <code>&lt;Suspense&gt;</code>, or remote chunks via Re.Pack. It helps most <b>without Hermes</b> (JSC/V8 pay that parse cost upfront); with Hermes' mmap'd bytecode the win shrinks, so measure before committing to the complexity. <b>On Hermes I profile startup before reaching for code splitting — it's not free complexity, and the JS-engine cost it avoids may not be there.</b>",
   },
 
   // ---------- Expo Router & native UI (building-native-ui) ----------
@@ -116,7 +116,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "When can you stay in Expo Go vs needing a custom dev build?",
     answerHtml:
-      "Expo Go covers all <code>expo-*</code> packages, Expo Router, Reanimated, gestures, push, and deep links. You need a <b>custom dev build</b> (or EAS build) only for <b>local native modules</b>, Apple targets (widgets/clips), third-party native modules not in Expo Go, or native config you can't express in <code>app.json</code>.",
+      "Expo Go's role is a fast-iteration sandbox with a fixed, pre-built set of native modules — great for shipping speed until you need code Expo didn't bundle. It covers all <code>expo-*</code> packages, Expo Router, Reanimated, gestures, push, and deep links. A <b>custom dev build</b> (or EAS build) is your own native binary, needed only for <b>local native modules</b>, Apple targets (widgets/clips), third-party native modules not in Expo Go, or native config you can't express in <code>app.json</code>. <b>I stay in Expo Go until a specific native dependency forces a custom dev build — not before.</b>",
   },
   {
     id: "ex-2",
@@ -124,7 +124,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "How does Expo Router structure routes?",
     answerHtml:
-      "<b>File-based</b>: files in <code>app/</code> are routes; <code>_layout.tsx</code> defines the Stack/Tabs for a folder; groups like <code>(index,search)</code> share screens. Rules: there must be a route matching <code>/</code>, and you <b>never co-locate</b> components/utils inside <code>app/</code>.",
+      "File-based routing removes an entire class of bugs — a route can't exist in the navigator config but not on disk, because the file <b>is</b> the route. Files in <code>app/</code> are routes; <code>_layout.tsx</code> defines the Stack/Tabs for a folder; groups like <code>(index,search)</code> share screens. Rules: there must be a route matching <code>/</code>, and you <b>never co-locate</b> components/utils inside <code>app/</code> — the router would treat them as routes. <b>Anything that isn't a screen lives outside app/, full stop.</b>",
   },
   {
     id: "ex-3",
@@ -133,7 +133,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     question:
       "Which RN core components/APIs should you avoid in modern Expo, and what replaces them?",
     answerHtml:
-      "Avoid the removed/legacy <code>SafeAreaView</code>, <code>Picker</code>, <code>WebView</code>, <code>AsyncStorage</code>, and <code>expo-av</code>. Use <code>react-native-safe-area-context</code>, <code>expo-audio</code> / <code>expo-video</code>, <code>expo-image</code>, and <code>process.env.EXPO_OS</code> instead of <code>Platform.OS</code>.",
+      "RN core deprecated or dropped several APIs because dedicated packages do the job better — maintained separately, better perf, not tied to the RN release cycle. Avoid the removed/legacy <code>SafeAreaView</code>, <code>Picker</code>, <code>WebView</code>, <code>AsyncStorage</code>, and <code>expo-av</code>. Use <code>react-native-safe-area-context</code>, <code>expo-audio</code> / <code>expo-video</code>, <code>expo-image</code>, and <code>process.env.EXPO_OS</code> instead of <code>Platform.OS</code>. <p><b>Red flag:</b> still importing <code>AsyncStorage</code> or <code>expo-av</code> out of habit in a new Expo project — both are on the way out, and the replacements are drop-in.</p> <b>In a new project I reach for the dedicated package first and only fall back to an RN core API if there isn't one.</b>",
   },
   {
     id: "ex-4",
@@ -141,7 +141,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "What's the modern way to handle safe areas in a scrollable screen?",
     answerHtml:
-      "Put a <code>ScrollView</code> (or FlatList) first in the route with <code>contentInsetAdjustmentBehavior=&quot;automatic&quot;</code> — it computes smarter insets than wrapping in <code>SafeAreaView</code>, and pairs with native stack headers/tabs.",
+      "Safe-area handling is about not fighting the native header/tab bar for space — get it wrong and content either hides under the notch or has dead padding. Put a <code>ScrollView</code> (or FlatList) first in the route with <code>contentInsetAdjustmentBehavior=&quot;automatic&quot;</code> — it computes smarter insets than wrapping in <code>SafeAreaView</code>, and pairs correctly with native stack headers/tabs. <p><b>Red flag:</b> wrapping the whole screen in <code>SafeAreaView</code> on top of a native stack header — you double up the inset and get extra dead space at the top.</p> <b>My default for a scrollable screen is contentInsetAdjustmentBehavior, not SafeAreaView.</b>",
   },
   {
     id: "ex-5",
@@ -149,7 +149,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "Dimensions.get() vs useWindowDimensions — which and why?",
     answerHtml:
-      "Prefer <b><code>useWindowDimensions</code></b>: it's a hook that re-renders on rotation / resize / split-view, so layouts stay correct. <code>Dimensions.get()</code> is a one-shot read that goes stale. Better still, lay out with <b>flexbox</b> instead of measuring.",
+      "<code>Dimensions.get()</code>'s role is a one-shot synchronous read — call it once and it goes stale on rotation, split-view, or foldables. <b><code>useWindowDimensions</code></b> is a hook that re-renders on every layout change, so derived sizes stay correct. Better still, lay out with <b>flexbox</b> instead of measuring at all. <p><b>Red flag:</b> caching <code>Dimensions.get('window')</code> in a module-level constant — it freezes your layout at whatever size the app launched with.</p> <b>I only reach for useWindowDimensions when flexbox genuinely can't express the layout.</b>",
   },
   {
     id: "ex-6",
@@ -157,7 +157,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "How should you do shadows in modern React Native?",
     answerHtml:
-      "Use the CSS <code>boxShadow</code> style prop (<code>'0 1px 2px rgba(0,0,0,0.05)'</code>, inset supported) — <b>not</b> legacy iOS <code>shadow*</code> props or Android <code>elevation</code>. Use <code>borderCurve: 'continuous'</code> for Apple-style rounded corners.",
+      "The old iOS <code>shadow*</code> props and Android <code>elevation</code> are two different visual languages, so a shared style needs a <code>Platform.select</code> just for a shadow. The CSS <code>boxShadow</code> style prop (<code>'0 1px 2px rgba(0,0,0,0.05)'</code>, inset supported) renders consistently on both platforms from one line. Pair with <code>borderCurve: 'continuous'</code> for Apple-style rounded corners. <b>One boxShadow value, no Platform.select — that's the whole pitch.</b>",
   },
   {
     id: "ex-7",
@@ -165,7 +165,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "How do you add a native context menu / preview to an Expo Router Link?",
     answerHtml:
-      "Wrap with <code>&lt;Link.Trigger&gt;</code> and add <code>&lt;Link.Menu&gt;</code> containing <code>&lt;Link.MenuAction title icon onPress destructive /&gt;</code>, plus <code>&lt;Link.Preview /&gt;</code> for the iOS peek. It's the real native long-press menu, not a custom JS popover.",
+      "A real native context menu gets you the system long-press gesture, haptics, and blur-preview animation for free — a JS popover has to reimplement all of that by hand. Wrap with <code>&lt;Link.Trigger&gt;</code> and add <code>&lt;Link.Menu&gt;</code> containing <code>&lt;Link.MenuAction title icon onPress destructive /&gt;</code>, plus <code>&lt;Link.Preview /&gt;</code> for the iOS peek. <b>For long-press actions I reach for Link.Menu before I'd ever build a custom popover.</b>",
   },
   {
     id: "ex-8",
@@ -173,7 +173,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "How do you present a screen as a modal or form sheet in Expo Router?",
     answerHtml:
-      "In the Stack, set <code>options={{ presentation: 'modal' }}</code> or <code>'formSheet'</code> (with <code>sheetAllowedDetents</code>, <code>sheetGrabberVisible</code>). Prefer this native presentation over building a custom modal component.",
+      "Native modal presentation gives you the platform's swipe-to-dismiss, interruptible animation, and detents for free — a hand-rolled modal component has to reimplement all of it, usually worse. In the Stack, set <code>options={{ presentation: 'modal' }}</code> or <code>'formSheet'</code> (with <code>sheetAllowedDetents</code>, <code>sheetGrabberVisible</code>). <b>I reach for the Stack's presentation option before writing a custom Modal component.</b>",
   },
   {
     id: "ex-9",
@@ -181,7 +181,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "What are NativeTabs in Expo Router?",
     answerHtml:
-      "<code>NativeTabs</code> (from <code>expo-router/unstable-native-tabs</code>) render the <b>platform-native</b> tab bar (UITabBar / Android tabs) using <code>&lt;NativeTabs.Trigger&gt;</code> + <code>&lt;Icon sf=&quot;…&quot;/&gt;</code> + <code>&lt;Label/&gt;</code> — better feel than JS bottom-tabs, and they support a <code>role=&quot;search&quot;</code> tab.",
+      "A JS-rendered tab bar can never quite match the system one — subtle spring physics, blur, and platform conventions users notice even if they can't name them. <code>NativeTabs</code> (from <code>expo-router/unstable-native-tabs</code>) render the <b>platform-native</b> tab bar (UITabBar / Android tabs) using <code>&lt;NativeTabs.Trigger&gt;</code> + <code>&lt;Icon sf=&quot;…&quot;/&gt;</code> + <code>&lt;Label/&gt;</code>, including a <code>role=&quot;search&quot;</code> tab. <b>For a tab bar I default to NativeTabs now — it's the platform-native one, not a JS approximation.</b>",
   },
   {
     id: "ex-10",
@@ -189,7 +189,7 @@ export const ADVANCED2_FLASHCARDS: Flashcard[] = [
     categoryLabel: "EXPO",
     question: "How do you render SF Symbols and set a screen title the idiomatic way?",
     answerHtml:
-      "SF Symbols via <code>expo-image</code> with <code>source=&quot;sf:square.and.arrow.up&quot;</code> (not <code>@expo/vector-icons</code>). Set the title through the navigator — <code>&lt;Stack.Screen options={{ title: 'Home' }} /&gt;</code> — rather than a custom header <code>Text</code>.",
+      "Routing title and icon rendering through the navigator's own props, instead of custom components, keeps native header behaviors — large-title collapse, Dynamic Type, safe-area alignment — working automatically. Render SF Symbols via <code>expo-image</code> with <code>source=&quot;sf:square.and.arrow.up&quot;</code> (not <code>@expo/vector-icons</code>), and set the title through the navigator — <code>&lt;Stack.Screen options={{ title: 'Home' }} /&gt;</code> — rather than a custom header <code>Text</code>. <p><b>Red flag:</b> rendering the title as a custom Text inside the header — it silently drops large-title collapse and Dynamic Type support.</p> <b>Title and icons go through the navigator's own props, never a hand-rolled header component.</b>",
   },
 ];
 
@@ -212,7 +212,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "Sync methods block the JS thread. Make it async and offload to a background thread (e.g. <code>DispatchQueue.global().async</code>), then resolve.",
+      "Sync methods block the JS thread, freezing every touch and re-render app-wide. Make it async and offload to a background thread (e.g. <code>DispatchQueue.global().async</code>), then resolve. The UI/main thread option is a tempting pick because native code 'feels' like it belongs there — but that thread is busy rendering frames, so heavy work there causes dropped frames just as surely as blocking JS does.",
   },
   {
     id: "b2-z2",
@@ -227,7 +227,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "Hermes ships native <code>Intl</code> support, so the polyfills are often dead weight (~430KB). Audit the exact APIs you use before dropping them.",
+      "Hermes ships native <code>Intl</code> support, so the polyfills are often dead weight (~430KB) — audit the exact APIs you use before dropping them. The security and deprecation options are misdirects: nothing about <code>@formatjs</code> is insecure or deprecated, it's simply redundant once Hermes covers the same surface.",
   },
   {
     id: "b2-z3",
@@ -242,7 +242,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "Context re-renders <b>every</b> consumer. Atomic stores (Zustand/Jotai) with selector subscriptions re-render only the components reading the changed slice.",
+      "Context re-renders <b>every</b> consumer, full stop — there's no per-field opt-out. 'Only those reading the changed field' is the tempting wrong answer because that's exactly how selector-based stores like Zustand/Jotai behave; don't confuse the two mental models. Atomic stores re-render only the components reading the changed slice — Context doesn't have that granularity.",
   },
   {
     id: "b2-z4",
@@ -257,7 +257,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "RN flattens layout-only views; <code>collapsable={false}</code> forces the view to persist so native components that count children still work.",
+      "RN flattens layout-only views; <code>collapsable={false}</code> forces the view to persist so native components that count children still work. <code>removeClippedSubviews</code> and <code>shouldRasterizeIOS</code> are unrelated perf knobs — one skips offscreen rendering, the other rasterizes for cheaper compositing — neither stops view flattening.",
   },
   {
     id: "b2-z5",
@@ -272,7 +272,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "Expo Go can't load custom native code. Local modules, Apple targets, and unsupported third-party native modules require a custom dev/EAS build.",
+      "Expo Go can't load custom native code, on either platform — local modules, Apple targets, and unsupported third-party native modules all require a custom dev/EAS build. The config-plugin option is a trap: plugins configure the native project at prebuild time, but Expo Go has no prebuild step, so a plugin can't get new native code into it.",
   },
   {
     id: "b2-z6",
@@ -287,7 +287,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "A first-child ScrollView/FlatList with <code>contentInsetAdjustmentBehavior=&quot;automatic&quot;</code> computes smarter insets and pairs with native headers/tabs.",
+      "A first-child ScrollView/FlatList with <code>contentInsetAdjustmentBehavior=&quot;automatic&quot;</code> computes smarter insets and pairs correctly with native headers/tabs. <b>Red flag:</b> wrapping the screen in <code>SafeAreaView</code> on top of a native stack header double-counts the inset, adding dead space at the top.",
   },
   {
     id: "b2-z7",
@@ -302,7 +302,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "<code>useWindowDimensions</code> is a hook that re-renders on resize/rotation; <code>Dimensions.get()</code> is a one-shot read that goes stale.",
+      "<code>useWindowDimensions</code> is a hook that re-renders on resize/rotation; <code>Dimensions.get()</code> is a one-shot read that goes stale the moment the window changes. <code>PixelRatio.get()</code> is a different concept entirely — pixel density for asset scaling, not window size — so it doesn't solve this problem at all.",
   },
   {
     id: "b2-z8",
@@ -317,7 +317,7 @@ export const ADVANCED2_QUIZ: QuizQuestion[] = [
     ],
     answer: 1,
     explanationHtml:
-      "Use the CSS <code>boxShadow</code> style prop (inset supported) instead of the legacy iOS shadow props or Android <code>elevation</code>.",
+      "Use the CSS <code>boxShadow</code> style prop (inset supported) instead of the legacy iOS <code>shadow*</code> props or Android <code>elevation</code> — those are single-platform props, so picking either one alone leaves the other platform without a shadow.",
   },
 ];
 

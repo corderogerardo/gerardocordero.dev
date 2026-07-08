@@ -14,9 +14,11 @@ export const PERF_LESSONS: Flashcard[] = [
     categoryLabel: "PERF",
     level: "junior",
     question: "Lesson 1 · The two metrics that matter: TTI and FPS",
-    answerHtml: `<p><b>TTI (Time to Interactive)</b> — how long from tapping the app icon until users can actually do something. Covers four phases: native process init → native app init → JS bundle load → React render. Users expect under 2-4 s; every 100 ms matters.</p>
+    answerHtml: `<p>Users don't file a bug report for a slow app — they churn, and a janky first impression reads as broken software before they've judged a single feature. TTI and FPS are the two metrics that map directly to that perception, so profile both before touching any code.</p>
+<p><b>TTI (Time to Interactive)</b> — how long from tapping the app icon until users can actually do something. Covers four phases: native process init → native app init → JS bundle load → React render. Users expect under 2-4 s; every 100 ms matters.</p>
 <p><b>FPS (Frames Per Second)</b> — how smooth the running app feels. Devices refresh at 60 Hz (1 frame = 16.6 ms) or 120 Hz (1 frame = 8.3 ms). Drop below 60 FPS and the user sees jank — stutter, lag, an "unpolished" feel. <b>Two independent FPS monitors</b> exist: JS-thread FPS and UI-thread FPS. A drop in only one tells you where the problem lives.</p>
-<p>Rule: measure both before optimizing. The React Perf Monitor overlay (Dev Menu → Perf Monitor) shows both live in development.</p>`,
+<p><b>Red flag:</b> treating FPS as a single number — a JS-thread drop and a UI-thread drop point at different root causes, and conflating them sends the first profiling pass in the wrong direction.</p>
+<p>Rule: measure both before optimizing. The React Perf Monitor overlay (Dev Menu → Perf Monitor) shows both live in development. <b>I check TTI and FPS before I write a single line of optimization code — otherwise I'm guessing.</b></p>`,
   },
   {
     id: "pl-02",
@@ -24,7 +26,8 @@ export const PERF_LESSONS: Flashcard[] = [
     categoryLabel: "PERF",
     level: "junior",
     question: "Lesson 2 · React's five re-render triggers",
-    answerHtml: `<p>A React Native component re-renders when <b>any</b> of these five things happen:</p>
+    answerHtml: `<p>Re-renders are where most React Native perf problems start — Callstack's internal survey of 100 RN developers found <b>80% of perf issues originate on the JS/React side</b>, which makes render control the highest-ROI skill in the toolbox.</p>
+<p>A component re-renders when <b>any</b> of these five things happen:</p>
 <ol>
   <li><b>Parent re-renders</b> — even if the child's props didn't logically change, a new object/function reference counts as "changed".</li>
   <li><b>State changes</b> — <code>useState</code>, <code>useReducer</code>, or any hook that manages state.</li>
@@ -32,7 +35,7 @@ export const PERF_LESSONS: Flashcard[] = [
   <li><b>Context changes</b> — every consumer of a changed context re-renders.</li>
   <li><b>Force update</b> — an escape hatch, avoid it.</li>
 </ol>
-<p>According to Callstack's internal survey of 100 RN developers, <b>80% of perf issues originate on the JS/React side</b> — so mastering re-render control is the highest-ROI skill.</p>`,
+<p><b>I run through these five triggers before I open the profiler — most re-render bugs are one of them, usually an unstable reference.</b></p>`,
   },
   {
     id: "pl-03",
@@ -40,14 +43,16 @@ export const PERF_LESSONS: Flashcard[] = [
     categoryLabel: "PERF",
     level: "junior",
     question: "Lesson 3 · The 16 ms JS-thread budget (and why 8 ms is the new target)",
-    answerHtml: `<p>A 60 Hz display refreshes every <b>16.6 ms</b>. Your JS thread must finish its work — reconciliation, state updates, any synchronous native calls — within that window or the frame is dropped.</p>
+    answerHtml: `<p>Every frame you drop is jank the user feels immediately — stutter during a scroll or gesture reads as "cheap app," which is why the frame budget is a hard constraint, not a nice-to-have.</p>
+<p>A 60 Hz display refreshes every <b>16.6 ms</b>. Your JS thread must finish its work — reconciliation, state updates, any synchronous native calls — within that window or the frame is dropped.</p>
 <p>With 120 Hz screens (iPhone 13 Pro+, Pixel 6 Pro+) the budget shrinks to <b>8.3 ms</b>. A function that takes 12 ms passes at 60 Hz but fails at 120 Hz.</p>
 <p>How to catch violations: open React Native DevTools → JavaScript Profiler → record → call the slow function → stop. The profiler shows each function's wall time. Any call exceeding 16 ms on the JS thread is a candidate for optimization or deferral to a background thread or worklet.</p>
 <div class="code">// Too slow — blocks JS thread for ~1s at 1 billion iterations
 const longRunningFunction = () => {
   let i = 0;
   while (i &lt; 1_000_000_000) i++;
-};</div>`,
+};</div>
+<p><b>I budget every synchronous JS call against 16.6 ms — and against 8.3 ms if the target device is 120 Hz.</b></p>`,
   },
   {
     id: "pl-04",
@@ -55,13 +60,16 @@ const longRunningFunction = () => {
     categoryLabel: "PERF",
     level: "junior",
     question: "Lesson 4 · How to profile React with React Native DevTools",
-    answerHtml: `<p>Open DevTools via Metro (<code>j</code>) or Dev Menu → "Open DevTools" → <b>Profiler tab</b>. Before recording, enable two settings:</p>
+    answerHtml: `<p>Guessing at re-render causes wastes review time and produces speculative fixes that don't move the metric — the profiler turns "I think this re-renders too much" into a provable claim before you touch a memoization hook.</p>
 <ol>
-  <li>"Highlight updates when components render" — paints a colored border around every re-rendering component in real time.</li>
-  <li>"Record why each component rendered while profiling" — adds a "Why did this render?" panel.</li>
+  <li>Open DevTools via Metro (<code>j</code>) or Dev Menu → "Open DevTools" → <b>Profiler tab</b>.</li>
+  <li>Enable "Highlight updates when components render" — paints a colored border around every re-rendering component in real time.</li>
+  <li>Enable "Record why each component rendered while profiling" — adds a "Why did this render?" panel.</li>
+  <li>Hit <b>Start Profiling</b> (or "Reload and start" for startup analysis), interact with the slow part, stop.</li>
+  <li>Read the <b>Flame Chart</b> — yellow = slow, green/gray = memoized/fast. Click a bar → "Why did this render?" for the exact prop or state that changed.</li>
+  <li>Cross-check the <b>Ranked view</b> — sorts components slowest→fastest, a bottom-up scan for where React spends the most time.</li>
 </ol>
-<p>Hit <b>Start Profiling</b> (or "Reload and start" for startup analysis), interact with the slow part, stop. The <b>Flame Chart</b> shows every render commit. Yellow = slow; green/gray = memoized/fast. Click a bar → "Why did this render?" to see the exact prop or state that changed.</p>
-<p>The <b>Ranked view</b> sorts components slowest→fastest — a quick "bottom-up" to find where React spends the most time. The profiler is the single most important tool in your perf toolkit.</p>`,
+<p><b>Before I add any memoization I profile first and quote the exact prop or state the "Why did this render?" panel names — that's what makes the fix defensible in review.</b></p>`,
   },
   {
     id: "pl-05",
@@ -69,7 +77,8 @@ const longRunningFunction = () => {
     categoryLabel: "PERF",
     level: "junior",
     question: "Lesson 5 · React.memo + useCallback: the memoization pair",
-    answerHtml: `<p><b>React.memo</b> wraps a component. It skips re-renders when props are shallowly equal to the previous render. Without it, a child re-renders every time the parent does, regardless of whether the child's data changed.</p>
+    answerHtml: `<p><b>React.memo</b>'s role is a re-render gate on a component; <b>useCallback</b>'s role is a stable reference on a function prop — they only pay off together, because a gate that always sees a "new" prop never closes.</p>
+<p><b>React.memo</b> wraps a component. It skips re-renders when props are shallowly equal to the previous render. Without it, a child re-renders every time the parent does, regardless of whether the child's data changed.</p>
 <p><b>useCallback</b> keeps a function reference stable across renders (only recreates when its deps change). This matters because an inline <code>() =&gt; …</code> in JSX creates a new reference every render, breaking <code>React.memo</code>'s shallow comparison.</p>
 <div class="code">// Bad: new function reference on every parent render
 &lt;Button onPress={() =&gt; setCount(c + 1)} /&gt;
@@ -77,7 +86,8 @@ const longRunningFunction = () => {
 // Good: stable reference; Button (wrapped in memo) skips re-renders
 const onPress = useCallback(() =&gt; setCount(c =&gt; c + 1), []);
 const Button = memo(({ onPress, title }) =&gt; &lt;Pressable onPress={onPress}&gt;…&lt;/Pressable&gt;);</div>
-<p>Profile first — the profiler's "Why did this render?" confirms the inline function was the culprit before you add the hooks.</p>`,
+<p><b>Red flag:</b> wrapping every component in <code>memo</code> and every function in <code>useCallback</code> without profiling first — the shallow-comparison overhead can cost more than the re-render it prevents on cheap components.</p>
+<p>Profile first — the profiler's "Why did this render?" confirms the inline function was the culprit before you add the hooks. <b>I reach for memo and useCallback together, and only after the profiler names an unstable reference as the cause.</b></p>`,
   },
 
   // ── INTERMEDIATE (6-12) ─────────────────────────────────────────────────────
@@ -87,13 +97,14 @@ const Button = memo(({ onPress, title }) =&gt; &lt;Pressable onPress={onPress}&g
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 6 · React Compiler: automatic memoization at build time",
-    answerHtml: `<p>React Compiler (from the React core team) analyzes your components at <b>build time</b> and inserts memoization automatically — no manual <code>React.memo</code>, <code>useMemo</code>, or <code>useCallback</code>. It respects the Rules of React; components that violate them are skipped.</p>
+    answerHtml: `<p>Manual memoization is maintenance debt — every <code>useMemo</code>/<code>useCallback</code> dependency array is something a future refactor can silently get wrong, reintroducing the exact re-render bug the hook was added to prevent. React Compiler moves that correctness burden to build time.</p>
+<p>React Compiler (from the React core team) analyzes your components at <b>build time</b> and inserts memoization automatically — no manual <code>React.memo</code>, <code>useMemo</code>, or <code>useCallback</code>. It respects the Rules of React; components that violate them are skipped.</p>
 <p><b>Setup (Expo):</b></p>
 <div class="code">npm install -D babel-plugin-react-compiler@latest
 // babel.config.js
 plugins: [['babel-plugin-react-compiler', { target: '19' }]]</div>
 <p>Add <code>eslint-plugin-react-compiler</code> first — it catches Rules-of-React violations that would block the compiler. Adopt incrementally with the <code>sources</code> config option.</p>
-<p><b>What to expect:</b> Expensify reported a 4.3% TTI improvement on a large production app. Apps already hand-memoized will see smaller gains. Optimized components appear with a ✨ Memo badge in React DevTools. The recommendation: enable the compiler and then <i>remove</i> your manual memoization hooks — the compiler does it better.</p>`,
+<p><b>What to expect:</b> Expensify reported a 4.3% TTI improvement on a large production app. Apps already hand-memoized will see smaller gains. Optimized components appear with a ✨ Memo badge in React DevTools. The recommendation: enable the compiler and then <i>remove</i> your manual memoization hooks — the compiler does it better. <b>I let the compiler own memoization and keep my own hooks for actual business logic, not render-count management.</b></p>`,
   },
   {
     id: "pl-07",
@@ -101,13 +112,13 @@ plugins: [['babel-plugin-react-compiler', { target: '19' }]]</div>
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 7 · Concurrent React: useDeferredValue vs useTransition",
-    answerHtml: `<p>Both hooks let React defer non-critical work so user input stays responsive.</p>
+    answerHtml: `<p>Both hooks let React defer non-critical work so user input stays responsive, but their role differs: <b>useDeferredValue</b>'s role is deferring a value; <b>useTransition</b>'s role is deferring a state update's priority.</p>
 <p><b>useDeferredValue(value)</b> — defers the rendering of components that consume <code>value</code>. The current (stale) value keeps rendering while React prepares the next one in the background. Best for deferring a single prop or search input downstream.</p>
 <div class="code">const deferredQuery = useDeferredValue(query);
 // SearchResults re-renders with deferredQuery while typing stays instant
 &lt;SearchResults query={deferredQuery} /&gt;</div>
 <p><b>useTransition()</b> — marks entire state updates as low-priority. <code>startTransition</code> wraps the slow setter; <code>isPending</code> lets you show a spinner while React works in the background. Best when multiple states or a whole section of the UI needs to update together.</p>
-<p>Rule of thumb: one value to defer → <code>useDeferredValue</code>. Multiple state updates or view transitions → <code>useTransition</code>. Both require the <b>New Architecture</b> (default since RN 0.76).</p>`,
+<p><b>Rule of thumb: one value to defer → useDeferredValue; multiple state updates or a whole view transition → useTransition.</b> Both require the New Architecture (default since RN 0.76).</p>`,
   },
   {
     id: "pl-08",
@@ -130,7 +141,7 @@ const TodoItem = () =&gt; {
   const setTodos = useSetAtom(todosAtom);
   …
 };</div>
-<p>Callstack's conclusion: React Compiler often makes atomic state unnecessary for perf reasons alone. But atoms are still useful for their architectural clarity — colocating state with the components that own it. Use Jotai/Zustand if you prefer the bottom-up model; use the Compiler if you want to keep top-down state without hand-memoizing.</p>`,
+<p>Callstack's conclusion: React Compiler often makes atomic state unnecessary for perf reasons alone. But atoms are still useful for their architectural clarity — colocating state with the components that own it. Use Jotai/Zustand if you prefer the bottom-up model; use the Compiler if you want to keep top-down state without hand-memoizing. <b>I reach for atoms when state ownership needs to live with the components that use it, not as a default perf fix — the Compiler already covers the perf case.</b></p>`,
   },
   {
     id: "pl-09",
@@ -138,7 +149,8 @@ const TodoItem = () =&gt; {
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 9 · High-performance animations: Reanimated worklets",
-    answerHtml: `<p>Animations that run on the <b>JS thread</b> are at the mercy of garbage collection, state updates, and any other JS work — they jank under load. The fix: run them on the <b>UI thread</b> via <b>worklets</b>.</p>
+    answerHtml: `<p>Animations that run on the <b>JS thread</b> are at the mercy of garbage collection, state updates, and any other JS work — they jank under load, and a janky gesture-driven animation is the fastest way to make an app feel broken. The fix: run them on the <b>UI thread</b> via <b>worklets</b>.</p>
+<p><b>Red flag:</b> driving a gesture-driven or continuously interactive animation with <code>setState</code> and the JS-thread <code>Animated</code> driver — any JS work (a fetch, a re-render elsewhere) stalls the frame. Worklets are UI-thread-only and immune to that.</p>
 <p>A worklet is a JS function annotated with <code>'worklet'</code> that Reanimated serializes and executes on the UI thread via JSI. <code>useAnimatedStyle</code> runs in a worklet by default:</p>
 <div class="code">const opacity = useSharedValue(1);
 const style = useAnimatedStyle(() =&gt; {
@@ -151,7 +163,7 @@ scheduleOnUI(() =&gt; { 'worklet'; opacity.value = withTiming(0); });
 
 // Call back to JS from the UI thread:
 scheduleOnRN(notifyCompletion); // replaces deprecated runOnJS</div>
-<p>Reanimated 4 (New Architecture required) adds a <b>CSS Transitions API</b> — declare which style properties should animate on change, no worklets needed for simple state-driven animations. The authors recommend adopting CSS Transitions for state-driven cases and keeping worklets for gesture-driven or complex sequenced animations.</p>`,
+<p>Reanimated 4 (New Architecture required) adds a <b>CSS Transitions API</b> — declare which style properties should animate on change, no worklets needed for simple state-driven animations. The authors recommend adopting CSS Transitions for state-driven cases and keeping worklets for gesture-driven or complex sequenced animations. <b>Rule of thumb: state-driven change → CSS Transitions; gesture-driven or sequenced → worklets.</b></p>`,
   },
   {
     id: "pl-10",
@@ -159,7 +171,9 @@ scheduleOnRN(notifyCompletion); // replaces deprecated runOnJS</div>
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 10 · JS memory leaks: the three patterns to know",
-    answerHtml: `<p>A leak happens when the garbage collector can't free memory because something holds a live reference. Hermes' GC is called <b>Hades</b>. The three most common RN patterns:</p>
+    answerHtml: `<p>An unbounded leak in a long-lived screen (a chat, a live-tracking map) grows until the app hits an OOM crash or the OS kills it in the background — the kind of bug that only shows up after a user has had the app open for twenty minutes, well past when it shipped.</p>
+<p><b>Red flag:</b> assuming "JS is garbage collected so I don't need cleanup" — GC only reclaims objects with zero live references. A subscription held by a native emitter, or a running timer, keeps its whole closure alive indefinitely.</p>
+<p>A leak happens when the garbage collector can't free memory because something holds a live reference. Hermes' GC is called <b>Hades</b>. The three most common RN patterns:</p>
 <p><b>1. Listeners without cleanup:</b></p>
 <div class="code">useEffect(() =&gt; {
   const sub = EventEmitter.addListener('myEvent', handler);
@@ -180,7 +194,8 @@ const createLeaky = () =&gt; {
 const createEfficient = () =&gt; {
   const length = new Array(1_000_000).fill('…').length;
   return () =&gt; length;
-};</div>`,
+};</div>
+<p><b>Every effect that subscribes or schedules gets a matching cleanup — that's the rule, not a case-by-case judgment call.</b></p>`,
   },
   {
     id: "pl-11",
@@ -188,15 +203,16 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 11 · JS memory profiling: the DevTools allocation timeline",
-    answerHtml: `<p>Open React Native DevTools → <b>Memory tab</b> → select <b>"Allocation instrumentation on timeline"</b> → Start. Exercise the leaky flow → Stop.</p>
-<p>Reading the output:</p>
-<ul>
-  <li><b>Blue bars</b> = memory allocated during that time window and still live at the end — a candidate leak.</li>
-  <li><b>Grey bars</b> = allocated then collected — healthy.</li>
-  <li><b>Shallow size</b> = memory the object itself holds.</li>
-  <li><b>Retained size</b> = memory freed if this object is deleted (includes all objects only reachable through it) — the number that matters for leaks.</li>
-</ul>
-<p>Tip: force a GC (DevTools → Memory → GC icon) before stopping — retained blue bars after a GC are genuine leaks, not just young-gen objects waiting for collection. Compare two heap snapshots (before/after exercising the flow) to see which constructor counts grow unexpectedly.</p>`,
+    answerHtml: `<p>A leak report ("the app gets slow after a while") is unactionable until you can point at the retaining object — the DevTools allocation timeline is what turns a vague complaint into a specific fix.</p>
+<ol>
+  <li>Open React Native DevTools → <b>Memory tab</b> → select "Allocation instrumentation on timeline" → Start.</li>
+  <li>Exercise the leaky flow (navigate in and out, trigger the suspect action repeatedly), then Stop.</li>
+  <li>Force a GC (DevTools → Memory → GC icon) before reading results — otherwise young-gen objects awaiting collection look identical to genuine leaks.</li>
+  <li>Read <b>blue bars</b> (allocated and still live after GC — candidate leaks) vs. <b>grey bars</b> (allocated then collected — healthy).</li>
+  <li>Check <b>retained size</b> on the suspect object, not shallow size — retained size includes everything only reachable through it, which is the number that matters for a leak.</li>
+  <li>Compare two heap snapshots (before/after exercising the flow) to see which constructor counts grow unexpectedly.</li>
+</ol>
+<p><b>Red flag:</b> judging leaks from blue bars without forcing a GC first — that's the single most common false positive in memory profiling.</p>`,
   },
   {
     id: "pl-12",
@@ -204,10 +220,12 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "mid",
     question: "Lesson 12 · Specialized list components: FlashList and LegendList",
-    answerHtml: `<p><b>FlatList</b> renders each item as a new native view. Fine for small lists, painful for feeds of hundreds of items.</p>
-<p><b>FlashList</b> (Shopify) <i>recycles</i> native cell views, the same optimization used by UICollectionView/RecyclerView. Under the New Architecture it auto-measures item sizes synchronously — no <code>getItemLayout</code> needed. Drop-in replacement: swap <code>FlatList</code> → <code>FlashList</code>, add <code>estimatedItemSize</code>.</p>
-<p><b>LegendList</b> (<code>@legendapp/list</code>) v2 is a pure-TypeScript alternative with no native deps. Opt-in recycling via <code>recycleItems</code> prop, built-in bidirectional infinite scroll, and a <code>KeyboardAvoidingLegendList</code> for chat UIs. Safer default (no recycling unless you opt in) but you must enable it for long lists.</p>
-<p>Rule: always measure. Run the profiler before and after the swap to confirm the re-render count and scroll FPS actually improved. A specialized component is only worth its bundle cost if your list is the bottleneck.</p>`,
+    answerHtml: `<p>A long list is where FlatList's per-item native view allocation becomes a scroll-jank bug, not just a memory nit — that's the case for reaching past the built-in component.</p>
+<p><b>FlatList</b>'s role: renders each item as a new native view. Fine for small lists, painful for feeds of hundreds of items.</p>
+<p><b>FlashList</b>'s role (Shopify): <i>recycles</i> native cell views, the same optimization used by UICollectionView/RecyclerView. Under the New Architecture it auto-measures item sizes synchronously — no <code>getItemLayout</code> needed. Drop-in replacement: swap <code>FlatList</code> → <code>FlashList</code>, add <code>estimatedItemSize</code>.</p>
+<p><b>LegendList</b>'s role (<code>@legendapp/list</code>): a pure-TypeScript alternative with no native deps, v2. Opt-in recycling via <code>recycleItems</code> prop, built-in bidirectional infinite scroll, and a <code>KeyboardAvoidingLegendList</code> for chat UIs. Safer default (no recycling unless you opt in) but you must enable it for long lists.</p>
+<p><b>Red flag:</b> swapping to a specialized list component before profiling — for a short list the swap adds bundle weight for zero measured benefit.</p>
+<p>Rule: always measure. Run the profiler before and after the swap to confirm the re-render count and scroll FPS actually improved. <b>A specialized list component is only worth its bundle cost if the profiler shows the list itself is the bottleneck.</b></p>`,
   },
 
   // ── ADVANCED (13-20) ────────────────────────────────────────────────────────
@@ -217,9 +235,10 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 13 · Native profiling: Instruments (iOS) and Android Studio Profiler",
-    answerHtml: `<p>React DevTools profiles the JS/React layer. For native-side bottlenecks you need native tools.</p>
+    answerHtml: `<p>React DevTools only sees the JS/React layer — a bottleneck in native rendering, layout, or a third-party SDK is invisible to it, so a "the profiler shows nothing slow but the app still hangs" report is the signal to drop to native tools.</p>
 <p><b>iOS — Xcode Instruments:</b> Xcode → Open Developer Tool → Instruments → Time Profiler. Select device + app → record → reproduce the slow interaction → stop. The flame graph shows the Main (UI) thread and JS thread side by side. A "Microhang" on the UI thread means the system noticed it was unresponsive; a "Hang" is worse. Filter by Hermes or React Native to hide system noise. Use Bottom-Up view sorted by "weight" to find the heaviest callers.</p>
-<p><b>Android — Android Studio Profiler:</b> View → Tool Windows → Profiler → "Find CPU Hotspots" task. The flame graph shows the JS thread (<code>mqt_v_js</code>) and main thread together. JSI's sync calls mean touch events on the main thread map almost precisely to JS-thread work starting — visible in the trace. Always test on the <b>lowest-end device</b> you support; Android fragmentation means behavior varies widely. Export traces to Perfetto (<code>ui.perfetto.dev</code>) for additional analysis.</p>`,
+<p><b>Android — Android Studio Profiler:</b> View → Tool Windows → Profiler → "Find CPU Hotspots" task. The flame graph shows the JS thread (<code>mqt_v_js</code>) and main thread together. JSI's sync calls mean touch events on the main thread map almost precisely to JS-thread work starting — visible in the trace. Always test on the <b>lowest-end device</b> you support; Android fragmentation means behavior varies widely. Export traces to Perfetto (<code>ui.perfetto.dev</code>) for additional analysis.</p>
+<p><b>When React DevTools shows nothing slow but users still report lag, I reach for Instruments or the Android Profiler next — the bottleneck moved to native.</b></p>`,
   },
   {
     id: "pl-14",
@@ -227,7 +246,8 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 14 · TTI measurement: startup pipeline markers",
-    answerHtml: `<p>Measuring TTI naively (cold + warm + hot starts mixed together) gives useless variance. <b>Always measure cold starts only</b> and exclude prewarm, warm, and hot starts.</p>
+    answerHtml: `<p>A TTI dashboard that mixes start types can hide a real regression under a pile of fast warm starts — the number product looks at needs to reflect the worst first impression, which is always a cold start.</p>
+<p><b>Red flag:</b> measuring TTI naively (cold + warm + hot starts mixed together) — this is the single biggest mistake in startup measurement and gives useless variance. Always measure cold starts only and exclude prewarm, warm, and hot starts.</p>
 <p>Use <code>react-native-performance</code> to instrument each phase:</p>
 <ul>
   <li><b>nativeLaunchStart / nativeLaunchEnd</b> — native process init (measured with <code>clock_gettime</code> on iOS, <code>Process.getElapsedCpuTime()</code> on Android).</li>
@@ -235,7 +255,7 @@ const createEfficient = () =&gt; {
   <li><b>runJSBundleStart / runJSBundleEnd</b> — listen to RN's internal <code>RCTJavaScriptWillStartLoadingNotification</code> (iOS) or <code>ReactMarker.RUN_JS_BUNDLE_START</code> (Android).</li>
   <li><b>screenInteractive</b> — place this in a <code>useEffect</code> on your home screen when meaningful content is visible and interactive.</li>
 </ul>
-<p>iOS prewarms apps using ML predictions (can cut cold-start time up to 40%), so filter out prewarmed starts using <code>ProcessInfo.environment["ActivePrewarm"]</code>. Ship these markers to your analytics; track p50/p95 by device tier, not just averages.</p>`,
+<p>iOS prewarms apps using ML predictions (can cut cold-start time up to 40%), so filter out prewarmed starts using <code>ProcessInfo.environment["ActivePrewarm"]</code>. Ship these markers to your analytics; track p50/p95 by device tier, not just averages. <b>I only trust a TTI number if I know it's cold-start-only and segmented by device tier — anything else is noise.</b></p>`,
   },
   {
     id: "pl-15",
@@ -243,7 +263,7 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 15 · Threading model of TurboModules and Fabric",
-    answerHtml: `<p>Knowing which thread runs what prevents freezes and crashes in native code.</p>
+    answerHtml: `<p>A synchronous call dispatched to the wrong thread either freezes the whole app or crashes a UIKit call made off the main thread — knowing this table cold is what separates "it works on my device" from a native module that's safe under load.</p>
 <p><b>TurboModules:</b></p>
 <ul>
   <li>iOS <code>init</code> → main thread (UIKit assumption). Android <code>init</code> → JS thread (<code>mqt_v_js</code>).</li>
@@ -252,7 +272,8 @@ const createEfficient = () =&gt; {
   <li>Void methods → <code>mqt_v_native</code>.</li>
   <li>Eager-init on Android (<code>needsEagerInit: true</code>) → <code>mqt_v_native</code>.</li>
 </ul>
-<p><b>Fabric (native views):</b> both <code>init</code> and <code>updateProps</code> run on the <b>main thread</b> — Yoga layout ops that back them run on the JS thread. All view mutations must ultimately reach the main thread; JSI makes this synchronous in the New Architecture, which is why the Android profiler shows touch events on the main thread lining up exactly with JS work starting immediately after.</p>`,
+<p><b>Fabric (native views):</b> both <code>init</code> and <code>updateProps</code> run on the <b>main thread</b> — Yoga layout ops that back them run on the JS thread. All view mutations must ultimately reach the main thread; JSI makes this synchronous in the New Architecture, which is why the Android profiler shows touch events on the main thread lining up exactly with JS work starting immediately after.</p>
+<p><b>Sync TurboModule methods and Fabric's init/updateProps never leave the main or JS thread — any blocking work in them has to hop to the native modules pool instead.</b></p>`,
   },
   {
     id: "pl-16",
@@ -260,7 +281,8 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 16 · View flattening and the collapsable prop",
-    answerHtml: `<p>Fabric's renderer identifies <b>"layout-only" nodes</b> — views that only affect layout (position, size) but don't render any visual content. It flattens them out of the native view hierarchy to save memory and CPU layout passes.</p>
+    answerHtml: `<p>Every native view Fabric doesn't have to create is memory and a layout pass saved across the whole tree — view flattening is a free win, so the goal is opting out of it as rarely as possible.</p>
+<p>Fabric's renderer identifies <b>"layout-only" nodes</b> — views that only affect layout (position, size) but don't render any visual content. It flattens them out of the native view hierarchy to save memory and CPU layout passes.</p>
 <p>This is transparent in most cases. It becomes a problem when a <b>native component</b> expects a specific number of children:</p>
 <div class="code">&lt;MyNativeComponent&gt;
   &lt;Child1 /&gt;  {/* if Child1 is layout-only, it may be flattened */}
@@ -269,7 +291,8 @@ const createEfficient = () =&gt; {
 // Native side may receive Child1's children instead of Child1 itself</div>
 <p>Fix: set <code>collapsable={false}</code> to prevent a specific view from being flattened:</p>
 <div class="code">&lt;Child1 collapsable={false} /&gt;</div>
-<p>Debug the live view hierarchy in Xcode (Debug → View Hierarchy) or Android Studio (Layout Inspector) to see what actually reaches the native layer. View flattening is a free optimization — only opt out where correctness requires it.</p>`,
+<p><b>Red flag:</b> sprinkling <code>collapsable={false}</code> everywhere "just in case" — it disables a free optimization on every view it touches. Only opt out where a native component's child-count assumption actually breaks.</p>
+<p>Debug the live view hierarchy in Xcode (Debug → View Hierarchy) or Android Studio (Layout Inspector) to see what actually reaches the native layer. <b>View flattening is free — I only opt a view out when correctness requires it, never as a precaution.</b></p>`,
   },
   {
     id: "pl-17",
@@ -277,8 +300,9 @@ const createEfficient = () =&gt; {
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 17 · Native memory management: ARC, WeakReference, and cleanup",
-    answerHtml: `<p>Swift uses <b>ARC</b> (Automatic Reference Counting) — the compiler inserts retain/release calls. A retain cycle (two objects holding strong references to each other) prevents deallocation. Fix: use <code>[weak self]</code> in closures or <code>weak var</code> for delegates.</p>
-<p>Kotlin/Android: the GC handles most cases, but listeners stored in a manager class keep their host object alive. Fix: <code>WeakReference</code> in the listener list, or implement <code>AutoCloseable</code> and call <code>close()</code> in the lifecycle teardown.</p>
+    answerHtml: `<p>A retain cycle in TurboModule glue code doesn't show up in the JS memory profiler at all — it's native memory, which is exactly why it's the kind of leak that survives code review until a crash report from production surfaces it.</p>
+<p><b>Swift's role:</b> ARC (Automatic Reference Counting) — the compiler inserts retain/release calls at compile time. A retain cycle (two objects holding strong references to each other) prevents deallocation. Fix: use <code>[weak self]</code> in closures or <code>weak var</code> for delegates.</p>
+<p><b>Kotlin/Android's role:</b> a tracing GC handles most cases at runtime, but listeners stored in a manager class keep their host object alive as long as the manager lives. Fix: <code>WeakReference</code> in the listener list, or implement <code>AutoCloseable</code> and call <code>close()</code> in the lifecycle teardown.</p>
 <div class="code">// Kotlin: WeakReference prevents DataManager from retaining listeners
 class DataManager {
   private val listeners = mutableListOf&lt;WeakReference&lt;DataListener&gt;&gt;()
@@ -286,7 +310,7 @@ class DataManager {
 
 // Swift: weak capture prevents retain cycle
 button.action = { [weak self] in self?.handleTap() }</div>
-<p><b>Manual ARC (<code>Unmanaged</code>) in Swift</b> is used for C-interop. Rule: match every <code>passRetained</code> with a <code>takeRetainedValue</code>. Mismatched calls cause crashes or double-frees. This rarely appears in application code but is important in TurboModule glue code.</p>`,
+<p><b>Manual ARC (<code>Unmanaged</code>) in Swift</b> is used for C-interop. Rule: match every <code>passRetained</code> with a <code>takeRetainedValue</code>. Mismatched calls cause crashes or double-frees. This rarely appears in application code but is important in TurboModule glue code. <b>Native retain cycles don't show up in the JS memory profiler — I check ARC/GC ownership explicitly whenever I review TurboModule glue code.</b></p>`,
   },
   {
     id: "pl-18",
@@ -294,18 +318,19 @@ button.action = { [weak self] in self?.handleTap() }</div>
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 18 · Bundle analysis: barrel exports are the silent bloat",
-    answerHtml: `<p>A <b>barrel export</b> is an <code>index.ts</code> that re-exports everything from a folder:</p>
+    answerHtml: `<p>A bundle bloated with unused code lands on every user's device, on every install — the barrel-export pattern is a case where a codebase convention chosen for developer convenience has a direct, invisible cost to TTI and download size.</p>
+<p>A <b>barrel export</b> is an <code>index.ts</code> that re-exports everything from a folder:</p>
 <div class="code">// components/index.ts
 export { Button } from './Button';
 export { Modal } from './Modal';
 export { VideoPlayer } from './VideoPlayer'; // huge dep</div>
-<p>When you import <code>Button</code> via the barrel, Metro must parse the whole <code>index.ts</code> and may pull <code>VideoPlayer</code>'s dependencies into the bundle even if you never use it — because <b>tree-shaking requires statically provable unused exports</b>, which barrel files make hard to prove.</p>
+<p><b>Red flag:</b> assuming Metro's tree-shaking will strip the unused re-exports automatically — <b>tree-shaking requires statically provable unused exports</b>, and a barrel file's re-export chain makes that proof hard, so <code>VideoPlayer</code>'s whole dependency tree can ship even though you only imported <code>Button</code>.</p>
 <p><b>Fix:</b> import directly: <code>import { Button } from './components/Button'</code>.</p>
 <p><b>Measure your bundle:</b></p>
 <div class="code">npx react-native bundle --platform ios --dev false \\
   --entry-file index.js --bundle-output out.js --sourcemap-output out.map
 npx source-map-explorer out.js out.map</div>
-<p>The treemap shows which modules contribute most to bundle size. Also check: duplicate transitive dependencies (two versions of the same package), moment.js (replace with date-fns + specific imports), lodash (use lodash-es with tree-shaking or individual package imports).</p>`,
+<p>The treemap shows which modules contribute most to bundle size. Also check: duplicate transitive dependencies (two versions of the same package), moment.js (replace with date-fns + specific imports), lodash (use lodash-es with tree-shaking or individual package imports). <b>I import directly from the module I need and treat barrel files as a bundle-size liability, not just a style preference.</b></p>`,
   },
   {
     id: "pl-19",
@@ -313,7 +338,8 @@ npx source-map-explorer out.js out.map</div>
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 19 · On-device AI with react-native-executorch: architecture and setup",
-    answerHtml: `<p><b>react-native-executorch</b> (Software Mansion) wraps Meta's ExecuTorch runtime — a 50KB C++ runtime that runs exported <code>.pte</code> model binaries on XNNPACK (CPU, default), Core ML (iOS), or QNN (Qualcomm). <b>New Architecture required.</b></p>
+    answerHtml: `<p>On-device inference trades a network round-trip and a server bill for local compute and download size — the architecture decisions below exist because a live model is a resource with its own lifecycle, not a stateless API call.</p>
+<p><b>react-native-executorch</b> (Software Mansion) wraps Meta's ExecuTorch runtime — a 50KB C++ runtime that runs exported <code>.pte</code> model binaries on XNNPACK (CPU, default), Core ML (iOS), or QNN (Qualcomm). <b>New Architecture required.</b></p>
 <p><b>Setup:</b></p>
 <div class="code">npm install react-native-executorch
 npm install react-native-executorch-expo-resource-fetcher  // Expo
@@ -323,7 +349,9 @@ npm install react-native-executorch-expo-resource-fetcher  // Expo
 import { initExecutorch } from 'react-native-executorch';
 import { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';
 initExecutorch({ resourceFetcher: ExpoResourceFetcher });</div>
-<p><b>Model lifecycle:</b> a hook (e.g., <code>useLLM</code>) auto-loads on mount. Observe <code>downloadProgress</code> (0–1) and <code>isReady</code>. For LLMs, <code>isGenerating</code> tracks active inference; <code>interrupt()</code> cancels it. <b>Critical:</b> call <code>interrupt()</code> and wait for <code>isGenerating === false</code> before unmounting — a live model being torn down crashes the app. Only <b>one LLM instance</b> can run at a time. Pin the exact version — breaking changes land nearly every minor release.</p>`,
+<p><b>Model lifecycle:</b> a hook (e.g., <code>useLLM</code>) auto-loads on mount. Observe <code>downloadProgress</code> (0–1) and <code>isReady</code>. For LLMs, <code>isGenerating</code> tracks active inference; <code>interrupt()</code> cancels it.</p>
+<p><b>Red flag:</b> unmounting a screen while the model <code>isGenerating</code> without calling <code>interrupt()</code> first — a live model torn down mid-inference crashes the app. Always call <code>interrupt()</code> and wait for <code>isGenerating === false</code> before unmount. Only <b>one LLM instance</b> can run at a time. Pin the exact version — breaking changes land nearly every minor release.</p>
+<p><b>I always wire the interrupt-before-unmount guard the same time I add the model hook, not as an afterthought — it's the difference between a clean exit and a crash report.</b></p>`,
   },
   {
     id: "pl-20",
@@ -331,7 +359,8 @@ initExecutorch({ resourceFetcher: ExpoResourceFetcher });</div>
     categoryLabel: "PERF",
     level: "senior",
     question: "Lesson 20 · On-device AI: RAM budget, quantization, and model families",
-    answerHtml: `<p><b>RAM rule of thumb:</b> 1B parameter model ≈ 1 GB download / ~2 GB RAM. Device tier recommendations:</p>
+    answerHtml: `<p>Picking a model size that outgrows the low-end devices in your install base doesn't fail gracefully — it OOM-crashes on exactly the users you can least afford to lose, so device-tier budgeting comes before model selection, not after.</p>
+<p><b>RAM rule of thumb:</b> 1B parameter model ≈ 1 GB download / ~2 GB RAM. Device tier recommendations:</p>
 <ul>
   <li><b>8 GB+ RAM</b> (flagship): 3B models (Qwen 3 1.7B, LLaMA 3.2 3B, Phi 4 Mini 4B)</li>
   <li><b>6 GB RAM</b> (mid-range): 1B quantized models (LLaMA 3.2 1B, SmolLM2 1.7B q4)</li>
@@ -339,7 +368,8 @@ initExecutorch({ resourceFetcher: ExpoResourceFetcher });</div>
 </ul>
 <p><b>Quantization</b> reduces model size and speeds up inference with minimal quality loss. SpinQuant reduces a 1B model by ~42%. All pre-exported models in <code>models.*</code> include quantized variants.</p>
 <p><b>v0.9.2 model families:</b> LLMs: Hammer 2.1, Qwen 3/3.5, Phi 4 Mini, SmolLM2, LLaMA 3.2, LFM2.5 (vision). CV: SSDLite, RF-DETR, YOLO26, DeepLab (segmentation), pose estimation (new in 0.9.x). Speech: Whisper tiny/base/small. Embeddings: all-MiniLM-L6-v2. TTS: Kokoro.</p>
-<p><b>Never</b> bundle a large model — use remote download with progress UI. Bundled assets are capped at ~512 MB and bloat the binary for every user, even those who never use the AI feature.</p>`,
+<p><b>Red flag:</b> bundling a large model into the app binary — bundled assets are capped at ~512 MB and bloat the download for every user, even those who never use the AI feature. Use remote download with progress UI instead.</p>
+<p><b>I size the model to the device tier and download it remotely with a progress UI — never bundle it, and never assume every user is on a flagship phone.</b></p>`,
   },
 ];
 
@@ -414,12 +444,12 @@ const Card = memo(({ item, style, onPress }) =&gt; (
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-<li>Bug 1: <code>style={{ marginBottom: 8 }}</code> creates a new object on every render. <code>Card</code> sees a new style reference → <code>memo</code> is bypassed.</li>
-<li>Bug 2: <code>() =&gt; console.log(item.id)</code> creates a new function on every render for every item. Same issue.</li>
-<li>Fix 1: hoist the constant style outside the component (or use <code>StyleSheet.create</code>).</li>
-<li>Fix 2: wrap the handler in <code>useCallback</code> keyed on <code>item.id</code>. But since items are mapped, <code>useCallback</code> inside the map doesn't help — move <code>onPress</code> into the <code>Card</code> component itself and pass only the stable <code>item.id</code>.</li>
-</ul>`,
+        html: `<ol>
+<li><b>Isolate:</b> two candidate re-render sources — the <code>style</code> prop and the <code>onPress</code> prop, both created inline inside <code>Feed</code>'s render.</li>
+<li><b>Prove it:</b> <code>style={{ marginBottom: 8 }}</code> is a new object every render; <code>() =&gt; console.log(item.id)</code> is a new function every render for every item. Either one alone defeats <code>Card</code>'s <code>memo</code> shallow comparison.</li>
+<li><b>Fix the style:</b> hoist the constant style outside the component (or use <code>StyleSheet.create</code>).</li>
+<li><b>Fix the handler:</b> <code>useCallback</code> inside the map doesn't help — a new callback is still created per item, per render. Move <code>onPress</code> into <code>Card</code> itself and pass only the stable <code>item.id</code>.</li>
+</ol>`,
       },
       {
         label: "Solution",
@@ -549,12 +579,12 @@ const ROW = ITEM_HEIGHT + SEPARATOR; // total height per slot
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-<li>Step 1: ESLint plugin catches Rules-of-React violations that would block compiler optimizations — add it before enabling the compiler itself.</li>
-<li>Step 2: Babel plugin transforms code at build time — must run <b>first</b> in the plugins array.</li>
-<li>Step 3: Incremental adoption with <code>sources</code> — point at a known-clean directory first; expand as you fix violations.</li>
-<li>Expo SDK 55+ ships React 19, so <code>target: '19'</code>. For older RN, use <code>'18'</code> + <code>react-compiler-runtime</code>.</li>
-</ul>`,
+        html: `<ol>
+<li>Add the ESLint plugin — it catches Rules-of-React violations that would block compiler optimizations, so run it before enabling the compiler itself.</li>
+<li>Add the Babel plugin — it transforms code at build time and must run <b>first</b> in the plugins array.</li>
+<li>Adopt incrementally with the <code>sources</code> option — point at a known-clean directory first, then expand as you fix violations.</li>
+</ol>
+<p>Expo SDK 55+ ships React 19, so <code>target: '19'</code>. For older RN, use <code>'18'</code> + <code>react-compiler-runtime</code>.</p>`,
       },
       {
         label: "Solution",
@@ -606,12 +636,12 @@ module.exports = () =&gt; ({
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
 <li>Install: <code>npx expo install @shopify/flash-list</code>.</li>
 <li>Swap the import. FlashList's API is a superset of FlatList's — most props transfer directly.</li>
-<li>Add <code>estimatedItemSize</code> (required): your best guess at the average item height in pixels. FlashList uses this to pre-allocate recycled views and size the scroll content. A poor estimate still works but causes a one-time layout correction flash.</li>
+<li>Add <code>estimatedItemSize</code>: your best guess at the average item height in pixels. FlashList uses this to pre-allocate recycled views and size the scroll content. A poor estimate still works but causes a one-time layout correction flash.</li>
 <li>Under New Architecture, FlashList v2 auto-measures synchronously, so <code>estimatedItemSize</code> becomes advisory rather than mandatory — but still improves first-paint accuracy.</li>
-</ul>`,
+</ol>`,
       },
       {
         label: "Solution",
@@ -875,8 +905,11 @@ const user = await dedupeFetch&lt;User&gt;('/api/users/42');</div>
     reveal: [
       {
         label: "What the DevTools timeline shows",
-        html: `<p>Open DevTools → Memory → Allocation instrumentation on timeline → record → navigate away from the component → stop. You would see <b>blue bars</b> (allocations) from the closure over <code>setCount</code> and the <code>fetchCount</code> promise chain that never go grey. They grow on every 5-second interval. The "Shallow/Retained size" for the interval's closure object would keep climbing.</p>
-<p>On Android Profiler: heap usage would grow by the closure size ~every 5 seconds, visible as a staircase pattern in the memory graph.</p>`,
+        html: `<ol>
+<li><b>Isolate:</b> the commented-out cleanup line is the tell — a timer with no <code>clearInterval</code> keeps its closure (over <code>setCount</code>) alive for as long as the interval runs, which is forever once the component unmounts.</li>
+<li><b>Prove it:</b> DevTools → Memory → Allocation instrumentation on timeline → record → navigate away from the component → stop. You'd see <b>blue bars</b> (allocations) from the closure over <code>setCount</code> and the <code>fetchCount</code> promise chain that never go grey, growing on every 5-second interval — retained size for the interval's closure keeps climbing. On Android Profiler, heap usage grows by the closure size roughly every 5 seconds, visible as a staircase pattern in the memory graph.</li>
+<li><b>Fix:</b> clear the interval in the effect's cleanup and guard the async state update (below).</li>
+</ol>`,
       },
       {
         label: "Fix",
