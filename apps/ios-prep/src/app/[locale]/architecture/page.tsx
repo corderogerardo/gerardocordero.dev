@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Arquitectura", description: "Inmersiones de diseño de sistemas — conceptos, ejemplos, problemas y soluciones explicados a profundidad senior." }
+    ? { title: "Arquitectura", description: "Cómo se diseñan las apps iOS a escala — patrones, modularización, flujo de datos, concurrencia y release — con inmersiones de concepto/ejemplo/problema/solución." }
     : { title: "Architecture", description: "How iOS apps are designed at scale — patterns, modularization, data flow, concurrency, and release — plus concept/example/problem/solution deep-dives." };
 }
 

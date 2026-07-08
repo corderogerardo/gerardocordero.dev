@@ -13,7 +13,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Pitches de Práctica", description: "Respuestas habladas e historias STAR con un teleprompter para ensayar en cámara." }
+    ? { title: "Pitches de Práctica", description: "Ocho guiones hablados que explican temas clave de iOS con claridad — el tipo de respuesta que un entrevistador espera con “explícame X” — con un teleprompter para ensayar en cámara." }
     : { title: "Pitches", description: "Eight spoken talk-tracks that explain core iOS topics clearly — the kind of answer an interviewer means by “walk me through X” — with a teleprompter to rehearse on camera." };
 }
 

@@ -14,7 +14,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
+    ? { title: "Guía de Estudio", description: "Todo el stack de iOS explicado desde cero — Swift, SwiftUI, UIKit, concurrencia, datos, rendimiento, testing, CI/CD y el App Store — con una nota de nivel en cada tema." }
     : { title: "Study Guide", description: "The whole iOS stack explained from scratch — Swift, SwiftUI, UIKit, concurrency, data, performance, testing, CI/CD, the App Store, security, and on-device AI — with a level note on each topic." };
 }
 

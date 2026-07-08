@@ -36,7 +36,7 @@
   },
   {
    "path": "modules[8].lessons[0].steps[0].md[6]",
-   "text": "    _ \"github.com/lib/pq\"   // registers the postgres driver"
+   "text": "    _ \"github.com/lib/pq\"   // registra el driver de postgres"
   },
   {
    "path": "modules[8].lessons[0].steps[0].md[7]",
@@ -152,7 +152,7 @@
   },
   {
    "path": "modules[8].lessons[0].steps[5].md[5]",
-   "text": "    // no walker with that id -> 404"
+   "text": "    // no hay walker con ese id -> 404"
   },
   {
    "path": "modules[8].lessons[0].steps[5].md[6]",

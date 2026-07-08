@@ -1454,7 +1454,7 @@
                 "## La razón por la que Go corre servidores",
                 "Un servidor de PawWalk nunca está haciendo una sola cosa. Mientras responde la petición de lista de walkers para un teléfono, también está transmitiendo coordenadas GPS a un cliente viendo un paseo en vivo, cobrando una tarjeta, y aceptando una reserva nueva — todo en el mismo instante. El trabajo completo de un backend es **muchas cosas a la vez**.",
                 "La respuesta de Go es la **goroutine**: una función que corre de forma concurrente con todo lo demás. Lanzas una poniendo la palabra `go` antes de una llamada. Esa es toda la sintaxis.",
-                "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10,000 goroutines es normal; levantar 10,000 hilos derretiría la máquina."
+                "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10 000 goroutines es normal; levantar 10 000 hilos derretiría la máquina."
               ]
             },
             {
@@ -2363,7 +2363,7 @@
                 "```",
                 "import (",
                 "    \"database/sql\"",
-                "    _ \"github.com/lib/pq\"   // registers the postgres driver",
+                "    _ \"github.com/lib/pq\"   // registra el driver de postgres",
                 ")",
                 "```",
                 "El guion bajo `_` significa *importa esto solo por sus efectos colaterales* — el driver registra el nombre `\"postgres\"` en su `init()`, y tú nunca lo llamas directamente."
@@ -2417,7 +2417,7 @@
                 "Lo verificas explícitamente con `==`, porque 'no existe ese paseador' usualmente significa un `404`, mientras que cualquier otro error significa que algo realmente se rompió:",
                 "```",
                 "if err == sql.ErrNoRows {",
-                "    // no walker with that id -> 404",
+                "    // no hay walker con ese id -> 404",
                 "}",
                 "```",
                 "Este es el mismo patrón que vas a conectar en un handler HTTP: `ErrNoRows` se convierte en una respuesta not-found, otros errores se convierten en un 500."

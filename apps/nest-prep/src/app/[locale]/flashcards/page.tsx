@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    ? { title: "Tarjetas", description: "Tarjetas de preguntas de entrevista sobre NestJS core, DI, el ciclo de vida de la petición, datos, auth, microservicios, GraphQL, internals de Node.js y rendimiento." }
     : { title: "Flashcards", description: "Interview Q&A flashcards across NestJS core, DI, the request lifecycle, data, auth, microservices, GraphQL, Node.js internals, performance, and testing. Reveal, self-grade, and drill what you don't know yet." };
 }
 

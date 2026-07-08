@@ -12,7 +12,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    ? { title: "Tarjetas", description: "Tarjetas de preguntas de entrevista sobre el App Router, renderizado y caché, obtención de datos, routing, rendimiento, auth, testing y seguridad — con repetición espaciada en tu navegador." }
     : { title: "Flashcards", description: "Interview Q&A flashcards across the App Router, rendering & caching, data fetching, routing, performance, auth, testing, and security. Reveal, self-grade, and drill what you don't know yet." };
 }
 

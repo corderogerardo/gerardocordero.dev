@@ -15,7 +15,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
+    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior de Android — Kotlin, coroutines, Compose, arquitectura, Jetpack, rendimiento, testing — explicado a profundidad senior." }
     : { title: "Study Guide", description: "Every requirement a senior Android role asks for — Kotlin, coroutines, Compose, architecture, Jetpack, performance, testing — explained at senior depth." };
 }
 

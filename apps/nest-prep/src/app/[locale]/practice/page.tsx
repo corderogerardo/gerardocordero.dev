@@ -13,7 +13,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Práctica", description: "Prompts de código y diseño de sistemas estilo entrevista, con pistas progresivas y revelado autoevaluado." }
+    ? { title: "Práctica", description: "Resolución activa de problemas: prompts de código de NestJS / Node.js estilo entrevista, prompts de algoritmos backend y de diseño de sistemas, con pistas progresivas y revelado autoevaluado." }
     : { title: "Practice", description: "Active problem-solving: interview-style NestJS / Node.js coding prompts, backend algorithm prompts, and system-design prompts, with progressive hints and a self-graded reveal." };
 }
 

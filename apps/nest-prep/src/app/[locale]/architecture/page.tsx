@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Arquitectura", description: "Inmersiones de diseño de sistemas — conceptos, ejemplos, problemas y soluciones explicados a profundidad senior." }
+    ? { title: "Arquitectura", description: "Un recorrido senior de diseño de sistemas backend aplicado a NestJS y Node.js — capas, microservicios, datos, caché y resiliencia — con inmersiones de concepto/ejemplo/problema/solución." }
     : { title: "Architecture", description: "A senior-level tour of backend system design mapped onto NestJS and Node.js — layering, microservices, data, caching, and resilience — plus concept/example/problem/solution deep-dives." };
 }
 

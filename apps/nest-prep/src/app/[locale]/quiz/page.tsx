@@ -12,7 +12,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Quiz", description: "Un quiz de opción múltiple con retroalimentación instantánea y explicada. Tus respuestas se guardan en este navegador." }
+    ? { title: "Quiz", description: "Un quiz de opción múltiple sobre NestJS y Node.js con retroalimentación instantánea y explicada. Tus respuestas se guardan en este navegador." }
     : { title: "Quiz", description: "A multiple-choice quiz on NestJS and Node.js with instant, explained feedback. Your answers are saved in this browser so you can finish later." };
 }
 

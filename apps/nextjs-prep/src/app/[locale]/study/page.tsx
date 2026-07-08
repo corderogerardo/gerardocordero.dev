@@ -12,7 +12,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
+    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior de Next.js / React, explicado a profundidad senior — con una línea de “cómo decirlo” para responder con confianza." }
     : { title: "Study Guide", description: "Every requirement a senior Next.js / React role asks for, explained at senior depth — with a 'how to say it' line so you can answer with confidence." };
 }
 

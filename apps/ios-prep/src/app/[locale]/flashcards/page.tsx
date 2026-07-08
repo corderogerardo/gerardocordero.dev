@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    ? { title: "Tarjetas", description: "Tarjetas de P&R sobre Swift, SwiftUI, UIKit, concurrencia, arquitectura, datos, rendimiento, testing, CI/CD, el App Store y seguridad — con repetición espaciada en tu navegador." }
     : { title: "Flashcards", description: "Q&A flashcards across Swift, SwiftUI, UIKit, concurrency, architecture, data, performance, testing, CI/CD, the App Store, security, and on-device AI. Reveal, self-grade, and drill what you don't know yet." };
 }
 

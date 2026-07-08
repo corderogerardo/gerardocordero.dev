@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Tarjetas", description: "Practica preguntas y respuestas de entrevista como tarjetas con repetición espaciada — tu progreso se guarda en el navegador." }
+    ? { title: "Tarjetas", description: "Tarjetas de P&R sobre Kotlin, Jetpack Compose, arquitectura Android, inyección de dependencias, rendimiento, testing e IA en el dispositivo — con repetición espaciada en tu navegador." }
     : { title: "Flashcards", description: "Q&A flashcards covering Kotlin, Jetpack Compose, Android architecture, dependency injection, performance, testing, and on-device AI. Reveal, self-grade, and drill what you don't know yet." };
 }
 

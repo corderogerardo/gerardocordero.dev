@@ -10,7 +10,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Arquitectura", description: "Inmersiones de diseño de sistemas — conceptos, ejemplos, problemas y soluciones explicados a profundidad senior." }
+    ? { title: "Arquitectura", description: "Un recorrido senior de diseño de sistemas frontend aplicado a Next.js — estrategia de renderizado, caché, flujo de datos y entrega — con inmersiones de concepto/ejemplo/problema/solución." }
     : { title: "Architecture", description: "A senior-level tour of frontend system design mapped onto Next.js — rendering strategy, caching, data flow, and delivery — plus concept/example/problem/solution deep-dives." };
 }
 

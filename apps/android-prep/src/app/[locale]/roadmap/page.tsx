@@ -14,7 +14,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Hoja de Ruta", description: "Un camino graduado por nivel: junior → mid → senior → arquitecto. Sabe dónde estás y qué sigue." }
+    ? { title: "Hoja de Ruta", description: "Un camino de aprendizaje de Android/Kotlin graduado por nivel — junior, mid, senior, arquitecto y más allá — con lo que puedes hacer en cada nivel y qué aprender después." }
     : { title: "Roadmap", description: "A level-graded Android/Kotlin learning path — junior, mid, senior, architect, and beyond — with what you can do at each level and what to learn next." };
 }
 

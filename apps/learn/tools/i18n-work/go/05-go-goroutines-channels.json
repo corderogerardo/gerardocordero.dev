@@ -24,7 +24,7 @@
   },
   {
    "path": "modules[5].lessons[0].steps[0].md[3]",
-   "text": "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10,000 goroutines es normal; levantar 10,000 hilos derretiría la máquina."
+   "text": "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10 000 goroutines es normal; levantar 10 000 hilos derretiría la máquina."
   },
   {
    "path": "modules[5].lessons[0].steps[1].title",

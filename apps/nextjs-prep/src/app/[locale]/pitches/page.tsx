@@ -13,7 +13,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return locale === "es"
-    ? { title: "Pitches de Práctica", description: "Respuestas habladas e historias STAR con un teleprompter para ensayar en cámara." }
+    ? { title: "Pitches de Práctica", description: "Respuestas habladas — presentaciones, “por qué Next.js”, una inmersión técnica e historias STAR — con un teleprompter para ensayar en cámara." }
     : { title: "Practice Pitches", description: 'Spoken answers — intros, "why Next.js", a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera.' };
 }
 
