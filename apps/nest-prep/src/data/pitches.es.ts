@@ -147,4 +147,45 @@ export const PITCHES: Pitch[] = [
     tipsHtml:
       "<span class=\"lbl\">Entrega</span> Preguntar sobre arquitectura, testing y on-call muestra que piensas como dueño. Evita preguntar solo sobre beneficios. Escucha la respuesta y haz seguimiento — debe sentirse como una conversación, no una lista de verificación.",
   },
+  {
+    id: "p11",
+    num: "Pitch 11",
+    title: "Express vs Fastify vs NestJS",
+    metaHtml:
+      "<span class=\"pill\">&quot;¿Cuál framework, y por qué?&quot;</span><span class=\"pill accent\">~75 seg</span>",
+    scriptHtml:
+      "<p>Se mapean a diferentes necesidades. <b>Express</b> es la capa middleware universal, no opinada — excelente para BFFs, webhooks y proxies delgados. <b>Fastify</b> es la jugada de rendimiento: serialización basada en esquema y encapsulación de plugins. <b>NestJS</b> es la jugada de estructura: módulos, DI y un pipeline de requests que escala con el equipo y la base de código.</p>" +
+      "<p>Sobre velocidad — cito los números, pero honestamente. La ejecución oficial de fastify/benchmarks hello-world tiene Fastify alrededor de <b>45,140 req/s</b> vs Express alrededor de <b>10,702</b> — unas 4.5× en <i>esa</i> ejecución; otros benchmarks llegan más cerca de 2–3×. Pero el repo en sí dice que esos números &quot;no pretenden representar un escenario del mundo real&quot;, y se ejecutan en hardware CI compartido ruidoso, así que los resultados varían. Los trato como <b>direccionales</b>, nunca como titular.</p>" +
+      "<p>Porque en una carga real el framework raramente es el cuello de botella — la base de datos, las llamadas posteriores y la lógica comercial dominan. Así que elijo por <b>ajuste de equipo y estructura</b>, y llego a NestJS. Y si un servicio específico es genuinamente crítico en rendimiento, Nest se ejecuta en el <b>adaptador Fastify</b> y recupera la mayoría de esa velocidad — no tengo que elegir.</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Entrega</span> Di los números de benchmark, luego inmediatamente socávalos con el propio descargo de responsabilidad del repo — esa autocorrección es la señal senior; un candidato que cita &quot;4.5× más rápido&quot; como hecho se ve junior. <span class=\"lbl\">Red flag</span> Nunca dejes que el pitch aterrice en req/s bruto. Aterrizalo en &quot;la BD domina cargas reales&quot; y &quot;Nest-en-Fastify significa que no tengo que comerciar estructura por velocidad&quot;. Pronuncia <i>Fastify</i> &quot;FAST-ify&quot;.",
+  },
+  {
+    id: "p12",
+    num: "Pitch 12",
+    title: "La fórmula del trade-off",
+    metaHtml:
+      "<span class=\"pill\">Meta-habilidad: cómo enmarcar cualquier respuesta</span><span class=\"pill accent\">reutilizable</span>",
+    scriptHtml:
+      "<p>La meta-habilidad senior no es conocer la respuesta — es <b>enmarcar la decisión</b>. Una oración, cada vez: <i>&quot;La Opción A optimiza X al costo de Y; dadas las restricciones Z, elegiría ___ y revisaría si [umbral].&quot;</i></p>" +
+      "<p>Concretamente, digamos que preguntan si ejecutar una exportación pesada inline o en una cola: <i>&quot;Hacerlo sincrónicamente optimiza la simpleza y la retroalimentación inmediata, al costo de mantener una request abierta y riesgo de timeouts bajo carga. Encolarlo optimiza la resiliencia y el rendimiento, al costo de complejidad de consistencia eventual y una UX de estado de trabajo. Dada que nuestra exportación toma unos pocos segundos y el tráfico es irregular, la encolaría — y revisaría el camino síncrono solo si la latencia p95 del trabajo cae bajo un segundo y el volumen sigue bajo.&quot;</i></p>" +
+      "<p>Mira lo que eso hace: nombra ambos costos, ata la elección a una restricción real, y da un disparador medible para reabrirla — latencia p95/p99, tasa de error, costo por request. Esa es la diferencia entre &quot;Elegí la cola&quot; y &quot;Tomé una decisión que puedo defender y deshacer.&quot;</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Entrega</span> Practica la fórmula hasta que sea refleja — funciona para cualquier pregunta, no solo esta. Siempre añade un <b>umbral numérico</b> a la cláusula &quot;revisaría si&quot;; un vago &quot;reconsideraríamos después&quot; desperdicia todo el movimiento. <span class=\"lbl\">Red flag</span> Elegir la opción de moda y defenderla después. Los seniors se contratan por su juicio bajo incertidumbre — muestra que pesaste el costo <i>antes</i> de elegir.",
+  },
+  {
+    id: "p13",
+    num: "Pitch 13",
+    title: "Un esqueleto de historia CARL",
+    metaHtml:
+      "<span class=\"pill\">Conductual: estructura cualquier historia</span><span class=\"pill accent\">≤3 min</span>",
+    scriptHtml:
+      "<p>Usa <b>CARL — Contexto, Acciones, Resultados, Aprendizajes</b>. El tiempo de Aprendizajes es lo que STAR pierde, y es lo que señala madurez: muestra que reflexionas, no solo ejecutas. Lidera con tu historia de <b>alcance más grande</b> incluso si no es una coincidencia literal, y cuantifica el impacto.</p>" +
+      "<p><b>Contexto:</b> [el sistema + las apuestas — por ejemplo [servicio] estaba [fallando / en un punto de decisión] afectando [X usuarios / $Y / una fecha límite]; fui dueño de [alcance].]</p>" +
+      "<p><b>Acciones:</b> [lo que <i>tú</i> hiciste — el marco que usaste, las alternativas que rechazaste y por qué, a quién alineaste. &quot;[Medí / hice benchmarks / escribí un ADR], elegí [X] sobre [Y] porque [restricción].&quot;]</p>" +
+      "<p><b>Resultados:</b> [el resultado medible — &quot;[métrica] se movió de [A] a [B]&quot; / &quot;[incidente] resuelto en [N] con una post-mortem sin culpa y propietarios asignados.&quot;]</p>" +
+      "<p><b>Aprendizajes:</b> [qué harías diferente y qué llevaste adelante — &quot;Habría [cambiado] antes; desde entonces [nueva práctica].&quot;]</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Entrega</span> Mantenlo bajo 3 minutos — Acciones es el tiempo más largo, Contexto el más corto. Lidera con alcance y el marco, cierra en la métrica. <span class=\"lbl\">Red flag</span> Describir <i>lo que el equipo</i> hizo en lugar de qué <b>tú</b> hiciste, y saltar Aprendizajes — esa omisión es lo que hace que una historia de acciones fuerte todavía se vea como nivel medio. Una pequeña historia real contada con precisión vence a una inflada.",
+  },
 ];

@@ -13,7 +13,7 @@ import vm from "node:vm";
 const isRegExp = (v) => types.isRegExp(v); // instanceof fails across the vm realm
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go"];
+const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go", "lessons-node"];
 
 const errors = [];
 const err = (file, msg) => errors.push(`${file}: ${msg}`);
@@ -22,14 +22,14 @@ const err = (file, msg) => errors.push(`${file}: ${msg}`);
 function normalize(code, lang) {
   code = lang === "python" ? code.replace(/#[^\n]*/g, " ")
     : lang === "ruby" ? code.replace(/#(?!\{)[^\n]*/g, " ")
-    : code.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+    : code.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " "); // swift/kotlin/go/ts: C-style comments
   return code
     .replace(/\s+/g, " ")
     .replace(/\s*([^\w\s])\s*/g, "$1")
     .trim();
 }
 
-const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby", "go"]);
+const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby", "go", "ts"]);
 
 const isBlocks = (v) => Array.isArray(v) && v.length > 0 && v.every((b) => typeof b === "string" && b.trim());
 

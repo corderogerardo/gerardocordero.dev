@@ -106,4 +106,25 @@ export const CHECKLIST_GROUPS: ChecklistGroup[] = [
       { id: "pg-r10", label: "Tener 4 preguntas agudas listas para el entrevistador" },
     ],
   },
+  {
+    title: "🗓 Plan de estudio de 8 semanas (en camino)",
+    items: [
+      { id: "pg-plan-w12", label: "Semanas 1–2 · Core internals y async — fases del event loop, micro/macrotasks, libuv, GC de V8, streams/backpressure, workers; LeetCode '30 Days of JS'" },
+      { id: "pg-plan-w34", label: "Semanas 3–4 · APIs, frameworks, DB & TS — REST/GraphQL (DataLoader/N+1), Nest/Fastify, SQL/Redis, TS avanzado; envía un servicio de Postgres+Redis" },
+      { id: "pg-plan-w56", label: "Semanas 5–6 · Diseño de sistemas, AWS, seguridad y perf — CAP/idempotencia/colas, OWASP+JWT, clinic.js/heap snapshots; 8–10 mocks de diseño en voz alta" },
+      { id: "pg-plan-w78", label: "Semanas 7–8 · Testing, DevOps, behavioral & mocks — pirámide de tests, Docker/K8s/CI, apagado graceful, 5–6 historias CARL; loops de mock completos, revisa puntos débiles" },
+    ],
+  },
+  {
+    title: "🎯 Conoce el loop (7 etapas)",
+    items: [
+      { id: "pg-stage-recruiter", label: "Ronda con reclutador (30m) — motivación, experiencia, comp/logística; domina 'cuéntame sobre ti' + puntos de impacto" },
+      { id: "pg-stage-techscreen", label: "Ronda técnica (45–60m) — conceptos de async/event-loop + un pequeño ejercicio de manejo de errores; investigan *por qué* funciona así Node" },
+      { id: "pg-stage-livecoding", label: "Codificación en vivo (60m) — implementar desde cero o una característica; async limpio, reintentos/timeouts, narra compromisos mientras codificas" },
+      { id: "pg-stage-sysdesign", label: "Diseño de sistemas (60m) — backend Node escalable; requisitos → diseño → inmersión profunda → escalabilidad/fallo → compromisos (idempotencia, backpressure, entrega)" },
+      { id: "pg-stage-archdive", label: "Inmersión arquitectónica — camina por un sistema que construiste; decisiones, alternativas rechazadas, resultados; espera perforación en manejo de fallos y observabilidad" },
+      { id: "pg-stage-behavioral", label: "Behavioral/liderazgo (45–60m) — 5–6 historias CARL liderando con scope + framework + impacto medible" },
+      { id: "pg-stage-takehome", label: "Take-home — API del mundo real; estructura de producción, tests, README con compromisos, validación, Docker; no sobre-ingenierices, respeta el límite de tiempo" },
+    ],
+  },
 ];

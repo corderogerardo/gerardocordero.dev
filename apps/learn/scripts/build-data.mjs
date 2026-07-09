@@ -17,6 +17,7 @@ const COURSES = [
   { dir: "lessons-ruby",     id: "ruby",    storeKey: "pawwalk-academy-ruby-v1",    title: "Ruby & Rails",  emoji: "💎" },
   { dir: "lessons-python",   id: "python",  storeKey: "pawwalk-academy-python-v1",  title: "Python & FastAPI", emoji: "🐍" },
   { dir: "lessons-go",       id: "go",      storeKey: "pawwalk-academy-go-v1",      title: "Go Backend",    emoji: "🐹" },
+  { dir: "lessons-node",     id: "node",    storeKey: "pawwalk-academy-node-v1",    title: "Node & NestJS", emoji: "🟢" },
 ];
 
 const LOCALES = ["en", "es"];
@@ -61,6 +62,10 @@ function loadCourse(courseDef, locale) {
       const serRe = (v) => (isRe(v) ? { source: v.source, flags: v.flags } : v);
       for (const lesson of m.lessons || []) {
         for (const step of lesson.steps || []) {
+          // Propagate the module's language onto each step so the runtime
+          // (code-step/exercise-step read step.lang ?? "swift") highlights and
+          // normalizes in the right language instead of falling back to Swift.
+          if (step.lang == null && m.lang) step.lang = m.lang;
           if (step.checks) step.checks = step.checks.map((c) => ({ ...c, re: serRe(c.re) }));
           if (step.mustNot) step.mustNot = step.mustNot.map((c) => ({ ...c, re: serRe(c.re) }));
         }

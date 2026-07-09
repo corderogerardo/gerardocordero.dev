@@ -1,0 +1,163 @@
+// Batch 23 — CommonJS vs ES Modules: require/module.exports synchronous loading and module caching (the Singleton), ESM's static import/export with async loading and tree-shaking, module resolution order, circular dependencies (partial exports vs live bindings), the dual-package hazard, and why Nest providers are singletons partly thanks to module caching.
+import type { Flashcard } from "./flashcards";
+import type { QuizQuestion } from "./quiz";
+
+export const ADVANCED23_FLASHCARDS: Flashcard[] = [
+  {
+    id: "a23-cjs-basics-1",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What are the mechanics of CommonJS — how do you export and import, and is loading synchronous or asynchronous?`,
+    answerHtml: `<p>CommonJS (CJS) is Node's original module system: you attach exports to <code>module.exports</code> (or the <code>exports</code> alias) and pull them in with <code>require('...')</code>. Loading is <b>synchronous and blocking</b> — <code>require</code> reads the file off disk, wraps it in a function, executes it top-to-bottom, and returns <code>module.exports</code> before the next line runs. That synchronous model is why <code>require</code> can appear anywhere (even mid-function) and why it never returns a promise. <span style="color:#b91c1c"><b>Red flag:</b></span> a candidate who thinks <code>require</code> is "just an import" and can't explain that it runs the whole module body eagerly, in order, on the calling thread.</p>`,
+  },
+  {
+    id: "a23-cjs-cache-2",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Explain CommonJS module caching. What happens on the first require versus every require after it?`,
+    answerHtml: `<p>Node keeps a module cache keyed by resolved absolute path (<code>require.cache</code>). The <b>first</b> <code>require</code> of a module executes its body once and stores the resulting <code>module.exports</code>. <b>Every subsequent</b> <code>require</code> of that same path skips execution entirely and returns the <i>exact same</i> cached object reference — not a fresh copy. So a module's top-level code runs at most once per process. The pitch line: <i>"require executes once and memoizes the exports; everyone who requires it shares one instance."</i></p>`,
+  },
+  {
+    id: "a23-cjs-singleton-3",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `How does module caching give you the Singleton pattern almost for free in CommonJS?`,
+    answerHtml: `<p>Because the cache returns the same <code>module.exports</code> object on every <code>require</code>, anything you create at module scope and export — a DB connection pool, a config object, a logger, an in-memory store — is effectively a process-wide singleton. Ten files that <code>require('./db')</code> all get the identical connection instance.</p><p>The framework: <b>(1)</b> instantiate at module top-level, <b>(2)</b> export the instance (not a class), <b>(3)</b> the cache guarantees one shared copy. <span style="color:#b91c1c"><b>Red flag:</b></span> claiming this is bulletproof — it breaks across separate module instances (e.g. the same package installed at two different paths under <code>node_modules</code>, or a worker thread with its own module registry), so "singleton" means <i>per module-cache</i>, not truly per-machine.</p>`,
+  },
+  {
+    id: "a23-esm-basics-4",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What defines ES Modules (ESM), and how do you opt a Node file into ESM?`,
+    answerHtml: `<p>ESM is the standardized JavaScript module system: <code>import</code> / <code>export</code> statements that are <b>static</b> — they must appear at the top level and are resolved before any code runs, not evaluated as function calls. You opt in one of three ways: name the file <code>.mjs</code>, set <code>"type": "module"</code> in the nearest <code>package.json</code> (which makes <code>.js</code> files ESM), or use a bundler/loader that treats input as ESM. Loading is <b>asynchronous</b>: the engine parses the whole graph, resolves every import, then evaluates. That async, statically-analyzable design is what unlocks the features CJS can't offer.</p>`,
+  },
+  {
+    id: "a23-esm-static-treeshake-5",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Why can ESM be tree-shaken but CommonJS generally can't?`,
+    answerHtml: `<p><b>Static analysis.</b> ESM <code>import</code>/<code>export</code> names are known at parse time, before execution, so a bundler can build the exact graph of which exports are actually used and drop the rest ("tree-shaking" = dead-export elimination). CommonJS is dynamic: <code>require</code> is a function call that can take a computed string (<code>require(someVar)</code>), and <code>module.exports</code> can be mutated at runtime — so a tool can't safely prove an export is unused and must keep everything. The one-liner: <i>"ESM's bindings are statically known, CJS's are runtime values — you can only shake what you can see without running the code."</i></p>`,
+  },
+  {
+    id: "a23-esm-features-6",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What do import.meta and top-level await give you in ESM, and why are they impossible in CommonJS?`,
+    answerHtml: `<p><code>import.meta</code> is a per-module metadata object (most usefully <code>import.meta.url</code>, the module's own URL — the ESM replacement for CJS <code>__dirname</code>/<code>__filename</code>, which don't exist in modules). <b>Top-level await</b> lets you <code>await</code> directly at module scope, so a module can do async setup (open a connection, fetch config) and its importers automatically wait for it to finish before they evaluate. Both rely on ESM's async, graph-based evaluation model. CJS can't have top-level await because <code>require</code> is synchronous — there's nowhere for the loader to suspend and resume, so an awaited module would block the thread.</p>`,
+  },
+  {
+    id: "a23-resolution-order-7",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Walk through Node's module resolution order when you require or import a bare specifier like 'lodash'.`,
+    answerHtml: `<p>Node resolves in a fixed order: <b>(1) Core modules</b> — if the name matches a built-in (<code>fs</code>, <code>path</code>, <code>node:crypto</code>), that wins immediately, no disk lookup. <b>(2) node_modules traversal</b> — for a bare name, Node looks in <code>./node_modules</code>, then walks up the directory tree (<code>../node_modules</code>, <code>../../node_modules</code>, …) to the filesystem root, taking the first match. <b>(3) File resolution</b> — for a relative/absolute path (or once it finds the package dir), it tries the exact file, then appends extensions (<code>.js</code>, <code>.json</code>, <code>.node</code>; for ESM the extension is usually required), and for a directory falls back to the package's <code>"main"</code>/<code>"exports"</code> entry or <code>index.js</code>. Knowing this order is how you debug "why is it loading the wrong copy of a package."</p>`,
+  },
+  {
+    id: "a23-circular-cjs-8",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What happens with a circular dependency in CommonJS, and why is it a subtle bug?`,
+    answerHtml: `<p>If A requires B and B requires A, CJS doesn't deadlock — it returns a <b>partially-populated exports object</b>. When B <code>require</code>s A mid-evaluation, A hasn't finished running, so B receives A's <code>module.exports</code> <i>as it exists at that moment</i> — missing anything A defines after its <code>require('./b')</code> line. The bug is subtle because it often "works" until someone reorders exports or accesses one too early and gets <code>undefined</code> (or a <code>TypeError: x is not a function</code>). The tell: <i>"CJS hands you a snapshot of a half-built module."</i></p>`,
+  },
+  {
+    id: "a23-circular-esm-9",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `How does ESM handle the same circular dependency differently from CommonJS, thanks to live bindings?`,
+    answerHtml: `<p>ESM imports are <b>live bindings</b>, not copied values — an <code>import</code> is a read-only reference to the exporting module's variable, so it reflects the current value whenever you actually <i>read</i> it, not the value at import time. In a cycle, the engine links all the bindings up front (they exist but may be in the temporal dead zone), then evaluates. As long as you don't <i>use</i> a circular import during the module's top-level evaluation — only later, inside a function that runs after the graph finishes — the binding is populated by the time you touch it. So ESM tolerates cycles that would hand CJS a stale snapshot, provided the access is deferred to call-time rather than load-time.</p>`,
+  },
+  {
+    id: "a23-circular-fixes-10",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What are the two practical fixes for a circular dependency, and which is the "real" one?`,
+    answerHtml: `<p><b>(1) Restructure</b> — the root-cause fix. Extract the shared thing both modules need into a third module they each import, so the cycle disappears. If A and B both reference a type or constant, pull it into <code>shared.ts</code>; the dependency graph becomes a tree again. <b>(2) Lazy require / deferred access</b> — the band-aid. Move the <code>require</code> (or the use of an ESM live binding) <i>inside the function that needs it</i> instead of at module top-level, so it resolves after both modules have finished loading. Lazy access makes the symptom go away, but restructuring is what a senior reaches for first — <span style="color:#b91c1c"><b>red flag:</b></span> scattering lazy requires everywhere to silence cycles instead of fixing the layering.</p>`,
+  },
+  {
+    id: "a23-dual-package-11",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What is the "dual-package hazard," and why does shipping both CJS and ESM builds cause it?`,
+    answerHtml: `<p>To support both module systems, a package often ships two builds and routes them via <code>package.json</code> <code>"exports"</code> (CJS for <code>require</code>, ESM for <code>import</code>). The hazard: a single process can end up loading <b>both</b> copies — one consumer <code>require</code>s the CJS build, another <code>import</code>s the ESM build — so now there are <b>two separate instances</b> of the package in memory. Any singleton, module-level state, or <code>instanceof</code> check silently breaks: an object created by the ESM copy fails <code>instanceof</code> against the CJS copy's class, and shared caches diverge. The framing: <i>"dual builds mean the 'same' module can exist twice, so identity and shared state stop being reliable."</i> Mitigations: keep stateless code in one shared internal CJS module both entry points wrap, or ship ESM-only.</p>`,
+  },
+  {
+    id: "a23-nest-providers-12",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Nest-relevant angle: NestJS providers are singletons by default. How much of that is Nest's DI container versus Node's module caching?`,
+    answerHtml: `<p>Two layers stack here. <b>Node's module cache</b> gives you singleton <i>modules</i>: the file that defines a provider class is evaluated once, so the class definition and any module-level state are shared across the process. But the "one instance per application" guarantee for a provider is <b>Nest's DI container</b>, which instantiates each provider once (default <code>Scope.DEFAULT</code>/singleton) and injects that same instance everywhere it's requested. So module caching ensures there's one <i>class</i> and one <i>module registry</i>; the container ensures there's one <i>instance</i> of that class. The senior nuance: this is why <code>Scope.REQUEST</code> or <code>Scope.TRANSIENT</code> providers exist — they opt <i>out</i> of the container's singleton behavior, but they can't undo module caching, so their <i>class</i> is still loaded once even though their <i>instances</i> are per-request. <span style="color:#b91c1c"><b>Red flag:</b></span> saying "providers are singletons because Node caches modules" — module caching alone gives you a shared class, not a shared instance; the container is what wires one instance everywhere.</p>`,
+  },
+];
+
+export const ADVANCED23_QUIZ: QuizQuestion[] = [
+  {
+    id: "a23-qz-1",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `In CommonJS, what does the second require('./config') of the same module return?`,
+    options: [
+      `A fresh re-execution of the module body with a new exports object`,
+      `The exact same cached module.exports object reference from the first require — the body does not re-run`,
+      `A deep clone of the first exports object`,
+      `undefined, because a module can only be required once per process`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>Node caches modules by resolved path. The first <code>require</code> runs the body once and stores <code>module.exports</code>; every later <code>require</code> of that path returns the identical cached reference without re-executing. That shared reference is exactly what makes a module-level instance behave as a process-wide singleton.</p>`,
+  },
+  {
+    id: "a23-qz-2",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Why can ES Modules be tree-shaken while CommonJS generally cannot?`,
+    options: [
+      `ESM files are always smaller, so bundlers can afford to analyze them`,
+      `CommonJS runs in the browser and ESM only runs in Node, and only Node supports tree-shaking`,
+      `ESM's import/export are static and known at parse time, so a bundler can prove which exports are unused; require is a dynamic runtime call that can take computed names`,
+      `ESM automatically deletes unused exports at runtime via garbage collection`,
+    ],
+    answer: 2,
+    explanationHtml: `<p>Tree-shaking needs the export graph to be knowable <i>without executing the code</i>. ESM's <code>import</code>/<code>export</code> are static top-level declarations, so a bundler can statically determine and drop unused exports. CommonJS <code>require</code> is a dynamic function call (it can take a computed string, and <code>module.exports</code> can be mutated), so tools can't safely prove an export is dead and must keep everything.</p>`,
+  },
+  {
+    id: "a23-qz-3",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Module A requires B, and B requires A while A is still mid-evaluation. What does B receive from require('./a') in CommonJS?`,
+    options: [
+      `A throws a circular-dependency error and the process crashes`,
+      `B receives A's partially-populated exports object — only what A had assigned before its require('./b') line`,
+      `Node blocks until A finishes, then hands B the complete exports`,
+      `B receives a Promise that resolves once A finishes evaluating`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>CommonJS doesn't deadlock on cycles — it returns whatever <code>A.module.exports</code> looks like at the moment B requires it. Since A hasn't finished, B gets a partial snapshot missing anything A exports after its <code>require('./b')</code> line. This is the classic "why is this export <code>undefined</code>" circular-dependency bug. ESM avoids the stale snapshot with live bindings resolved at read time.</p>`,
+  },
+  {
+    id: "a23-qz-4",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `A single Node process ends up with two in-memory copies of the same library — one loaded via require (CJS build) and one via import (ESM build). What is this called, and what breaks?`,
+    options: [
+      `The module cache collision — all requires start returning undefined`,
+      `The dual-package hazard — singletons/module state diverge and instanceof checks across the two copies fail`,
+      `A circular dependency — the two copies deadlock waiting on each other`,
+      `Nothing breaks; Node deduplicates the two builds automatically`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>This is the dual-package hazard. When a package ships separate CJS and ESM builds routed by <code>package.json</code> <code>"exports"</code>, a process can load both, creating two distinct instances. Shared singletons and caches diverge, and an object from one copy fails <code>instanceof</code> against the other copy's class. Fixes: funnel state through one shared internal module, or ship ESM-only.</p>`,
+  },
+  {
+    id: "a23-qz-5",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `A NestJS provider with the default scope is a singleton. Which statement is the most precise account of why?`,
+    options: [
+      `Node's module cache alone makes it a singleton, because the module is evaluated once`,
+      `Node's module cache guarantees one shared class/module registry; Nest's DI container is what instantiates the class once and injects that single instance everywhere`,
+      `Nest re-runs the provider file on every injection but memoizes the result`,
+      `Providers are singletons only if you explicitly mark them with Scope.SINGLETON`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>Two layers stack. Node's module caching evaluates the provider's file once, so there's a single shared class definition and module-level state. But the "one instance per app" guarantee comes from Nest's DI container, which instantiates each default-scoped provider once and injects that same instance. Module caching gives a shared <i>class</i>; the container gives a shared <i>instance</i>. <code>Scope.REQUEST</code>/<code>TRANSIENT</code> opt out of the container's singleton behavior but can't undo module caching.</p>`,
+  },
+];

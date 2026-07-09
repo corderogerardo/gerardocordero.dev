@@ -59,7 +59,9 @@ export const ROADMAP: RoadmapStage[] = [
     can: [
       "Explicar los alcances de DI, módulos dinámicos y el ciclo de vida de requests de memoria.",
       "Diseñar auth (JWT + refresh, RBAC/ABAC) y endurecer la API.",
-      "Perfilar y corregir bloqueo del event loop, consultas N+1 y fugas de memoria.",
+      "Perfilar con clinic.js/flame graphs/APM y razonar en p95/p99 — corregir bloqueo del event loop, consultas N+1 y fugas de memoria con evidencia, no adivinanzas.",
+      "Aislar fallos con circuit breakers, bulkheads y timeouts (no bare try/catch) para que una dependencia lenta no arrastre todo el proceso.",
+      "Enmarcar decisiones como trade-offs: nombra la opción que rechazaste y por qué, luego vincula la elección a un resultado medible — mid dice qué hizo, tú dices por qué y qué movió.",
       "Hacer que caché/rate-limiting/colas sean correctos entre réplicas con Redis.",
       "Ser dueño de observabilidad: logs estructurados, traces, health checks, apagado graceful.",
     ],
@@ -68,9 +70,10 @@ export const ROADMAP: RoadmapStage[] = [
       "Microservicios: transportes, message vs event, sagas + outbox.",
       "GraphQL a escala (DataLoader, federation) y tiempo real (WebSockets + Redis).",
       "Despliegue: Docker multi-stage, CI/CD, SLOs.",
+      'La meta-habilidad senior — comunicar trade-offs en vivo: "La opción A optimiza X al costo de Y; dada Z elegiría…, y revisaría en [umbral]," siempre anclado a p95/p99, tasa de error o costo por request.',
     ],
     drillHtml:
-      'Filtra flashcards a <b>Senior</b> y las categorías <b>Node.js Core</b>, <b>Performance</b>, <b>Security</b>, <b>Auth</b> y <b>Deploy &amp; Ops</b>. Lee los temas de estudio <a href="/study#st-26">26</a>–<a href="/study#st-34">34</a> y la <a href="/architecture">guía completa de Arquitectura</a>.',
+      'Filtra flashcards a <b>Senior</b> y las categorías <b>Node.js Core</b>, <b>Performance</b>, <b>Security</b>, <b>Auth</b> y <b>Deploy &amp; Ops</b>. Lee los temas de estudio <a href="/study#st-26">26</a>–<a href="/study#st-34">34</a> y la <a href="/architecture">guía completa de Arquitectura</a>. Luego ensaya el <b>por qué</b>: para cada corrección, practica diciendo el framework, la alternativa que rechazaste y el número p95/p99 o tasa de error que movió — ese enmarque es lo que se lee como senior, no la corrección misma.',
   },
   {
     level: "architect",
@@ -79,9 +82,10 @@ export const ROADMAP: RoadmapStage[] = [
     can: [
       "Diseñar un servicio de extremo a extremo y justificar la arquitectura, datos y estrategia de consistencia.",
       "Elegir entre monolito modular y microservicios y trazar límites limpios.",
-      "Aplicar sagas, el outbox, idempotencia y patrones de resiliencia.",
+      "Aplicar sagas, el outbox, idempotencia y patrones de resiliencia (circuit breakers, bulkheads, timeouts) para aislamiento de fallos.",
       "Diseñar multi-tenancy y prevenir filtración entre tenants.",
       "Implementar CI/CD, observabilidad y SLOs entre servicios.",
+      "Recorrer un sistema que construiste de extremo a extremo — decisiones, alternativas rechazadas, modos de fallo y el resultado medido — y conducir un diseño de 45 minutos que proactivamente plantea idempotencia, backpressure y semánticas de entrega.",
     ],
     next: [
       "Estrategia de plataforma a nivel de organización: librerías compartidas, convenciones, caminos dorados.",
