@@ -22,6 +22,7 @@ window.COURSE.push({
             ")",
             "```",
             "The underscore `_` means *import this only for its side effects* — the driver registers the name `\"postgres\"` in its `init()`, and you never call it directly.",
+            "> `lib/pq` is perfectly fine for learning `database/sql` here, but it's now in maintenance mode. For new projects the actively-developed **`jackc/pgx`** is the modern Postgres driver of choice — use it directly, or through `pgx/stdlib` to keep this same `database/sql` API.",
           ],
         },
         {
