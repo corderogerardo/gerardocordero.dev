@@ -181,7 +181,7 @@ const DEFAULT_STATUS: BookingStatus = "pending";`,
           type: "exercise",
           title: "Wrap the two writes in one transaction",
           prompt: [
-            "The booking insert and the slot-hold insert must land together or not at all. Wrap them in an **interactive** transaction: call `this.prisma.$transaction(async (tx) => { ... })`, create the booking with `tx.booking.create({ data: bookingData })`, then the hold with `tx.hold.create({ data: holdData })`, and `return booking`.",
+            "The booking insert and the slot-hold insert must land together or not at all. Wrap them in an **interactive** transaction: call `this.prisma.$transaction(async (tx) => { ... })`, create the booking with `tx.booking.create({ data: bookingData })`, then the hold with `tx.slotHold.create({ data: holdData })`, and `return booking`.",
             "> Use `tx` for both writes, never `this.prisma` — only the `tx` client is enrolled in the transaction.",
           ],
           starter: String.raw`async create(dto: CreateBookingDto) {
@@ -194,14 +194,14 @@ const DEFAULT_STATUS: BookingStatus = "pending";`,
   const holdData = this.buildHold(dto);
   return this.prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({ data: bookingData });
-    await tx.hold.create({ data: holdData });
+    await tx.slotHold.create({ data: holdData });
     return booking;
   });
 }`,
           checks: [
             { re: /this\.prisma\.\$transaction\(async\(tx\)=>\{/, hint: "Open an interactive transaction: `this.prisma.$transaction(async (tx) => {`." },
             { re: /tx\.booking\.create\(\{data:bookingData\}\)/, hint: "Create the booking on the transaction client: `tx.booking.create({ data: bookingData })`." },
-            { re: /tx\.hold\.create\(\{data:holdData\}\)/, hint: "Create the hold on the same client: `tx.hold.create({ data: holdData })`." },
+            { re: /tx\.slotHold\.create\(\{data:holdData\}\)/, hint: "Create the hold on the same client: `tx.slotHold.create({ data: holdData })`." },
           ],
           mustNot: [
             { re: /this\.prisma\.booking\.create/, hint: "Don't use `this.prisma.booking.create` inside the callback — that write escapes the transaction. Use the `tx` client." },

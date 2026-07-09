@@ -40,20 +40,23 @@ datasource db {
 }
 
 model Walker {
-  id                 String    @id @default(cuid())
+  id                 Int       @id @default(autoincrement())
   name               String
+  city               String
   pricePer30MinCents Int
   bookings           Booking[]
   createdAt          DateTime  @default(now())
 }
 
 model Booking {
-  id              String   @id @default(cuid())
+  id              Int      @id @default(autoincrement())
   walker          Walker   @relation(fields: [walkerId], references: [id])
-  walkerId        String
+  walkerId        Int
+  userId          String
   dogName         String
   durationMinutes Int
   priceCents      Int
+  status          String   @default("pending")
   createdAt       DateTime @default(now())
 }`,
           caption: "This is NOT TypeScript — it's Prisma's own schema language. Two models become two Postgres tables. Note the relation: a Walker has many bookings (Booking[]), and each Booking points back with a walker relation plus a walkerId foreign key. The connection string lives in DATABASE_URL, never hard-coded.",
@@ -111,7 +114,7 @@ model Booking {
 const prisma = new PrismaClient();
 
 const walker = await prisma.walker.findUnique({
-  where: { id: "1" },
+  where: { id: 1 },
 });
 // walker is typed Walker | null — Prisma inferred it from the schema.
 // walker.pricePer30MinCents autocompletes; walker.priceInDollars won't compile.`,
@@ -216,7 +219,7 @@ export class WalkersService {
     return this.prisma.walker.findMany();
   }
 
-  findOne(id: string): Promise<Walker | null> {
+  findOne(id: number): Promise<Walker | null> {
     return this.prisma.walker.findUnique({ where: { id } });
   }
 
@@ -264,7 +267,7 @@ export class WalkersService {
           type: "exercise",
           title: "Fetch one walker with findUnique",
           prompt: [
-            "Add a `findOne(id: string)` method below `findAll`. Type its return as `Promise<Walker | null>` — Prisma returns `null` when no row matches. Return `this.prisma.walker.findUnique({ where: { id } })`.",
+            "Add a `findOne(id: number)` method below `findAll`. Type its return as `Promise<Walker | null>` — Prisma returns `null` when no row matches. Return `this.prisma.walker.findUnique({ where: { id } })`.",
           ],
           starter: String.raw`@Injectable()
 export class WalkersService {
@@ -284,12 +287,12 @@ export class WalkersService {
     return this.prisma.walker.findMany();
   }
 
-  findOne(id: string): Promise<Walker | null> {
+  findOne(id: number): Promise<Walker | null> {
     return this.prisma.walker.findUnique({ where: { id } });
   }
 }`,
           checks: [
-            { re: /findOne\(id:string\):Promise<Walker\|null>\{/, hint: "Declare it as `findOne(id: string): Promise<Walker | null> {` — the `| null` is Prisma's 'no row matched' case, and it's part of the contract." },
+            { re: /findOne\(id:number\):Promise<Walker\|null>\{/, hint: "Declare it as `findOne(id: number): Promise<Walker | null> {` — the `| null` is Prisma's 'no row matched' case, and it's part of the contract." },
             { re: /this\.prisma\.walker\.findUnique\(\{where:\{id\}\}\)/, hint: "Call `this.prisma.walker.findUnique({ where: { id } })` — findUnique takes an options object with a `where` clause." },
           ],
           mustNot: [

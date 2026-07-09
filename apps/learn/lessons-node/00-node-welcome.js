@@ -116,7 +116,7 @@ export class WalkersController {
           title: "Create and run your first Node project",
           intro: ["Get the toolchain working end to end. Keep this workflow — every module in the course starts from a `package.json`."],
           items: [
-            "Install Node (skip if `node --version` already prints v20 or newer): `brew install node`",
+            "Install Node (skip if `node --version` already prints v24 or newer): `brew install node`",
             "Make a scratch project: `mkdir pawwalk-api && cd pawwalk-api`",
             "`npm init -y` — creates `package.json`, marking this folder a Node project",
             "Save `console.log(\"Welcome, Mochi\")` as `index.js`",

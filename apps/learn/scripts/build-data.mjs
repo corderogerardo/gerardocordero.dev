@@ -62,6 +62,10 @@ function loadCourse(courseDef, locale) {
       const serRe = (v) => (isRe(v) ? { source: v.source, flags: v.flags } : v);
       for (const lesson of m.lessons || []) {
         for (const step of lesson.steps || []) {
+          // Propagate the module's language onto each step so the runtime
+          // (code-step/exercise-step read step.lang ?? "swift") highlights and
+          // normalizes in the right language instead of falling back to Swift.
+          if (step.lang == null && m.lang) step.lang = m.lang;
           if (step.checks) step.checks = step.checks.map((c) => ({ ...c, re: serRe(c.re) }));
           if (step.mustNot) step.mustNot = step.mustNot.map((c) => ({ ...c, re: serRe(c.re) }));
         }
