@@ -29,7 +29,7 @@ The Ruby & Rails course teaches backend web development from zero by rebuilding 
 | 18 | `18-hotwire-admin.js` | A Hotwire Admin Dashboard | Turbo Drive/Frames/Streams over Solid Cable, Stimulus controllers, adding an HTML admin surface alongside an `api_only` JSON app |
 | 19 | `19-money-ledger.js` | Money: Payouts & a Ledger | Integer cents vs `Float`/`BigDecimal`, idempotent payouts (unique idempotency key), a double-entry ledger (`ledger_entries`), reconciliation (balance = sum, never a cached counter) |
 | 20 | `20-api-hardening.js` | Hardening the Public API | URL vs Accept-header versioning (`namespace :v1`), capped pagination (offset vs keyset), rate limiting with rack-attack (IP throttle, disabled in test), brakeman static security scanning + strong params recap |
-| 21 | `21-observability-scale-graduation.js` | Observability, Scale & Graduation | `ActiveSupport::Notifications` (slow-query subscriber), lograge single-line structured request logs, PgBouncer + Rails multi-database `connects_to` (read replicas, automatic role switching), Solid Queue at volume (named/priority queues, `retry_on` backoff, idempotent jobs), Kamal deploy recap — **senior-tier graduation, caps modules 0-21** |
+| 21 | `21-observability-scale-graduation.js` | Observability, Scale & Graduation | `ActiveSupport::Notifications` (slow-query subscriber), lograge single-line structured request logs, PgBouncer + Rails multi-database `connects_to` (read replicas, automatic role switching), Solid Queue at volume (named/priority queues, `retry_on` backoff, idempotent jobs), Kamal deploy recap — **senior-tier graduation of the app-build track (modules 0-21)** |
 | 22 | `22-data-structures.js` | Data Structures & Problem-Solving | Big-O, arrays/hashes, stacks/queues, linked lists, trees/BSTs, graph BFS/DFS, heaps, hashing patterns — interview algorithm prep in Ruby |
 | 23 | `23-design-patterns.js` | Design Patterns (All 23 GoF) | The full Gang-of-Four catalog expressed idiomatically in Ruby, anchored in PawWalk scenarios |
 | 24 | `24-ruby-object-model.js` | The Ruby Object Model | Messages & arguments, `self` as default object, scope gates & visibility, the method lookup path (`ancestors`, include/prepend/extend), singleton classes & `class << self`, equality (`==`/`eql?`/`hash`) & copies — the deep-Ruby foundation |
@@ -106,9 +106,11 @@ STRIPE_SECRET_KEY=sk_live_...
 - [x] Backend features complete (auth, bookings, payments, jobs, live tracking, 66 tests, rubocop)
 - [x] Kamal/Docker verified (local production boot proven, deployment config ready)
 - [x] **Ruby senior tier COMPLETE** — modules 16-21 (query performance, caching, Hotwire admin,
-      money ledger, API hardening, observability/scale/graduation). Module 21 is the final,
-      senior-level graduation capping the entire Ruby track (0-21). Real-app capstone: lograge
-      added to `apps/pawwalk-api` for single-line structured request logs.
+      money ledger, API hardening, observability/scale/graduation). Module 21 caps the
+      app-build track (0-21) — the senior-level graduation of the Rails backend build. Real-app
+      capstone: lograge added to `apps/pawwalk-api` for single-line structured request logs.
+      (The course then continues into the interview tier (22-23) and deep-Ruby mastery tier
+      (24-27); module 27 is the final module of the full 00-27 curriculum.)
 
 ### Planned Items ⬜
 - [ ] First real VPS deployment (Kamal push to production server)

@@ -28,7 +28,7 @@ window.COURSE.push({
         {
           type: "text",
           md: [
-            "## The six kinds of parameters",
+            "## The seven kinds of parameters",
             "A senior signal is knowing Ruby's full parameter vocabulary — most people only ever use two. In order, a method can declare:",
             "1. **Required positional** — `def walk(dog)`\n2. **Optional positional (default)** — `def walk(dog, minutes = 30)`\n3. **Splat / rest** — `def walk(dog, *extras)` collects leftover positionals into an array\n4. **Required keyword** — `def walk(dog:)` — caller *must* pass `dog:`\n5. **Optional keyword** — `def walk(dog:, minutes: 30)`\n6. **Double-splat** — `def walk(dog:, **opts)` collects leftover keywords into a hash\n7. **Block** — `def walk(dog, &action)` captures a passed block as a Proc",
             "Keyword arguments (4–6) are the modern default for anything with more than two parameters — they're self-documenting at the call site and order-independent. This is exactly why Rails APIs read like `redirect_to path, status: :see_other`.",

@@ -425,7 +425,7 @@ p Booking.events             # ["confirmed", "completed"]`,
           type: "text",
           md: [
             "## This is how has_many works",
-            "Now the big reveal. `has_many :bookings` is a class method (defined via the object model, module 24) that, when called in the class body, uses `define_method` (this module) to generate `bookings`, `bookings=`, `bookings.build`, and more — capturing the association name in a closure (module 25). The methods are added to the class the moment the macro runs. Every layer of this tier converges here: **Rails is the object model + closures + define_method + hooks, arranged deliberately.**",
+            "Now the big reveal. `has_many :bookings` is a class method (defined via the object model, module 24) that, when called in the class body, uses `define_method` (this module) to generate the `bookings` reader and `bookings=` writer — capturing the association name in a closure (module 25). The reader hands back a collection proxy whose *own* methods (`build`, `create`, `where`) come from ActiveRecord — they live on the proxy, not on your model. The reader/writer are added to the class the moment the macro runs. Every layer of this tier converges here: **Rails is the object model + closures + define_method + hooks, arranged deliberately.**",
           ],
         },
         {

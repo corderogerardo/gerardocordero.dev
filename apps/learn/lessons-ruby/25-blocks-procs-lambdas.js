@@ -13,7 +13,7 @@ window.COURSE.push({
           type: "text",
           md: [
             "## Blocks are Ruby's superpower — and you've only used them",
-            "You've *passed* blocks to `each`, `map`, and `select` since module 02. Now you'll *write methods that accept them*. This is the skill that makes Ruby feel like Ruby: methods that hand control back to their caller mid-execution. `File.open(path) { |f| ... }`, `transaction { ... }`, `respond_to { |f| ... }` — every one is a method yielding to a block you supply.",
+            "You've *passed* blocks to `each`, `map`, and `select` since module 02. Now you'll *write methods that accept them*. This is the skill that makes Ruby feel like Ruby: methods that hand control back to their caller mid-execution. `File.open(path) { |f| ... }`, `transaction { ... }`, `5.times { |i| ... }` — every one is a method yielding to a block you supply.",
             "> In an interview, say: \"A block is a chunk of caller-supplied code a method can run via `yield`. It's how Ruby does the template-method pattern without ceremony — the method owns the *when*, the block owns the *what*.\"",
           ],
         },
