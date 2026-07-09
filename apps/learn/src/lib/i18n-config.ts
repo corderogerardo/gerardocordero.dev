@@ -14,4 +14,4 @@ export const LOCALES: LocaleInfo[] = [
   { id: "es", labelEn: "Spanish", labelNative: "Español" },
 ];
 
-export const COURSE_IDS = ["ios", "android", "ruby", "python", "go"] as const;
+export const COURSE_IDS = ["ios", "android", "ruby", "python", "go", "node"] as const;

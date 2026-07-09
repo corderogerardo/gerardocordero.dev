@@ -16,8 +16,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
       reducer, side effects isolated and testable.</p>
     <div class="callout tip"><span class="lbl">How to choose</span> Small/medium app or a team new to it:
       MVVM with the Observation framework. Large app, many engineers, heavy logic, a premium on testability and
-      consistency: a unidirectional architecture (TCA or a hand-rolled equivalent) pays off. The senior move is
-      matching the pattern to the team and product, not cargo-culting one.</div>`,
+      consistency: a unidirectional architecture (TCA or a hand-rolled equivalent) pays off. <b>"I match the
+      architecture to the team and the product's complexity — I don't cargo-cult one pattern everywhere."</b></div>`,
   },
   {
     id: "arch-2",
@@ -29,8 +29,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
       depend on core, never on each other).</p>
     <div class="callout tip"><span class="lbl">Payoff</span> Faster incremental and parallel builds, enforced
       boundaries (no accidental cross-feature imports), feature-level tests and previews, and the option to
-      build a feature in isolation. This is the single highest-leverage architecture decision in a large iOS
-      codebase.</div>`,
+      build a feature in isolation. <b>"Modularizing into Swift packages is the single highest-leverage
+      architecture decision in a large iOS codebase."</b></div>`,
   },
   {
     id: "arch-3",
@@ -40,9 +40,10 @@ export const ARCH_SECTIONS: ArchSection[] = [
       or SwiftUI's <code>@Environment</code>) rather than reaching for singletons. That single discipline makes
       view models testable with fakes, decouples features from infrastructure, and lets you swap
       implementations (e.g. a stub API in previews).</p>
-    <div class="callout warn"><span class="lbl">Smell</span> A view model that constructs
+    <div class="callout warn"><span class="lbl">Red flag</span> A view model that constructs
       <code>URLSession.shared</code> or a global singleton internally can't be tested without the network.
-      Inject an <code>APIClient</code> protocol instead.</div>`,
+      <b>"I inject an APIClient protocol so the view model never talks to the network directly — that's what
+      makes it testable with a fake."</b></div>`,
   },
   {
     id: "arch-4",
@@ -65,8 +66,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
       background. You need a strategy for <b>conflict resolution</b> (last-write-wins, server-authoritative, or
       per-field merge), change tracking, and retry of failed mutations.</p>
     <div class="callout warn"><span class="lbl">Hard parts</span> Ordering and idempotency of queued
-      mutations, clock skew, and partial failures. Design the queue and conflict policy explicitly — this is a
-      favorite senior/architect system-design prompt.</div>`,
+      mutations, clock skew, and partial failures. <b>"I design the mutation queue and conflict policy
+      explicitly up front — offline sync fails at the edges, not the happy path."</b></div>`,
   },
   {
     id: "arch-6",
@@ -78,7 +79,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
       <code>Route</code> values, and state restoration becomes "persist and reload the path".</p>
     <div class="callout tip"><span class="lbl">Why</span> Decoupling "what to show" from "how to present it"
       keeps features independent, makes deep linking and A/B-tested flows trivial, and gives you one place to
-      reason about the entire navigation graph.</div>`,
+      reason about the entire navigation graph. <b>"Navigation is data in my apps — a router owns the path, so
+      deep links, push notifications, and state restoration all just append a Route."</b></div>`,
   },
   {
     id: "arch-7",
@@ -89,9 +91,9 @@ export const ARCH_SECTIONS: ArchSection[] = [
       tasks and hops back to the main actor only to publish results. Under Swift 6, making types
       <code>Sendable</code> and respecting isolation is enforced at compile time — so the architecture has to
       be intentional, not accidental.</p>
-    <div class="callout warn"><span class="lbl">Anti-pattern</span> Sprinkling <code>DispatchQueue.main.async</code>
-      and locks everywhere. Replace with explicit actor boundaries and <code>@MainActor</code> — the compiler
-      then proves you're race-free.</div>`,
+    <div class="callout warn"><span class="lbl">Red flag</span> Sprinkling <code>DispatchQueue.main.async</code>
+      and locks everywhere is a symptom of undesigned isolation. <b>"I put shared mutable state behind actors
+      and pin UI to @MainActor so the compiler proves I'm race-free, instead of policing it by convention."</b></div>`,
   },
   {
     id: "arch-8",
@@ -141,7 +143,8 @@ export const DEEP_DIVES: DeepDive[] = [
         change anywhere recompiles the world and risks breaking unrelated features.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Feature packages depend only on Core
         / DesignSystem; builds parallelize, boundaries are enforced by the compiler, and features ship and test
-        independently.</div>
+        independently. <b>"I let the compiler enforce module boundaries instead of a lint rule or code review
+        convention."</b></div>
     </div>`,
   },
   {
@@ -156,7 +159,9 @@ export const DEEP_DIVES: DeepDive[] = [
       <div class="dd-block dd-problem"><span class="lbl">Problem</span> Naive "save to server on tap" loses
         edits offline and shows spinners everywhere.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Write locally and render instantly;
-        queue mutations with idempotency keys; sync with a defined conflict policy and retry on reconnect.</div>
+        queue mutations with idempotency keys; sync with a defined conflict policy and retry on reconnect.
+        <b>"The local store is the source of truth — the UI never waits on the network to show what the user
+        just did."</b></div>
     </div>`,
   },
   {
@@ -171,7 +176,8 @@ export const DEEP_DIVES: DeepDive[] = [
       <div class="dd-block dd-problem"><span class="lbl">Problem</span> A plain dictionary cache accessed from
         multiple tasks crashes or corrupts under load.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Wrap the cache in an actor; callers
-        <code>await</code> its methods. Swift 6 then proves the absence of races at compile time.</div>
+        <code>await</code> its methods. Swift 6 then proves the absence of races at compile time. <b>"I reach
+        for an actor instead of a lock because it makes the race impossible, not just unlikely."</b></div>
     </div>`,
   },
   {
@@ -187,7 +193,8 @@ export const DEEP_DIVES: DeepDive[] = [
         spikes memory and drops frames; the Time Profiler shows decode on the main thread.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Downsample off the main actor, cache
         decoded thumbnails in an actor, use <code>LazyVStack</code>, and give rows stable identity so SwiftUI
-        reuses them.</div>
+        reuses them. <b>"Frame drops are almost always decode work leaking onto the main thread — move it off,
+        cache the result, and the frame rate takes care of itself."</b></div>
     </div>`,
   },
   {
@@ -203,7 +210,8 @@ export const DEEP_DIVES: DeepDive[] = [
         costly, and a privacy liability.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Embed content with a small Core ML
         model on the Neural Engine, store vectors locally, and rank by cosine similarity — exactly what this
-        guide's own search does in your browser.</div>
+        guide's own search does in your browser. <b>"On-device inference isn't just a privacy story — it's zero
+        marginal cost per query and it still works with no signal."</b></div>
     </div>`,
   },
   {
@@ -235,7 +243,8 @@ export const DEEP_DIVES: DeepDive[] = [
         everything makes CI slow and reds out on timing, so people stop trusting it.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solution</span> Push logic into injectable view
         models covered by fast unit tests; keep a handful of UI tests for the money paths; parallelize on
-        simulator clones via a test plan.</div>
+        simulator clones via a test plan. <b>"I keep the pyramid shape on purpose — UI tests verify the money
+        paths still work end to end, unit tests do the exhaustive edge-case coverage."</b></div>
     </div>`,
   },
 ];

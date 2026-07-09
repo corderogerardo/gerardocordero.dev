@@ -106,4 +106,25 @@ export const CHECKLIST_GROUPS: ChecklistGroup[] = [
       { id: "pg-r10", label: "Have 4 sharp questions ready for the interviewer" },
     ],
   },
+  {
+    title: "🗓 8-week study plan (on track)",
+    items: [
+      { id: "pg-plan-w12", label: "Weeks 1–2 · Core internals & async — event-loop phases, micro/macrotasks, libuv, V8 GC, streams/backpressure, workers; LeetCode '30 Days of JS'" },
+      { id: "pg-plan-w34", label: "Weeks 3–4 · APIs, frameworks, DB & TS — REST/GraphQL (DataLoader/N+1), Nest/Fastify, SQL/Redis, advanced TS; ship a Postgres+Redis service" },
+      { id: "pg-plan-w56", label: "Weeks 5–6 · System design, AWS, security & perf — CAP/idempotency/queues, OWASP+JWT, clinic.js/heap snapshots; 8–10 design mocks out loud" },
+      { id: "pg-plan-w78", label: "Weeks 7–8 · Testing, DevOps, behavioral & mocks — test pyramid, Docker/K8s/CI, graceful shutdown, 5–6 CARL stories; full mock loops, review weak spots" },
+    ],
+  },
+  {
+    title: "🎯 Know the loop (7 stages)",
+    items: [
+      { id: "pg-stage-recruiter", label: "Recruiter screen (30m) — motivation, experience, comp/logistics; nail 'tell me about yourself' + impact highlights" },
+      { id: "pg-stage-techscreen", label: "Technical screen (45–60m) — async/event-loop concepts + a small error-handling exercise; they probe *why* Node works this way" },
+      { id: "pg-stage-livecoding", label: "Live coding (60m) — implement-from-scratch or a feature; clean async, retries/timeouts, narrate trade-offs while coding" },
+      { id: "pg-stage-sysdesign", label: "System design (60m) — scalable Node backend; requirements → design → deep-dive → scaling/failure → trade-offs (idempotency, backpressure, delivery)" },
+      { id: "pg-stage-archdive", label: "Architecture deep-dive — walk a system you built; decisions, rejected alternatives, results; expect drilling on failure handling & observability" },
+      { id: "pg-stage-behavioral", label: "Behavioral/leadership (45–60m) — 5–6 CARL stories leading with scope + framework + measurable impact" },
+      { id: "pg-stage-takehome", label: "Take-home — real-world API; production structure, tests, README with trade-offs, validation, Docker; don't over-engineer, respect the time box" },
+    ],
+  },
 ];
