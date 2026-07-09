@@ -23,12 +23,16 @@ export type PrepConfig = {
     title: string;
     /** Footer tagline. */
     footerText: string;
+    /** Spanish footer tagline (falls back to `footerText`). */
+    footerTextEs?: string;
   };
   ai: {
     /** System prompt that frames the on-device tutor for this subject. */
     systemPrompt: string;
     /** Default input placeholder. */
     placeholder: string;
+    /** Spanish input placeholder (falls back to `placeholder`). */
+    placeholderEs?: string;
   };
   nav: NavItem[];
 };

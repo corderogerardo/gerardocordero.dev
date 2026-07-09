@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
-import "./rich.css";
-import { PrepProvider, SiteHeader, SiteFooter } from "@gerardocordero/prep-kit";
+import "../globals.css";
+import "../rich.css";
+import { I18nProvider, PrepProvider, SiteHeader, SiteFooter } from "@gerardocordero/prep-kit";
+import type { Locale } from "@gerardocordero/prep-kit";
 import { prepConfig } from "@/prep.config";
+import type { Metadata } from "next";
 
 const sans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -26,22 +27,34 @@ export const metadata: Metadata = {
     "A starter template for spaced-repetition study sites built on @gerardocordero/prep-kit: flashcards, quiz, practice prompts, on-device AI search & tutor, streaks. Drop in your content and ship.",
 };
 
-export default function RootLayout({
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "es" }];
+}
+
+export default async function LocaleLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <PrepProvider config={prepConfig}>
-          <SiteHeader />
-          <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
-            {children}
-          </main>
-          <SiteFooter />
-        </PrepProvider>
+        <I18nProvider locale={locale as Locale}>
+      <PrepProvider config={prepConfig}>
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-content flex-1 px-4 py-8 sm:px-6 sm:py-10">
+          {children}
+        </main>
+        <SiteFooter />
+      </PrepProvider>
+        </I18nProvider>
       </body>
     </html>
   );

@@ -11,11 +11,14 @@ export const prepConfig: PrepConfig = {
     title: "Dev Study Guide",
     footerText:
       "iOS development study guide · Swift, SwiftUI & the whole stack. Learn it, say it out loud, drill it, repeat.",
+    footerTextEs:
+      "Guía de estudio de desarrollo iOS · Swift, SwiftUI y todo el stack. Apréndelo, dilo en voz alta, practícalo, repite.",
   },
   ai: {
     systemPrompt:
       "You are a concise, encouraging senior iOS (Swift & SwiftUI) interview coach. Answer in a few short sentences or a tight list. Be accurate and practical.",
     placeholder: "Ask anything about iOS interviews…",
+    placeholderEs: "Pregunta lo que sea sobre entrevistas de iOS…",
   },
   nav: NAV,
 };

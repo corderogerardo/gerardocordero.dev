@@ -12,11 +12,12 @@ export function generateStaticParams() {
 
 
 
-export const metadata: Metadata = {
-  title: "Study Guide",
-  description:
-    "Every requirement a senior Android role asks for — Kotlin, coroutines, Compose, architecture, Jetpack, performance, testing — explained at senior depth.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Guía de Estudio", description: "Cada requisito de un rol senior de Android — Kotlin, coroutines, Compose, arquitectura, Jetpack, rendimiento, testing — explicado a profundidad senior." }
+    : { title: "Study Guide", description: "Every requirement a senior Android role asks for — Kotlin, coroutines, Compose, architecture, Jetpack, performance, testing — explained at senior depth." };
+}
 
 export default async function StudyPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -24,9 +25,11 @@ export default async function StudyPage({ params }: { params: Promise<{ locale: 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Master the job description"
-        title="Study Guide"
-        lead="Every requirement a senior Android role commonly asks for — explained at senior depth, then tied to how you'd apply it on a real team. Read the concept, then the “in practice” line so you can speak from experience."
+        eyebrow={locale === "es" ? "Domina la descripción del puesto" : "Master the job description"}
+        title={locale === "es" ? "Guía de Estudio" : "Study Guide"}
+        lead={locale === "es"
+          ? "Cada requisito que un rol senior de Android comúnmente pide — explicado a profundidad senior, y luego ligado a cómo lo aplicarías en un equipo real. Lee el concepto, luego la línea “en la práctica” para que puedas hablar desde la experiencia."
+          : "Every requirement a senior Android role commonly asks for — explained at senior depth, then tied to how you'd apply it on a real team. Read the concept, then the “in practice” line so you can speak from experience."}
       />
 
       <RichText html={box("callout warn", getStudyIntroHtml(locale as Locale))} />

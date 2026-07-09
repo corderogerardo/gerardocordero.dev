@@ -9,20 +9,23 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Search",
-  description:
-    "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Buscar", description: "Busca cada tarjeta, prompt, quiz y tema de estudio por palabra clave — o activa la IA en el dispositivo para buscar por significado." }
+    : { title: "Search", description: "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor." };
+}
 
 export default async function SearchPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Find anything · ask anything"
-        title="Search & Ask"
-        lead="Keyword search is instant. Enable AI to search by meaning — a small model runs fully in your browser, nothing leaves your device. And ask the on-device AI tutor a question when your browser supports it."
+        eyebrow={locale === "es" ? "Busca cualquier cosa · Pregunta cualquier cosa" : "Find anything · ask anything"}
+        title={locale === "es" ? "Buscar y Preguntar" : "Search & Ask"}
+        lead={locale === "es"
+          ? "La búsqueda por palabra clave es instantánea. Activa IA para buscar por significado — un modelo pequeño se ejecuta completamente en tu navegador, nada sale de tu dispositivo. Y pregunta al tutor IA cuando tu navegador lo soporte."
+          : "Keyword search is instant. Enable AI to search by meaning — a small model runs fully in your browser, nothing leaves your device. And ask the on-device AI tutor a question when your browser supports it."}
       />
       <SearchView
         flashcards={getFlashcards(locale as Locale)}
@@ -31,7 +34,9 @@ export default async function SearchPage({ params }: { params: Promise<{ locale:
         study={getStudySections(locale as Locale)}
       />
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white">On-device AI tutor</h2>
+        <h2 className="text-lg font-bold text-white">
+          {locale === "es" ? "Tutor IA en el dispositivo" : "On-device AI tutor"}
+        </h2>
         <AiTutor />
       </section>
     </div>

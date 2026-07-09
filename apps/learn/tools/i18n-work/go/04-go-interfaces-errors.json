@@ -1,0 +1,330 @@
+{
+ "course": "go",
+ "module": 4,
+ "units": [
+  {
+   "path": "modules[4].title",
+   "text": "Interfaces y errores"
+  },
+  {
+   "path": "modules[4].lessons[0].title",
+   "text": "Interfaces"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[0].md[0]",
+   "text": "## Un contrato, no una clase"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[0].md[1]",
+   "text": "Ya tienes structs (`Walker`, `Booking`) y métodos colgados de ellos. Una **interface** es la siguiente idea: una lista con nombre de firmas de métodos — un *contrato*. Cualquier cosa que tenga esos métodos **satisface** la interface, y puede usarse en cualquier lugar donde esa interface se espere."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[0].md[2]",
+   "text": "En Swift escribirías un `protocol` y luego dirías `struct Walker: Pricer`. Go es distinto en un aspecto grande, y es lo que hay que interiorizar en esta lección: no hay **palabra clave `implements`**. Nunca declaras que un tipo satisface una interface. Si el tipo tiene los métodos, la satisface — automáticamente, en silencio, en todas partes."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[0].md[3]",
+   "text": "> A esto se le llama satisfacción **estructural** o **implícita**. La interface describe una forma; cualquier tipo con esa forma encaja."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[1].title",
+   "text": "playground/pricer.go"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[1].caption",
+   "text": "`var p Pricer = Walker{...}` compila solo porque Walker tiene el único método que Pricer pide. Agrega un segundo tipo con un PriceLabel() y encaja en el mismo lugar gratis."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[2].md[0]",
+   "text": "## Por qué importa esto"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[2].md[1]",
+   "text": "Como la satisfacción es implícita, puedes escribir una función contra una **interface** y funciona con cualquier tipo — incluso tipos escritos después, o en otros paquetes, que nunca anticipaste."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[2].md[2]",
+   "text": "Una función que recibe un `Pricer` no le importa si le llegó un `Walker`, un `Sitter` o un `Groomer`. Solo sabe: *esta cosa puede decirme su etiqueta de precio.* Ese es todo el punto — el código depende del **comportamiento**, no de tipos concretos."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[3].title",
+   "text": "playground/print.go"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[3].caption",
+   "text": "Una función, muchos tipos. Sitter se agregó sin tocar printPrice ni Pricer — la satisfacción implícita es lo que hace eso indoloro."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[4].md[0]",
+   "text": "## Dos cosas que verás constantemente"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[4].md[1]",
+   "text": "**`Stringer`** — la interface más famosa de la librería estándar. Es solo `String() string`. Si tu tipo tiene un método `String() string`, `fmt.Println(x)` lo usa automáticamente. Así es como le das a un tipo una forma legible para humanos."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[4].md[2]",
+   "text": "**`any`** (también `interface{}`) — la interface *vacía*. No lista **ningún** método, así que **todos** los tipos la satisfacen. `any` significa \"literalmente cualquier cosa.\" Es la vía de escape de Go (como `Any` en Swift), útil pero débil — pierdes toda la información de tipo. Recurre primero a una interface pequeña y específica; usa `any` solo cuando de verdad quieras decir \"cualquier valor.\""
+  },
+  {
+   "path": "modules[4].lessons[0].steps[4].md[3]",
+   "text": "> **Las interfaces pequeñas son mejores.** La cultura de Go valora interfaces de uno o dos métodos (`Stringer`, `io.Reader`). Mientras más pequeño el contrato, más tipos pueden satisfacerlo y más fácil es reutilizar tu código."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].q",
+   "text": "Defines `type Pricer interface { PriceLabel() string }`, luego escribes un struct `Sitter` con un método `PriceLabel() string`. ¿Qué debes agregar para que `Sitter` satisfaga `Pricer`?"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].choices[0]",
+   "text": "Nada — tener el método PriceLabel() string es suficiente; la satisfacción es implícita"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].choices[1]",
+   "text": "Una línea `type Sitter implements Pricer`"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].choices[2]",
+   "text": "`Sitter: Pricer` en la declaración del struct"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].choices[3]",
+   "text": "Una llamada a `register(Sitter{}, Pricer)` al iniciar"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].explain",
+   "text": "Go no tiene palabra clave `implements`. Como `Sitter` tiene exactamente el método que lista la interface, satisface `Pricer` automáticamente — puedes pasar un `Sitter` donde se quiera un `Pricer`, sin ninguna declaración que los conecte."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[5].nudge",
+   "text": "Repasa cómo `Walker` se volvió un `Pricer`. ¿Algún código dijo que los dos estaban relacionados?"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[6].title",
+   "text": "Define una interface y satisfazla"
+  },
+  {
+   "path": "modules[4].lessons[0].steps[6].prompt[0]",
+   "text": "Dos tareas. Primero declara una interface `Pricer` con un método, `PriceLabel() string`. Luego dale a `Walker` un método `PriceLabel() string` que retorne una etiqueta en dólares usando `fmt.Sprintf`. Como el método coincide con la interface, `Walker` satisfará `Pricer` sin ningún otro cableado."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[6].prompt[1]",
+   "text": "Retorna `fmt.Sprintf(\"$%d / 30 min\", w.PricePer30MinCents/100)` desde el método."
+  },
+  {
+   "path": "modules[4].lessons[0].steps[6].success",
+   "text": "Definiste un contrato y lo satisficiste — con cero código repetitivo de `implements`. `var p Pricer = Walker{...}` compila solo porque Walker tiene el método que la interface nombra."
+  },
+  {
+   "path": "modules[4].lessons[1].title",
+   "text": "Errores"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[0].md[0]",
+   "text": "## Un error es un valor"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[0].md[1]",
+   "text": "Swift lanza excepciones. Go no. En Go, un error es un **valor** ordinario que retornas junto con tu resultado — no hay `try`/`catch`, ni desenrollado de pila para el caso cotidiano. Una función que puede fallar retorna **dos** cosas: el resultado *y* un error."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[0].md[2]",
+   "text": "La convención es de hierro: el error es el **último** valor de retorno, y su tipo es la interface incorporada `error`. Cuando todo funcionó, el error es `nil`. Cuando algo salió mal, es un error no-`nil` que describe qué."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[0].md[3]",
+   "text": "> `error` en sí mismo es solo una interface — un método, `Error() string`. Cualquier cosa que pueda describirse a sí misma como un string es un error. (Sí, es exactamente la idea de interface de la Lección 1.)"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[1].title",
+   "text": "playground/duration.go"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[1].caption",
+   "text": "El llamador recibe dos valores y revisa el error primero. Si todo salió bien el error es `nil`; el código que usa `d` se ejecuta solo después de saber que no hubo error."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[2].md[0]",
+   "text": "## Crear errores"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[2].md[1]",
+   "text": "Dos funciones cubren casi todo:"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[2].md[2]",
+   "text": "- **`errors.New(\"walker not found\")`** — el error más simple: un mensaje fijo. Importa el paquete `errors`.\n- **`fmt.Errorf(\"parsing id %d: %w\", id, err)`** — un error *formateado*. Como `Printf`, pero retorna un error. El verbo especial **`%w`** *envuelve* otro error dentro del nuevo, así que el original sigue siendo alcanzable después (lo usarás en la próxima lección)."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[2].md[3]",
+   "text": "Usa `errors.New` para un mensaje plano; usa `fmt.Errorf` cuando quieras agregar contexto (un id, un nombre de campo) o envolver un error de nivel más bajo con `%w`."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[3].title",
+   "text": "playground/wrap.go"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[3].caption",
+   "text": "`%w` es el verbo de envoltura — mantiene el error original encadenado dentro del nuevo. `%s` o `%v` solo pegarían el texto y perderían la cadena."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].q",
+   "text": "En Go, ¿cómo reporta una función que no pudo encontrar un walker?"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].choices[0]",
+   "text": "Retorna un valor `error` como su último resultado; el llamador revisa `if err != nil`"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].choices[1]",
+   "text": "Lanza una excepción que el llamador captura con `try`/`catch`"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].choices[2]",
+   "text": "Asigna una variable global `lastError`"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].choices[3]",
+   "text": "Retorna `nil` e imprime el problema en la consola"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].explain",
+   "text": "Los errores en Go son valores retornados junto con el resultado — el error es el último retorno, y los llamadores lo inspeccionan con `if err != nil`. No hay mecanismo de excepciones para las fallas cotidianas; el camino de error se escribe de forma explícita."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[4].nudge",
+   "text": "Go no tiene `try`/`catch`. ¿Cómo le dijo `parseDuration` a su llamador que algo salió mal?"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[5].title",
+   "text": "Retorna un error cuando falta el walker"
+  },
+  {
+   "path": "modules[4].lessons[1].steps[5].prompt[0]",
+   "text": "Termina `findWalker`. Busca un walker en un map. Si el id no está presente, retorna un `Walker{}` en cero y `errors.New(\"walker not found\")`. Si está presente, retorna el walker y `nil`."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[5].prompt[1]",
+   "text": "La firma es `func findWalker(id string) (Walker, error)` — resultado primero, error al final."
+  },
+  {
+   "path": "modules[4].lessons[1].steps[5].success",
+   "text": "Ese es el contrato de errores de Go en miniatura: el valor cuando hay éxito, un `error` no-nil cuando falla, y el error llevado como el último retorno."
+  },
+  {
+   "path": "modules[4].lessons[2].title",
+   "text": "Patrones de manejo de errores"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[0].md[0]",
+   "text": "## El idioma que escribirás mil veces"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[0].md[1]",
+   "text": "Como los errores son valores, manejarlos es solo un `if`. El programa de Go está salpicado con este bloque exacto:"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[0].md[2]",
+   "text": "```\nresult, err := doSomething()\nif err != nil {\n    return result, err\n}\n```"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[0].md[3]",
+   "text": "Se ve repetitivo, y lo es — a propósito. Cada falla es visible en el punto exacto donde ocurre; nada queda oculto en un `throw` invisible. Al leer una función de Go de arriba a abajo, ves cada lugar donde puede detenerse. Esa explicitud es la decisión que Go toma a propósito."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[1].md[0]",
+   "text": "## Agrega contexto conforme sube"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[1].md[1]",
+   "text": "Retornar el `err` crudo está bien, pero muchas veces quieres decir *dónde* falló. Para eso está `fmt.Errorf` con **`%w`** — envuelve el error con un poco de contexto y sigue pasándolo hacia arriba:"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[1].md[2]",
+   "text": "```\nif err != nil {\n    return Walker{}, fmt.Errorf(\"loading walker: %w\", err)\n}\n```"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[1].md[3]",
+   "text": "Ahora la parte superior del programa ve un mensaje como `loading walker: not found` — un rastro de migas de pan — mientras el error original sigue envuelto adentro, todavía inspeccionable. Envuelve con `%w` en cada capa que agregue significado."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[0]",
+   "text": "## Errores sentinela, y cómo revisarlos"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[1]",
+   "text": "A veces los llamadores necesitan reaccionar a un error *específico* — \"si fue **no encontrado**, muestra un 404; si no, es un 500.\" Para eso defines un **sentinela**: una variable de error a nivel de paquete, por convención nombrada `ErrAlgo`."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[2]",
+   "text": "```\nvar ErrNotFound = errors.New(\"not found\")\n```"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[3]",
+   "text": "Para probar si un error *es* ese sentinela — incluso después de haber sido envuelto con `%w` — usa **`errors.Is`**. Desenvuelve la cadena por ti:"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[4]",
+   "text": "- **`errors.Is(err, ErrNotFound)`** — \"¿es este error, o algo que envuelve, el sentinela ErrNotFound?\" Retorna un bool.\n- **`errors.As(err, &target)`** — la hermana para *tipos de error personalizados*: revisa la cadena buscando un error de un tipo particular y, si lo encuentra, llena `target` para que puedas leer sus campos. Usa `Is` para hacer coincidir un valor, `As` para extraer un tipo."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[2].md[5]",
+   "text": "> Nunca compares mensajes de error con `==` sobre strings. Usa `errors.Is` / `errors.As` — ven a través de la envoltura, la comparación de strings no."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[3].md[0]",
+   "text": "## ¿Y qué hay de panic?"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[3].md[1]",
+   "text": "Go sí tiene `panic` (y `recover`), que *sí* desenrolla la pila como una excepción. Pero no es para fallas ordinarias. Que no se encuentre un walker, una entrada inválida, un bache de red — esos son **errores**, retornados como valores. `panic` está reservado para situaciones verdaderamente irrecuperables: un bug que significa que el programa no puede continuar de forma sensata (un estado imposible, un puntero nil que nunca protegiste)."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[3].md[2]",
+   "text": "> Regla general: si un llamador razonable podría manejarlo de forma plausible, retorna un `error`. Usa `panic` solo cuando no haya un camino sensato hacia adelante."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].q",
+   "text": "Un error se creó como `ErrNotFound` en las profundidades, luego se envolvió en el camino hacia arriba con `fmt.Errorf(\"loading walker: %w\", err)`. ¿Cómo lo detectas de forma confiable arriba?"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].choices[0]",
+   "text": "`errors.Is(err, ErrNotFound)` — desenvuelve la cadena de `%w` y coincide con el sentinela"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].choices[1]",
+   "text": "`err == ErrNotFound` — la igualdad directa sigue funcionando después de envolver"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].choices[2]",
+   "text": "`err.Error() == \"not found\"` — comparar los strings del mensaje"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].choices[3]",
+   "text": "No puedes; envolver con `%w` oculta el error original de forma permanente"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].explain",
+   "text": "`%w` mantiene el error original envuelto adentro, y `errors.Is` recorre esa cadena, así que encuentra `ErrNotFound` incluso bajo capas de contexto. La igualdad directa con `==` falla porque el valor de nivel superior es el envoltorio, y la comparación de strings es frágil — usa siempre `errors.Is`."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[4].nudge",
+   "text": "Después de que `%w` lo envuelve, el valor externo es el envoltorio, no el sentinela. ¿Qué función mira *a través* de la envoltura?"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[5].title",
+   "text": "Envuelve un error y revisa un sentinela"
+  },
+  {
+   "path": "modules[4].lessons[2].steps[5].prompt[0]",
+   "text": "Dos pequeños ajustes. En `loadWalker`, cuando `findWalker` falla, retorna un walker en cero y el error envuelto con contexto: `fmt.Errorf(\"loading walker: %w\", err)`. Luego en `main`, ramifica según el sentinela con `errors.Is(err, ErrNotFound)`."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[5].prompt[1]",
+   "text": "El verbo `%w` conserva `ErrNotFound` dentro del envoltorio, que es exactamente por qué `errors.Is` todavía puede encontrarlo."
+  },
+  {
+   "path": "modules[4].lessons[2].steps[5].success",
+   "text": "Envolviste un error con contexto y aun así diste con el sentinela a través de la envoltura — el bucle central de manejo de errores en Go, tal como lo hace el backend real."
+  }
+ ]
+}

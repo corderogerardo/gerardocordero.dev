@@ -55,6 +55,10 @@ export type ChecklistGroup = { title: string; items: ChecklistItem[] };
 export type NavItem = {
   href: string;
   label: string;
+  /** Spanish nav label (falls back to `label` when absent). */
+  labelEs?: string;
   /** Short description used on the overview page cards. */
   blurb?: string;
+  /** Spanish blurb (falls back to `blurb` when absent). */
+  blurbEs?: string;
 };

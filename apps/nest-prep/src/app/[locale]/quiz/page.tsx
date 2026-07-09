@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import type { Locale } from "@gerardocordero/prep-kit";
+import { PageHeader, Quiz } from "@gerardocordero/prep-kit";
 import { getQuiz, getQuizFilters } from "@/lib/locale-data";
-import { PageHeader } from "@gerardocordero/prep-kit";
-import { Quiz } from "@gerardocordero/prep-kit";
-import { ALL_QUIZ, ALL_QUIZ_FILTERS } from "@/data/all";
 
 
 export function generateStaticParams() {
@@ -11,22 +9,25 @@ export function generateStaticParams() {
 }
 
 
-const questions = ALL_QUIZ;
-const filters = ALL_QUIZ_FILTERS;
-
-export const metadata: Metadata = {
-  title: "Quiz",
-  description:
-    "A multiple-choice quiz on NestJS and Node.js with instant, explained feedback. Your answers are saved in this browser so you can finish later.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Quiz", description: "Un quiz de opción múltiple sobre NestJS y Node.js con retroalimentación instantánea y explicada. Tus respuestas se guardan en este navegador." }
+    : { title: "Quiz", description: "A multiple-choice quiz on NestJS and Node.js with instant, explained feedback. Your answers are saved in this browser so you can finish later." };
+}
 
 export default async function QuizPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const questions = getQuiz(locale as Locale);
+  const filters = getQuizFilters(locale as Locale);
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Test yourself"
-        title="Quiz — Multiple Choice"
-        lead="Pick an answer; it instantly marks it right or wrong and explains why. Your answers are saved in this browser, so you can come back and finish."
+        eyebrow={locale === "es" ? "Pon a prueba tus conocimientos" : "Test yourself"}
+        title={locale === "es" ? "Quiz — Opción Múltiple" : "Quiz — Multiple Choice"}
+        lead={locale === "es"
+          ? "Elige una respuesta; marca instantáneamente si es correcta o incorrecta y explica por qué. Tus respuestas se guardan en este navegador para que puedas volver y terminar."
+          : "Pick an answer; it instantly marks it right or wrong and explains why. Your answers are saved in this browser, so you can come back and finish."}
       />
       <Quiz questions={questions} filters={filters} />
     </div>

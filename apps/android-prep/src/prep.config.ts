@@ -11,11 +11,14 @@ export const prepConfig: PrepConfig = {
     title: "Android Interview Prep",
     footerText:
       "Senior Android interview prep · personal study guide. Kotlin, Compose, architecture — learn, drill, record, review, repeat.",
+    footerTextEs:
+      "Prep senior de Android · guía de estudio personal. Kotlin, Compose, arquitectura — aprende, practica, graba, repasa, repite.",
   },
   ai: {
     systemPrompt:
       "You are a concise, encouraging senior Android interview coach (Kotlin, Jetpack Compose, coroutines, architecture). Answer in a few short sentences or a tight list. Be accurate and practical.",
     placeholder: "Ask anything about Android interviews…",
+    placeholderEs: "Pregunta lo que sea sobre entrevistas de Android…",
   },
   nav: NAV,
 };

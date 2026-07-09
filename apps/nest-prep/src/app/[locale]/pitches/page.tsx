@@ -10,20 +10,23 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Practice Pitches",
-  description:
-    "Spoken answers — intros, “why NestJS”, a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Pitches de Práctica", description: "Respuestas habladas — presentaciones, “por qué NestJS”, una inmersión técnica e historias STAR — con un teleprompter para ensayar en cámara." }
+    : { title: "Practice Pitches", description: "Spoken answers — intros, “why NestJS”, a technical deep-dive, and STAR stories — with a teleprompter to rehearse on camera." };
+}
 
 export default async function PitchesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Say it out loud"
-        title="Practice Pitches"
-        lead="Spoken answers covering the full interview range. Tap ▶ Teleprompter on any pitch to rehearse on camera with a scrolling script, timer, and speed control."
+        eyebrow={locale === "es" ? "Dilo en voz alta" : "Say it out loud"}
+        title={locale === "es" ? "Pitches de Práctica" : "Practice Pitches"}
+        lead={locale === "es"
+          ? "Respuestas orales que cubren todo el rango de la entrevista. Toca ▶ Teleprompter en cualquier pitch para ensayar con una cámara, guión que se desplaza, temporizador y control de velocidad."
+          : "Spoken answers covering the full interview range. Tap ▶ Teleprompter on any pitch to rehearse on camera with a scrolling script, timer, and speed control."}
       />
       <Pitches pitches={getPitches(locale as Locale)} introHtml={getPitchesIntroHtml(locale as Locale)} />
     </div>

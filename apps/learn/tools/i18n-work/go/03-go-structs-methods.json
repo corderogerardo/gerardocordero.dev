@@ -1,0 +1,366 @@
+{
+ "course": "go",
+ "module": 3,
+ "units": [
+  {
+   "path": "modules[3].title",
+   "text": "Structs y métodos"
+  },
+  {
+   "path": "modules[3].lessons[0].title",
+   "text": "Structs"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[0].md[0]",
+   "text": "## Una forma para tus datos"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[0].md[1]",
+   "text": "Un backend de PawWalk maneja walkers, perros, reservas, coordenadas GPS. Cada uno es un pequeño paquete de campos relacionados: un walker tiene un nombre y un precio; una reserva tiene un walker, un perro y una hora. En Go describes ese paquete con un **struct** — un tipo con nombre formado por campos."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[0].md[2]",
+   "text": "Si hiciste el curso de iOS, esta es la misma idea que `struct Walker { ... }` en Swift. La versión de Go es más ligera: no hay una alternativa `class` que sopesar, no hay herencia, solo campos y (en la próxima lección) métodos colgados de ellos."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[1].title",
+   "text": "internal/walker/walker.go"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[1].caption",
+   "text": "`type Walker struct { ... }` define un tipo nuevo. Cada línea es un campo: un nombre y un tipo. Los nombres exportados empiezan con mayúscula (Walker, Name), para que otros paquetes puedan verlos — esa convención ES el control de acceso de Go."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[2].md[0]",
+   "text": "## Construir uno: literales"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[2].md[1]",
+   "text": "Una vez que el tipo existe, creas valores a partir de él con un **literal de struct**. Dos estilos:"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[2].md[2]",
+   "text": "- **Con claves** (haz esto): `Walker{Name: \"Mochi\", PricePer30MinCents: 2500}`. Nombras cada campo, así que el orden no importa y puedes omitir campos.\n- **Posicional**: `Walker{\"w1\", \"Mochi\", 2500}` — todos los campos, en el orden de declaración. Frágil: agregas un campo y todo literal posicional se rompe. Evítalo fuera de código pequeño y desechable."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[2].md[3]",
+   "text": "Los literales con claves son el idioma de Go precisamente por la razón por la que los posicionales son frágiles: sobreviven cuando el struct crece con nuevos campos."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[0]",
+   "text": "## El valor cero es real, y usable"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[1]",
+   "text": "Declara un struct sin un literal y cada campo recibe el **valor cero** de su tipo — sin `nil`, sin crash, sin `undefined`:"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[2]",
+   "text": "```"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[3]",
+   "text": "var w Walker   // w.ID == \"\", w.Name == \"\", w.PricePer30MinCents == 0"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[4]",
+   "text": "```"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[3].md[5]",
+   "text": "Los números en cero, los strings vacíos, los booleanos en false. Go garantiza un valor completamente formado desde el momento en que lo declaras — un literal `Walker{}` hace lo mismo. Accedes a cualquier campo con un punto: `w.Name`, `w.PricePer30MinCents`."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].q",
+   "text": "Escribes `w := Walker{Name: \"Mochi\"}` pero nunca defines `PricePer30MinCents`. ¿Qué es `w.PricePer30MinCents`?"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].choices[0]",
+   "text": "`0` — el valor cero para `int`, asignado automáticamente"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].choices[1]",
+   "text": "`nil` — el campo no está definido"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].choices[2]",
+   "text": "Un error de compilación — todo campo debe darse"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].choices[3]",
+   "text": "Comportamiento indefinido — leerlo puede provocar un crash"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].explain",
+   "text": "Un literal con claves llena los campos que nombras y deja el resto en su valor cero. Para `int` eso es `0`; nunca obtienes `nil` ni basura de un struct de Go. Por eso los valores cero son una herramienta de diseño, no un peligro."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[4].nudge",
+   "text": "Go nunca deja un campo en un estado inutilizable — piensa qué valor por defecto tiene un `int` sin definir."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[5].title",
+   "text": "Define y construye un Booking"
+  },
+  {
+   "path": "modules[3].lessons[0].steps[5].prompt[0]",
+   "text": "Define un struct `Booking` con tres campos: `ID string`, `WalkerID string` y `DogName string`."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[5].prompt[1]",
+   "text": "Luego, dentro de `makeBooking`, construye uno con un literal **con claves** — asigna `\"w1\"` a `WalkerID` y `\"Mochi\"` a `DogName` — asígnalo a `b`, y retórnalo."
+  },
+  {
+   "path": "modules[3].lessons[0].steps[5].success",
+   "text": "Eso es una definición de struct más un literal con claves — el patrón exacto que usa cada handler del backend para construir una reserva."
+  },
+  {
+   "path": "modules[3].lessons[1].title",
+   "text": "Métodos y punteros"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[0].md[0]",
+   "text": "## El comportamiento cuelga del struct"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[0].md[1]",
+   "text": "Un struct guarda datos; un **método** le da comportamiento. Go no tiene clases, así que un método no se escribe *dentro* del tipo — es una función normal con un **receiver**: un parámetro extra entre paréntesis antes del nombre que indica a qué tipo pertenece."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[0].md[2]",
+   "text": "`func (w Walker) PriceLabel() string` se lee: \"un método llamado `PriceLabel`, sobre `Walker`, que retorna un `string`.\" Adentro, `w` es el walker sobre el que fue llamado — como el `self` de Swift, pero tú mismo lo nombras (convención de Go: una o dos letras, normalmente la inicial del tipo)."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[1].title",
+   "text": "internal/walker/walker.go"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[1].caption",
+   "text": "Llámalo con un punto, como un campo: `w.PriceLabel()`. `fmt.Sprintf` construye un string a partir de un formato — `%d` inserta los dólares enteros tras dividir los centavos entre 100."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].q",
+   "text": "En `func (w Walker) PriceLabel() string`, ¿qué es la parte `(w Walker)`?"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].choices[0]",
+   "text": "El receiver — vincula el método al tipo `Walker`, con `w` como el valor sobre el que se llama"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].choices[1]",
+   "text": "El primer argumento que el llamador debe pasar"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].choices[2]",
+   "text": "El tipo de retorno del método"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].choices[3]",
+   "text": "Un parámetro de tipo genérico"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].explain",
+   "text": "El receiver nombra el tipo al que pertenece el método y la variable que usas para acceder a sus campos (`w.PricePer30MinCents`). Es el sustituto de `self` en Go, escrito antes del nombre del método en vez de estar implícito."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[2].nudge",
+   "text": "Va antes del nombre del método — esa posición es especial. No es un argumento normal."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[3].md[0]",
+   "text": "## Punteros: compartir un valor en vez de copiarlo"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[3].md[1]",
+   "text": "Por defecto Go **copia** un struct cuando lo pasas o lo recibes en un método. Leer está bien, pero una copia significa que los cambios no se reflejan en el original. Para llegar al valor real usas un **puntero**."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[3].md[2]",
+   "text": "- `&w` toma la **dirección** de `w` — un `*Walker`, \"puntero a Walker.\"\n- `*Walker` como tipo significa \"la dirección de un Walker.\" A través de él, Go te permite leer y escribir los campos del original con la misma sintaxis de punto — `p.Name = \"Mochi\"` actualiza el walker al que apunta `p`."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[3].md[3]",
+   "text": "Viniendo de Swift, este es el momento en que la semántica de copia de `struct` se vuelve explícita: eliges, por método, si trabajas sobre una copia o sobre el original."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[4].title",
+   "text": "Un receiver de puntero muta el original"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[4].caption",
+   "text": "El receiver es `*Walker`, así que `w` apunta al walker del llamador. `w.Name = name` lo cambia de verdad. Llámalo como `p.SetName(\"Mochi\")` — Go toma la dirección por ti."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[5].md[0]",
+   "text": "## ¿Receiver de valor o receiver de puntero?"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[5].md[1]",
+   "text": "La regla general:"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[5].md[2]",
+   "text": "- **¿Necesitas mutar el receiver?** Usa un receiver de puntero (`*Walker`). Un receiver de valor solo obtiene una copia, así que cualquier cambio se descarta cuando el método retorna.\n- **¿Solo estás leyendo?** Un receiver de valor (`Walker`) está bien — `PriceLabel` solo lee `PricePer30MinCents`, así que no necesita un puntero."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[5].md[3]",
+   "text": "> En código real verás con frecuencia receivers de puntero usados de forma consistente en todo un tipo — en parte por la mutación, en parte para evitar copiar un struct grande en cada llamada. Por ahora: puntero cuando escribes, valor está bien cuando solo lees."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].q",
+   "text": "Escribes un método que actualiza el campo de estado de una reserva y quieres que el cambio persista. ¿Qué receiver usas?"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].choices[0]",
+   "text": "Un receiver de puntero — `func (b *Booking) ...` — para que el método trabaje sobre el original, no sobre una copia"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].choices[1]",
+   "text": "Un receiver de valor — `func (b Booking) ...` — Go siempre actualiza el original"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].choices[2]",
+   "text": "Cualquiera de los dos funciona igual para mutar"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].choices[3]",
+   "text": "Ninguno — los métodos en Go nunca pueden cambiar campos"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].explain",
+   "text": "Un receiver de valor obtiene una copia; escribir en él cambia solo la copia, que desaparece cuando el método retorna. Para que una mutación persista necesitas un receiver de puntero, para que el método tenga la dirección del valor real."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[6].nudge",
+   "text": "Uno de estos obtiene una copia desechable. ¿Cuál llega al valor real?"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[7].title",
+   "text": "Agrega un método PriceLabel"
+  },
+  {
+   "path": "modules[3].lessons[1].steps[7].prompt[0]",
+   "text": "Agrega un método `PriceLabel` a `Walker`. No toma argumentos, retorna un `string`, y retorna `fmt.Sprintf(\"$%d / 30 min\", w.PricePer30MinCents/100)`."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[7].prompt[1]",
+   "text": "Solo lee un campo, así que un receiver de valor `(w Walker)` es lo correcto aquí."
+  },
+  {
+   "path": "modules[3].lessons[1].steps[7].success",
+   "text": "Ese es el `PriceLabel` real del paquete walker — un receiver de valor formateando centavos en un precio legible."
+  },
+  {
+   "path": "modules[3].lessons[2].title",
+   "text": "Composición"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[0].md[0]",
+   "text": "## Sin herencia — a propósito"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[0].md[1]",
+   "text": "En muchos lenguajes crearías un `PremiumWalker` *heredando* de `Walker`. Go **no tiene herencia**. No hay subclases, no hay clases base, no hay `extends`."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[0].md[2]",
+   "text": "En su lugar Go te da **composición**: construyes tipos más grandes *embebiendo* tipos más pequeños. En vez de \"un premium walker ES UN walker (más extras),\" dices \"un walker-with-stats TIENE UN walker adentro.\" Resulta que eso cubre casi todo para lo que se usaba la herencia, con muchas menos aristas filosas."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[1].title",
+   "text": "internal/walker/stats.go"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[1].caption",
+   "text": "`Walker` aparece sin nombre de campo — eso es un campo EMBEBIDO. WalkerWithStats ahora contiene un Walker completo, más sus propios Rating y WalksTotal."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[0]",
+   "text": "## Promoción: los campos internos vienen incluidos"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[1]",
+   "text": "Como `Walker` está embebido (sin nombre de campo), sus campos y métodos son **promovidos** — los alcanzas directamente en el struct externo, como si estuvieran declarados ahí:"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[2]",
+   "text": "```"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[3]",
+   "text": "ws := WalkerWithStats{Walker: Walker{Name: \"Mochi\"}, Rating: 4.9}"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[4]",
+   "text": "ws.Name          // \"Mochi\"  — promovido desde el Walker embebido"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[5]",
+   "text": "ws.PriceLabel()  // también funciona — el método está promovido"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[6]",
+   "text": "```"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[2].md[7]",
+   "text": "*Puedes* seguir accediendo al valor interno explícitamente como `ws.Walker.Name`, pero la promoción hace que rara vez lo necesites. El tipo externo obtiene el comportamiento del tipo interno gratis."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].q",
+   "text": "`WalkerWithStats` embebe `Walker` (que tiene un campo `Name`). Dado `ws` de tipo `WalkerWithStats`, ¿cómo lees el nombre del walker?"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].choices[0]",
+   "text": "`ws.Name` — el campo está promovido desde el `Walker` embebido"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].choices[1]",
+   "text": "`ws.get(\"Name\")` — los campos embebidos necesitan un getter"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].choices[2]",
+   "text": "No puedes — los campos embebidos están ocultos del struct externo"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].choices[3]",
+   "text": "`Walker.Name` — a través del tipo, no del valor"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].explain",
+   "text": "Embeber sin un nombre de campo promueve los campos y métodos del tipo interno al struct externo, así que `ws.Name` lee el `Name` del Walker embebido directamente. `ws.Walker.Name` también funciona, pero la promoción hace que la forma corta sea la norma."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[3].nudge",
+   "text": "Embeber es lo que hace que los campos internos se sientan como si pertenecieran al struct externo."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[4].md[0]",
+   "text": "## Composición > herencia"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[4].md[1]",
+   "text": "La guía de la comunidad de Go es directa: **prefiere la composición sobre la herencia.** Embeber te da reutilización de código sin las jerarquías de clases frágiles y profundas que la herencia tiende a generar. Ensamblas un tipo a partir de las piezas que necesita, y cada pieza se mantiene pequeña y comprobable por sí sola."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[4].md[2]",
+   "text": "> Te apoyarás en esto mucho más adelante: un struct `Server` embebe un logger y un handle de base de datos; un handler embebe dependencias compartidas. La misma jugada siempre: poner lo pequeño dentro de lo grande."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[5].title",
+   "text": "Embebe y accede a un campo promovido"
+  },
+  {
+   "path": "modules[3].lessons[2].steps[5].prompt[0]",
+   "text": "Define `WalkerWithStats` **embebiendo** `Walker` (escribe `Walker` en su propia línea, sin nombre de campo) y agregando un campo `Rating float64`."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[5].prompt[1]",
+   "text": "Luego, dentro de `describe`, retorna `ws.Name` — el campo promovido desde el `Walker` embebido."
+  },
+  {
+   "path": "modules[3].lessons[2].steps[5].success",
+   "text": "Embebiste un struct dentro de otro y leíste un campo promovido — composición, la forma en que Go reutiliza un tipo sin heredar de él."
+  }
+ ]
+}

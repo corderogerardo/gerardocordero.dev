@@ -7,11 +7,12 @@ export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "es" }];
 }
 
-export const metadata: Metadata = {
-  title: "Architecture",
-  description:
-    "A senior-level tour of backend system design mapped onto NestJS and Node.js — layering, microservices, data, caching, and resilience — plus concept/example/problem/solution deep-dives.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Arquitectura", description: "Un recorrido senior de diseño de sistemas backend aplicado a NestJS y Node.js — capas, microservicios, datos, caché y resiliencia — con inmersiones de concepto/ejemplo/problema/solución." }
+    : { title: "Architecture", description: "A senior-level tour of backend system design mapped onto NestJS and Node.js — layering, microservices, data, caching, and resilience — plus concept/example/problem/solution deep-dives." };
+}
 
 export default async function ArchitecturePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -19,8 +20,8 @@ export default async function ArchitecturePage({ params }: { params: Promise<{ l
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="System design"
-        title="Backend Architecture Guide"
+        eyebrow={locale === "es" ? "Diseño de sistemas" : "System design"}
+        title={locale === "es" ? "Guía de Arquitectura Backend" : "Backend Architecture Guide"}
         lead={intro}
       />
 
@@ -35,7 +36,7 @@ export default async function ArchitecturePage({ params }: { params: Promise<{ l
 
       <section className="space-y-4 pt-4">
         <div className="space-y-1.5">
-          <h2 className="text-2xl font-extrabold">Deep dives</h2>
+          <h2 className="text-2xl font-extrabold">{locale === "es" ? "Inmersiones" : "Deep dives"}</h2>
           {deepDivesIntro && <p className="text-muted">{deepDivesIntro}</p>}
         </div>
         {deepDives.map((d) => (

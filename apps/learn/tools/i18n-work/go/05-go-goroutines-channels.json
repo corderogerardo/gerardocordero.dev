@@ -1,0 +1,358 @@
+{
+ "course": "go",
+ "module": 5,
+ "units": [
+  {
+   "path": "modules[5].title",
+   "text": "Goroutines y channels"
+  },
+  {
+   "path": "modules[5].lessons[0].title",
+   "text": "Goroutines"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[0].md[0]",
+   "text": "## La razón por la que Go corre servidores"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[0].md[1]",
+   "text": "Un servidor de PawWalk nunca está haciendo una sola cosa. Mientras responde la petición de lista de walkers para un teléfono, también está transmitiendo coordenadas GPS a un cliente viendo un paseo en vivo, cobrando una tarjeta, y aceptando una reserva nueva — todo en el mismo instante. El trabajo completo de un backend es **muchas cosas a la vez**."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[0].md[2]",
+   "text": "La respuesta de Go es la **goroutine**: una función que corre de forma concurrente con todo lo demás. Lanzas una poniendo la palabra `go` antes de una llamada. Esa es toda la sintaxis."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[0].md[3]",
+   "text": "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10 000 goroutines es normal; levantar 10 000 hilos derretiría la máquina."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[1].title",
+   "text": "playground/goroutines.go"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[1].caption",
+   "text": "Tres goroutines lanzadas al instante. main no espera a que track() termine — dispara cada una y sigue adelante. (Ejecuta esto y puede que no veas NINGUNA de las líneas de tracking — sigue leyendo para saber por qué.)"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[2].md[0]",
+   "text": "## La goroutine main es especial"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[2].md[1]",
+   "text": "`func main` corre en su propia goroutine — la **goroutine main**. Aquí está la regla que sorprende a todos una vez: **cuando `main` retorna, todo el programa termina de inmediato**, matando cualquier otra goroutine que siga corriendo, terminada o no."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[2].md[2]",
+   "text": "En el fragmento anterior, `main` lanzó tres goroutines y luego llegó al final. El programa terminó antes de que `track` tuviera oportunidad de imprimir. Las goroutines eran reales — solo se cortaron. Casi nunca quieres hacer `go` de algo y esperar que termine a tiempo. Necesitas **esperar**."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[3].md[0]",
+   "text": "## Esperar con un WaitGroup"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[3].md[1]",
+   "text": "`sync.WaitGroup` es un contador que deja que `main` bloquee hasta que un lote de goroutines termine. Tres llamadas:"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[3].md[2]",
+   "text": "- **`wg.Add(1)`** antes de lanzar — \"una goroutine más que esperar.\"\n- **`wg.Done()`** dentro de la goroutine cuando termina — \"esta ya terminó\" (decrementa el contador). Idiomáticamente `defer wg.Done()` al inicio, para que se dispare sin importar cómo retorne la función.\n- **`wg.Wait()`** en `main` — bloquea hasta que el contador llegue a cero."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[4].title",
+   "text": "playground/waitgroup.go"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[4].caption",
+   "text": "Ahora main bloquea en wg.Wait() hasta que las tres goroutines llamen wg.Done(). Esto imprime las tres líneas de tracking, luego el resumen — siempre."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[5].md[0]",
+   "text": "## La trampa de la variable de loop (y por qué Go 1.22 la arregló)"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[5].md[1]",
+   "text": "Ese loop `range` esconde el bug histórico más famoso de Go. Antes de **Go 1.22**, la variable de loop `id` era una *única* variable reutilizada en cada iteración. Las tres goroutines capturaban el *mismo* `id`, y para cuando corrían, el loop ya había avanzado — así que solías ver `walk-3` impreso tres veces."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[5].md[2]",
+   "text": "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. Pero seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[5].md[3]",
+   "text": "> Conoce ambos. En Go 1.22+ la captura simple es segura. En cualquier versión anterior, copia la variable de loop al entrar — o vas a lanzar un heisenbug."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].q",
+   "text": "Lanzas tres goroutines desde `main` y luego `main` retorna de inmediato, sin un WaitGroup. ¿Qué pasa?"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].choices[0]",
+   "text": "El programa termina de inmediato y las goroutines puede que nunca terminen"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].choices[1]",
+   "text": "Go espera automáticamente a cada goroutine antes de terminar"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].choices[2]",
+   "text": "El programa entra en panic porque las goroutines sobrevivieron a main"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].choices[3]",
+   "text": "Las goroutines siguen corriendo en segundo plano después de que el programa termina"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].explain",
+   "text": "Cuando la goroutine main retorna, el proceso termina y se lleva consigo a cualquier otra goroutine — terminada o no. Por eso exactamente necesitas algo como sync.WaitGroup para hacer que main espere."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[6].nudge",
+   "text": "Piensa en qué goroutine controla el tiempo de vida de todo el programa."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[7].title",
+   "text": "Rastrea un paseo en una goroutine"
+  },
+  {
+   "path": "modules[5].lessons[0].steps[7].prompt[0]",
+   "text": "Dentro de `main`, registra una goroutine con el WaitGroup y lánzala. Llama `wg.Add(1)`, luego inicia `go func() { ... }()` cuyo cuerpo primero hace `defer wg.Done()` y luego imprime `tracking walk`."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[7].prompt[1]",
+   "text": "La línea `wg.Wait()` ya está ahí — solo necesitas las tres líneas antes de ella."
+  },
+  {
+   "path": "modules[5].lessons[0].steps[7].success",
+   "text": "Ese es el patrón goroutine + WaitGroup que usarás en todas partes: Add antes de lanzar, defer Done adentro, Wait para bloquear main."
+  },
+  {
+   "path": "modules[5].lessons[1].title",
+   "text": "Channels"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[0].md[0]",
+   "text": "## Pasar valores entre goroutines"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[0].md[1]",
+   "text": "Las goroutines corren de forma concurrente — pero necesitan devolver resultados. Una goroutine de búsqueda de walkers encuentra tres coincidencias; ¿cómo se las entrega a `main`? La respuesta de Go es un **channel**: una tubería tipada que conecta goroutines. Una goroutine envía un valor adentro, otra lo recibe afuera."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[0].md[2]",
+   "text": "El proverbio guía de Go: **\"No te comuniques compartiendo memoria; comparte memoria comunicándote.\"** En vez de que dos goroutines toquen la misma variable detrás de un lock, una *envía* el valor por un channel a la otra. El channel maneja la entrega de forma segura."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[1].md[0]",
+   "text": "## Make, send, receive"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[1].md[1]",
+   "text": "Un channel tiene un tipo — un `chan int` solo transporta valores `int`, comprobado en tiempo de compilación. Tres operaciones:"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[1].md[2]",
+   "text": "- **`ch := make(chan int)`** — crea un channel de `int`.\n- **`ch <- v`** — *envía* `v` dentro del channel. La flecha apunta *hacia dentro* de `ch`.\n- **`v := <-ch`** — *recibe* el siguiente valor de `ch`. La flecha apunta *hacia afuera* de `ch`."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[1].md[3]",
+   "text": "> Lee la flecha como una dirección de flujo. `ch <- v` mueve `v` hacia `ch` (adentro). `<-ch` saca un valor de `ch` (afuera)."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[2].title",
+   "text": "playground/channel.go"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[2].caption",
+   "text": "La goroutine envía 30 dentro de ch; main lo recibe en price. En un channel sin buffer, el envío se bloquea hasta que main esté listo para recibir — las dos goroutines se encuentran. Ese bloqueo también es la sincronización: no se necesita WaitGroup aquí."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[3].md[0]",
+   "text": "## Channels con buffer"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[3].md[1]",
+   "text": "El channel de arriba es **sin buffer**: un envío se bloquea hasta que alguien reciba. Dale un buffer y los envíos solo se bloquean cuando el buffer está lleno — útil para poner en cola coordenadas GPS sin hacer que el emisor espere en cada una."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[3].md[2]",
+   "text": "`make(chan int, 3)` guarda hasta tres valores. El productor puede meter tres coordenadas y seguir caminando; el consumidor las drena a su propio ritmo."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[4].title",
+   "text": "playground/buffered.go"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[4].caption",
+   "text": "Tres envíos caben en el buffer sin que un receptor espere. close(fixes) señala que ya no vendrán más valores, lo que permite que `for f := range fixes` recorra lo que está en buffer y luego pare de forma limpia."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[5].md[0]",
+   "text": "## Direcciones y cierre"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[5].md[1]",
+   "text": "Una función puede declarar en qué *sentido* usa un channel, y el compilador lo hace cumplir:"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[5].md[2]",
+   "text": "- **`chan<- int`** — solo envío. La función solo puede meter valores.\n- **`<-chan int`** — solo recepción. La función solo puede sacar valores."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[5].md[3]",
+   "text": "Esto es una red de seguridad real: un `producer(out chan<- int)` no puede, físicamente, leer accidentalmente de la tubería. Y **`close(ch)`** marca un channel como terminado — los receptores todavía pueden drenar valores en buffer, y `v, ok := <-ch` pone `ok` en `false` una vez que está vacío y cerrado. Regla general: **el que envía cierra, nunca el que recibe.**"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].q",
+   "text": "¿Qué hace la expresión `price := <-ch`?"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].choices[0]",
+   "text": "Recibe el siguiente valor del channel `ch` y lo guarda en `price`"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].choices[1]",
+   "text": "Envía `price` dentro del channel `ch`"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].choices[2]",
+   "text": "Crea un channel nuevo llamado `price`"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].choices[3]",
+   "text": "Cierra el channel `ch` y retorna su longitud"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].explain",
+   "text": "La flecha apunta alejándose de ch, así que el valor fluye hacia afuera del channel hacia price. `ch <- price` (flecha hacia ch) sería el envío. La dirección de la flecha te dice cuál operación es."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[6].nudge",
+   "text": "¿Hacia dónde apunta la flecha `<-` respecto a `ch`?"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[7].title",
+   "text": "Envía un precio por un channel"
+  },
+  {
+   "path": "modules[5].lessons[1].steps[7].prompt[0]",
+   "text": "Dentro de `main`, crea un channel de `int` llamado `ch` con `make`. Lanza una goroutine que envíe `30` por él, luego recibe el valor en `v` e imprímelo."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[7].prompt[1]",
+   "text": "Escribirás tres líneas: el `make`, el envío dentro de la goroutine, y la recepción en `v`."
+  },
+  {
+   "path": "modules[5].lessons[1].steps[7].success",
+   "text": "Acabas de pasar un valor entre dos goroutines con cero memoria compartida — el channel hizo la entrega y la sincronización a la vez."
+  },
+  {
+   "path": "modules[5].lessons[2].title",
+   "text": "select, context y mutex"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[0].md[0]",
+   "text": "## Esperar en varios channels a la vez"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[0].md[1]",
+   "text": "Un handler de rastreo en vivo espera más de una cosa: una nueva coordenada GPS en un channel, *o* una señal de que el paseo terminó en otro, *o* un timeout para que nunca se quede colgado para siempre. **`select`** es un `switch` para operaciones de channel — se bloquea hasta que uno de sus `case` pueda proceder, y luego ejecuta ese."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[0].md[2]",
+   "text": "Si varios cases están listos, `select` elige uno al azar. Un case `default` (opcional) corre de inmediato cuando nada más está listo, así puedes hacer polling sin bloquear."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[1].title",
+   "text": "internal/tracking/stream.go"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[1].caption",
+   "text": "El loop se bloquea en select hasta que O llega una coordenada O se dispara done. En done, retorna, terminando la goroutine. Este es el corazón de una conexión de rastreo en vivo: reaccionar a cualquier evento que ocurra primero."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[2].md[0]",
+   "text": "## context: cancelación y timeouts"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[2].md[1]",
+   "text": "¿Qué corta una petición cuando el cliente cuelga, o una llamada lenta a la base de datos tarda demasiado? En Go la respuesta es **`context.Context`** — un valor que se pasa a través de una petición y lleva una señal de cancelación. Cada handler de `net/http` recibe uno, y cada función que pueda bloquearse debería aceptar uno como su primer argumento, por convención llamado `ctx`."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[2].md[2]",
+   "text": "El channel clave es **`ctx.Done()`**: se cierra cuando el context se cancela o pasa su deadline. Haces `select` sobre él. `context.WithTimeout` te da un context que se cancela solo después de una duración."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[3].title",
+   "text": "internal/tracking/wait.go"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[3].caption",
+   "text": "select compite una coordenada real contra ctx.Done(). Si no llega ninguna coordenada en 5 segundos el context expira, ctx.Done() se dispara, y la función se retira en vez de quedarse colgada para siempre. Siempre haz defer cancel() para liberar el timer."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[4].md[0]",
+   "text": "## Mutex: protegiendo estado compartido"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[4].md[1]",
+   "text": "Los channels son la forma preferida de coordinar, pero a veces de verdad tienes una sola pieza de estado compartido — digamos un conteo en memoria de paseos activos — que varias goroutines actualizan. Leerlo y escribirlo desde varias goroutines a la vez es una **carrera de datos** (data race): comportamiento indefinido que el detector `-race` de Go va a marcar."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[4].md[2]",
+   "text": "Un **`sync.Mutex`** es un lock que asegura que solo una goroutine a la vez toque el estado. `mu.Lock()` lo adquiere; `mu.Unlock()` lo libera. El idioma es `mu.Lock()` e inmediatamente después `defer mu.Unlock()`, para que el lock siempre se libere cuando la función retorne — incluso en un retorno anticipado o un panic."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[5].title",
+   "text": "internal/tracking/counter.go"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[5].caption",
+   "text": "Ambos métodos bloquean antes de tocar count y difieren el unlock. Ahora cualquier número de goroutines puede llamar Start() de forma concurrente y el conteo se mantiene correcto — el mutex serializa el acceso a ese único campo."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].q",
+   "text": "¿Por qué se escribe `defer mu.Unlock()` inmediatamente después de `mu.Lock()`?"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].choices[0]",
+   "text": "Garantiza que el lock se libere cuando la función retorne, incluso en un retorno anticipado o un panic"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].choices[1]",
+   "text": "Desbloquea el mutex antes de que corra el código protegido"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].choices[2]",
+   "text": "Hace el lock más rápido al diferir el trabajo"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].choices[3]",
+   "text": "Es sintaxis obligatoria — un Lock sin un Unlock diferido no compila"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].explain",
+   "text": "defer programa que el Unlock corra cuando la función salga, por cualquier camino. Eso significa que no puedes olvidar desbloquear y no dejarás el mutex tomado tras un retorno anticipado o un panic — un deadlock esperando a suceder de otra forma."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[6].nudge",
+   "text": "Piensa en cada forma en que una función puede retornar, incluyendo las que no planeaste."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[7].title",
+   "text": "select en dos channels"
+  },
+  {
+   "path": "modules[5].lessons[2].steps[7].prompt[0]",
+   "text": "Dentro de `main`, termina el `select`. Agrega dos cases: uno que reciba un valor en `v` desde `ch` y lo imprima, y uno que reciba desde `done`."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[7].prompt[1]",
+   "text": "Escribe `select { ... }` con `case v := <-ch:` y `case <-done:`. Los channels y la goroutine que envía ya están configurados."
+  },
+  {
+   "path": "modules[5].lessons[2].steps[7].success",
+   "text": "Ese es un loop de rastreo en vivo en miniatura: select se bloquea hasta que llega una coordenada o el paseo termina, y luego maneja lo que haya llegado primero."
+  }
+ ]
+}

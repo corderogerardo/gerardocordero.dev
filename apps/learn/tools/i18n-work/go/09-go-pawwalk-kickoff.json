@@ -1,0 +1,334 @@
+{
+ "course": "go",
+ "module": 9,
+ "units": [
+  {
+   "path": "modules[9].title",
+   "text": "Arranque de PawWalk"
+  },
+  {
+   "path": "modules[9].lessons[0].title",
+   "text": "Estructura del proyecto"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[0].md[0]",
+   "text": "## De fragmentos sueltos a un servicio"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[0].md[1]",
+   "text": "Todo lo que has visto hasta ahora vivía en un único archivo de prueba `main.go`. Un backend de verdad no funciona así. PawWalk va a crecer con walkers, reservas, GPS, auth y tests — así que lo organizamos como se organiza cualquier servicio Go en producción, desde ahora, antes de que el código se amontone."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[0].md[2]",
+   "text": "Go tiene una convención de comunidad muy fuerte para esto. El compilador no la impone (salvo una regla que veremos enseguida), pero cualquier ingeniero de Go la reconoce al instante:"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[1].md[0]",
+   "text": "## La forma"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[1].md[1]",
+   "text": "```\npawwalk/\n  go.mod                  módulo raíz\n  cmd/\n    api/\n      main.go           el entrypoint: conecta todo, arranca el servidor\n  internal/\n    walker/\n      walker.go         el tipo Walker + su lógica\n      handler.go        handlers HTTP para /walkers\n    server/\n      server.go         mux, middleware, configuración de http.Server\n```"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[1].md[2]",
+   "text": "Dos ideas hacen todo el trabajo aquí:"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[1].md[3]",
+   "text": "- **`cmd/`** contiene *entrypoints* — cada subcarpeta es un programa ejecutable (`package main` con un `func main`). `cmd/api` es nuestro servidor HTTP. Más adelante podrías agregar `cmd/worker` para un job en segundo plano, compartiendo el mismo código de `internal/`.\n- **`internal/`** contiene la *lógica real*, dividida en paquetes pequeños por funcionalidad (`walker`, `server`, más tarde `booking`, `auth`). `main.go` se queda pequeño — importa estos paquetes y los conecta entre sí."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[2].md[0]",
+   "text": "## Por qué `internal/` es especial"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[2].md[1]",
+   "text": "`internal` es el único nombre de carpeta que el compilador de Go trata de forma mágica. **Un paquete bajo `internal/` solo puede ser importado por código que esté dentro del mismo padre.** Tu `pawwalk/internal/walker` se puede importar desde cualquier lugar dentro de `pawwalk/`, pero si otro módulo intenta importarlo, la compilación falla."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[2].md[2]",
+   "text": "Eso te da un límite real de público/privado a nivel de paquete: `internal/` es *tu* código, que ningún módulo externo puede depender de él, así que eres libre de refactorizarlo sin romperle nada a nadie. Es el equivalente en Go de marcar un módulo entero como `internal` en Swift."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[2].md[3]",
+   "text": "> Regla práctica: si no está pensado para ser importado por otros proyectos, va bajo `internal/`. Para una app (a diferencia de una librería), eso es casi todo."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].q",
+   "text": "Pusiste la lógica de walker en `pawwalk/internal/walker`. ¿Qué garantiza la carpeta `internal/`?"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].choices[0]",
+   "text": "Solo el código dentro del módulo `pawwalk` puede importar ese paquete; otros módulos no pueden"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].choices[1]",
+   "text": "El paquete se compila pero nunca se incluye en el binario final"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].choices[2]",
+   "text": "Las funciones dentro son automáticamente privadas a su propio archivo"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].choices[3]",
+   "text": "Go encripta el paquete para que no se pueda leer"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].explain",
+   "text": "`internal/` se impone en el compilador: un paquete bajo esa carpeta solo se puede importar desde código que comparte el mismo directorio padre. Traza un límite duro de módulo — lo interno se queda interno."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[3].nudge",
+   "text": "Se trata de *quién puede importarlo*, no del binario ni de la visibilidad a nivel de archivo."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[4].md[0]",
+   "text": "## El module path lo conecta todo"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[4].md[1]",
+   "text": "`go mod init pawwalk` escribe un `go.mod` cuya primera línea es `module pawwalk`. Ese string es el **prefijo de importación** para todo lo del proyecto. Así que `internal/walker` se importa como:"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[4].md[2]",
+   "text": "```go\nimport \"pawwalk/internal/walker\"\n```"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[4].md[3]",
+   "text": "En un repo real usarías la ruta completa, por ejemplo `module github.com/gerardocordero/pawwalk`, e importarías `github.com/gerardocordero/pawwalk/internal/walker`. La regla es la misma — el module path más la ruta de carpeta *es* el import path. Define bien el nombre del módulo una vez y todos los imports se derivan de ahí."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].label",
+   "text": "A la terminal"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].title",
+   "text": "Arma el andamiaje del proyecto"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].intro[0]",
+   "text": "Construye el esqueleto en disco. Vas a llenar estos archivos a lo largo de los próximos módulos — por ahora solo queremos la forma y un entrypoint que compile."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[0]",
+   "text": "Crea la raíz y entra en ella: `mkdir pawwalk && cd pawwalk`"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[1]",
+   "text": "`go mod init pawwalk` — crea `go.mod` con `module pawwalk`"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[2]",
+   "text": "Crea la carpeta del entrypoint: `mkdir -p cmd/api`"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[3]",
+   "text": "Crea los paquetes de funcionalidad: `mkdir -p internal/walker internal/server`"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[4]",
+   "text": "Agrega `cmd/api/main.go` con un `package main` y un `func main` (el ejercicio de abajo es exactamente este archivo)"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[5].items[5]",
+   "text": "`go run ./cmd/api` — nota que ejecutas la *carpeta*, no `main.go`; debería compilar e imprimir tu línea de arranque"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[6].title",
+   "text": "cmd/api/main.go"
+  },
+  {
+   "path": "modules[9].lessons[0].steps[6].prompt[0]",
+   "text": "Escribe el entrypoint. Declara `package main`, importa `\"fmt\"`, y dale un `func main()` que imprima una línea de arranque con `fmt.Println(\"PawWalk API booting on port\", 8080)`."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[6].prompt[1]",
+   "text": "Este es todo el archivo con el que empieza `cmd/api/main.go` — pequeño a propósito. El cableado real se agrega más adelante."
+  },
+  {
+   "path": "modules[9].lessons[0].steps[6].success",
+   "text": "Eso es `cmd/api/main.go`. `go run ./cmd/api` compila todo el módulo y ejecuta este único entrypoint — la base de la que cuelga todo lo demás."
+  },
+  {
+   "path": "modules[9].lessons[1].title",
+   "text": "Configuración desde el entorno"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[0].md[0]",
+   "text": "## La configuración vive en el entorno"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[0].md[1]",
+   "text": "Tu servidor necesita saber cosas que cambian entre tu laptop y producción: qué puerto escuchar, la URL de la base de datos, el secreto usado para firmar los tokens de login. ¿De dónde vienen esos valores?"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[0].md[2]",
+   "text": "La respuesta que la industria adoptó es la **configuración 12-factor**: leer los ajustes desde **variables de entorno**, no desde archivos incrustados en el build. El mismo binario corre en todas partes; el entorno le dice *cómo*. Sin secretos en git, y pasar de dev a prod es solo cambiar variables de entorno — sin recompilar."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[1].md[0]",
+   "text": "## Un solo struct lo contiene todo"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[1].md[1]",
+   "text": "En vez de llamar a `os.Getenv` disperso por todo el código, leemos todo **una sola vez** al arrancar en un único struct `Config` y lo pasamos hacia abajo. Eso te da un solo lugar donde ver cada parámetro que tiene el servicio, y un solo lugar que falla ruidosamente si falta algo."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[1].md[2]",
+   "text": "`os.Getenv(\"PORT\")` devuelve el valor de la variable de entorno `PORT` — o un **string vacío** si no está definida. Nunca da error; una variable no definida simplemente se lee como `\"\"`. Así que cada campo necesita un valor por defecto sensato para desarrollo local."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[2].title",
+   "text": "internal/config/config.go"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[2].caption",
+   "text": "`Load` lee cada variable a través de un pequeño helper. Fíjate en el patrón: cada campo es `env(NAME, default)`, así que un checkout recién clonado corre sin ninguna configuración, y producción la sobrescribe exportando valores reales."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[3].md[0]",
+   "text": "## El helper de respaldo"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[3].md[1]",
+   "text": "Todo el archivo se apoya en una función pequeñita, `env`. Es el caballo de batalla — dado un nombre de variable y un valor de respaldo, devuelve el valor del entorno si existe, si no el valor de respaldo:"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[3].md[2]",
+   "text": "```go\nfunc env(key, fallback string) string {\n\tif v := os.Getenv(key); v != \"\" {\n\t\treturn v\n\t}\n\treturn fallback\n}\n```"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[3].md[3]",
+   "text": "Ese `if v := os.Getenv(key); v != \"\"` es el **if-with-init** de Go: declara `v`, luego lo evalúa, todo en una sola línea — y `v` solo existe dentro del `if`. Es la forma idiomática de tomar un valor y ramificar de inmediato según él."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].q",
+   "text": "¿Por qué leer la configuración desde variables de entorno en vez de fijar el puerto y la URL de la base de datos directamente en el código?"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].choices[0]",
+   "text": "El mismo binario compilado puede correr en dev, staging y prod sin recompilar — el entorno aporta las diferencias, y los secretos se quedan fuera de git"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].choices[1]",
+   "text": "Las variables de entorno se leen más rápido que los campos de un struct en tiempo de ejecución"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].choices[2]",
+   "text": "Go no puede guardar strings en un struct, así que las variables de entorno son la única opción"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].choices[3]",
+   "text": "Es la única forma de hacer que `os.Getenv` compile"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].explain",
+   "text": "Esa es la idea de 12-factor: un solo artefacto, muchos entornos. La configuración (y sobre todo los secretos) vienen del entorno al arrancar, así que nada sensible vive en el repo y promover un build entre entornos no necesita ningún cambio de código."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[4].nudge",
+   "text": "Piensa en qué tiene que cambiar cuando el mismo binario pasa de tu laptop a un servidor de producción."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[5].title",
+   "text": "Escribe el helper env"
+  },
+  {
+   "path": "modules[9].lessons[1].steps[5].prompt[0]",
+   "text": "Implementa `func env(key, fallback string) string`. Lee la variable con `os.Getenv(key)` usando un if-with-init: `if v := os.Getenv(key); v != \"\"`, devuelve `v` cuando no está vacío, si no devuelve `fallback`."
+  },
+  {
+   "path": "modules[9].lessons[1].steps[5].success",
+   "text": "Ese es el helper sobre el que se sostiene toda la capa de configuración — una forma limpia de decir 'esta variable de entorno, o este valor por defecto'."
+  },
+  {
+   "path": "modules[9].lessons[2].title",
+   "text": "El endpoint de walkers"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[0].md[0]",
+   "text": "## El primer endpoint real"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[0].md[1]",
+   "text": "Es hora de servir datos. En la app de iOS, la pantalla de lista de walkers hacía fetch a `GET /walkers` y recibía JSON de vuelta. Ahora vas a construir el otro extremo de esa llamada."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[0].md[2]",
+   "text": "El patrón para cada endpoint de este servicio es el mismo: un **handler struct** guarda sus dependencias (aquí, un repositorio que sabe cómo obtener walkers), y cada ruta es un **método** de ese struct. Meter la dependencia dentro del struct hace que el handler nunca recurra a globales — todo lo que necesita es un campo."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[1].md[0]",
+   "text": "## Cómo se ve un Walker en el cable"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[1].md[1]",
+   "text": "El tipo `Walker` lleva **struct tags** de `json` — le dicen al encoder JSON de Go exactamente qué clave usar para cada campo, así que `PricePer30MinCents` sale como `price_per_30min_cents`:"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[1].md[2]",
+   "text": "```go\ntype Walker struct {\n\tID                 string `json:\"id\"`\n\tName               string `json:\"name\"`\n\tPricePer30MinCents int    `json:\"price_per_30min_cents\"`\n}\n```"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[1].md[3]",
+   "text": "> Esos tags entre backticks son un raw string de Go. Los escribirás en tu editor real, pero nunca dentro de un ejercicio *verificado* aquí — el verificador del navegador no puede manejar un backtick. Los mostramos de solo lectura; tú escribes el handler alrededor de ellos."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[2].title",
+   "text": "internal/walker/handler.go"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[2].caption",
+   "text": "El handler depende de una *interface* `Repo`, no de una base de datos concreta — así los tests pueden pasarle una versión falsa y producción le pasa la real. `NewWalkerHandler` es el constructor que la inyecta."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[3].md[0]",
+   "text": "## Codificando JSON directo a la respuesta"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[3].md[1]",
+   "text": "`http.ResponseWriter` es un `io.Writer` — un stream al que escribes bytes. `json.NewEncoder(w)` envuelve ese stream, y `.Encode(walkers)` serializa el slice y lo escribe todo en una sola llamada. Sin buffer intermedio, sin `Marshal` y luego `Write`."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[3].md[2]",
+   "text": "Antes de escribir el body, define el content type para que el cliente lo parsee como JSON: `w.Header().Set(\"Content-Type\", \"application/json\")`. Los headers deben definirse *antes* de la primera escritura al body."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[4].title",
+   "text": "El handler List"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[4].prompt[0]",
+   "text": "Escribe el método `List` sobre `*WalkerHandler`. Su firma es `func (h *WalkerHandler) List(w http.ResponseWriter, r *http.Request)`. Adentro: obtén `walkers := h.repo.All()`, define el header de content-type JSON, y luego codifica con `json.NewEncoder(w).Encode(walkers)`."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[4].success",
+   "text": "Eso es un handler de endpoint JSON completo — obtener, definir el tipo, codificar. Todos los endpoints de lista del servicio siguen exactamente esta forma."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[5].md[0]",
+   "text": "## Registrando la ruta"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[5].md[1]",
+   "text": "Go 1.22 le dio a `http.ServeMux` **patrones basados en método**. Puedes registrar una ruta como `\"GET /walkers\"` y el mux solo hace match con peticiones GET a esa ruta — un POST a `/walkers` no llegará a este handler. Antes de 1.22 tenías que revisar `r.Method` a mano; ahora el router lo hace."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[5].md[2]",
+   "text": "Conectas el método del handler como la función del handler: `mux.HandleFunc(\"GET /walkers\", h.List)`. Un method value como `h.List` es una función `func(w, r)` perfectamente válida — Go te vincula `h` automáticamente."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[6].title",
+   "text": "Conéctalo al mux"
+  },
+  {
+   "path": "modules[9].lessons[2].steps[6].prompt[0]",
+   "text": "Escribe `routes`, que construye y devuelve el mux del servidor. Créalo con `http.NewServeMux()`, registra la lista de walkers con `mux.HandleFunc(\"GET /walkers\", h.List)`, y devuelve el mux."
+  },
+  {
+   "path": "modules[9].lessons[2].steps[6].success",
+   "text": "El endpoint está vivo: `GET /walkers` enruta a `List`, que codifica los walkers como JSON. Esa es exactamente la petición que hacía la app de iOS — acabas de construir su lado servidor."
+  }
+ ]
+}

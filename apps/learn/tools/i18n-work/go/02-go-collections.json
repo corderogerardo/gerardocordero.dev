@@ -1,0 +1,410 @@
+{
+ "course": "go",
+ "module": 2,
+ "units": [
+  {
+   "path": "modules[2].title",
+   "text": "Colecciones"
+  },
+  {
+   "path": "modules[2].lessons[0].title",
+   "text": "Slices"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[0].md[0]",
+   "text": "## Una lista de paseadores, no solo uno"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[0].md[1]",
+   "text": "Hasta ahora has guardado un solo valor en una variable — un nombre, un precio. Un backend real de PawWalk trabaja con *listas*: cada paseador cerca de ti, cada reserva del día, cada fix de GPS en una ruta. El tipo de lista de todos los días en Go es el **slice**."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[0].md[2]",
+   "text": "Go tiene dos tipos parecidos a listas, y la diferencia importa:"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[0].md[3]",
+   "text": "- Un **array** tiene una longitud *fija* incorporada en su tipo: `[3]string` son exactamente tres strings, para siempre. Casi nunca escribes esto.\n- Un **slice** es una vista *creciente* sobre una serie de valores: `[]string` — fíjate en los corchetes vacíos. Esto es lo que realmente usas, todos los días."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[0].md[4]",
+   "text": "> Viniendo de Swift, un slice de Go es tu `Array`. El array fijo `[3]string` es la excepción rara — recurre a un slice a menos que tengas una razón específica para no hacerlo."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[1].title",
+   "text": "playground/slices.go"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[1].caption",
+   "text": "`[]string{...}` es un literal de slice. `len(names)` te da el conteo. La indexación empieza en 0, exactamente igual que en Swift."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[2].md[0]",
+   "text": "## Hacer crecer un slice con `append`"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[2].md[1]",
+   "text": "Un slice empieza con cierta longitud y crece a medida que le agregas cosas. Lo haces crecer con la función incorporada **`append`** — y aquí está la única regla que hace tropezar a todos: `append` *devuelve* el nuevo slice, así que debes asignar el resultado de vuelta."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[2].md[2]",
+   "text": "```names = append(names, \"Rex\")```"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[2].md[3]",
+   "text": "Léelo como una oración: \"names se convierte en names-con-Rex-al-final.\" Olvidar el `names =` a la izquierda es el bug clásico de quien empieza en Go — el append pasa, pero tiras el resultado a la basura."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].q",
+   "text": "¿Qué línea agrega correctamente \"Rex\" a un `[]string` llamado `walkers`?"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].choices[0]",
+   "text": "walkers = append(walkers, \"Rex\")"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].choices[1]",
+   "text": "walkers.append(\"Rex\")"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].choices[2]",
+   "text": "append(walkers, \"Rex\")"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].choices[3]",
+   "text": "walkers += \"Rex\""
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].explain",
+   "text": "`append` es una función incorporada, no un método — llamas a `append(slice, valor)` y devuelve el slice crecido, así que lo asignas de vuelta con `walkers = ...`. Olvidar la asignación es el error clásico: el resultado se descarta."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[3].nudge",
+   "text": "`append` devuelve un nuevo slice. ¿A dónde necesita ir ese valor devuelto?"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[4].md[0]",
+   "text": "## Longitud, capacidad, y slicing"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[4].md[1]",
+   "text": "Dos números describen un slice: **`len`** (cuántos elementos tiene ahora) y **`cap`** (cuántos puede tener antes de que Go asigne un array de respaldo más grande). Casi siempre te importará `len`; `cap` es un detalle de rendimiento que append maneja por ti."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[4].md[2]",
+   "text": "También puedes tomar un **sub-slice** con `s[low:high]` — una ventana desde el índice `low` hasta *sin incluir* `high`:"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[4].md[3]",
+   "text": "```first := bookings[1:3]```"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[4].md[4]",
+   "text": "Eso son los elementos en el índice 1 y 2 — dos de ellos. El rango semiabierto (`high` excluido) es la misma convención que usa Swift para `..<`."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[5].title",
+   "text": "playground/slicing.go"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[5].caption",
+   "text": "`s[1:3]` es una ventana semiabierta (índice alto excluido). Un slice que nunca inicializaste es `nil` — pero un slice nil es perfectamente utilizable: `len` es 0 y puedes hacerle `append` directamente."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].q",
+   "text": "¿Cuál es el valor cero de un `[]string` que declaraste pero nunca asignaste, por ejemplo `var names []string`?"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].choices[0]",
+   "text": "nil — pero aun así funciona: len es 0 y puedes hacerle append directamente"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].choices[1]",
+   "text": "Un array vacío de longitud 3"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].choices[2]",
+   "text": "Un crash en tiempo de ejecución en cuanto lo tocas"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].choices[3]",
+   "text": "El string \"\""
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].explain",
+   "text": "Un slice sin asignar es `nil`. A diferencia de otros lenguajes, eso no es una trampa aquí — un slice nil tiene longitud 0 y puedes hacerle `append` de inmediato. Por eso casi nunca necesitas escribir `[]string{}` explícitamente solo para empezar vacío."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[6].nudge",
+   "text": "Los slices de Go tienen un valor por defecto, y hacerle append a ese valor por defecto está permitido. ¿Cómo se llama 'todavía sin array de respaldo'?"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[7].title",
+   "text": "Construye un roster y agrégale algo"
+  },
+  {
+   "path": "modules[2].lessons[0].steps[7].prompt[0]",
+   "text": "Dentro de `main`, crea un `[]string` llamado `names` con `\"Mochi\"` y `\"Biscuit\"` usando un literal de slice. Luego hazle `append` a `\"Cocoa\"`, asignando el resultado de vuelta a `names`."
+  },
+  {
+   "path": "modules[2].lessons[0].steps[7].success",
+   "text": "Ese es el slice con el que construirás un roster de paseadores — declara con un literal, haz crecer con append."
+  },
+  {
+   "path": "modules[2].lessons[1].title",
+   "text": "Maps"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[0].md[0]",
+   "text": "## Buscar cosas por clave"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[0].md[1]",
+   "text": "Un slice es genial para una *lista ordenada*. Pero muchas veces quieres buscar algo por una **clave**: la calificación de un ID de paseador dado, el precio de una duración dada. Eso es un **map** — el diccionario de Go."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[0].md[2]",
+   "text": "El tipo especifica ambas mitades: `map[TipoClave]TipoValor`."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[0].md[3]",
+   "text": "- `map[string]int` — claves string, valores int (ID de paseador → calificación).\n- `map[int]int` — claves int, valores int (duración en minutos → precio en centavos)."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[0].md[4]",
+   "text": "> Este es el `Dictionary<Key, Value>` de Swift — misma idea, sintaxis más breve. Las claves son únicas; asignar a una clave existente la sobrescribe."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[1].title",
+   "text": "playground/maps.go"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[1].caption",
+   "text": "Precios en centavos, con clave por duración. Se lee con `prices[key]`, se escribe con `prices[key] = value`. `len` cuenta los pares."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[2].md[0]",
+   "text": "## La trampa de la clave faltante, y la solución comma-ok"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[2].md[1]",
+   "text": "Leer una clave que no está en el map **no** hace crash — devuelve el *valor cero* del tipo del valor. Para `map[int]int` eso es `0`. Así que `prices[999]` devuelve `0`, y no puedes distinguir \"el precio es cero\" de \"no existe esa duración\"."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[2].md[2]",
+   "text": "La respuesta de Go es el **idioma comma-ok** — la lectura puede devolver un segundo booleano que te dice si la clave realmente estaba presente:"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[2].md[3]",
+   "text": "```price, ok := prices[45]```"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[2].md[4]",
+   "text": "Ahora `ok` es `true` si `45` era una clave real, `false` si obtuviste el valor cero por defecto. Este patrón aparece por todas partes en Go."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].q",
+   "text": "Para `prices := map[int]int{30: 1800}`, ¿qué te da `v, ok := prices[45]`?"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].choices[0]",
+   "text": "v es 0 y ok es false — 45 no es una clave, así que obtienes el valor cero más una señal de 'no encontrado'"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].choices[1]",
+   "text": "Hace panic porque falta 45"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].choices[2]",
+   "text": "v es 45 y ok es true"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].choices[3]",
+   "text": "v es nil y ok es nil"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].explain",
+   "text": "Una clave faltante devuelve el valor cero del tipo del valor (`0` para `int`) y nunca hace panic. La forma comma-ok agrega `ok`, que aquí es `false` — así distingues 'se guardó un 0 real' de 'clave ausente'."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[3].nudge",
+   "text": "Leer una clave faltante es seguro en Go. ¿A qué número por defecto va un `int`, y qué reporta `ok`?"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[4].md[0]",
+   "text": "## Borrar e iterar"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[4].md[1]",
+   "text": "Quita un par con la función incorporada **`delete`**: `delete(prices, 45)`. Borrar una clave que no existe es una operación inofensiva que no hace nada."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[4].md[2]",
+   "text": "Recorre cada par con `range` (vas a profundizar en `range` en la próxima lección):"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[4].md[3]",
+   "text": "```for duration, cents := range prices {\n    fmt.Println(duration, cents)\n}```"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[4].md[4]",
+   "text": "> Una trampa que vale la pena conocer ya: el orden de iteración de un map es **aleatorio** en Go, a propósito. Nunca confíes en el orden en el que salen los pares."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[5].title",
+   "text": "playground/mapops.go"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[5].caption",
+   "text": "Escribe, `delete`, y luego una lectura comma-ok protegida por un `if`. Declarar `r, ok :=` dentro del `if` es idiomático en Go — los valores viven solo dentro de ese bloque."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[6].title",
+   "text": "Búsqueda de precio por duración"
+  },
+  {
+   "path": "modules[2].lessons[1].steps[6].prompt[0]",
+   "text": "Dentro de `main`, crea un `map[int]int` llamado `prices` con un literal que mapee `30` a `1800` y `60` a `3200`. Luego lee el precio de 30 minutos con la forma comma-ok en `price, ok`."
+  },
+  {
+   "path": "modules[2].lessons[1].steps[6].success",
+   "text": "Esa lectura comma-ok es exactamente cómo el servicio de reservas va a buscar un precio y rechazar una duración desconocida."
+  },
+  {
+   "path": "modules[2].lessons[2].title",
+   "text": "Range y strings"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[0].md[0]",
+   "text": "## Una sola palabra clave de bucle para recorrer cualquier cosa"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[0].md[1]",
+   "text": "Go tiene exactamente una palabra clave de bucle — `for` — y su forma `range` recorre slices, maps, y strings. Sobre un **slice**, `range` te da dos cosas en cada vuelta: el **índice** y una **copia del valor**."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[0].md[2]",
+   "text": "```for i, name := range names {\n    fmt.Println(i, name)\n}```"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[0].md[3]",
+   "text": "Sobre un **map**, `range` en cambio te da la **clave** y el **valor** (con orden aleatorio, como ya viste):"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[0].md[4]",
+   "text": "```for id, rating := range ratings {\n    fmt.Println(id, rating)\n}```"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[1].md[0]",
+   "text": "## El identificador en blanco `_`"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[1].md[1]",
+   "text": "Go se niega a compilar si declaras una variable y nunca la usas. Pero muchas veces quieres el valor y no el índice. El **identificador en blanco `_`** es la escotilla de escape — dice \"range me da esto, y deliberadamente lo estoy descartando\":"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[1].md[2]",
+   "text": "```for _, name := range names {\n    fmt.Println(name) // índice ignorado\n}```"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[1].md[3]",
+   "text": "> `_` no es una variable que puedas volver a leer — es un agujero negro. Úsalo cada vez que Go te entregue algo que no necesitas."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].q",
+   "text": "Estás recorriendo con range un `[]string` y solo quieres cada nombre, no su posición. ¿Cuál es la primera variable idiomática?"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].choices[0]",
+   "text": "_ — el identificador en blanco, por ejemplo `for _, name := range names`"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].choices[1]",
+   "text": "nil, por ejemplo `for nil, name := range names`"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].choices[2]",
+   "text": "Nada — `for name := range names` te da el valor"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].choices[3]",
+   "text": "Debes declarar `i` y agregarle un uso ficticio"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].explain",
+   "text": "`_` descarta el índice para que Go no se queje de una variable sin usar. Fíjate en la trampa de la opción 3: `for name := range names` te da el *índice*, no el valor — la forma de una sola variable sobre un slice es la posición."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[2].nudge",
+   "text": "Go no deja pasar una variable sin usar. ¿Qué carácter único significa 'descarta esto'?"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[3].md[0]",
+   "text": "## Strings: bytes vs runes"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[3].md[1]",
+   "text": "Un string en Go es en realidad una secuencia de solo lectura de **bytes**. Para ASCII simple (`\"Mochi\"`) eso es un byte por carácter y `len(\"Mochi\")` es `5`. Pero un carácter como `é` o un emoji ocupa *varios* bytes, así que `len` cuenta **bytes, no caracteres**."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[3].md[2]",
+   "text": "Cuando haces `range` sobre un string, Go hace lo inteligente: decodifica un **rune** (carácter Unicode) a la vez, dándote el **índice de byte** y el **rune**:"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[3].md[3]",
+   "text": "```for i, r := range \"Mögen\" {\n    fmt.Println(i, r) // i salta de a 2 en la ö\n}```"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[3].md[4]",
+   "text": "Así que `len(s)` es el conteo de bytes, pero recorrer un string con range cuenta caracteres reales. Para un nombre de perro como `\"Åke\"`, `len` es 4 pero el range produce 3 runes."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[4].title",
+   "text": "playground/strings.go"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[4].caption",
+   "text": "`len` reporta bytes; hacer range sobre un string produce `(byteIndex, rune)` y cuenta caracteres reales. `string(r)` convierte un solo rune de vuelta en un string imprimible."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].q",
+   "text": "Para un nombre con una letra acentuada, `len(name)` es 6 pero `for i, r := range name` se ejecuta 5 veces. ¿Por qué?"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].choices[0]",
+   "text": "len cuenta bytes; el range de un string decodifica runes (caracteres), y la letra acentuada ocupa 2 bytes"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].choices[1]",
+   "text": "Uno de los caracteres es invisible y se salta"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].choices[2]",
+   "text": "range siempre se ejecuta una vez menos que len"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].choices[3]",
+   "text": "El nombre tiene un espacio al final que len cuenta"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].explain",
+   "text": "`len` sobre un string es el conteo bruto de bytes. El range decodifica UTF-8 en runes, así que un carácter acentuado de 2 bytes cuenta como una vuelta del bucle pero dos hacia `len`. Por eso 6 bytes pueden ser 5 caracteres."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[5].nudge",
+   "text": "Se están contando dos unidades diferentes. ¿Qué mide `len`, y qué te entrega `range` en cada vuelta?"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[6].title",
+   "text": "Suma los precios del día"
+  },
+  {
+   "path": "modules[2].lessons[2].steps[6].prompt[0]",
+   "text": "Tienes `prices := []int{1800, 2500, 3200}` y `total := 0`. Haz range sobre `prices`, ignorando el índice con `_`, y suma cada precio `p` a `total` con `total += p`."
+  },
+  {
+   "path": "modules[2].lessons[2].steps[6].success",
+   "text": "Esa es la forma de todo total en el backend — recorre la lista con range, descarta el índice, suma sobre la marcha."
+  }
+ ]
+}

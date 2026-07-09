@@ -9,11 +9,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Today",
-  description:
-    "Your daily drill — the flashcards that are due plus one coding and one system-design prompt, with a streak to keep you honest.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Hoy", description: "Tu práctica diaria — las tarjetas pendientes más un prompt de código y uno de diseño de sistemas, con una racha." }
+    : { title: "Today", description: "Your daily drill — the flashcards that are due plus one coding and one system-design prompt, with a streak to keep you honest." };
+}
 
 export default async function TodayPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

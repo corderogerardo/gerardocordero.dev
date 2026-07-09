@@ -8,11 +8,12 @@ export function generateStaticParams() {
 }
 
 
-export const metadata: Metadata = {
-  title: "Search",
-  description:
-    "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return locale === "es"
+    ? { title: "Buscar", description: "Busca cada tarjeta, prompt, quiz y tema de estudio por palabra clave — o activa la IA en el dispositivo para buscar por significado." }
+    : { title: "Search", description: "Search every flashcard, prompt, quiz, and study topic by keyword — or enable on-device AI to search by meaning. Plus an on-device AI tutor." };
+}
 
 export default async function SearchPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -32,7 +33,9 @@ export default async function SearchPage({ params }: { params: Promise<{ locale:
         study={ALL_STUDY}
       />
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-white">On-device AI tutor</h2>
+        <h2 className="text-lg font-bold text-white">
+          {locale === "es" ? "Tutor IA en el dispositivo" : "On-device AI tutor"}
+        </h2>
         <AiTutor />
       </section>
     </div>

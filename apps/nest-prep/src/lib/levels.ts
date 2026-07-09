@@ -4,14 +4,16 @@ export type Level = "junior" | "mid" | "senior" | "architect" | "beyond";
 export const LEVELS: {
   value: Level;
   label: string;
+  labelEs: string;
   short: string;
   tagline: string;
+  taglineEs: string;
 }[] = [
-  { value: "junior", label: "Junior", short: "JR", tagline: "Build & ship endpoints with guidance." },
-  { value: "mid", label: "Mid", short: "MID", tagline: "Own modules end-to-end: data, validation, tests." },
-  { value: "senior", label: "Senior", short: "SR", tagline: "DI depth, the request lifecycle, performance & security." },
-  { value: "architect", label: "Architect", short: "ARCH", tagline: "System design, microservices, platform decisions." },
-  { value: "beyond", label: "Beyond", short: "★", tagline: "Frontier: event-driven at scale, edge & serverless Nest." },
+  { value: "junior", label: "Junior", labelEs: "Junior", short: "JR", tagline: "Build & ship endpoints with guidance.", taglineEs: "Construye y publica endpoints con guía." },
+  { value: "mid", label: "Mid", labelEs: "Mid", short: "MID", tagline: "Own modules end-to-end: data, validation, tests.", taglineEs: "Domina módulos de principio a fin: datos, validación, tests." },
+  { value: "senior", label: "Senior", labelEs: "Senior", short: "SR", tagline: "DI depth, the request lifecycle, performance & security.", taglineEs: "Profundidad en DI, el ciclo de vida de la petición, rendimiento y seguridad." },
+  { value: "architect", label: "Architect", labelEs: "Arquitecto", short: "ARCH", tagline: "System design, microservices, platform decisions.", taglineEs: "Diseño de sistemas, microservicios, decisiones de plataforma." },
+  { value: "beyond", label: "Beyond", labelEs: "Beyond", short: "★", tagline: "Frontier: event-driven at scale, edge & serverless Nest.", taglineEs: "Frontera: event-driven a escala, edge y Nest serverless." },
 ];
 
 export const LEVEL_LABEL: Record<Level, string> = {
@@ -19,6 +21,14 @@ export const LEVEL_LABEL: Record<Level, string> = {
   mid: "Mid",
   senior: "Senior",
   architect: "Architect",
+  beyond: "Beyond",
+};
+
+export const LEVEL_LABEL_ES: Record<Level, string> = {
+  junior: "Junior",
+  mid: "Mid",
+  senior: "Senior",
+  architect: "Arquitecto",
   beyond: "Beyond",
 };
 

@@ -1,6 +1,6 @@
 import type { Locale } from "@gerardocordero/prep-kit";
 import { FLASHCARDS, FLASHCARD_FILTERS } from "@/data/flashcards";
-import { QUIZ, QUIZ_FILTERS } from "@/data/quiz";
+import { ALL_QUIZ } from "@/data/all";
 import { STUDY_SECTIONS, STUDY_INTRO_HTML } from "@/data/study";
 import { PROMPTS } from "@/data/prompts";
 import { PITCHES, PITCHES_INTRO_HTML } from "@/data/pitches";
@@ -11,7 +11,7 @@ import { resolveLevel } from "@/lib/levels";
 import type { Flashcard } from "@/data/flashcards";
 
 import { FLASHCARDS as FLASHCARDS_ES, FLASHCARD_FILTERS as FLASHCARD_FILTERS_ES } from "@/data/flashcards.es";
-import { QUIZ as QUIZ_ES, QUIZ_FILTERS as QUIZ_FILTERS_ES } from "@/data/quiz.es";
+import { QUIZ as QUIZ_ES } from "@/data/quiz.es";
 import { STUDY_SECTIONS as STUDY_SECTIONS_ES, STUDY_INTRO_HTML as STUDY_INTRO_HTML_ES } from "@/data/study.es";
 import { PROMPTS as PROMPTS_ES } from "@/data/prompts.es";
 import { PITCHES as PITCHES_ES, PITCHES_INTRO_HTML as PITCHES_INTRO_HTML_ES } from "@/data/pitches.es";
@@ -32,12 +32,21 @@ export function getFlashcardFilters(locale: Locale): Filter[] {
 }
 
 export function getQuiz(locale: Locale) {
-  return locale === "es" ? QUIZ_ES : QUIZ;
+  // Spanish exists only for the base quiz; English gets the full aggregate.
+  return locale === "es" ? QUIZ_ES : ALL_QUIZ;
 }
 
 export function getQuizFilters(locale: Locale): Filter[] {
-  const source = locale === "es" ? QUIZ_FILTERS_ES : QUIZ_FILTERS;
-  return [{ value: "all", label: locale === "es" ? "Todas" : "All" }, ...source];
+  // Derive category chips from the questions so every category is covered.
+  const seen = new Set<string>();
+  const derived: Filter[] = [];
+  for (const q of getQuiz(locale)) {
+    if (!seen.has(q.category)) {
+      seen.add(q.category);
+      derived.push({ value: q.category, label: q.categoryLabel });
+    }
+  }
+  return [{ value: "all", label: locale === "es" ? "Todas" : "All" }, ...derived];
 }
 
 export function getStudySections(locale: Locale) {
