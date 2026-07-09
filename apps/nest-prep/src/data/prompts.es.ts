@@ -352,4 +352,233 @@ export const PROMPTS: Prompt[] = [
       },
     ],
   },
+
+  // ---------------- LIVE-CODING: implement-the-primitive ----------------
+  {
+    id: "pr-impl-promise-all",
+    kind: "coding",
+    title: "Implementar Promise.all desde cero",
+    level: "senior",
+    tags: ["Node", "async", "promises"],
+    promptHtml:
+      "<p>Reimplementa <code>Promise.all(promises)</code>: resuelve a un array de resultados <b>en el orden de entrada</b>, rechaza tan pronto como cualquier entrada rechace (fail-fast), y resuelve a <code>[]</code> para un array vacío. No uses la incorporada.</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li>Devuelve una nueva Promise. Rastrea un contador <code>remaining</code> comenzando en la longitud de entrada.</li><li>Almacena cada resultado en su <b>índice</b> — el orden de resolución es no determinista, así que no puedes <code>push</code>.</li><li>El primer rechazo llama a <code>reject</code> (fail-fast); los asentamientos posteriores se ignoran porque una Promise se asienta una vez.</li><li>Entrada vacía → resuelve <code>[]</code> inmediatamente, o el contador nunca llegará a cero.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">function promiseAll&lt;T&gt;(promises: Promise&lt;T&gt;[]): Promise&lt;T[]&gt; {\n  return new Promise((resolve, reject) =&gt; {\n    const results: T[] = new Array(promises.length);\n    let remaining = promises.length;\n    if (remaining === 0) return resolve(results); // [] fast path\n    promises.forEach((p, i) =&gt; {\n      Promise.resolve(p).then(\n        (value) =&gt; {\n          results[i] = value;          // por índice, no push\n          if (--remaining === 0) resolve(results);\n        },\n        reject,                        // fail-fast en el primer rechazo\n      );\n    });\n  });\n}</div><p><b>Insight clave:</b> los resultados van por índice y el contador impulsa la resolución — nunca dependes del orden en que las promesas se asienten.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-event-emitter",
+    kind: "coding",
+    title: "Implementar un EventEmitter personalizado",
+    level: "senior",
+    tags: ["Node", "events", "patterns"],
+    promptHtml:
+      "<p>Construye un <code>EventEmitter</code> con <code>on</code>, <code>off</code>, <code>once</code> y <code>emit</code>. Un listener <code>once</code> se dispara exactamente una vez y luego se elimina. ¿Qué se rompe si un listener llama a <code>off</code> durante <code>emit</code>?</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li>Respaldado por un <code>Map&lt;event, Set&lt;fn&gt;&gt;</code> — un Set deduplica y da O(1) add/remove.</li><li><code>once</code> envuelve el listener; el wrapper se elimina antes de invocar, para que las emits reentrantes no lo reenciendan.</li><li><b>Itera una copia</b> en <code>emit</code> — un listener que llama a <code>off</code> (u <code>once</code> auto-eliminarse) muta el Set activo a mitad de iteración.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">class EventEmitter {\n  private map = new Map&lt;string, Set&lt;Function&gt;&gt;();\n\n  on(event: string, fn: Function) {\n    (this.map.get(event) ?? this.map.set(event, new Set()).get(event)!).add(fn);\n    return this;\n  }\n  off(event: string, fn: Function) {\n    this.map.get(event)?.delete(fn);\n    return this;\n  }\n  once(event: string, fn: Function) {\n    const wrap = (...args: unknown[]) =&gt; {\n      this.off(event, wrap);   // eliminar antes de llamar\n      fn(...args);\n    };\n    return this.on(event, wrap);\n  }\n  emit(event: string, ...args: unknown[]) {\n    const fns = this.map.get(event);\n    if (!fns) return false;\n    [...fns].forEach((fn) =&gt; fn(...args)); // itera una COPIA\n    return true;\n  }\n}</div><p><b>Insight clave:</b> emite sobre una snapshot (<code>[...fns]</code>) para que un listener eliminándose a sí mismo — u otro — a mitad de despacho no pueda corromper la iteración.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-promise-pool",
+    kind: "coding",
+    title: "Implementar un pool de promesas (límite de concurrencia)",
+    level: "senior",
+    tags: ["Node", "async", "concurrency"],
+    promptHtml:
+      "<p>Escribe <code>promisePool(thunks, limit)</code> que ejecute como máximo <b>N</b> tareas asíncronas a la vez y devuelva resultados en el orden de entrada. Las tareas son <b>thunks</b> (<code>() =&gt; Promise</code>), no promesas — ¿por qué importa?</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li>Los thunks son lazy: una <code>Promise</code> cruda ya ha comenzado, así que no podrías limitar la concurrencia. Una <code>() =&gt; Promise</code> comienza solo cuando la llamas.</li><li>Spawn N <b>workers</b>; cada uno extrae la siguiente tarea de un cursor compartido hasta que la lista se agota.</li><li><b>Captura el índice antes de <code>await</code></b> — <code>i++</code> después del await lee un cursor mutado y desplaza los resultados.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">async function promisePool&lt;T&gt;(\n  thunks: Array&lt;() =&gt; Promise&lt;T&gt;&gt;, limit: number,\n): Promise&lt;T[]&gt; {\n  const results: T[] = new Array(thunks.length);\n  let cursor = 0;\n  async function worker() {\n    while (cursor &lt; thunks.length) {\n      const idx = cursor++;          // captura ANTES de await\n      results[idx] = await thunks[idx]();\n    }\n  }\n  const workers = Array.from(\n    { length: Math.min(limit, thunks.length) }, worker,\n  );\n  await Promise.all(workers);\n  return results;\n}</div><p><b>Insight clave:</b> N workers de larga duración extrayendo de un cursor compartido mantiene exactamente N tareas en vuelo — agarra el índice sincrónica antes de ceder o dos workers pisarán el mismo slot.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-lru",
+    kind: "coding",
+    title: "Implementar una caché LRU con un Map",
+    level: "senior",
+    tags: ["Node", "data structures", "caching"],
+    promptHtml:
+      "<p>Implementa un caché LRU de O(1) (<code>get</code>/<code>put</code>, capacidad fija) usando solo un <code>Map</code> de JS — sin linked list hecha a mano. ¿Cómo te da <code>Map</code> el orden de recencia gratis?</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li><code>Map</code> preserva <b>el orden de inserción</b> y su iterador <code>keys()</code> cede desde el más antiguo — ese es tu list de recencia ya.</li><li><code>get</code> un hit: <code>delete</code> y luego <code>set</code> para mover la clave al extremo más reciente.</li><li><code>put</code> sobre capacidad: elimina <code>keys().next().value</code> (la clave más antigua).</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">class LRUCache&lt;K, V&gt; {\n  private map = new Map&lt;K, V&gt;();\n  constructor(private capacity: number) {}\n\n  get(key: K): V | undefined {\n    if (!this.map.has(key)) return undefined;\n    const value = this.map.get(key)!;\n    this.map.delete(key);\n    this.map.set(key, value);        // re-insertar = marcar más reciente\n    return value;\n  }\n  put(key: K, value: V) {\n    if (this.map.has(key)) this.map.delete(key);\n    else if (this.map.size &gt;= this.capacity) {\n      this.map.delete(this.map.keys().next().value); // eliminar el más antiguo\n    }\n    this.map.set(key, value);\n  }\n}</div><p><b>Insight clave:</b> el orden de inserción de un <code>Map</code> <i>es</i> la lista de recencia — delete+set para promover, <code>keys().next().value</code> para eliminar, y saltas toda la contabilidad de linked-list.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-token-bucket",
+    kind: "coding",
+    title: "Implementar un limitador de token bucket en proceso",
+    level: "senior",
+    tags: ["Node", "rate limiting", "algorithms"],
+    promptHtml:
+      "<p>Construye un limitador de token bucket: capacidad <b>C</b>, tasa de recarga <b>R</b> tokens/sec, <code>tryRemove()</code> devuelve true (permitir) o false (→ 429). Sin <code>setInterval</code>. ¿Cómo se recarga sin un timer?</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li><b>Recarga lazy:</b> no ejecutes un timer — en cada llamada, suma <code>elapsed × R</code> tokens desde la última verificación, limitado a C. Costo cero cuando está ocioso.</li><li>Permite si <code>tokens &gt;= 1</code>, luego decrementa; de otro modo rechaza.</li><li>La capacidad C es la asignación de <b>burst</b>; R es la tasa de estado estable.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">class TokenBucket {\n  private tokens: number;\n  private last = Date.now();\n  constructor(private capacity: number, private ratePerSec: number) {\n    this.tokens = capacity;\n  }\n  private refill() {\n    const now = Date.now();\n    const elapsed = (now - this.last) / 1000;\n    this.tokens = Math.min(\n      this.capacity, this.tokens + elapsed * this.ratePerSec,\n    );\n    this.last = now;\n  }\n  tryRemove(cost = 1): boolean {\n    this.refill();\n    if (this.tokens &gt;= cost) { this.tokens -= cost; return true; }\n    return false; // el llamador responde 429\n  }\n}</div><p><b>Insight clave:</b> recarga lazy desde tiempo transcurrido en lugar de un timer — bursts hasta C se permiten, la tasa a largo plazo es R, y los buckets ociosos no cuestan nada. Para múltiples servidores, mueve esto a Redis como un script Lua para que la recarga→verificación→decremento sea atómico.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-retry-backoff",
+    kind: "coding",
+    title: "Implementar reintentos con backoff + jitter",
+    level: "senior",
+    tags: ["Node", "resilience", "async"],
+    promptHtml:
+      "<p>Escribe <code>retry(fn, retries, baseMs)</code> que reintente una llamada asíncrona fallida con backoff exponencial más jitter, y relance el último error después de que se agoten los intentos.</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li>Bucle hasta <code>retries</code> veces; en lanzamiento, duerme <code>base × 2^attempt</code> más jitter aleatorio, luego intenta de nuevo.</li><li>Después del último intento, relanza para que el llamador vea la falla real.</li><li>El jitter dispersa a los clientes sincronizados para que los reintentos no se apresuren en lockstep.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">const sleep = (ms: number) =&gt; new Promise((r) =&gt; setTimeout(r, ms));\n\nasync function retry&lt;T&gt;(\n  fn: () =&gt; Promise&lt;T&gt;, retries = 3, baseMs = 100,\n): Promise&lt;T&gt; {\n  let lastErr: unknown;\n  for (let attempt = 0; attempt &lt;= retries; attempt++) {\n    try {\n      return await fn();\n    } catch (err) {\n      lastErr = err;\n      if (attempt === retries) break;      // sin intentos\n      const backoff = baseMs * 2 ** attempt;\n      const jitter = Math.random() * backoff;\n      await sleep(backoff + jitter);\n    }\n  }\n  throw lastErr; // relanzar después del agotamiento\n}</div><p><b>Insight clave:</b> backoff exponencial más jitter convierte un thundering herd en una ráfaga dispersa. Los seguimientos que el entrevistador quiere: solo reintentar errores <b>reintenables</b> (429/5xx, no 4xx), <b>limita</b> el delay máximo para que no crezca sin límites, e hilo un <code>AbortSignal</code> para cancelar reintentos en vuelo.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-debounce-throttle",
+    kind: "coding",
+    title: "Implementar debounce y throttle",
+    level: "senior",
+    tags: ["Node", "async", "patterns"],
+    promptHtml:
+      "<p>Implementa <code>debounce(fn, wait)</code> y <code>throttle(fn, wait)</code>. Explica la diferencia y asegúrate de que ambas preserven <code>this</code> y los argumentos.</p>",
+    reveal: [
+      {
+        label: "Enfoque",
+        html:
+          "<ul><li><b>Debounce:</b> dispara una vez después de que la actividad <b>se detiene</b> — cada llamada <code>clearTimeout</code>s la pendiente y reinicia el timer. Bueno para search-as-you-type.</li><li><b>Throttle:</b> dispara como máximo una vez por ventana — ignora llamadas hasta que la ventana transcurra. Bueno para scroll/resize.</li><li>Preserva <code>this</code> y args con <code>fn.apply(this, args)</code>; usa una función normal (no una arrow) para que <code>this</code> se vincule en tiempo de llamada.</li></ul>",
+      },
+      {
+        label: "Solución",
+        html:
+          "<div class=\"code\">function debounce&lt;A extends unknown[]&gt;(\n  fn: (...args: A) =&gt; void, wait: number,\n) {\n  let timer: ReturnType&lt;typeof setTimeout&gt; | undefined;\n  return function (this: unknown, ...args: A) {\n    clearTimeout(timer);              // reinicia la cuenta regresiva\n    timer = setTimeout(() =&gt; fn.apply(this, args), wait);\n  };\n}\n\nfunction throttle&lt;A extends unknown[]&gt;(\n  fn: (...args: A) =&gt; void, wait: number,\n) {\n  let last = 0;\n  return function (this: unknown, ...args: A) {\n    const now = Date.now();\n    if (now - last &gt;= wait) {          // borde líder\n      last = now;\n      fn.apply(this, args);\n    }\n  };\n}</div><p><b>Insight clave:</b> debounce espera una pausa (clearTimeout la reinicia); throttle impone una cadencia fija (una puerta de timestamp). Esta versión dispara en el <b>borde líder</b> — menciona que una variante de borde final dispara una vez más después del burst, y que <code>apply(this, args)</code> es lo que mantiene la llamada envuelta transparente.</p>",
+      },
+    ],
+  },
+
+  // ---------------- SYSTEM DESIGN: queues, delivery, limits ----------------
+  {
+    id: "pr-design-job-queue",
+    kind: "design",
+    title: "Diseñar una cola de trabajos con reintentos + dead-letter",
+    level: "senior",
+    tags: ["architecture", "messaging", "resilience"],
+    promptHtml:
+      "<p>Diseña una cola de trabajos de background: productores encolan trabajo, workers lo procesan, fallos transitorios reintentan, y los trabajos que fallan permanentemente van a un lugar seguro en lugar de bloquear la cola.</p>",
+    reveal: [
+      {
+        label: "Clarificar",
+        html:
+          "<ul><li>Target de throughput y latencia — ¿es esto segundos-fresco o trabajo en background best-effort?</li><li>Garantía de entrega: al-menos-una-vez (deduplica downstream) vs exactamente-una-vez (mucho más difícil)?</li><li>¿Son los trabajos <b>idempotentes</b>? Si no, un reintento puede ejecutar-doble.</li><li>Ordenamiento: orden estricto por clave, o trabajos independientes?</li><li>Max reintentos, forma del backoff y qué significa \"renunciar\" (alertar? reproducción manual?).</li></ul>",
+      },
+      {
+        label: "Diseño de alto nivel",
+        html:
+          "<ul><li><b>Estados:</b> <code>PENDING → RUNNING → SUCCEEDED</code>, o <code>FAILED → RETRYING</code> (de vuelta a RUNNING) hasta que se agoten los intentos, luego <code>DEAD</code>.</li><li><b>Visibility timeout:</b> un trabajo reclamado se oculta durante un arrendamiento; si el worker muere sin ack, el arrendamiento expira y otro worker lo reclama — entonces un crash no pierde el trabajo.</li><li><b>Reintentos:</b> incrementa un contador de intentos, requeuea con backoff exponencial; después de N, mueve a una <b>dead-letter queue</b> (DLQ) con la razón de fallo.</li><li><b>Workers idempotentes:</b> indexa cada trabajo por un id estable y deduplica en él, porque al-menos-una-vez significa que el mismo trabajo puede ejecutarse dos veces.</li><li><b>DLQ:</b> alerta sobre profundidad, mantén la carga + error para inspección y reproducción manual/automatizada.</li></ul>",
+      },
+      {
+        label: "Trade-offs para decir en voz alta",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> Al-menos-una-vez + workers idempotentes es el default pragmático; true exactamente-una-vez necesita un outbox transaccional o almacén de dedup y cuesta latencia. Un visibility timeout corto re-ejecuta trabajos lentos (trabajo duplicado); uno largo retrasa la recuperación de un worker muerto. Compra un broker (SQS/RabbitMQ/BullMQ-on-Redis) antes de construir el tuyo — la DLQ, backoff y arrendamientos son el valor.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-design-notifications",
+    kind: "design",
+    title: "Diseñar un sistema de notificaciones multicanal",
+    level: "senior",
+    tags: ["architecture", "messaging", "scalability"],
+    promptHtml:
+      "<p>Diseña un sistema que envíe notificaciones a través de email, SMS y push. No debe doble-enviar en reintento, debe sobrevivir a una caída del proveedor y debe abarcar un solo evento a muchos destinatarios.</p>",
+    reveal: [
+      {
+        label: "Clarificar",
+        html:
+          "<ul><li>Volumen y forma de burst — ¿un abanico a millones, o envíos transaccionales por usuario?</li><li>Latencia: en tiempo real (push) vs digerible (email por lotes)?</li><li>Preferencias de usuario / quiet hours / opt-outs por canal?</li><li>Garantía de entrega y ventana de dedup — ¿cómo definimos \"misma notificación\"?</li><li>¿Necesitamos recibos de entrega/lectura y fallback por canal (push falla → email)?</li></ul>",
+      },
+      {
+        label: "Diseño de alto nivel",
+        html:
+          "<ul><li><b>Ingest:</b> un evento golpea un servicio de notificación que resuelve destinatarios + preferencias, luego <b>abanica</b> un mensaje por (usuario, canal).</li><li><b>Colas por canal:</b> colas separadas de email/SMS/push para que un proveedor lento o caído back-presure solo su propio canal, y cada uno pueda escalar workers independientemente.</li><li><b>Dedup / claves de idempotencia:</b> cada notificación lleva una clave estable (event id + usuario + canal); workers la verifican antes de enviar para que un reintento no pueda doble-enviar.</li><li><b>Proveedores:</b> workers de canal llaman a SendGrid/Twilio/FCM; en fallo reintenta con backoff, luego <b>DLQ</b> para inspección y reproducción.</li><li><b>Preferencias + templating:</b> centraliza opt-outs, quiet hours y rendering para que cada canal sea consistente.</li></ul>",
+      },
+      {
+        label: "Trade-offs para decir en voz alta",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> Las colas compran resiliencia pero añaden latencia de consistencia eventual — está bien para notificaciones. Entrega al-menos-una-vez significa que la clave de idempotencia está haciendo el trabajo real; sin ella, los reintentos spamean usuarios. Aislamiento por canal cuesta más partes movibles que una cola pero detiene un proveedor flaky de estancar el resto. El DLQ es innegociable — es la diferencia entre una notificación perdida y una reproducible.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-design-rate-limiter",
+    kind: "design",
+    title: "Diseñar un rate limiter distribuido",
+    level: "senior",
+    tags: ["architecture", "rate limiting", "Redis"],
+    promptHtml:
+      "<p>Diseña un rate limiter para un API detrás de N instancias de la app: por ej. 100 requests/min por clave API, aplicado consistentemente sin importar qué instancia golpee una request. Devuelve 429 con un <code>Retry-After</code> cuando se exceda.</p>",
+    reveal: [
+      {
+        label: "Clarificar",
+        html:
+          "<ul><li>Clave de límite — por clave API, por usuario, por IP, o una combinación?</li><li>Tolerancia de burst: ¿es un pico corto aceptable (token bucket) o debe la ventana ser estricta (sliding window)?</li><li>¿Límite global a través de todas las instancias, o per-instancia está bien?</li><li>Fail-open (permitir en caída del limiter) o fail-closed (rechazar)?</li><li>Precisión vs costo — ¿es un límite aproximado OK en RPS alto?</li></ul>",
+      },
+      {
+        label: "Diseño de alto nivel",
+        html:
+          "<ul><li><b>Almacén compartido:</b> los contadores por-instancia no pueden aplicar un límite global — mantén estado en <b>Redis</b> para que todas las N instancias coincidan.</li><li><b>Algoritmo:</b> <b>token bucket</b> (permite bursts hasta capacidad, recarga suave) vs <b>sliding-window</b> counter (estricto, sin picos de límite en el borde de ventana). Token bucket es el default común.</li><li><b>Atomicidad:</b> la verificación-y-decremento debe ser atómico o dos requests concurrentes ambas leen \"1 izquierda\" y ambas pasan — ejecútalo como un <b>script Lua</b> en Redis (ejecutado atómicamente), indexado por la clave API, con un PEXPIRE.</li><li><b>Respuesta:</b> en rechazo devuelve <code>429</code> con <code>Retry-After</code> y headers <code>X-RateLimit-Remaining/-Reset</code> para que los clientes hagan backoff.</li><li><b>Colocación:</b> aplica en el gateway/edge para límites globales baratos; límites por-servicio para control fino.</li></ul>",
+      },
+      {
+        label: "Trade-offs para decir en voz alta",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> Redis lo hace consistente a través de instancias pero añade un hop de red por request y una dependencia única — decide <b>fail-open vs fail-closed</b> si no está alcanzable (usualmente fail-open para que el limiter no pueda derribar el API). Token bucket permite bursts; sliding window es más estricto pero cuesta más memoria/compute. En RPS extremo, una pequeña asignación local por-instancia sincronizada a Redis cambia exactitud por latencia.</div>",
+      },
+    ],
+  },
 ];

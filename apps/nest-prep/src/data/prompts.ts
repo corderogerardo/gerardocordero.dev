@@ -352,4 +352,233 @@ export const PROMPTS: Prompt[] = [
       },
     ],
   },
+
+  // ---------------- LIVE-CODING: implement-the-primitive ----------------
+  {
+    id: "pr-impl-promise-all",
+    kind: "coding",
+    title: "Implement Promise.all from scratch",
+    level: "senior",
+    tags: ["Node", "async", "promises"],
+    promptHtml:
+      "<p>Reimplement <code>Promise.all(promises)</code>: resolve to an array of results <b>in input order</b>, reject as soon as any input rejects (fail-fast), and resolve to <code>[]</code> for an empty array. Don't use the built-in.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Return a new Promise. Track a <code>remaining</code> counter starting at the input length.</li><li>Store each result at its <b>index</b> — resolution order is nondeterministic, so you can't <code>push</code>.</li><li>First rejection calls <code>reject</code> (fail-fast); later settlements are ignored because a Promise settles once.</li><li>Empty input → resolve <code>[]</code> immediately, or the counter never hits zero.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">function promiseAll&lt;T&gt;(promises: Promise&lt;T&gt;[]): Promise&lt;T[]&gt; {\n  return new Promise((resolve, reject) =&gt; {\n    const results: T[] = new Array(promises.length);\n    let remaining = promises.length;\n    if (remaining === 0) return resolve(results); // [] fast path\n    promises.forEach((p, i) =&gt; {\n      Promise.resolve(p).then(\n        (value) =&gt; {\n          results[i] = value;          // by index, not push\n          if (--remaining === 0) resolve(results);\n        },\n        reject,                        // fail-fast on first rejection\n      );\n    });\n  });\n}</div><p><b>Key insight:</b> results go in by index and the counter drives resolution — you never rely on the order promises happen to settle in.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-event-emitter",
+    kind: "coding",
+    title: "Implement a custom EventEmitter",
+    level: "senior",
+    tags: ["Node", "events", "patterns"],
+    promptHtml:
+      "<p>Build an <code>EventEmitter</code> with <code>on</code>, <code>off</code>, <code>once</code>, and <code>emit</code>. A <code>once</code> listener fires exactly one time then removes itself. What breaks if a listener calls <code>off</code> during <code>emit</code>?</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Back it with a <code>Map&lt;event, Set&lt;fn&gt;&gt;</code> — a Set dedupes and gives O(1) add/remove.</li><li><code>once</code> wraps the listener; the wrapper removes itself before invoking, so re-entrant emits don't refire it.</li><li><b>Iterate a copy</b> in <code>emit</code> — a listener that calls <code>off</code> (or <code>once</code> self-removing) mutates the live Set mid-iteration.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">class EventEmitter {\n  private map = new Map&lt;string, Set&lt;Function&gt;&gt;();\n\n  on(event: string, fn: Function) {\n    (this.map.get(event) ?? this.map.set(event, new Set()).get(event)!).add(fn);\n    return this;\n  }\n  off(event: string, fn: Function) {\n    this.map.get(event)?.delete(fn);\n    return this;\n  }\n  once(event: string, fn: Function) {\n    const wrap = (...args: unknown[]) =&gt; {\n      this.off(event, wrap);   // remove before calling\n      fn(...args);\n    };\n    return this.on(event, wrap);\n  }\n  emit(event: string, ...args: unknown[]) {\n    const fns = this.map.get(event);\n    if (!fns) return false;\n    [...fns].forEach((fn) =&gt; fn(...args)); // iterate a COPY\n    return true;\n  }\n}</div><p><b>Key insight:</b> emit over a snapshot (<code>[...fns]</code>) so a listener removing itself — or another — mid-dispatch can't corrupt the iteration.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-promise-pool",
+    kind: "coding",
+    title: "Implement a promise pool (concurrency limit)",
+    level: "senior",
+    tags: ["Node", "async", "concurrency"],
+    promptHtml:
+      "<p>Write <code>promisePool(thunks, limit)</code> that runs at most <b>N</b> async tasks at once and returns results in input order. Tasks are <b>thunks</b> (<code>() =&gt; Promise</code>), not promises — why does that matter?</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Thunks are lazy: a raw <code>Promise</code> has already started, so you couldn't limit concurrency. A <code>() =&gt; Promise</code> starts only when you call it.</li><li>Spawn N <b>workers</b>; each pulls the next task off a shared cursor until the list is exhausted.</li><li><b>Capture the index before <code>await</code></b> — <code>i++</code> after the await reads a mutated cursor and misplaces results.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">async function promisePool&lt;T&gt;(\n  thunks: Array&lt;() =&gt; Promise&lt;T&gt;&gt;, limit: number,\n): Promise&lt;T[]&gt; {\n  const results: T[] = new Array(thunks.length);\n  let cursor = 0;\n  async function worker() {\n    while (cursor &lt; thunks.length) {\n      const idx = cursor++;          // capture BEFORE await\n      results[idx] = await thunks[idx]();\n    }\n  }\n  const workers = Array.from(\n    { length: Math.min(limit, thunks.length) }, worker,\n  );\n  await Promise.all(workers);\n  return results;\n}</div><p><b>Key insight:</b> N long-lived workers pulling from one shared cursor keeps exactly N tasks in flight — grab the index synchronously before yielding or two workers stomp the same slot.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-lru",
+    kind: "coding",
+    title: "Implement an LRU cache with a Map",
+    level: "senior",
+    tags: ["Node", "data structures", "caching"],
+    promptHtml:
+      "<p>Implement an O(1) LRU cache (<code>get</code>/<code>put</code>, fixed capacity) using only a JS <code>Map</code> — no hand-rolled linked list. How does <code>Map</code> give you the recency order for free?</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li><code>Map</code> preserves <b>insertion order</b> and its <code>keys()</code> iterator yields oldest-first — that's your recency list already.</li><li><code>get</code> a hit: <code>delete</code> then <code>set</code> to move the key to the most-recent end.</li><li><code>put</code> over capacity: evict <code>keys().next().value</code> (the oldest key).</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">class LRUCache&lt;K, V&gt; {\n  private map = new Map&lt;K, V&gt;();\n  constructor(private capacity: number) {}\n\n  get(key: K): V | undefined {\n    if (!this.map.has(key)) return undefined;\n    const value = this.map.get(key)!;\n    this.map.delete(key);\n    this.map.set(key, value);        // re-insert = mark most recent\n    return value;\n  }\n  put(key: K, value: V) {\n    if (this.map.has(key)) this.map.delete(key);\n    else if (this.map.size &gt;= this.capacity) {\n      this.map.delete(this.map.keys().next().value); // evict oldest\n    }\n    this.map.set(key, value);\n  }\n}</div><p><b>Key insight:</b> a <code>Map</code>'s insertion order <i>is</i> the recency list — delete+set to promote, <code>keys().next().value</code> to evict, and you skip the linked-list bookkeeping entirely.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-token-bucket",
+    kind: "coding",
+    title: "Implement an in-process token-bucket limiter",
+    level: "senior",
+    tags: ["Node", "rate limiting", "algorithms"],
+    promptHtml:
+      "<p>Build a token-bucket rate limiter: capacity <b>C</b>, refill rate <b>R</b> tokens/sec, <code>tryRemove()</code> returns true (allow) or false (→ 429). No <code>setInterval</code>. How do you refill without a timer?</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li><b>Lazy refill:</b> don't run a timer — on each call, add <code>elapsed × R</code> tokens since the last check, capped at C. Zero cost when idle.</li><li>Allow if <code>tokens &gt;= 1</code>, then decrement; else reject.</li><li>Capacity C is the <b>burst</b> allowance; R is the steady-state rate.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">class TokenBucket {\n  private tokens: number;\n  private last = Date.now();\n  constructor(private capacity: number, private ratePerSec: number) {\n    this.tokens = capacity;\n  }\n  private refill() {\n    const now = Date.now();\n    const elapsed = (now - this.last) / 1000;\n    this.tokens = Math.min(\n      this.capacity, this.tokens + elapsed * this.ratePerSec,\n    );\n    this.last = now;\n  }\n  tryRemove(cost = 1): boolean {\n    this.refill();\n    if (this.tokens &gt;= cost) { this.tokens -= cost; return true; }\n    return false; // caller responds 429\n  }\n}</div><p><b>Key insight:</b> refill lazily from elapsed time instead of a timer — bursts up to C are allowed, the long-run rate is R, and idle buckets cost nothing. For multiple servers, move this into Redis as a Lua script so the refill→check→decrement is atomic.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-retry-backoff",
+    kind: "coding",
+    title: "Implement retry with backoff + jitter",
+    level: "senior",
+    tags: ["Node", "resilience", "async"],
+    promptHtml:
+      "<p>Write <code>retry(fn, retries, baseMs)</code> that retries a failing async call with exponential backoff plus jitter, and rethrows the last error after attempts are exhausted.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li>Loop up to <code>retries</code> times; on throw, sleep <code>base × 2^attempt</code> plus random jitter, then try again.</li><li>After the last attempt, rethrow so the caller sees the real failure.</li><li>Jitter spreads out synchronized clients so retries don't stampede in lockstep.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">const sleep = (ms: number) =&gt; new Promise((r) =&gt; setTimeout(r, ms));\n\nasync function retry&lt;T&gt;(\n  fn: () =&gt; Promise&lt;T&gt;, retries = 3, baseMs = 100,\n): Promise&lt;T&gt; {\n  let lastErr: unknown;\n  for (let attempt = 0; attempt &lt;= retries; attempt++) {\n    try {\n      return await fn();\n    } catch (err) {\n      lastErr = err;\n      if (attempt === retries) break;      // out of tries\n      const backoff = baseMs * 2 ** attempt;\n      const jitter = Math.random() * backoff;\n      await sleep(backoff + jitter);\n    }\n  }\n  throw lastErr; // rethrow after exhaustion\n}</div><p><b>Key insight:</b> exponential backoff plus jitter turns a thundering herd into a spread-out trickle. Follow-ups the interviewer wants: only retry <b>retryable</b> errors (429/5xx, not 4xx), <b>cap</b> the max delay so it can't grow unbounded, and thread an <code>AbortSignal</code> to cancel in-flight retries.</p>",
+      },
+    ],
+  },
+  {
+    id: "pr-impl-debounce-throttle",
+    kind: "coding",
+    title: "Implement debounce and throttle",
+    level: "senior",
+    tags: ["Node", "async", "patterns"],
+    promptHtml:
+      "<p>Implement <code>debounce(fn, wait)</code> and <code>throttle(fn, wait)</code>. Explain the difference, and make sure both preserve <code>this</code> and the arguments.</p>",
+    reveal: [
+      {
+        label: "Approach",
+        html:
+          "<ul><li><b>Debounce:</b> fire once after activity <b>stops</b> — each call <code>clearTimeout</code>s the pending one and restarts the timer. Good for search-as-you-type.</li><li><b>Throttle:</b> fire at most once per window — ignore calls until the window elapses. Good for scroll/resize.</li><li>Preserve <code>this</code> and args with <code>fn.apply(this, args)</code>; use a normal function (not an arrow) so <code>this</code> binds at call time.</li></ul>",
+      },
+      {
+        label: "Solution",
+        html:
+          "<div class=\"code\">function debounce&lt;A extends unknown[]&gt;(\n  fn: (...args: A) =&gt; void, wait: number,\n) {\n  let timer: ReturnType&lt;typeof setTimeout&gt; | undefined;\n  return function (this: unknown, ...args: A) {\n    clearTimeout(timer);              // reset the countdown\n    timer = setTimeout(() =&gt; fn.apply(this, args), wait);\n  };\n}\n\nfunction throttle&lt;A extends unknown[]&gt;(\n  fn: (...args: A) =&gt; void, wait: number,\n) {\n  let last = 0;\n  return function (this: unknown, ...args: A) {\n    const now = Date.now();\n    if (now - last &gt;= wait) {          // leading edge\n      last = now;\n      fn.apply(this, args);\n    }\n  };\n}</div><p><b>Key insight:</b> debounce waits for a lull (clearTimeout resets it); throttle enforces a fixed cadence (a timestamp gate). This version fires on the <b>leading</b> edge — mention that a trailing-edge variant runs once more after the burst, and that <code>apply(this, args)</code> is what keeps the wrapped call transparent.</p>",
+      },
+    ],
+  },
+
+  // ---------------- SYSTEM DESIGN: queues, delivery, limits ----------------
+  {
+    id: "pr-design-job-queue",
+    kind: "design",
+    title: "Design a job queue with retries + dead-letter",
+    level: "senior",
+    tags: ["architecture", "messaging", "resilience"],
+    promptHtml:
+      "<p>Design a background job queue: producers enqueue work, workers process it, transient failures retry, and permanently-failing jobs land somewhere safe instead of blocking the queue.</p>",
+    reveal: [
+      {
+        label: "Clarify",
+        html:
+          "<ul><li>Throughput and latency target — is this seconds-fresh or best-effort background work?</li><li>Delivery guarantee: at-least-once (dedupe downstream) vs exactly-once (much harder)?</li><li>Are jobs <b>idempotent</b>? If not, a retry can double-execute.</li><li>Ordering: strict per-key order, or independent jobs?</li><li>Max retries, backoff shape, and what \"give up\" means (alert? manual replay?).</li></ul>",
+      },
+      {
+        label: "High-level design",
+        html:
+          "<ul><li><b>States:</b> <code>PENDING → RUNNING → SUCCEEDED</code>, or <code>FAILED → RETRYING</code> (back to RUNNING) until attempts exhaust, then <code>DEAD</code>.</li><li><b>Visibility timeout:</b> a claimed job is hidden for a lease; if the worker dies without ack, the lease expires and another worker re-claims it — so a crash doesn't lose the job.</li><li><b>Retries:</b> increment an attempt counter, requeue with exponential backoff; after N, move to a <b>dead-letter queue</b> (DLQ) with the failure reason.</li><li><b>Idempotent workers:</b> key each job by a stable id and dedupe on it, since at-least-once means the same job can run twice.</li><li><b>DLQ:</b> alert on depth, keep the payload + error for inspection and manual/automated replay.</li></ul>",
+      },
+      {
+        label: "Trade-offs to say out loud",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> At-least-once + idempotent workers is the pragmatic default; true exactly-once needs a transactional outbox or dedup store and costs latency. A short visibility timeout re-runs slow jobs (duplicate work); a long one delays recovery from a dead worker. Buy a broker (SQS/RabbitMQ/BullMQ-on-Redis) before building your own — the DLQ, backoff, and leases are the value.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-design-notifications",
+    kind: "design",
+    title: "Design a multi-channel notification system",
+    level: "senior",
+    tags: ["architecture", "messaging", "scalability"],
+    promptHtml:
+      "<p>Design a system that sends notifications across email, SMS, and push. It must not double-send on retry, must survive a provider outage, and must fan a single event out to many recipients.</p>",
+    reveal: [
+      {
+        label: "Clarify",
+        html:
+          "<ul><li>Volume and burst shape — a fan-out to millions, or per-user transactional sends?</li><li>Latency: real-time (push) vs digestible (batched email)?</li><li>User preferences / quiet hours / opt-outs per channel?</li><li>Delivery guarantee and dedup window — how do we define \"same notification\"?</li><li>Do we need delivery/read receipts and per-channel fallback (push fails → email)?</li></ul>",
+      },
+      {
+        label: "High-level design",
+        html:
+          "<ul><li><b>Ingest:</b> an event hits a notification service that resolves recipients + preferences, then <b>fans out</b> one message per (user, channel).</li><li><b>Per-channel queues:</b> separate email/SMS/push queues so a slow or down provider back-pressures only its own channel, and each can scale workers independently.</li><li><b>Dedup / idempotency keys:</b> each notification carries a stable key (event id + user + channel); workers check it before sending so a retry can't double-send.</li><li><b>Providers:</b> channel workers call SendGrid/Twilio/FCM; on failure retry with backoff, then <b>DLQ</b> for inspection and replay.</li><li><b>Preferences + templating:</b> centralize opt-outs, quiet hours, and rendering so every channel is consistent.</li></ul>",
+      },
+      {
+        label: "Trade-offs to say out loud",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> Queues buy resilience but add eventual-consistency latency — fine for notifications. At-least-once delivery means the idempotency key is doing the real work; without it, retries spam users. Per-channel isolation costs more moving parts than one queue but stops one flaky provider from stalling the rest. The DLQ is non-negotiable — it's the difference between a lost notification and a replayable one.</div>",
+      },
+    ],
+  },
+  {
+    id: "pr-design-rate-limiter",
+    kind: "design",
+    title: "Design a distributed rate limiter",
+    level: "senior",
+    tags: ["architecture", "rate limiting", "Redis"],
+    promptHtml:
+      "<p>Design a rate limiter for an API behind N app instances: e.g. 100 requests/min per API key, enforced consistently no matter which instance a request hits. Return 429 with a <code>Retry-After</code> when exceeded.</p>",
+    reveal: [
+      {
+        label: "Clarify",
+        html:
+          "<ul><li>Limit key — per API key, per user, per IP, or a combination?</li><li>Burst tolerance: is a short spike acceptable (token bucket) or must the window be strict (sliding window)?</li><li>Global limit across all instances, or per-instance is good enough?</li><li>Fail-open (allow on limiter outage) or fail-closed (reject)?</li><li>Accuracy vs cost — is an approximate limit fine at high RPS?</li></ul>",
+      },
+      {
+        label: "High-level design",
+        html:
+          "<ul><li><b>Shared store:</b> per-instance counters can't enforce a global limit — keep state in <b>Redis</b> so all N instances agree.</li><li><b>Algorithm:</b> <b>token bucket</b> (allows bursts up to capacity, smooth refill) vs <b>sliding-window</b> counter (strict, no boundary spikes at the window edge). Token bucket is the common default.</li><li><b>Atomicity:</b> the check-and-decrement must be atomic or two concurrent requests both read \"1 left\" and both pass — run it as a <b>Lua script</b> in Redis (executed atomically), keyed by the API key, with a PEXPIRE.</li><li><b>Response:</b> on reject return <code>429</code> with <code>Retry-After</code> and <code>X-RateLimit-Remaining/-Reset</code> headers so clients back off.</li><li><b>Placement:</b> enforce at the gateway/edge for cheap global limits; per-service limits for fine-grained control.</li></ul>",
+      },
+      {
+        label: "Trade-offs to say out loud",
+        html:
+          "<div class=\"callout\"><span class=\"lbl\">Trade-off</span> Redis makes it consistent across instances but adds a network hop per request and a single dependency — decide <b>fail-open vs fail-closed</b> if it's unreachable (usually fail-open so the limiter can't take down the API). Token bucket permits bursts; sliding window is stricter but costs more memory/compute. At extreme RPS, a small per-instance local allowance synced to Redis trades exactness for latency.</div>",
+      },
+    ],
+  },
 ];

@@ -24,6 +24,16 @@ import { ADVANCED15_FLASHCARDS, ADVANCED15_QUIZ } from "./advanced15";
 import { ADVANCED16_FLASHCARDS, ADVANCED16_QUIZ } from "./advanced16";
 import { ADVANCED17_FLASHCARDS, ADVANCED17_QUIZ } from "./advanced17";
 import { ADVANCED18_FLASHCARDS, ADVANCED18_QUIZ } from "./advanced18";
+import { ADVANCED19_FLASHCARDS, ADVANCED19_QUIZ } from "./advanced19";
+import { ADVANCED20_FLASHCARDS, ADVANCED20_QUIZ } from "./advanced20";
+import { ADVANCED21_FLASHCARDS, ADVANCED21_QUIZ } from "./advanced21";
+import { ADVANCED22_FLASHCARDS, ADVANCED22_QUIZ } from "./advanced22";
+import { ADVANCED23_FLASHCARDS, ADVANCED23_QUIZ } from "./advanced23";
+import { ADVANCED24_FLASHCARDS, ADVANCED24_QUIZ } from "./advanced24";
+import { ADVANCED25_FLASHCARDS, ADVANCED25_QUIZ } from "./advanced25";
+import { ADVANCED26_FLASHCARDS, ADVANCED26_QUIZ } from "./advanced26";
+import { ADVANCED27_FLASHCARDS, ADVANCED27_QUIZ } from "./advanced27";
+import { ADVANCED28_FLASHCARDS, ADVANCED28_QUIZ } from "./advanced28";
 import { QUIZ, QUIZ_FILTERS } from "./quiz";
 import { QUIZ2, QUIZ2_FILTERS } from "./quiz2";
 import { STUDY_SECTIONS } from "./study";
@@ -56,6 +66,16 @@ export const ALL_FLASHCARDS: Flashcard[] = [
   ...ADVANCED16_FLASHCARDS,
   ...ADVANCED17_FLASHCARDS,
   ...ADVANCED18_FLASHCARDS,
+  ...ADVANCED19_FLASHCARDS,
+  ...ADVANCED20_FLASHCARDS,
+  ...ADVANCED21_FLASHCARDS,
+  ...ADVANCED22_FLASHCARDS,
+  ...ADVANCED23_FLASHCARDS,
+  ...ADVANCED24_FLASHCARDS,
+  ...ADVANCED25_FLASHCARDS,
+  ...ADVANCED26_FLASHCARDS,
+  ...ADVANCED27_FLASHCARDS,
+  ...ADVANCED28_FLASHCARDS,
 ].map((c) => ({ ...c, level: resolveLevel(c) }));
 
 export const ALL_FLASHCARD_FILTERS: Filter[] = [
@@ -64,6 +84,8 @@ export const ALL_FLASHCARD_FILTERS: Filter[] = [
   ...FLASHCARD2_FILTERS,
   ...FLASHCARD3_FILTERS,
   { value: "perf", label: "Performance" },
+  { value: "ts", label: "TypeScript" },
+  { value: "aws", label: "AWS & Cloud" },
 ];
 
 export const ALL_QUIZ = [...QUIZ, ...QUIZ2,
@@ -85,12 +107,24 @@ export const ALL_QUIZ = [...QUIZ, ...QUIZ2,
   ...ADVANCED16_QUIZ,
   ...ADVANCED17_QUIZ,
   ...ADVANCED18_QUIZ,
+  ...ADVANCED19_QUIZ,
+  ...ADVANCED20_QUIZ,
+  ...ADVANCED21_QUIZ,
+  ...ADVANCED22_QUIZ,
+  ...ADVANCED23_QUIZ,
+  ...ADVANCED24_QUIZ,
+  ...ADVANCED25_QUIZ,
+  ...ADVANCED26_QUIZ,
+  ...ADVANCED27_QUIZ,
+  ...ADVANCED28_QUIZ,
 ];
 
 export const ALL_QUIZ_FILTERS: Filter[] = [
   { value: "all", label: "All" },
   ...QUIZ_FILTERS,
   ...QUIZ2_FILTERS,
+  { value: "ts", label: "TypeScript" },
+  { value: "aws", label: "AWS & Cloud" },
 ];
 
 export const ALL_STUDY = [...STUDY_SECTIONS, ...STUDY2_SECTIONS];

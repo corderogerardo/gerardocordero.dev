@@ -147,4 +147,45 @@ export const PITCHES: Pitch[] = [
     tipsHtml:
       "<span class=\"lbl\">Delivery</span> Asking about architecture, testing, and on-call shows you think like an owner. Avoid only asking about perks. Listen to the answer and follow up — it should feel like a conversation, not a checklist.",
   },
+  {
+    id: "p11",
+    num: "Pitch 11",
+    title: "Express vs Fastify vs NestJS",
+    metaHtml:
+      "<span class=\"pill\">“Which framework, and why?”</span><span class=\"pill accent\">~75 sec</span>",
+    scriptHtml:
+      "<p>They map to different needs. <b>Express</b> is the universal, unopinionated middleware layer — great for BFFs, webhooks, and thin proxies. <b>Fastify</b> is the throughput play: schema-based serialization and plugin encapsulation. <b>NestJS</b> is the structure play: modules, DI, and a request pipeline that scales with the team and the codebase.</p>" +
+      "<p>On speed — I quote the numbers, but honestly. The official fastify/benchmarks hello-world run has Fastify around <b>45,140 req/s</b> vs Express around <b>10,702</b> — about 4.5× in <i>that</i> run; other benchmarks land closer to 2–3×. But the repo itself says those numbers “do not pretend to represent a real-world scenario,” and they run on noisy shared CI hardware, so results vary. I treat them as <b>directional</b>, never a headline.</p>" +
+      "<p>Because in a real workload the framework is rarely the bottleneck — the database, downstream calls, and business logic dominate. So I pick on <b>team fit and structure</b>, and reach for NestJS. And if a specific service is genuinely throughput-critical, Nest runs on the <b>Fastify adapter</b> and recovers most of that speed — I don't have to choose.</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Delivery</span> Say the benchmark numbers, then immediately undercut them with the repo's own disclaimer — that self-correction is the senior signal; a candidate who quotes “4.5× faster” as fact reads as junior. <span class=\"lbl\">Red flag</span> Never let the pitch land on raw req/s. Land it on “the DB dominates real workloads” and “Nest-on-Fastify means I don't have to trade structure for speed.” Pronounce <i>Fastify</i> “FAST-ify.”",
+  },
+  {
+    id: "p12",
+    num: "Pitch 12",
+    title: "The trade-off formula",
+    metaHtml:
+      "<span class=\"pill\">Meta-skill: how to frame any answer</span><span class=\"pill accent\">reusable</span>",
+    scriptHtml:
+      "<p>The senior meta-skill isn't knowing the answer — it's <b>framing the decision</b>. One sentence, every time: <i>“Option A optimizes X at the cost of Y; given constraints Z, I'd choose ___ and revisit if [threshold].”</i></p>" +
+      "<p>Concretely, say they ask whether to run a heavy export inline or on a queue: <i>“Doing it synchronously optimizes simplicity and immediate feedback, at the cost of holding a request open and risking timeouts under load. Queuing it optimizes resilience and throughput, at the cost of eventual-consistency complexity and a job-status UX. Given our export runs a few seconds and traffic is spiky, I'd queue it — and I'd revisit the sync path only if p95 job latency drops under a second and volume stays low.”</i></p>" +
+      "<p>Notice what that does: it names both costs, ties the choice to a real constraint, and gives a measurable trigger to reopen it — p95/p99 latency, error rate, cost per request. That's the difference between “I picked the queue” and “I made a decision I can defend and unwind.”</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Delivery</span> Drill the formula until it's reflexive — it works for any question, not just this one. Always attach a <b>numeric threshold</b> to the “revisit if” clause; a vague “we'd reconsider later” wastes the whole move. <span class=\"lbl\">Red flag</span> Picking the trendy option and defending it after the fact. Seniors are hired for judgment under uncertainty — show you weighed the cost <i>before</i> choosing.",
+  },
+  {
+    id: "p13",
+    num: "Pitch 13",
+    title: "A CARL story skeleton",
+    metaHtml:
+      "<span class=\"pill\">Behavioral: structure any story</span><span class=\"pill accent\">≤3 min</span>",
+    scriptHtml:
+      "<p>Use <b>CARL — Context, Actions, Results, Learnings</b>. The Learnings beat is what STAR misses, and it's the one that signals maturity: it shows you reflect, not just execute. Lead with your <b>largest-scope</b> story even if it's not a literal match, and quantify the impact.</p>" +
+      "<p><b>Context:</b> [the system + the stakes — e.g. [service] was [failing / at a decision point] affecting [X users / $Y / a deadline]; I owned [scope].]</p>" +
+      "<p><b>Actions:</b> [what <i>you</i> did — the framework you used, the alternatives you rejected and why, who you aligned. “I [measured / benchmarked / wrote an ADR], chose [X] over [Y] because [constraint].”]</p>" +
+      "<p><b>Results:</b> [the measurable outcome — “[metric] moved from [A] to [B]” / “[incident] resolved in [N] with a blameless post-mortem and owners assigned.”]</p>" +
+      "<p><b>Learnings:</b> [what you'd do differently and what you carried forward — “I'd [change] earlier; since then I [new practice].”]</p>",
+    tipsHtml:
+      "<span class=\"lbl\">Delivery</span> Keep it under 3 minutes — Actions is the longest beat, Context the shortest. Lead with scope and the framework, close on the metric. <span class=\"lbl\">Red flag</span> Describing <i>what the team</i> did instead of what <b>you</b> did, and skipping Learnings — that omission is what makes a strong-actions story still read as mid-level. A small real story told precisely beats an inflated one.",
+  },
 ];

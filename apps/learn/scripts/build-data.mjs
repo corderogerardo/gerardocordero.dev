@@ -17,6 +17,7 @@ const COURSES = [
   { dir: "lessons-ruby",     id: "ruby",    storeKey: "pawwalk-academy-ruby-v1",    title: "Ruby & Rails",  emoji: "💎" },
   { dir: "lessons-python",   id: "python",  storeKey: "pawwalk-academy-python-v1",  title: "Python & FastAPI", emoji: "🐍" },
   { dir: "lessons-go",       id: "go",      storeKey: "pawwalk-academy-go-v1",      title: "Go Backend",    emoji: "🐹" },
+  { dir: "lessons-node",     id: "node",    storeKey: "pawwalk-academy-node-v1",    title: "Node & NestJS", emoji: "🟢" },
 ];
 
 const LOCALES = ["en", "es"];

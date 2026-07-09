@@ -1,0 +1,163 @@
+// Batch 20 — V8 memory & leak hunting: the generational heap (Scavenge on new space vs Mark-Sweep/Mark-Compact on old space), what a leak actually is in a long-lived Node process, the five classic leak patterns and their fixes, the two-heap-snapshot comparison workflow, the EventEmitter max-listeners warning as a leak signal, and Buffers (off-heap bytes) vs immutable UTF-16 strings.
+import type { Flashcard } from "./flashcards";
+import type { QuizQuestion } from "./quiz";
+
+export const ADVANCED20_FLASHCARDS: Flashcard[] = [
+  {
+    id: "a20-generational-heap-1",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Walk me through V8's generational heap: what spaces exist and which collector runs on each?`,
+    answerHtml: `<p>V8 splits the heap by object age because most objects die young. <b>New space (young generation)</b> holds freshly allocated, short-lived objects and is collected by <b>Scavenge</b> — a fast copying GC that walks only the live objects in a small region and evacuates them to the other half of a semi-space. <b>Old space (old generation)</b> holds objects that survived enough Scavenges to be <i>promoted</i>, and is collected by the slower <b>Mark-Sweep / Mark-Compact</b>, which walks the whole old generation. There's also a <b>large object space</b> for allocations too big to fit in a normal page and a <b>code space</b> for JIT-compiled functions. The senior framing: "GC cost tracks the old generation, not total allocations — cheap objects that die in new space barely cost anything; the expensive collections are the ones that have to sweep old space."</p>`,
+  },
+  {
+    id: "a20-scavenge-vs-marksweep-2",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Why is Scavenge fast and Mark-Sweep slow, and what does that imply for how you should allocate?`,
+    answerHtml: `<p>Scavenge only touches <i>live</i> objects in a small semi-space and copies them out; dead objects are reclaimed for free by just resetting the region — its cost scales with survivors, not garbage. Mark-Sweep/Mark-Compact must mark every reachable object across the (much larger) old generation and then sweep or compact it, so its cost scales with the old-generation size. The implication: <b>let short-lived objects stay short-lived</b>. Per-request scratch data that dies in new space is nearly free; the same data accidentally kept alive gets promoted to old space and now every major GC has to walk it. <span>Red flag: a candidate who says "just allocate less" — the real lever is allocation <i>lifetime</i>, not count.</span></p>`,
+  },
+  {
+    id: "a20-promotion-3",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What is promotion (new → old space) and why does it matter for leak behavior?`,
+    answerHtml: `<p>When an object survives a Scavenge (or two), V8 <b>promotes</b> it from new space into old space, betting it's now long-lived. That's exactly the mechanism a leak rides: anything you unintentionally keep referenced long enough gets promoted, and once it's in old space it's only reclaimable by a full Mark-Sweep — and only if it's actually unreachable. So a leak isn't just "memory grows," it's "garbage keeps getting promoted into the generation that's expensive to collect and then never freed." That's why a leaking process shows both rising heap <i>and</i> rising GC pause time.</p>`,
+  },
+  {
+    id: "a20-max-old-space-4",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What does --max-old-space-size control, and when do you reach for it?`,
+    answerHtml: `<p><code>--max-old-space-size=2048</code> caps the old generation at (here) 2048 MB; hit the cap and you get an <code>Allocation failed - JavaScript heap out of memory</code> crash. You raise it when a process legitimately needs a bigger working set (large in-memory dataset, big build) <i>and</i> the container has the RAM to back it. <span>Red flag: bumping <code>--max-old-space-size</code> to make an OOM "go away."</span> If a service leaks, raising the ceiling just delays the crash — it buys time to the same wall. Treat a rising heap under steady load as a leak to hunt, not a limit to raise. The senior line: "I'd bump the heap size for a genuinely large workload, but if memory climbs under constant traffic, that's a leak — the flag is a tourniquet, not a fix."</p>`,
+  },
+  {
+    id: "a20-leak-definition-5",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Define a memory leak precisely in a garbage-collected runtime like Node.`,
+    answerHtml: `<p>A leak is memory that is still <b>reachable</b> from a GC root (so the collector won't free it) but that your program will never use again — you <i>believe</i> it's dead, V8 disagrees because something still holds a reference. That's the whole game: GC frees the unreachable, so a leak is definitionally about an unintended <b>retainer</b> keeping garbage alive. This is why "we have a GC, so we can't leak" is wrong — GC prevents dangling frees, not accidental retention.</p>`,
+  },
+  {
+    id: "a20-long-lived-accumulation-6",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Why do long-lived Node processes accumulate leaks per request when a short-lived script wouldn't?`,
+    answerHtml: `<p>Node is a single, long-lived process serving thousands of requests. A short-lived CLI script exits and the OS reclaims everything, so a small per-request retention never matters. In a server, a reference leaked <i>once per request</i> — a cache entry never evicted, a listener never removed — is added again on the next request and the next, so it compounds monotonically until the heap exhausts the container limit and the process OOM-crashes (then the orchestrator restarts it, hiding the leak as "periodic restarts"). The senior framing: "In a request/response server, any per-request allocation that outlives the request is a leak in slow motion — multiply it by your request rate and time-to-OOM is just arithmetic."</p>`,
+  },
+  {
+    id: "a20-five-leak-patterns-7",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Name the five classic Node leak patterns and the fix for each.`,
+    answerHtml: `<ul><li><b>Unbounded caches / Maps</b> that grow forever → an <b>LRU cache with a max size + TTL</b> so entries are evicted.</li><li><b>Listeners added without removal</b> (<code>emitter.on</code> with no matching <code>off</code>) → always pair <code>on</code>/<code>removeListener</code>, or use <code>once</code> for one-shot handlers.</li><li><b>Closures holding large buffers</b> — a callback that captures a big <code>Buffer</code> stays alive as long as the closure does → for streams, use <code>pipeline()</code> so buffers are consumed and released instead of accumulating.</li><li><b>Forgotten timers / intervals</b> — <code>setInterval</code> keeps its callback (and everything it closes over) alive forever → <code>clearInterval</code>/<code>clearTimeout</code> on teardown.</li><li><b>Unclosed DB connections</b> — connections/handles never returned to the pool → always close/release, ideally in a <code>finally</code>.</li></ul><p>The unifying senior line: "Every one of these is the same bug — something long-lived (a cache, an emitter, a timer, a pool) holding a reference to something that should have died with the request. Bound it or release it."</p>`,
+  },
+  {
+    id: "a20-lru-ttl-8",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Why is an unbounded in-memory cache the most common Node leak, and what makes an LRU+TTL the right fix?`,
+    answerHtml: `<p>A cache is <i>designed</i> to hold references — that's its job — so an unbounded <code>Map</code> keyed by, say, user id or query string grows one entry per distinct key and never shrinks. Under real traffic the key space is effectively unbounded (unique query params, expiring tokens), so the map grows without limit and every entry is reachable, so GC can't touch it. An <b>LRU with a max size</b> caps the entry count and evicts the least-recently-used key when full; a <b>TTL</b> additionally expires stale entries so a key that stops being requested doesn't sit forever. Together they turn "grows until OOM" into "bounded working set." <span>Red flag: an in-process cache with no eviction policy — "we cache it in a Map" with no answer for <i>when it's removed</i>.</span></p>`,
+  },
+  {
+    id: "a20-heap-snapshot-workflow-9",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Walk me through the two-heap-snapshot workflow for finding a leak.`,
+    answerHtml: `<p>Capture a heap snapshot at a <b>known-good baseline</b>, apply load (or run the suspected operation many times), let GC settle, then capture a <b>second snapshot</b>. Take snapshots with <code>v8.writeHeapSnapshot()</code> from inside the process, or attach via <code>--inspect</code> and use Chrome DevTools' Memory tab. Load both into DevTools and use the <b>Comparison view</b>, which shows objects allocated between the two snapshots and never freed — the delta <i>is</i> the leak. Then pick a suspicious object and <b>follow the retainer chain</b> up to the GC root to see exactly what's holding it (the cache, the emitter's listener array, a closure). The senior framing: "Two snapshots and the Comparison view tell you <i>what</i> leaked; the retainer chain tells you <i>who's holding it</i> — you need both to actually fix it, not just observe growth."</p>`,
+  },
+  {
+    id: "a20-retainer-chain-10",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `What is a retainer chain and why is following it to the GC root the actual fix step?`,
+    answerHtml: `<p>A retainer chain is the path of references from a <b>GC root</b> (globals, the active call stack, module scope) down to the leaked object — it's the reason V8 still considers the object reachable. Knowing an object leaked isn't enough to fix it; you have to know <i>what points at it</i>, because that pointer is the bug. Following the chain to the root surfaces the real culprit: "oh, it's retained by an array on this EventEmitter" or "it's captured by this interval's closure." You cut the leak by breaking that specific edge — removing the listener, clearing the interval, evicting the cache entry. <span>Red flag: "I saw the heap grow so I raised the memory limit" — that's diagnosing the symptom without ever finding the retainer.</span></p>`,
+  },
+  {
+    id: "a20-maxlisteners-warning-11",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `An EventEmitter logs "possible EventEmitter memory leak detected." What is that, and how do you respond?`,
+    answerHtml: `<p>By default an <code>EventEmitter</code> allows up to <b>10 listeners</b> for any single event. That's not a hard limit — it keeps accepting listeners — but on the 11th it prints a <b>trace warning to stderr</b> ("possible EventEmitter memory leak detected") because unbounded listener growth on one event is a classic leak signal: usually you're calling <code>.on()</code> in a hot path without a matching <code>.off()</code>, so listeners (and everything they close over) pile up. The right response is to <b>find the missing removal</b>, not silence the warning. You <i>can</i> raise the threshold with <code>emitter.setMaxListeners(n)</code> (per emitter) or <code>events.defaultMaxListeners</code> (global) when you legitimately need more listeners — but do that deliberately. <span>Red flag: reflexively calling <code>setMaxListeners(Infinity)</code> to hush the warning — that just removes the smoke detector from a real fire.</span></p>`,
+  },
+  {
+    id: "a20-buffer-vs-string-12",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `How does a Node Buffer differ from a JS string in memory, and why does the off-heap detail matter?`,
+    answerHtml: `<p>A <code>Buffer</code> is a <b>mutable, fixed-length sequence of raw bytes allocated <i>outside</i> the V8 heap</b> (in C++-managed memory), which is what makes it right for file I/O, TCP/network, and stream processing — you're moving raw bytes, not text. A JS <code>string</code> is <b>immutable</b> and stored as <b>UTF-16</b> inside the V8 heap. The off-heap detail matters two ways: (1) large Buffers don't show up in your V8 heap-snapshot numbers the way strings/objects do, so a Buffer leak can look like "flat heap, rising RSS" and fool a heap-only investigation; and (2) because Buffers are fixed-length and mutable, you allocate the exact size and reuse them, whereas every string transformation allocates a new immutable copy. The senior framing: "Text lives in the V8 heap as immutable UTF-16; raw bytes live off-heap in Buffers — mixing them up (or forgetting Buffers are invisible to a heap snapshot) is how people chase the wrong leak."</p>`,
+  },
+];
+
+export const ADVANCED20_QUIZ: QuizQuestion[] = [
+  {
+    id: "a20-qz-1",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Which V8 collector runs on the new (young) space, and what makes it cheap?`,
+    options: [
+      `Mark-Compact — it compacts the whole heap so allocation stays fast`,
+      `Scavenge — a copying collector whose cost scales with the number of live (surviving) objects, not the garbage`,
+      `Reference counting — it frees each object the instant its count hits zero`,
+      `Mark-Sweep — it sweeps only the young generation, which is small`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>New space is collected by <b>Scavenge</b>, a copying GC that evacuates only the live objects from one semi-space to the other; dead objects are reclaimed for free by resetting the region. Its cost tracks survivors, so short-lived objects that die in new space are nearly free. Old space is what Mark-Sweep/Mark-Compact handles, and that's the expensive collection.</p>`,
+  },
+  {
+    id: "a20-qz-2",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `A service's heap climbs steadily under constant traffic and eventually OOM-crashes. A teammate proposes bumping --max-old-space-size from 2048 to 4096. What's the right read?`,
+    options: [
+      `Correct fix — the process simply needs a larger old generation for its workload`,
+      `It's a tourniquet: under steady load a rising heap is a leak, so raising the ceiling only delays the same crash — hunt the retainer instead`,
+      `Raising it will make GC faster because there's more room before a collection triggers`,
+      `--max-old-space-size has no effect on OOM crashes; only new-space size matters`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>Constant load with monotonically rising heap is the signature of a leak — memory reachable but never used again. <code>--max-old-space-size</code> just moves the wall further out; you hit the same OOM later. Raising it is defensible for a genuinely large workload, but here the fix is to find the unintended <b>retainer</b> (unbounded cache, un-removed listener, forgotten timer), not raise the limit.</p>`,
+  },
+  {
+    id: "a20-qz-3",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `You suspect a leak in one operation. Which workflow most directly identifies both what leaked and who's retaining it?`,
+    options: [
+      `Log process.memoryUsage() every second and eyeball when RSS climbs`,
+      `Take a heap snapshot at baseline, run the operation under load, take a second snapshot, use DevTools' Comparison view to find never-freed objects, then follow the retainer chain to the GC root`,
+      `Run the process with --max-old-space-size lowered until it crashes faster, then read the stack trace`,
+      `Enable --trace-gc and count how many Scavenges happen per minute`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>The two-snapshot Comparison workflow (via <code>v8.writeHeapSnapshot()</code> or <code>--inspect</code> + Chrome DevTools) surfaces objects allocated between the snapshots and never freed — that delta is <i>what</i> leaked. Following the <b>retainer chain</b> from a suspect object up to the GC root reveals <i>who</i> is holding it, which is the reference you actually cut to fix the leak. Watching RSS or GC counts tells you a leak exists but not its cause.</p>`,
+  },
+  {
+    id: "a20-qz-4",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `Your logs show "possible EventEmitter memory leak detected. 11 listeners added." What does this indicate and what's the correct first move?`,
+    options: [
+      `A hard crash is imminent because the emitter rejected the 11th listener; call setMaxListeners(Infinity) to allow it`,
+      `The default 10-listener threshold was exceeded — it's a trace warning, not a hard limit; find the .on() call in a hot path that has no matching .off()/removeListener`,
+      `The emitter has a bug in Node core; upgrade Node to clear the warning`,
+      `It means 11 events fired at once; debounce the event source`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>An <code>EventEmitter</code> warns (but keeps working) when a single event passes the default <b>10-listener</b> threshold, because unbounded listener growth usually means listeners are being added in a hot path without removal — each one retains its closure. The fix is to find the missing <code>off()</code>/<code>removeListener</code> (or use <code>once</code>). You <i>can</i> raise the bar with <code>setMaxListeners(n)</code> / <code>events.defaultMaxListeners</code> when you genuinely need more, but doing it just to silence the warning hides a real leak.</p>`,
+  },
+  {
+    id: "a20-qz-5",
+    category: "node",
+    categoryLabel: "Node.js Core",
+    question: `A process shows flat V8 heap in snapshots but steadily rising RSS. Which explanation best fits, given how Buffers are stored?`,
+    options: [
+      `Impossible — all Node memory lives in the V8 heap, so a heap snapshot would show any growth`,
+      `Buffers are raw bytes allocated outside the V8 heap, so a Buffer leak grows RSS without showing up in a heap snapshot`,
+      `Strings are stored off-heap as UTF-8, so a string leak is invisible to heap snapshots`,
+      `Rising RSS with flat heap always means a native C++ addon bug, never anything in your JS`,
+    ],
+    answer: 1,
+    explanationHtml: `<p>A <code>Buffer</code> is a fixed-length, mutable sequence of bytes allocated <b>outside</b> the V8 heap, whereas JS <code>string</code>s are immutable UTF-16 <i>inside</i> the heap. Because Buffers are off-heap, a Buffer leak inflates RSS while a heap snapshot stays flat — a classic trap that sends people chasing the wrong memory. Native addons can also do this, but the off-heap Buffer is the everyday Node explanation.</p>`,
+  },
+];
