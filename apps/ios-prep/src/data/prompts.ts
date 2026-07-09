@@ -28,12 +28,14 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Drive a <code>.task(id: query)</code> modifier so a new task starts whenever the query changes —
+        html: `<p>Every unnecessary keystroke that hits the network wastes bandwidth and can return results out
+          of order — the framework already solves both if you tie the request's lifetime to the query value.</p>
+        <ul>
+          <li>1. Drive a <code>.task(id: query)</code> modifier so a new task starts whenever the query changes —
             and SwiftUI cancels the previous task automatically.</li>
-          <li>Inside, <code>try await Task.sleep(for: .milliseconds(300))</code>. If cancelled during the sleep
+          <li>2. Inside, <code>try await Task.sleep(for: .milliseconds(300))</code>. If cancelled during the sleep
             it throws, so a new keystroke aborts the pending query.</li>
-          <li>After the sleep, run the search. Cancellation makes the debounce fall out for free.</li>
+          <li>3. After the sleep, run the search. Cancellation makes the debounce fall out for free.</li>
         </ul>`,
       },
       {
@@ -56,8 +58,11 @@ export const PROMPTS: Prompt[] = [
       }
   }
 }</div>
-        <p>The key insight: <code>.task(id:)</code> ties task lifetime to the value, so debounce + cancellation
-        come from the framework rather than manual timers.</p>`,
+        <p><b>Tying task lifetime to the value is the whole trick</b> — debounce and cancellation come from the
+        framework rather than a hand-rolled timer or Combine's <code>.debounce</code>.</p>
+        <p>Red flag: reaching for a <code>Timer</code> or a manual <code>DispatchWorkItem</code> to cancel the
+        previous call — it works, but it's exactly the boilerplate <code>.task(id:)</code> exists to remove, and
+        interviewers read it as not knowing structured concurrency.</p>`,
       },
     ],
   },
@@ -72,11 +77,14 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Use an <code>actor</code> so all access to the dictionary is serialized — no locks.</li>
-          <li>Cache either a finished image or the in-flight <code>Task</code>, so concurrent callers for the
+        html: `<p>A plain dictionary behind a lock only solves the race — it doesn't stop ten cells that scroll
+          onto screen at once from each kicking off the same download. Caching the in-flight work, not just the
+          result, is what collapses that into one request.</p>
+        <ul>
+          <li>1. Use an <code>actor</code> so all access to the dictionary is serialized — no locks.</li>
+          <li>2. Cache either a finished image or the in-flight <code>Task</code>, so concurrent callers for the
             same URL await the same download.</li>
-          <li>Await the stored task and return its value.</li>
+          <li>3. Await the stored task and return its value.</li>
         </ul>`,
       },
       {
@@ -96,8 +104,9 @@ export const PROMPTS: Prompt[] = [
     return img
   }
 }</div>
-        <p>Storing the in-flight <code>Task</code> is what de-dupes: ten views asking at once all await one
-        download. The actor guarantees the dictionary is never accessed concurrently.</p>`,
+        <p><b>Storing the in-flight <code>Task</code>, not just the finished result, is what de-dupes</b> — ten
+        views asking at once all await one download, and the actor guarantees the dictionary is never touched
+        concurrently.</p>`,
       },
     ],
   },
@@ -112,11 +121,14 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Model the shape with nested <code>Codable</code> structs.</li>
-          <li>Set <code>keyDecodingStrategy = .convertFromSnakeCase</code> so <code>full_name</code> maps to
+        html: `<p>Hand-writing <code>CodingKeys</code> for every field is maintenance debt that breaks silently
+          the moment the backend adds a field — decoder-level strategies handle the common transforms once, for
+          every model in the app.</p>
+        <ul>
+          <li>1. Model the shape with nested <code>Codable</code> structs.</li>
+          <li>2. Set <code>keyDecodingStrategy = .convertFromSnakeCase</code> so <code>full_name</code> maps to
             <code>fullName</code> automatically.</li>
-          <li>Set <code>dateDecodingStrategy = .iso8601</code> for the timestamps.</li>
+          <li>3. Set <code>dateDecodingStrategy = .iso8601</code> for the timestamps.</li>
         </ul>`,
       },
       {
@@ -135,8 +147,9 @@ func decodeUser(_ data: Data) throws -&gt; User {
   decoder.dateDecodingStrategy = .iso8601
   return try decoder.decode(User.self, from: data)
 }</div>
-        <p>Strategies handle the common cases globally; reach for explicit <code>CodingKeys</code> only when a
-        single field doesn't follow the pattern.</p>`,
+        <p><b>Strategies handle the common cases globally; reach for explicit <code>CodingKeys</code> only when a
+        single field doesn't follow the pattern.</b> Writing full <code>CodingKeys</code> for every model when a
+        strategy would do is the tell that someone hasn't used <code>Codable</code> at scale.</p>`,
       },
     ],
   },
@@ -151,10 +164,12 @@ func decodeUser(_ data: Data) throws -&gt; User {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Loop up to <code>maxAttempts</code>; on success return, on failure remember the error.</li>
-          <li>Between attempts <code>try await Task.sleep</code> for a growing delay (cancellation-aware).</li>
-          <li>After the loop, throw the last captured error.</li>
+        html: `<p>Retrying immediately on failure just hammers a struggling server harder; growing the delay
+          between attempts is what keeps a flaky network from turning into a self-inflicted outage.</p>
+        <ul>
+          <li>1. Loop up to <code>maxAttempts</code>; on success return, on failure remember the error.</li>
+          <li>2. Between attempts <code>try await Task.sleep</code> for a growing delay (cancellation-aware).</li>
+          <li>3. After the loop, throw the last captured error.</li>
         </ul>`,
       },
       {
@@ -174,8 +189,9 @@ func decodeUser(_ data: Data) throws -&gt; User {
     }
   }
 }</div>
-        <p>Because the sleep is cancellation-aware, cancelling the surrounding task stops the retries
-        immediately. Add jitter in production to avoid thundering herds.</p>`,
+        <p><b>Because the sleep is cancellation-aware, cancelling the surrounding task stops the retries
+        immediately</b> — no orphaned background work. Add jitter in production so many clients retrying at once
+        don't re-synchronize into a thundering herd.</p>`,
       },
     ],
   },
@@ -190,10 +206,13 @@ func decodeUser(_ data: Data) throws -&gt; User {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Model state as an <code>enum</code> so impossible combinations can't exist.</li>
-          <li>Depend on an <code>APIClient</code> protocol (injected) so tests pass a mock.</li>
-          <li>Mark the model <code>@MainActor</code> and <code>@Observable</code>; switch over state in the
+        html: `<p>A view that juggles separate <code>isLoading</code>/<code>items</code>/<code>error</code>
+          booleans can represent impossible states (loading <i>and</i> error at once) — modeling state as one enum
+          makes those states unrepresentable, and injecting the API dependency is what makes it testable at all.</p>
+        <ul>
+          <li>1. Model state as an <code>enum</code> so impossible combinations can't exist.</li>
+          <li>2. Depend on an <code>APIClient</code> protocol (injected) so tests pass a mock.</li>
+          <li>3. Mark the model <code>@MainActor</code> and <code>@Observable</code>; switch over state in the
             view.</li>
         </ul>`,
       },
@@ -217,8 +236,9 @@ final class ItemsModel {
     }
   }
 }</div>
-        <p>The view does <code>switch model.state</code> and renders a spinner, list, empty view, or error.
-        Tests construct <code>ItemsModel(api: MockAPI())</code> and assert the resulting state.</p>`,
+        <p><b>The view just does <code>switch model.state</code></b> and renders a spinner, list, empty view, or
+        error — no combinatorial boolean logic. Tests construct <code>ItemsModel(api: MockAPI())</code> and assert
+        the resulting state directly.</p>`,
       },
     ],
   },
@@ -233,10 +253,12 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Use <code>async let</code> to start both requests immediately.</li>
-          <li><code>await</code> both when constructing the combined result; they run concurrently.</li>
-          <li>If either throws, the whole function throws (and the sibling is cancelled).</li>
+        html: `<p>Awaiting the two requests sequentially pays their full latency twice for no reason — the
+          requests don't depend on each other, so they should be in flight at the same time.</p>
+        <ul>
+          <li>1. Use <code>async let</code> to start both requests immediately.</li>
+          <li>2. <code>await</code> both when constructing the combined result; they run concurrently.</li>
+          <li>3. If either throws, the whole function throws (and the sibling is cancelled).</li>
         </ul>`,
       },
       {
@@ -246,8 +268,9 @@ final class ItemsModel {
   async let posts = api.posts(forUser: id)
   return try await Profile(user: user, posts: posts)
 }</div>
-        <p>Two round-trips happen in parallel, roughly halving latency versus sequential awaits. For a dynamic
-        number of children, use a <code>TaskGroup</code> instead.</p>`,
+        <p><b>Two round-trips happen in parallel, roughly halving latency versus sequential awaits.</b> For a
+        fixed, known-in-advance set of requests <code>async let</code> is the right tool; for a dynamic number of
+        children, use a <code>TaskGroup</code> instead.</p>`,
       },
     ],
   },
@@ -262,11 +285,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Use the Security framework's <code>SecItem</code> APIs with
+        html: `<p>An auth token in <code>UserDefaults</code> sits in an unencrypted plist that any process with
+          filesystem access to the container can read — the Keychain exists specifically to keep secrets encrypted
+          and hardware-backed, which is a compliance requirement on most teams, not a nice-to-have.</p>
+        <ul>
+          <li>1. Use the Security framework's <code>SecItem</code> APIs with
             <code>kSecClassGenericPassword</code>.</li>
-          <li>Delete any existing item before adding, so save is idempotent.</li>
-          <li>UserDefaults is an unencrypted plist; the Keychain is encrypted and hardware-backed.</li>
+          <li>2. Delete any existing item before adding, so save is idempotent.</li>
+          <li>3. Read it back with a matching query and decode the returned <code>Data</code>.</li>
         </ul>`,
       },
       {
@@ -296,8 +322,10 @@ final class ItemsModel {
     return String(decoding: data, as: UTF8.self)
   }
 }</div>
-        <p>Tokens and passwords go here, not in UserDefaults. For higher assurance add
-        <code>kSecAttrAccessible</code> and biometric access control.</p>`,
+        <p><b>Tokens and passwords go in the Keychain, never in UserDefaults.</b> For higher assurance add
+        <code>kSecAttrAccessible</code> and biometric access control.</p>
+        <p>Red flag: saying "I'd just encrypt the UserDefaults value myself" — that only moves the key-storage
+        problem one level down without the hardware backing the Keychain already gives you for free.</p>`,
       },
     ],
   },
@@ -312,11 +340,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Use <code>withCheckedThrowingContinuation</code>.</li>
-          <li>Call the legacy API; in its completion, <code>resume</code> the continuation with the value or
+        html: `<p>Rewriting the legacy completion-based API risks breaking every existing caller for no gain —
+          the continuation bridge lets new call sites adopt async/await while the legacy implementation stays
+          untouched.</p>
+        <ul>
+          <li>1. Use <code>withCheckedThrowingContinuation</code>.</li>
+          <li>2. Call the legacy API; in its completion, <code>resume</code> the continuation with the value or
             error — exactly once.</li>
-          <li>The checked variant traps if you resume zero or multiple times.</li>
+          <li>3. Return the awaited value; the checked variant traps if you resume zero or multiple times.</li>
         </ul>`,
       },
       {
@@ -331,8 +362,9 @@ final class ItemsModel {
     }
   }
 }</div>
-        <p>This is the standard adapter for delegate- and completion-based APIs. Guarantee a single
-        <code>resume</code> on every path or you'll leak or crash.</p>`,
+        <p><b>This is the standard adapter for delegate- and completion-based APIs.</b> Guarantee a single
+        <code>resume</code> on every code path — the checked continuation traps at runtime if you resume it zero
+        or more than once, which is exactly the bug class it's designed to surface early.</p>`,
       },
     ],
   },
@@ -347,11 +379,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Use <code>List</code> (lazy) and trigger a load when the last item appears via
+        html: `<p>Loading the entire dataset up front burns memory and bandwidth the user may never scroll far
+          enough to need — lazy rendering plus a load-triggered-by-appearance keeps both flat while still feeling
+          continuous to the user.</p>
+        <ul>
+          <li>1. Use <code>List</code> (lazy) and trigger a load when the last item appears via
             <code>.onAppear</code>.</li>
-          <li>Guard with an <code>isLoading</code> flag so you don't fire the same page twice.</li>
-          <li>Append results and advance the page cursor in the model.</li>
+          <li>2. Guard with an <code>isLoading</code> flag so you don't fire the same page twice.</li>
+          <li>3. Append results and advance the page cursor in the model.</li>
         </ul>`,
       },
       {
@@ -371,8 +406,10 @@ final class ItemsModel {
 }
 // In FeedModel.loadNextPage(): guard !isLoading; isLoading = true;
 // fetch page; items += new; page += 1; isLoading = false.</div>
-        <p><code>List</code> only realizes visible rows, so memory stays flat; the last-item check plus the
-        loading guard gives clean, duplicate-free pagination.</p>`,
+        <p><b><code>List</code> only realizes visible rows, so memory stays flat; the last-item check plus the
+        loading guard gives clean, duplicate-free pagination.</b></p>
+        <p>Red flag: forgetting the <code>isLoading</code> guard — <code>.onAppear</code> can fire more than once
+        for the same row during fast scrolling, and without the guard you'll fire the same page request twice.</p>`,
       },
     ],
   },
@@ -387,10 +424,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Clarify: multi-device, last-writer acceptable? rich text or plain? scale?</li>
-          <li>Local store as source of truth; background sync engine; mutation queue with retries.</li>
-          <li>Define conflict policy and change tracking.</li>
+        html: `<p>An app that treats the network as the source of truth is unusable the moment connectivity
+          drops — offline-first means the local store is authoritative and sync is a background concern layered
+          on top, not a blocking dependency of every write.</p>
+        <ul>
+          <li>1. Clarify: multi-device, last-writer acceptable? rich text or plain? scale?</li>
+          <li>2. Make the local store the source of truth; add a background sync engine with a mutation queue and
+            retries.</li>
+          <li>3. Define the conflict policy and how changes are tracked.</li>
         </ul>`,
       },
       {
@@ -402,8 +443,13 @@ final class ItemsModel {
           queued with idempotency keys and retried on reconnect (with backoff). <b>Conflicts:</b> start with
           server-authoritative or last-write-wins by timestamp; upgrade to per-field merge or CRDTs only if the
           product needs true concurrent editing. <b>Observability:</b> surface a subtle sync state and a manual
-          retry. The interview is really testing whether you make the local store authoritative and handle the
-          queue/conflict edge cases explicitly.</p>`,
+          retry.</p>
+        <p>Yes, a mutation queue with idempotency keys is more code than "just PUT the note" — but the
+          alternative is silent data loss the moment two devices edit offline and reconnect, which is much more
+          expensive to debug in production than to build up front. Treat it as infrastructure you write once and
+          every future feature reuses, and budget for the long-term cost too: CRDTs in particular need tombstone
+          garbage collection or their metadata grows unbounded. <b>The interview is really testing whether you
+          make the local store authoritative and handle the queue/conflict edge cases explicitly.</b></p>`,
       },
     ],
   },
@@ -418,10 +464,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Diagnose: one target = serial builds, tangled deps, merge pain.</li>
-          <li>Modularize into local Swift packages with a strict dependency direction.</li>
-          <li>Add shared foundations and tooling; enforce boundaries.</li>
+        html: `<p>A single target forces the compiler to rebuild everything on any change and forces every
+          engineer to edit the same files — the fix isn't a faster machine, it's removing the coupling that makes
+          builds serial and diffs collide in the first place.</p>
+        <ul>
+          <li>1. Diagnose: one target = serial builds, tangled deps, merge pain.</li>
+          <li>2. Modularize into local Swift packages with a strict dependency direction.</li>
+          <li>3. Add shared foundations and tooling, and enforce the boundaries in CI.</li>
         </ul>`,
       },
       {
@@ -431,9 +480,13 @@ final class ItemsModel {
           <i>Networking</i> packages — and never on each other. The app target just composes features.</p>
         <p><b>Payoffs:</b> parallel + incremental builds, compiler-enforced boundaries, per-feature tests and
           previews, and the ability to build a feature in isolation. Add a router so features stay decoupled
-          from navigation, a design system for consistency, and CI that builds/tests changed packages. The
-          architect signal is treating <b>module boundaries and dependency direction</b> as the core decision,
-          plus a migration plan (extract leaf features first).</p>`,
+          from navigation, a design system for consistency, and CI that builds/tests changed packages.</p>
+        <p>The migration itself costs real sprint time and a stretch of dual-maintenance while packages are
+          extracted — but leaving it as one target costs that same time every week forever, in build minutes and
+          merge conflicts across 30 engineers. Extract leaf features first so the payoff compounds early, and plan
+          for it as an investment in velocity, not a one-off cleanup: as the team grows, module boundaries are
+          what keep onboarding and code review tractable. <b>The architect signal is treating module boundaries
+          and dependency direction as the core decision</b>, with a concrete migration plan.</p>`,
       },
     ],
   },
@@ -448,9 +501,11 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Lazy rendering, off-main decoding, downsampling, caching, stable identity.</li>
-          <li>Prefetch ahead; cancel loads for cells that scroll away.</li>
+        html: `<p>Dropped frames during scroll almost always mean too much work is happening on the main thread
+          per frame — the fix is doing less work there, not making the device faster.</p>
+        <ul>
+          <li>1. Render lazily, decode off the main thread, downsample, cache, and give rows stable identity.</li>
+          <li>2. Prefetch a few rows ahead; cancel loads for cells that scroll away.</li>
         </ul>`,
       },
       {
@@ -460,8 +515,9 @@ final class ItemsModel {
           300px cell). <b>Cache</b> decoded thumbnails in an actor-backed cache keyed by URL+size, de-duping
           concurrent loads. Give rows <b>stable identity</b> so SwiftUI reuses views. <b>Prefetch</b> a few rows
           ahead and <b>cancel</b> loads when cells disappear (tie work to <code>.task</code>). Validate with the
-          Time Profiler (no main-thread decode) and Allocations (flat memory). The senior signal: smooth = do
-          less per frame, off the main thread.</p>`,
+          Time Profiler (no main-thread decode) and Allocations (flat memory).</p>
+        <p><b>Smooth = do less per frame, off the main thread</b> — that's the one sentence to say when asked how
+          you'd approach any scroll-performance problem, image feed or not.</p>`,
       },
     ],
   },
@@ -476,9 +532,12 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Layered: ViewModel → Repository → (APIClient + Store).</li>
-          <li>Protocols at each seam; central auth/retry; caching policy.</li>
+        html: `<p>Networking logic scattered across view models means auth refresh and retry get reimplemented
+          (and re-broken) in every screen — a layered architecture puts each concern in exactly one place.</p>
+        <ul>
+          <li>1. Layer it: ViewModel → Repository → (APIClient + Store).</li>
+          <li>2. Put a protocol at each seam so tests can inject fakes.</li>
+          <li>3. Centralize auth refresh and retry policy in one place, not per-call-site.</li>
         </ul>`,
       },
       {
@@ -488,8 +547,10 @@ final class ItemsModel {
           returning domain models and owning the fresh-vs-cached decision (memory/disk/store) and pagination.
           <b>ViewModels</b> depend only on repository protocols, so tests inject fakes. Centralize
           <b>auth refresh</b> (intercept 401, refresh once, retry queued requests) and <b>retry/backoff</b> in
-          one place. The win is one source of truth, clear seams for testing, and no duplicated networking
-          logic in views.</p>`,
+          one place.</p>
+        <p><b>One source of truth for auth and retry, with clear seams for testing, beats no duplicated
+          networking logic scattered across views.</b> Say that line when asked why you'd bother with a
+          Repository layer instead of calling the API straight from a view model.</p>`,
       },
     ],
   },
@@ -504,9 +565,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Navigation as data: a path of typed Route values.</li>
-          <li>A router maps routes to destinations; links/notifications decode to routes.</li>
+        html: `<p>Navigation that's imperative — screens presenting other screens directly — can't be driven by
+          an external event like a push notification or a deep link without threading UIKit-style delegates
+          through the whole app. Modeling navigation as data removes that problem entirely.</p>
+        <ul>
+          <li>1. Model navigation as a path of typed <code>Route</code> values.</li>
+          <li>2. A router maps routes to destinations.</li>
+          <li>3. Decode deep links and notification payloads into the same <code>Route</code> values.</li>
         </ul>`,
       },
       {
@@ -516,8 +581,10 @@ final class ItemsModel {
           via <code>navigationDestination(for:)</code>; features emit routes rather than presenting screens
           themselves. <b>Deep links and notifications</b> decode a URL/payload into <code>Route</code> values
           appended to the path — same mechanism as in-app navigation. <b>State restoration</b> becomes
-          persist-and-reload the path. This decouples "what to show" from "how to present," makes flows
-          testable, and gives one place to reason about the whole graph.</p>`,
+          persist-and-reload the path.</p>
+        <p><b>This decouples "what to show" from "how to present," makes flows testable, and gives one place to
+          reason about the whole navigation graph</b> — the line to lead with when asked why routes-as-data beats
+          screens presenting screens.</p>`,
       },
     ],
   },
@@ -532,9 +599,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>PR CI runs tests; main auto-ships TestFlight; releases promoted with phased rollout.</li>
-          <li>Reproducible signing; versioning; observability + rollback.</li>
+        html: `<p>Manual signing and manual TestFlight uploads don't scale past a couple of engineers and turn
+          "ship it" into a half-day ritual — automating build → sign → distribute is what makes releases boring,
+          which is the goal.</p>
+        <ul>
+          <li>1. On every PR, run tests and lint in CI.</li>
+          <li>2. On merge to main, auto-archive, sign, and upload a TestFlight build.</li>
+          <li>3. Promote releases with a phased rollout, and keep a rollback path.</li>
         </ul>`,
       },
       {
@@ -543,9 +614,12 @@ final class ItemsModel {
           archive, sign, and upload a <b>TestFlight</b> build, auto-incrementing <code>CFBundleVersion</code>.
           <b>Release:</b> promote a TestFlight build to the App Store with a <b>phased rollout</b>. Use
           <b>Xcode Cloud</b> for tight App Store Connect integration, or <b>Fastlane</b> lanes on GitHub Actions
-          for control; manage signing reproducibly (Fastlane <i>match</i> or automatic signing).
-          <b>Safety net:</b> crash monitoring + a feature flag kill-switch so a bad release can be disabled
-          without a new build. The signal is a repeatable path from commit to store with a rollback story.</p>`,
+          for control; manage signing reproducibly (Fastlane <i>match</i> or automatic signing).</p>
+        <p>Setting this up costs real time up front, and phased rollout means a fix takes longer to reach 100% of
+          users than a single big-bang release — but the alternative is a bad build reaching everyone at once with
+          no way back except an expedited review. Add a crash-monitoring + feature-flag kill-switch as the
+          long-term safety net so a bad release can be disabled without a new build at all. <b>The signal is a
+          repeatable path from commit to store with a rollback story</b>, not just green CI.</p>`,
       },
     ],
   },
@@ -560,9 +634,12 @@ final class ItemsModel {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
-          <li>Embed content with a small on-device model; store vectors locally.</li>
-          <li>At query time, embed the query and rank by cosine similarity.</li>
+        html: `<p>Sending content to a server for embedding is the easy path, but it means user data leaves the
+          device and the feature stops working offline — an on-device embedding model trades a heavier client for
+          both privacy and zero per-query cost.</p>
+        <ul>
+          <li>1. Embed content with a small on-device model; store vectors locally.</li>
+          <li>2. At query time, embed the query and rank by cosine similarity.</li>
         </ul>`,
       },
       {
@@ -571,9 +648,13 @@ final class ItemsModel {
           Engine) to get a normalized vector; store vectors alongside the items locally. <b>Query:</b> embed the
           query with the same model and rank items by <b>cosine similarity</b> (top-k). Keep a keyword fallback
           and blend scores. <b>Engineering:</b> embed lazily/incrementally, cache vectors, quantize the model to
-          fit memory/latency, and run indexing off the main actor. It's private (nothing leaves the device),
-          works offline, and has no per-query cost — exactly the architecture this guide's own browser search
-          uses as a live demo.</p>`,
+          fit memory/latency, and run indexing off the main actor.</p>
+        <p>An on-device model adds app size and needs quantization work a server-side model wouldn't — but a
+          server round-trip means user content leaves the device and the feature dies offline, which is a
+          non-starter for anything privacy-sensitive. <b>It's private (nothing leaves the device), works offline,
+          and has no per-query cost</b> — exactly the architecture this guide's own browser search uses as a live
+          demo. Plan for re-embedding as the model improves; treat the index as something you version, not a
+          one-time build.</p>`,
       },
     ],
   },

@@ -19,7 +19,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       letting you queue, log, or undo it. iOS examples: <code>UndoManager</code> registers command-like
       closures/selectors to reverse an action; a background task queue where each task is a serializable
       command object; <code>UIAction</code> bundles a title and handler as one first-class value passed
-      around independently of the button that triggers it.</p>`,
+      around independently of the button that triggers it. <b>I use Command whenever an action needs to be
+      queued, logged, or undone independently of whoever triggered it.</b></p>`,
     level: "senior",
   },
   {
@@ -43,7 +44,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       encapsulation</b> — e.g. an undo stack of snapshots. In Swift, a <code>struct</code> conforming to
       <code>Codable</code>/<code>Equatable</code> already <i>is</i> a memento: copying a value type into an
       array is a full, safe snapshot with no custom save/restore API needed, unlike reference types where
-      you'd have to deep-copy explicitly.</p>`,
+      you'd have to deep-copy explicitly. <b>In Swift, value semantics give you Memento for free — I only
+      reach for the classic pattern when I'm stuck with a reference type.</b></p>`,
     level: "mid",
   },
   {
@@ -55,7 +57,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       overrides. <code>XCTestCase</code>'s <code>setUp()</code>/<code>tearDown()</code> around each test
       method, and <code>UIViewController</code>'s <code>viewDidLoad</code>/<code>viewWillAppear</code>/
       <code>viewDidAppear</code> sequence, are both template methods — the framework calls the steps in a
-      fixed order and you fill in the pieces that vary.</p>`,
+      fixed order and you fill in the pieces that vary. <b>Template Method is why overriding one lifecycle
+      method safely composes with the rest — the framework, not your code, owns the sequencing.</b></p>`,
     level: "mid",
   },
   {
@@ -67,7 +70,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       standardized: implement <code>next() -&gt; Element?</code> and you get <code>for-in</code>,
       <code>map</code>, <code>filter</code>, and every other sequence algorithm for free. It decouples
       traversal from a collection's internal storage — a linked list, a lazily-computed sequence, and an
-      array can all be iterated identically by client code.</p>`,
+      array can all be iterated identically by client code. <b>Conforming to Sequence buys me the entire
+      standard library's algorithm surface for one method implementation.</b></p>`,
     level: "mid",
   },
   {
@@ -79,7 +83,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       so they don't hold references to each other. A parent coordinator that listens to child view
       controllers' callbacks and decides what happens next — rather than child A holding a reference to child
       B and calling it directly — is a mediator: it keeps children reusable and testable in isolation, at the
-      cost of concentrating logic in the mediator.</p>`,
+      cost of concentrating logic in the mediator. <b>I route cross-child communication through a coordinator
+      so no child view controller knows another one exists.</b></p>`,
     level: "senior",
   },
   {
@@ -90,7 +95,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
     answerHtml: `<p>Proxy provides a <b>stand-in</b> that controls access to a real object — adding caching,
       lazy loading, access control, or logging transparently. A repository that wraps a network client behind
       the same protocol, serving cached responses when fresh and only hitting the network when stale, is a
-      proxy: callers depend on the protocol and can't tell which implementation they're talking to.</p>`,
+      proxy: callers depend on the protocol and can't tell which implementation they're talking to. <b>Proxy
+      lets me add caching or logging without the caller's code changing at all.</b></p>`,
     level: "senior",
   },
   {
@@ -102,7 +108,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       shared interface. SwiftUI's <code>View</code> protocol is composite by design: a leaf view
       (<code>Text</code>) and a container built from many views (a whole screen) both conform to
       <code>View</code> and compose the same way — a parent's <code>body</code> doesn't need to know whether
-      a child is a leaf or a deep subtree.</p>`,
+      a child is a leaf or a deep subtree. <b>Every SwiftUI view tree is a Composite — that's why a
+      three-line view and a whole screen slot into the same <code>some View</code> return type.</b></p>`,
     level: "mid",
   },
   {
@@ -114,7 +121,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       constructing from scratch — useful when construction is expensive or config-heavy. Swift structs get
       this for free via copy-on-write: <code>var b = a</code> clones <code>a</code>'s state cheaply, and
       mutating <code>b</code> only triggers a real copy on write. For reference types you'd implement
-      <code>NSCopying</code> or a manual <code>copy()</code> method to get the same effect.</p>`,
+      <code>NSCopying</code> or a manual <code>copy()</code> method to get the same effect. <b>Copy-on-write
+      makes Prototype the default for structs — I only implement it explicitly for classes.</b></p>`,
     level: "mid",
   },
   {
@@ -127,7 +135,9 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       <code>enum</code> with associated values is usually simpler and gets exhaustiveness checking for free —
       reach for a true visitor (a protocol with one <code>visit(_:)</code> method per concrete type) mainly
       when walking a heterogeneous <b>class hierarchy</b> you don't own (e.g. a third-party AST/DOM) and need
-      type-safe dispatch without <code>as?</code> casts everywhere.</p>`,
+      type-safe dispatch without <code>as?</code> casts everywhere. Red flag: reaching for a full Visitor on
+      your own enum types — that's just a switch statement wearing a costume, and it loses Swift's
+      exhaustiveness checking.</p>`,
     level: "architect",
   },
   {
@@ -151,7 +161,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       and its view binds directly to it. An <b>Interactor</b> is stateless — it receives the shared
       <code>AppState</code> (or a repository) as a parameter, performs one use-case, and writes the result
       back into that shared state; views then read their own slice independently. This trades a 1:1
-      view/state coupling for a shared-state model that many views can read consistently.</p>`,
+      view/state coupling for a shared-state model that many views can read consistently. <b>An Interactor
+      is a stateless use-case object — the state lives in AppState, not in the interactor.</b></p>`,
     level: "senior",
   },
   {
@@ -163,7 +174,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       read the same slice of data (e.g. the signed-in user, a countries list) without duplicating a fetch or
       risking two screens disagreeing. It also makes the whole app's state <b>serializable and diffable</b>
       for debugging (print/log a snapshot, drive tests) at the cost of every observer needing to scope its
-      reads carefully to avoid over-rendering.</p>`,
+      reads carefully to avoid over-rendering. <b>One AppState means one place to look when two screens
+      disagree about the same data — there's nowhere else it could have drifted from.</b></p>`,
     level: "senior",
   },
   {
@@ -175,7 +187,10 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       interactors) behind protocols, built once at launch. Injecting it via a custom
       <code>EnvironmentKey</code> rather than a global singleton means <b>previews and tests can substitute a
       container of mocks</b> for a subtree of the view hierarchy without touching global state — SwiftUI's
-      environment is scoped and overridable per-view, a singleton isn't.</p>`,
+      environment is scoped and overridable per-view, a singleton isn't. Red flag: reaching straight for
+      <code>DIContainer.shared</code> — that reintroduces the exact global-state coupling the environment key
+      was meant to avoid. <b>I inject dependencies through the environment specifically so a preview can
+      swap in mocks without touching production code.</b></p>`,
     level: "senior",
   },
   {
@@ -187,7 +202,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       a mock conforming to that protocol that returns canned data (or throws), call the interactor's method,
       and assert on the resulting <code>AppState</code> mutation — no <code>URLSession</code>, no server, and
       the test runs in milliseconds. The same seam lets Xcode Previews inject an always-succeeding or
-      always-loading mock to preview every state without live data.</p>`,
+      always-loading mock to preview every state without live data. <b>Depending on a protocol, not a
+      concrete client, is what makes an Interactor testable in the first place.</b></p>`,
     level: "mid",
   },
   {
@@ -199,7 +215,9 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       inherently a <b>stream of updates over time</b> (a live search's results, a websocket feed, a value
       multiple sources write to). Combine/<code>AsyncStream</code> model "zero or more values over time"
       directly, and compose with operators (debounce, combineLatest) that a single <code>await</code> call
-      can't express — async/await is the right tool for one-shot work, streams for ongoing state.</p>`,
+      can't express — async/await is the right tool for one-shot work, streams for ongoing state. <b>I pick
+      async/await for "fetch this once" and a stream for "keep me updated" — mixing them up is where the bugs
+      come from.</b></p>`,
     level: "architect",
   },
   {
@@ -212,7 +230,9 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       re-render when that slice changes — SwiftUI's diffing then skips the view when unrelated state changes.
       In practice: a small per-screen view model that projects <code>AppState</code> down to its own
       <code>@Published</code> value, or a <code>Binding</code> created with a getter/setter scoped to one
-      sub-tree of the state.</p>`,
+      sub-tree of the state. Red flag: binding a view directly to the raw <code>AppState</code> struct — every
+      unrelated mutation elsewhere in the app now redraws that view too. <b>I scope every observer to an
+      Equatable slice of state, never the whole struct.</b></p>`,
     level: "senior",
   },
   {
@@ -237,7 +257,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       sub-graph?), <b>maintenance signal</b> (recent commits/releases vs. abandoned), <b>license</b>
       compatibility, whether its public API is <code>Sendable</code>/concurrency-checked for Swift 6 strict
       mode, and its binary/asset size impact on your app. A one-file utility you could write in an afternoon
-      rarely justifies a dependency; a well-maintained networking or crash-reporting SDK usually does.</p>`,
+      rarely justifies a dependency; a well-maintained networking or crash-reporting SDK usually does. <b>Every
+      dependency is code I now own the risk of, not just code I don't have to write.</b></p>`,
     level: "mid",
   },
   {
@@ -245,11 +266,12 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
     category: "arch",
     categoryLabel: "Architecture",
     question: "What's a fast way to understand a large unfamiliar iOS codebase's architecture without reading every file top to bottom?",
-    answerHtml: `<p>Start at the <b>README</b> and the app's entry point (<code>@main</code> struct or
-      <code>AppDelegate</code>), skim the <b>top-level folder structure</b> for the module boundaries the
-      team chose, find the <b>composition root</b> (where dependencies get wired together) to see how the
-      big pieces connect, and open the <b>tests</b> — they're often the most honest, up-to-date description
-      of what the app's boundaries and edge cases actually are.</p>`,
+    answerHtml: `<p>Reading top to bottom doesn't scale past a few thousand lines, so I work outside-in: 1.
+      <b>README</b> and entry point (<code>@main</code> struct or <code>AppDelegate</code>) for the app's
+      stated shape. 2. <b>Top-level folder structure</b> for the module boundaries the team actually chose. 3.
+      The <b>composition root</b> (where dependencies get wired together) to see how the big pieces connect.
+      4. The <b>tests</b> — often the most honest, up-to-date description of the app's real boundaries and
+      edge cases. <b>I map a codebase outside-in before I ever read a file top to bottom.</b></p>`,
     level: "mid",
   },
   {
@@ -261,7 +283,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       architecture changed — a migration from Core Data to SwiftData, or MVC to MVVM — including the
       trade-offs discussed in review, which the final code alone doesn't capture. Reading a decision's
       history is often more instructive than reading its current shape, especially for the "why not the
-      alternative" reasoning interviews probe for.</p>`,
+      alternative" reasoning interviews probe for. <b>The current code shows what won; the history shows
+      why it won — and that's the part interviewers actually ask about.</b></p>`,
     level: "senior",
   },
   {
@@ -285,7 +308,8 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       following a CONTRIBUTING guide, passing CI, responding to review feedback on a codebase you don't
       control. That's a closer proxy for team collaboration than a solo portfolio app, and gives you a
       concrete, verifiable story ("I fixed X in library Y, here's the PR") instead of a generic "I'm a team
-      player" claim.</p>`,
+      player" claim. <b>A merged PR in someone else's codebase is verifiable evidence, not a self-reported
+      trait.</b></p>`,
     level: "mid",
   },
   {
@@ -297,7 +321,9 @@ export const ADVANCED34_FLASHCARDS: Flashcard[] = [
       deep on — then actually read source/docs for those — not as a checklist to skim every linked repo's
       README. Breadth without depth reads as buzzword familiarity in an interview; being able to explain
       <i>why</i> you'd reach for one specific tool, with a trade-off, beats naming ten you've only
-      skimmed.</p>`,
+      skimmed. Red flag: name-dropping five libraries from an awesome-list you've never opened — one
+      interviewer follow-up question exposes it. <b>I'd rather go deep on two tools than wide on ten I've
+      only skimmed.</b></p>`,
     level: "mid",
   },
 ];
@@ -313,7 +339,9 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     options: ["Command", "Chain of Responsibility", "Mediator", "Visitor"],
     answer: 1,
     explanationHtml: `<p>Each responder gets a chance to handle the event and, if it can't, passes it to the
-      next responder — the defining shape of Chain of Responsibility.</p>`,
+      next responder — the defining shape of Chain of Responsibility. Mediator is the tempting wrong pick
+      because it also "coordinates" objects, but a mediator is one central object making decisions; here
+      there's no central decision-maker, just a linear hand-off until someone claims the event.</p>`,
   },
   {
     id: "gofz2",
@@ -324,7 +352,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>Copying a value type gives you an independent snapshot automatically (copy-on-write)
       — with a reference type you'd need to hand-write a deep copy to avoid the "snapshot" aliasing the live
-      object.</p>`,
+      object. "Memento requires classes" is backwards: the pattern is easiest with value types precisely
+      because you don't need custom save/restore machinery at all.</p>`,
   },
   {
     id: "gofz3",
@@ -344,7 +373,9 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     options: ["Factory", "Proxy", "Composite", "Command"],
     answer: 1,
     explanationHtml: `<p>It's a stand-in that transparently controls access to the real network client —
-      adding caching without callers knowing which implementation they're talking to. That's Proxy.</p>`,
+      adding caching without callers knowing which implementation they're talking to. That's Proxy. Factory
+      is the wrong pick because a factory's job ends at object <i>creation</i> — it doesn't intercept calls
+      on an already-created object the way this caching wrapper does.</p>`,
   },
   {
     id: "gofz5",
@@ -355,7 +386,9 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>A switch over an owned enum with associated values is simpler and
       exhaustiveness-checked. Visitor earns its ceremony for heterogeneous class hierarchies (e.g. a
-      third-party AST) where you can't add a switch-friendly enum.</p>`,
+      third-party AST) where you can't add a switch-friendly enum. "You want less code" is the trap answer —
+      Visitor is strictly more code than a switch; it only pays off when you don't own the types to switch
+      on in the first place.</p>`,
   },
   {
     id: "caz1",
@@ -366,7 +399,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>Dependencies only point inward — Presentation depends on Domain, Domain depends on
       abstractions the Data layer fulfills — so the domain logic never imports SwiftUI or a concrete network
-      stack.</p>`,
+      stack. "Interactors depend on concrete network types" is the trap: Interactors depend on a repository
+      <i>protocol</i>, which is precisely what keeps them ignorant of SwiftUI or a live network stack.</p>`,
   },
   {
     id: "caz2",
@@ -377,7 +411,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>A ViewModel typically owns its screen's published state 1:1 with its view; an
       Interactor is a stateless use-case that mutates a shared AppState which multiple views can then read
-      from.</p>`,
+      from. "ViewModels can't call repositories" is false and misses the actual distinction — both can call a
+      repository; what differs is who owns the resulting state.</p>`,
   },
   {
     id: "caz3",
@@ -388,7 +423,9 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>The environment is scoped and overridable per-view-subtree, so previews and tests
       can swap in a container of mocks without touching global state — a singleton can't be scoped that
-      way.</p>`,
+      way. The reason to avoid <code>DIContainer.shared</code> isn't performance or binary size — it's that a
+      singleton has exactly one live instance app-wide, so a test or preview can't substitute a mock without
+      mutating that same global instance.</p>`,
   },
   {
     id: "caz4",
@@ -399,7 +436,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>The ceremony pays off with many contributors and a real test suite; for a small app,
       protocols with a single implementation and an unused DI graph are usually just overhead — add the layer
-      when a second implementation or a test needs it.</p>`,
+      when a second implementation or a test needs it. Treating it as "always strictly better" is the trap:
+      an architecture's ceremony should be justified by the problem's actual scale, not applied by default.</p>`,
   },
   {
     id: "osz1",
@@ -409,7 +447,9 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     options: ["Read every file in alphabetical order", "Start at the README, entry point, folder structure, composition root, and tests", "Only read the view controllers", "Search for TODO comments"],
     answer: 1,
     explanationHtml: `<p>The README, entry point, top-level structure, composition root, and tests together
-      give you the architecture and real edge cases far faster than a linear top-to-bottom read.</p>`,
+      give you the architecture and real edge cases far faster than a linear top-to-bottom read. Reading only
+      view controllers misses the misconception's core: real architecture and boundaries live in how pieces
+      are wired and tested, not in any single layer's files.</p>`,
   },
   {
     id: "osz2",
@@ -420,7 +460,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>Ceremony should match complexity. Ceremony far beyond what a small app needs reads
       as not knowing when to stop, the same way ad-hoc MVC on a large multi-team app reads as
-      under-engineered.</p>`,
+      under-engineered. Mistaking heavy ceremony for "senior judgment" is the trap — senior judgment is
+      knowing which ceremony a given scale actually earns, in either direction.</p>`,
   },
   {
     id: "osz3",
@@ -431,7 +472,8 @@ export const ADVANCED34_QUIZ: QuizQuestion[] = [
     answer: 1,
     explanationHtml: `<p>Whether a dependency is actively maintained, licensed compatibly, and
       Sendable/concurrency-checked matters far more long-term than superficial signals like popularity or
-      branding.</p>`,
+      branding. Download count feels like a proxy for quality but says nothing about whether the maintainer
+      is still responding to issues or the code compiles cleanly under Swift 6 strict concurrency.</p>`,
   },
 ];
 
@@ -478,7 +520,8 @@ final class CommandStack {
       in the frameworks you use (responder chain, <code>Sequence</code>, view lifecycle) — recognize them
       rather than reinvent them. Command, Mediator, and Visitor are the three worth hand-rolling
       deliberately, and only when the problem (undo, decoupled child coordination, dispatch over a foreign
-      hierarchy) actually calls for the ceremony.</div>`,
+      hierarchy) actually calls for the ceremony. Say this: "Most GoF patterns are already baked into iOS
+      frameworks — I hand-roll one only when the framework doesn't give it to me for free."</div>`,
   },
   {
     id: "st-adv-76",
@@ -549,7 +592,9 @@ struct RealCountriesInteractor: CountriesInteractor {
     <div class="callout tip"><span class="lbl">Portfolio signal</span> Match your own project's patterns to
       the seniority you're interviewing for — a junior/mid portfolio project done cleanly in plain MVVM reads
       better than a small app wrapped in Clean Architecture ceremony it doesn't need. Save "architect-scale"
-      patterns for when the project's actual complexity earns them.</div>
+      patterns for when the project's actual complexity earns them. Say this: "I chose plain MVVM here
+      because five screens don't justify a DI container — I'd introduce Clean Architecture once there's a
+      second team or a second data source to isolate."</div>
     <div class="callout warn"><span class="lbl">Before you copy a pattern</span> A pattern used in a large
       open-source app (Clean Architecture, TCA, heavy modularization) was chosen for <i>that</i> app's team
       size and lifespan — cite it in an interview as "here's a real example of X, and here's when I would and

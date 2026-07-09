@@ -250,7 +250,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["A test file", "What consumers import (library/executable)", "A build setting", "A resource"],
     answer: 1,
     explanationHtml: `<p>Products (<code>.library</code>/<code>.executable</code>) are the public surface;
-      targets are the internal modules that build them.</p>`,
+      targets are the internal modules that build them. Picking "a build setting" is the tempting wrong answer
+      because products live in the same manifest as build config — but a product is a consumption contract, not a
+      compiler flag; that distinction is what keeps a package's public surface intentional.</p>`,
   },
   {
     id: "lz2",
@@ -260,7 +262,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["Bundle.main", "Bundle.module", "FileManager only", "URLSession"],
     answer: 1,
     explanationHtml: `<p>SPM generates <code>Bundle.module</code> for a target's resources; <code>Bundle.main</code>
-      is the app bundle, not the package's.</p>`,
+      is the app bundle, not the package's. Reaching for <code>Bundle.main</code> is the natural instinct if you're
+      used to app-target code, but a package doesn't share the app's bundle — that assumption is exactly what
+      produces a "resource not found" crash at runtime instead of a compile error.</p>`,
   },
   {
     id: "lz3",
@@ -270,7 +274,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["Exactly 1.2.0", "Up to the next major (SemVer-compatible)", "Any version", "The main branch"],
     answer: 1,
     explanationHtml: `<p><code>from:</code> allows updates up to (but not including) the next major version,
-      following Semantic Versioning.</p>`,
+      following Semantic Versioning. Treating it as "exactly 1.2.0" is the misconception — that's what
+      <code>.exact</code> does; <code>from:</code> deliberately leaves room for minor/patch updates so you get fixes
+      without waiting on a manual bump, at the cost of trusting the dependency's SemVer discipline.</p>`,
   },
   {
     id: "lz4",
@@ -280,7 +286,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["Reducing app size", "Enforcing module boundaries + parallel/cached builds", "Encrypting code", "Avoiding tests"],
     answer: 1,
     explanationHtml: `<p>They modularize the app: compiler-enforced boundaries, parallel/incremental builds, and
-      isolated tests/previews.</p>`,
+      isolated tests/previews. "Reducing app size" is the tempting distractor because splitting code sounds like
+      trimming it — but a local package doesn't remove code from the binary, it just draws a hard boundary around
+      it so a feature literally can't import another feature's internals.</p>`,
   },
   {
     id: "lz5",
@@ -290,7 +298,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["Speeds up the app at runtime", "Externalizes them into versioned text (fewer .pbxproj conflicts)", "Encrypts settings", "Is required by SPM"],
     answer: 1,
     explanationHtml: `<p>xcconfig moves settings into readable, per-config text files, avoiding binary
-      project-file merge conflicts and enabling includes/overrides.</p>`,
+      project-file merge conflicts and enabling includes/overrides. It's not a runtime optimization and SPM doesn't
+      require it — the payoff is purely for the team: a setting change becomes a reviewable one-line diff instead
+      of a silent edit buried in <code>.pbxproj</code>.</p>`,
   },
   {
     id: "lz6",
@@ -300,7 +310,9 @@ export const ADVANCED20_QUIZ: QuizQuestion[] = [
     options: ["A scheme", "Declared input/output files", "An xcconfig", "A product"],
     answer: 1,
     explanationHtml: `<p>Without input/output file declarations Xcode can't tell the phase is up to date, so it
-      re-runs every build — declare them so it's skipped when unchanged.</p>`,
+      re-runs every build — declare them so it's skipped when unchanged. Blaming the scheme or xcconfig is the wrong
+      lead because neither controls per-phase caching; the up-to-date check is scoped to that one Run Script phase's
+      declared files.</p>`,
   },
 ];
 
@@ -309,31 +321,39 @@ export const ADVANCED20_STUDY: StudySection[] = [
     id: "st-adv-47",
     num: "62",
     title: "62 · Authoring Swift packages",
-    html: `<p><b>What it is.</b> <code>Package.swift</code> (using <code>PackageDescription</code>) declares
-      <b>products</b> (what consumers import), <b>targets</b> (<code>.target</code>, <code>.testTarget</code>,
-      <code>.executableTarget</code>, <code>.binaryTarget</code>, <code>.plugin</code>, <code>.macro</code>), and
-      <b>dependencies</b> (SemVer rules via <code>from:</code>/<code>exact</code>/ranges, or local
-      <code>path:</code>). Bundle resources with <code>.process</code>/<code>.copy</code> and read them via
+    html: `<p>A package manifest exists to make the public surface and internal dependency graph
+      machine-resolvable, so SPM (and every consumer) can build, cache, and version it like any other dependency
+      instead of trusting folder conventions. <code>Package.swift</code> (using <code>PackageDescription</code>)
+      declares <b>products</b> (what consumers import), <b>targets</b> (<code>.target</code>,
+      <code>.testTarget</code>, <code>.executableTarget</code>, <code>.binaryTarget</code>, <code>.plugin</code>,
+      <code>.macro</code>), and <b>dependencies</b> (SemVer rules via <code>from:</code>/<code>exact</code>/ranges, or
+      local <code>path:</code>). Bundle resources with <code>.process</code>/<code>.copy</code> and read them via
       <code>Bundle.module</code>; set <code>platforms:</code> for deployment targets.</p>
     <p>The big win is <b>local packages</b> for modularization — feature + shared packages with enforced
       boundaries, parallel builds, and isolated tests. Distribute closed-source via a checksummed
       <code>binaryTarget</code> (XCFramework), and automate tooling with build/command plugins.</p>
     <div class="callout tip"><span class="lbl">Library type</span> Prefer <b>automatic</b> linkage; too many
-      dynamic frameworks slows app launch.</div>`,
+      dynamic frameworks slows app launch.</div>
+    <p><b>In an interview, say:</b> "I split by feature and shared-layer boundaries so the compiler enforces the
+      module graph, not just code review."</p>`,
   },
   {
     id: "st-adv-48",
     num: "63",
     title: "63 · Build settings, configs & schemes",
-    html: `<p><b>What it is.</b> How a build is parameterized. <b>Configurations</b> (Debug vs Release) flip
-      optimization, assertions, and stripping — never profile Debug. <b>Schemes</b> define what each action
-      builds/runs/tests (share them so CI matches local). <b>xcconfig</b> files externalize settings into
-      versioned text (fewer <code>.pbxproj</code> conflicts; <code>#include</code> + <code>$(VAR)</code>
-      references). <b>Run-script build phases</b> need declared input/output files or they run every build.</p>
+    html: `<p>How a build is parameterized matters because every one of these knobs decides whether "it works on my
+      machine" also works on a teammate's machine and in CI — get them wrong and you chase phantom bugs in the wrong
+      configuration entirely. <b>Configurations</b> (Debug vs Release) flip optimization, assertions, and stripping —
+      never profile Debug. <b>Schemes</b> define what each action builds/runs/tests (share them so CI matches local).
+      <b>xcconfig</b> files externalize settings into versioned text (fewer <code>.pbxproj</code> conflicts;
+      <code>#include</code> + <code>$(VAR)</code> references). <b>Run-script build phases</b> need declared
+      input/output files or they run every build.</p>
     <p><b>Conditional compilation</b> (<code>#if DEBUG</code>, Active Compilation Conditions) bakes per-config
       behavior; build-setting variables drive the generated <code>Info.plist</code> and entitlements
       (<code>$(MARKETING_VERSION)</code>, bundle id). Tune optimization/size only with measurement.</p>
     <div class="callout warn"><span class="lbl">Reproducibility</span> Shared schemes + xcconfig + a pinned
-      toolchain are what make "builds on my machine" also build in CI.</div>`,
+      toolchain are what make "builds on my machine" also build in CI.</div>
+    <p><b>In an interview, say:</b> "I always profile a Release build, never Debug — unoptimized code makes every
+      measurement meaningless."</p>`,
   },
 ];
