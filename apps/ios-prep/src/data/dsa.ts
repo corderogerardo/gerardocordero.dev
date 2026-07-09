@@ -18,12 +18,12 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: two pointers.</b> Because the array is sorted, put one pointer at each end.</li>
           <li>If the pair sums too low, the only way to grow it is to move the left pointer right; too high, move
             the right pointer left.</li>
           <li>Each step discards an element that can't be part of any answer — O(n) time, O(1) space, no hash map.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -51,12 +51,12 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: sliding window with a last-seen map.</b> Expand the window one character at a time.</li>
           <li>Keep each character's most recent index. When you hit a repeat that sits inside the window, jump the
             window's start to just past it.</li>
           <li>Track the best width as you go — O(n) time, O(min(n, alphabet)) space.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -86,11 +86,11 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: hash map for O(1) complement lookup.</b> The sorted-array two-pointer trick can't apply.</li>
           <li>Walk once; for each number ask the map whether its complement <code>target − n</code> was already seen.</li>
           <li>If yes you're done; otherwise record <code>n → index</code> and continue — O(n) time, O(n) space.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -118,12 +118,12 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: binary search on a boundary.</b> Search the half-open range <code>[lo, hi)</code>.</li>
           <li>Invariant: the answer always lies in <code>[lo, hi]</code>. Shrink toward the first index whose
             value is ≥ target.</li>
           <li>When <code>lo == hi</code> the window is empty and <code>lo</code> is the insert point — O(log n).</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -150,11 +150,11 @@ export const DSA_PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: breadth-first search, processed one level at a time.</b></li>
           <li>Hold the current level in a list; build the next level from every node's children before going deeper.</li>
           <li>Each full sweep of the queue is exactly one tree level — O(n) time and space.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -196,11 +196,11 @@ func levelOrder(_ root: TreeNode?) -&gt; [[Int]] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: flood-fill DFS.</b> Scan the grid; each unvisited land cell starts a new island.</li>
           <li>From it, recursively sink every connected land cell (set it to water) so you never recount an island.</li>
           <li>The grid itself records progress — no separate visited set — O(rows × cols).</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -236,11 +236,11 @@ func levelOrder(_ root: TreeNode?) -&gt; [[Int]] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: 1-D dynamic programming — it's Fibonacci.</b> ways(i) = ways(i−1) + ways(i−2).</li>
           <li>You only ever need the last two values, so keep two rolling variables instead of a full array.</li>
           <li>O(n) time, O(1) space.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -266,11 +266,11 @@ func levelOrder(_ root: TreeNode?) -&gt; [[Int]] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: stack for matching pairs.</b> Push every opening bracket.</li>
           <li>On a closing bracket, the top of the stack must be its matching opener — otherwise it's invalid.</li>
           <li>Valid iff the stack is empty at the end — O(n).</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -301,12 +301,12 @@ func levelOrder(_ root: TreeNode?) -&gt; [[Int]] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: count, then select the top K.</b> First tally frequencies in a hash map.</li>
           <li>A size-K heap gives O(n log k); here we use <b>bucket sort by frequency</b> — index buckets by count
             — for O(n).</li>
           <li>Walk buckets from highest count down, collecting until you have K.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",
@@ -339,12 +339,12 @@ func levelOrder(_ root: TreeNode?) -&gt; [[Int]] {
     reveal: [
       {
         label: "Approach",
-        html: `<ul>
+        html: `<ol>
           <li><b>Pattern: backtracking / decision tree.</b> At each index decide: include it or not.</li>
           <li>Record the current partial subset at every node, recurse on the remaining suffix, then undo (pop) —
             the classic choose / explore / un-choose loop.</li>
           <li>O(n · 2ⁿ): there are 2ⁿ subsets.</li>
-        </ul>`,
+        </ol>`,
       },
       {
         label: "Solution",

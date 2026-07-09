@@ -59,7 +59,9 @@ export const ADVANCED17_FLASHCARDS: Flashcard[] = [
       <code>HKStatisticsQuery</code>/<code>HKStatisticsCollectionQuery</code> compute aggregates (daily step
       sums, average heart rate) bucketed by interval.</p>
     <p>Red flag: fetching every sample and summing it in app code. For aggregates, let HealthKit do the math
-      with a statistics query.</p>`,
+      with a statistics query.</p>
+    <p><b>I reach for a statistics query for any aggregate, and reserve sample queries for the raw list a user
+      actually needs to see.</b></p>`,
     level: "senior",
   },
   {
@@ -164,7 +166,9 @@ export const ADVANCED17_FLASHCARDS: Flashcard[] = [
       <b>magnetometer</b>, and the fused <b>device motion</b> (the processed, drift-corrected combination). Set
       an update interval and start updates to a handler/queue.</p>
     <p>Red flag: creating a CMMotionManager per view controller. Use a <b>single shared</b> instance — multiple
-      instances conflict over the same hardware.</p>`,
+      instances conflict over the same hardware.</p>
+    <p><b>I keep one shared CMMotionManager for the whole app and hand out its data, rather than letting each
+      screen own its own instance.</b></p>`,
     level: "senior",
   },
   {
@@ -204,7 +208,9 @@ export const ADVANCED17_FLASHCARDS: Flashcard[] = [
       classifies movement (stationary, walking, running, cycling, automotive) and supports historical queries —
       efficient, low-power context.</p>
     <p>Red flag: assuming Location or HealthKit permission covers this — it requires its own <b>Motion &amp;
-      Fitness</b> permission and an <code>NSMotionUsageDescription</code> string.</p>`,
+      Fitness</b> permission and an <code>NSMotionUsageDescription</code> string.</p>
+    <p><b>I request Motion &amp; Fitness explicitly and never assume Location or HealthKit access carries over
+      to activity classification.</b></p>`,
     level: "senior",
   },
   {

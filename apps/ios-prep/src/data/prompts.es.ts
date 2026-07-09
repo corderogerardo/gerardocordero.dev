@@ -28,12 +28,15 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Dirija un modificador <code>.task(id: query)</code> para que una nueva tarea inicie cuando cambie la
+        html: `<p>Cada pulsación innecesaria que llega a la red desperdicia ancho de banda y puede devolver
+          resultados desordenados — el framework ya resuelve ambos problemas si ata la vida de la solicitud al
+          valor de la consulta.</p>
+        <ul>
+          <li>1. Dirija un modificador <code>.task(id: query)</code> para que una nueva tarea inicie cuando cambie la
             consulta — y SwiftUI cancele la tarea anterior automáticamente.</li>
-          <li>Dentro, <code>try await Task.sleep(for: .milliseconds(300))</code>. Si se cancela durante la
+          <li>2. Dentro, <code>try await Task.sleep(for: .milliseconds(300))</code>. Si se cancela durante la
             espera lanza una excepción, por lo que una nueva pulsación aborta la consulta pendiente.</li>
-          <li>Después de la espera, ejecute la búsqueda. La cancelación genera el debounce automáticamente.</li>
+          <li>3. Después de la espera, ejecute la búsqueda. La cancelación genera el debounce automáticamente.</li>
         </ul>`,
       },
       {
@@ -56,8 +59,11 @@ export const PROMPTS: Prompt[] = [
       }
   }
 }</div>
-        <p>La clave: <code>.task(id:)</code> vincula la vida útil de la tarea al valor, por lo que el
-        debounce + la cancelación vienen del framework en lugar de timers manuales.</p>`,
+        <p><b>Atar la vida de la tarea al valor es todo el truco</b> — el debounce y la cancelación vienen del
+        framework en lugar de un timer manual o el <code>.debounce</code> de Combine.</p>
+        <p>Señal de alerta: recurrir a un <code>Timer</code> o a un <code>DispatchWorkItem</code> manual para
+        cancelar la llamada anterior — funciona, pero es exactamente el boilerplate que <code>.task(id:)</code>
+        existe para eliminar, y los entrevistadores lo leen como no conocer la concurrencia estructurada.</p>`,
       },
     ],
   },
@@ -73,11 +79,14 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Use un <code>actor</code> para que todo acceso al diccionario esté serializado — sin locks.</li>
-          <li>Almacene una imagen terminada o el <code>Task</code> en curso, para que los llamadores concurrentes
+        html: `<p>Un diccionario simple detrás de un lock solo resuelve la competencia por datos — no evita que
+          diez celdas que aparecen a la vez en pantalla disparen cada una la misma descarga. Cachear el trabajo
+          en curso, no solo el resultado, es lo que colapsa eso en una sola solicitud.</p>
+        <ul>
+          <li>1. Use un <code>actor</code> para que todo acceso al diccionario esté serializado — sin locks.</li>
+          <li>2. Almacene una imagen terminada o el <code>Task</code> en curso, para que los llamadores concurrentes
             para la misma URL esperen la misma descarga.</li>
-          <li>Espere la tarea almacenada y retorne su valor.</li>
+          <li>3. Espere la tarea almacenada y retorne su valor.</li>
         </ul>`,
       },
       {
@@ -97,9 +106,9 @@ export const PROMPTS: Prompt[] = [
     return img
   }
 }</div>
-        <p>Almacenar el <code>Task</code> en curso es lo que deduplica: diez vistas que preguntan a la vez
-        esperan una sola descarga. El actor garantiza que el diccionario nunca se acceda
-        concurrentemente.</p>`,
+        <p><b>Almacenar el <code>Task</code> en curso, no solo el resultado terminado, es lo que deduplica</b>
+        — diez vistas que preguntan a la vez esperan una sola descarga, y el actor garantiza que el diccionario
+        nunca se toque concurrentemente.</p>`,
       },
     ],
   },
@@ -114,11 +123,14 @@ export const PROMPTS: Prompt[] = [
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Modele la forma con structs <code>Codable</code> anidados.</li>
-          <li>Establezca <code>keyDecodingStrategy = .convertFromSnakeCase</code> para que
+        html: `<p>Escribir <code>CodingKeys</code> a mano para cada campo es deuda de mantenimiento que se rompe
+          en silencio en cuanto el backend agrega un campo — las estrategias a nivel de decoder resuelven las
+          transformaciones comunes una sola vez, para todos los modelos de la app.</p>
+        <ul>
+          <li>1. Modele la forma con structs <code>Codable</code> anidados.</li>
+          <li>2. Establezca <code>keyDecodingStrategy = .convertFromSnakeCase</code> para que
             <code>full_name</code> se mapee a <code>fullName</code> automáticamente.</li>
-          <li>Establezca <code>dateDecodingStrategy = .iso8601</code> para las marcas de tiempo.</li>
+          <li>3. Establezca <code>dateDecodingStrategy = .iso8601</code> para las marcas de tiempo.</li>
         </ul>`,
       },
       {
@@ -137,8 +149,9 @@ func decodeUser(_ data: Data) throws -&gt; User {
   decoder.dateDecodingStrategy = .iso8601
   return try decoder.decode(User.self, from: data)
 }</div>
-        <p>Las estrategias manejan los casos comunes globalmente; recurrir a <code>CodingKeys</code> explícitos
-        solo cuando un campo no sigue el patrón.</p>`,
+        <p><b>Las estrategias manejan los casos comunes globalmente; recurra a <code>CodingKeys</code> explícitos
+        solo cuando un campo no sigue el patrón.</b> Escribir <code>CodingKeys</code> completos para cada modelo
+        cuando una estrategia bastaría es la señal de que alguien no ha usado <code>Codable</code> a escala.</p>`,
       },
     ],
   },
@@ -154,11 +167,14 @@ func decodeUser(_ data: Data) throws -&gt; User {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Bucle hasta <code>maxAttempts</code>; en éxito retorne, en fallo recuerde el error.</li>
-          <li>Entre intentos <code>try await Task.sleep</code> con un creciente retardo (consciente de
+        html: `<p>Reintentar de inmediato tras un fallo solo martilla más a un servidor que ya está en apuros;
+          hacer crecer el retardo entre intentos es lo que evita que una red inestable se convierta en una
+          caída autoinfligida.</p>
+        <ul>
+          <li>1. Bucle hasta <code>maxAttempts</code>; en éxito retorne, en fallo recuerde el error.</li>
+          <li>2. Entre intentos <code>try await Task.sleep</code> con un retardo creciente (consciente de
             cancelación).</li>
-          <li>Después del bucle, lance el último error capturado.</li>
+          <li>3. Después del bucle, lance el último error capturado.</li>
         </ul>`,
       },
       {
@@ -178,8 +194,9 @@ func decodeUser(_ data: Data) throws -&gt; User {
     }
   }
 }</div>
-        <p>Debido a que la espera es consciente de cancelación, cancelar la tarea que la contiene detiene los
-        reintentos inmediatamente. Agregue jitter en producción para evitar thundering herds.</p>`,
+        <p><b>Debido a que la espera es consciente de cancelación, cancelar la tarea que la contiene detiene los
+        reintentos inmediatamente</b> — sin trabajo en segundo plano huérfano. Agregue jitter en producción para
+        que muchos clientes reintentando a la vez no se resincronicen en un thundering herd.</p>`,
       },
     ],
   },
@@ -194,10 +211,14 @@ func decodeUser(_ data: Data) throws -&gt; User {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Modele el estado como un <code>enum</code> para que combinaciones imposibles no existan.</li>
-          <li>Dependa de un protocolo <code>APIClient</code> (inyectado) para que las pruebas pasen un mock.</li>
-          <li>Anote el modelo con <code>@MainActor</code> y <code>@Observable</code>; haga switch sobre el
+        html: `<p>Una vista que maneja por separado booleanos como <code>isLoading</code>/<code>items</code>/
+          <code>error</code> puede representar estados imposibles (cargando <i>y</i> con error a la vez) —
+          modelar el estado como un solo enum hace irrepresentables esos casos, y inyectar la dependencia de la
+          API es lo que lo hace testeable siquiera.</p>
+        <ul>
+          <li>1. Modele el estado como un <code>enum</code> para que combinaciones imposibles no existan.</li>
+          <li>2. Dependa de un protocolo <code>APIClient</code> (inyectado) para que las pruebas pasen un mock.</li>
+          <li>3. Anote el modelo con <code>@MainActor</code> y <code>@Observable</code>; haga switch sobre el
             estado en la vista.</li>
         </ul>`,
       },
@@ -221,9 +242,9 @@ final class ItemsModel {
     }
   }
 }</div>
-        <p>La vista hace <code>switch model.state</code> y renderiza un spinner, lista, vista vacía o error.
-        Las pruebas construyen <code>ItemsModel(api: MockAPI())</code> y verifican el estado
-        resultante.</p>`,
+        <p><b>La vista simplemente hace <code>switch model.state</code></b> y renderiza un spinner, lista, vista
+        vacía o error — sin lógica combinatoria de booleanos. Las pruebas construyen
+        <code>ItemsModel(api: MockAPI())</code> y verifican el estado resultante directamente.</p>`,
       },
     ],
   },
@@ -238,10 +259,12 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Use <code>async let</code> para iniciar ambas solicitudes inmediatamente.</li>
-          <li><code>await</code> ambas al construir el resultado combinado; se ejecutan concurrentemente.</li>
-          <li>Si alguna lanza una excepción, toda la función falla (y la hermana se cancela).</li>
+        html: `<p>Esperar las dos solicitudes de forma secuencial paga su latencia completa dos veces sin
+          motivo — las solicitudes no dependen entre sí, así que deberían estar en vuelo al mismo tiempo.</p>
+        <ul>
+          <li>1. Use <code>async let</code> para iniciar ambas solicitudes inmediatamente.</li>
+          <li>2. <code>await</code> ambas al construir el resultado combinado; se ejecutan concurrentemente.</li>
+          <li>3. Si alguna lanza una excepción, toda la función falla (y la hermana se cancela).</li>
         </ul>`,
       },
       {
@@ -251,9 +274,9 @@ final class ItemsModel {
   async let posts = api.posts(forUser: id)
   return try await Profile(user: user, posts: posts)
 }</div>
-        <p>Dos viajes de red ocurren en paralelo, reduciendo aproximadamente a la mitad la latencia frente a
-        awaits secuenciales. Para un número dinámico de hijos, use un <code>TaskGroup</code> en
-        su lugar.</p>`,
+        <p><b>Dos viajes de red ocurren en paralelo, reduciendo aproximadamente a la mitad la latencia frente a
+        awaits secuenciales.</b> Para un conjunto fijo y conocido de solicitudes <code>async let</code> es la
+        herramienta correcta; para un número dinámico de hijos, use un <code>TaskGroup</code> en su lugar.</p>`,
       },
     ],
   },
@@ -268,11 +291,15 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Use las APIs <code>SecItem</code> del framework Security con
+        html: `<p>Un token de autenticación en <code>UserDefaults</code> vive en un plist sin cifrar que
+          cualquier proceso con acceso al contenedor puede leer — el Keychain existe específicamente para
+          mantener los secretos cifrados y respaldados por hardware, algo que en la mayoría de los equipos es un
+          requisito de cumplimiento, no un extra.</p>
+        <ul>
+          <li>1. Use las APIs <code>SecItem</code> del framework Security con
             <code>kSecClassGenericPassword</code>.</li>
-          <li>Elimine cualquier elemento existente antes de agregar, para que el guardado sea idempotente.</li>
-          <li>UserDefaults es un plist sin cifrar; el Keychain está cifrado y respaldado por hardware.</li>
+          <li>2. Elimine cualquier elemento existente antes de agregar, para que el guardado sea idempotente.</li>
+          <li>3. Léalo de vuelta con una consulta coincidente y descodifique el <code>Data</code> retornado.</li>
         </ul>`,
       },
       {
@@ -302,8 +329,11 @@ final class ItemsModel {
     return String(decoding: data, as: UTF8.self)
   }
 }</div>
-        <p>Tokens y contraseñas van aquí, no en UserDefaults. Para mayor seguridad agregue
-        <code>kSecAttrAccessible</code> y control de acceso biométrico.</p>`,
+        <p><b>Tokens y contraseñas van en el Keychain, nunca en UserDefaults.</b> Para mayor seguridad agregue
+        <code>kSecAttrAccessible</code> y control de acceso biométrico.</p>
+        <p>Señal de alerta: decir "yo simplemente cifraría el valor de UserDefaults" — eso solo mueve el
+        problema de dónde guardar la clave un nivel más abajo, sin el respaldo de hardware que el Keychain ya
+        da gratis.</p>`,
       },
     ],
   },
@@ -318,11 +348,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Use <code>withCheckedThrowingContinuation</code>.</li>
-          <li>Llame a la API legacy; en su completion, <code>resume</code> la continuación con el valor o
+        html: `<p>Reescribir la API legacy basada en completion arriesga romper cada llamador existente sin
+          ninguna ganancia — el puente de continuación permite que los nuevos sitios de llamada adopten
+          async/await mientras la implementación legacy queda intacta.</p>
+        <ul>
+          <li>1. Use <code>withCheckedThrowingContinuation</code>.</li>
+          <li>2. Llame a la API legacy; en su completion, <code>resume</code> la continuación con el valor o
             error — exactamente una vez.</li>
-          <li>La variante checked detecta si resume cero o múltiples veces.</li>
+          <li>3. Retorne el valor esperado; la variante checked detecta si resume cero o múltiples veces.</li>
         </ul>`,
       },
       {
@@ -337,8 +370,10 @@ final class ItemsModel {
     }
   }
 }</div>
-        <p>Este es el adaptador estándar para APIs basadas en delegate y completion. Garantice un único
-        <code>resume</code> en cada camino o tendrá una fuga o un fallo.</p>`,
+        <p><b>Este es el adaptador estándar para APIs basadas en delegate y completion.</b> Garantice un único
+        <code>resume</code> en cada camino — la continuación checked lanza un trap en tiempo de ejecución si la
+        resume cero o más de una vez, que es exactamente la clase de bug que está diseñada para exponer
+        temprano.</p>`,
       },
     ],
   },
@@ -353,11 +388,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Use <code>List</code> (perezoso) y active una carga cuando el último elemento aparezca mediante
+        html: `<p>Cargar todo el conjunto de datos de antemano consume memoria y ancho de banda que el usuario
+          puede nunca necesitar si no llega a desplazarse tan lejos — el renderizado perezoso más una carga
+          disparada por aparición mantiene ambos planos sin perder la sensación de continuidad.</p>
+        <ul>
+          <li>1. Use <code>List</code> (perezoso) y active una carga cuando el último elemento aparezca mediante
             <code>.onAppear</code>.</li>
-          <li>Proteja con una bandera <code>isLoading</code> para no disparar la misma página dos veces.</li>
-          <li>Agregue resultados y avance el cursor de página en el modelo.</li>
+          <li>2. Proteja con una bandera <code>isLoading</code> para no disparar la misma página dos veces.</li>
+          <li>3. Agregue resultados y avance el cursor de página en el modelo.</li>
         </ul>`,
       },
       {
@@ -377,9 +415,12 @@ final class ItemsModel {
 }
 // In FeedModel.loadNextPage(): guard !isLoading; isLoading = true;
 // fetch page; items += new; page += 1; isLoading = false.</div>
-        <p><code>List</code> solo materializa las filas visibles, por lo que la memoria se mantiene plana; la
+        <p><b><code>List</code> solo materializa las filas visibles, por lo que la memoria se mantiene plana; la
         verificación del último elemento más la protección de carga da una paginación limpia y sin
-        duplicados.</p>`,
+        duplicados.</b></p>
+        <p>Señal de alerta: olvidar la protección <code>isLoading</code> — <code>.onAppear</code> puede
+        dispararse más de una vez para la misma fila durante un scroll rápido, y sin la protección disparará la
+        misma solicitud de página dos veces.</p>`,
       },
     ],
   },
@@ -395,11 +436,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Aclare: ¿multi-dispositivo, último escritor aceptable? ¿texto enriquecido o plano? ¿escala?</li>
-          <li>Almacenamiento local como fuente de verdad; motor de sincronización en segundo plano; cola de
-            mutaciones con reintentos.</li>
-          <li>Defina la política de conflictos y el rastreo de cambios.</li>
+        html: `<p>Una app que trata la red como fuente de verdad se vuelve inutilizable en cuanto se pierde la
+          conexión — offline-first significa que el almacenamiento local es autoritativo y la sincronización es
+          una preocupación en segundo plano montada encima, no una dependencia bloqueante de cada escritura.</p>
+        <ul>
+          <li>1. Aclare: ¿multi-dispositivo, último escritor aceptable? ¿texto enriquecido o plano? ¿escala?</li>
+          <li>2. Haga que el almacenamiento local sea la fuente de verdad; agregue un motor de sincronización en
+            segundo plano con una cola de mutaciones y reintentos.</li>
+          <li>3. Defina la política de conflictos y cómo se rastrean los cambios.</li>
         </ul>`,
       },
       {
@@ -408,12 +452,18 @@ final class ItemsModel {
           se renderizan instantáneamente sin spinner. Un <b>motor de sincronización</b> en segundo plano envía una
           cola de mutaciones y obtiene cambios remotos.</p>
         <p><b>Sincronización:</b> cada nota tiene un id estable, un <code>updatedAt</code> y una bandera sucia.
-          Las mutaciones se encolan con claves de idempotencia y se reintean al reconectar (con backoff).
+          Las mutaciones se encolan con claves de idempotencia y se reintentan al reconectar (con backoff).
           <b>Conflictos:</b> comience con servidor autoritativo o último escritor gana por timestamp; actualice a
           fusión por campo o CRDTs solo si el producto necesita edición concurrente real.
-          <b>Observabilidad:</b> muestre un estado de sincronización sutil y un reintento manual. La entrevista
-          realmente está evaluando si usted hace el almacenamiento local autoritativo y maneja los casos extremos
-          de cola/conflicto explícitamente.</p>`,
+          <b>Observabilidad:</b> muestre un estado de sincronización sutil y un reintento manual.</p>
+        <p>Sí, una cola de mutaciones con claves de idempotencia es más código que "simplemente hacer un PUT de
+          la nota" — pero la alternativa es pérdida silenciosa de datos en cuanto dos dispositivos editan sin
+          conexión y luego se reconectan, algo mucho más caro de depurar en producción que de construir de
+          antemano. Trátelo como infraestructura que se escribe una vez y toda funcionalidad futura reutiliza, y
+          presupueste también el costo a largo plazo: los CRDTs en particular necesitan recolección de basura de
+          tombstones o sus metadatos crecen sin límite. <b>La entrevista realmente está evaluando si usted hace
+          el almacenamiento local autoritativo y maneja los casos extremos de cola/conflicto
+          explícitamente.</b></p>`,
       },
     ],
   },
@@ -428,10 +478,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Diagnosticar: un target = compilaciones en serie, dependencias enredadas, dolor de merge.</li>
-          <li>Modularizar en paquetes Swift locales con una dirección de dependencia estricta.</li>
-          <li>Agregar fundamentos compartidos y herramientas; forzar límites.</li>
+        html: `<p>Un solo target obliga al compilador a reconstruir todo ante cualquier cambio y obliga a cada
+          ingeniero a editar los mismos archivos — la solución no es una máquina más rápida, es eliminar el
+          acoplamiento que hace que las compilaciones sean en serie y los diffs choquen entre sí.</p>
+        <ul>
+          <li>1. Diagnostique: un target = compilaciones en serie, dependencias enredadas, dolor de merge.</li>
+          <li>2. Modularice en paquetes Swift locales con una dirección de dependencia estricta.</li>
+          <li>3. Agregue fundamentos compartidos y herramientas, y fuerce los límites en CI.</li>
         </ul>`,
       },
       {
@@ -442,9 +495,14 @@ final class ItemsModel {
         <p><b>Resultados:</b> compilaciones paralelas e incrementales, límites forzados por el compilador,
           pruebas y previews por funcionalidad, y la posibilidad de construir una funcionalidad de forma aislada.
           Agregue un router para que las funcionalidades permanezcan desacopladas de la navegación, un sistema de
-          diseño para consistencia y CI que compile/pruebe paquetes modificados. La señal de arquitecto es tratar
-          los <b>límites de módulos y la dirección de dependencia</b> como la decisión central, más un plan de
-          migración (extraer funcionalidades hoja primero).</p>`,
+          diseño para consistencia y CI que compile/pruebe paquetes modificados.</p>
+        <p>La migración en sí cuesta tiempo real de sprint y un tramo de doble mantenimiento mientras se extraen
+          los paquetes — pero dejarlo como un solo target cuesta ese mismo tiempo cada semana para siempre, en
+          minutos de compilación y conflictos de merge entre 30 ingenieros. Extraiga primero las funcionalidades
+          hoja para que el beneficio se acumule pronto, y planifíquelo como una inversión en velocidad, no como
+          una limpieza puntual: a medida que el equipo crece, los límites de módulos son lo que mantiene el
+          onboarding y el code review manejables. <b>La señal de arquitecto es tratar los límites de módulos y la
+          dirección de dependencia como la decisión central</b>, con un plan de migración concreto.</p>`,
       },
     ],
   },
@@ -459,10 +517,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Renderizado perezoso, descodificación fuera del principal, reducción de resolución, caché,
-            identidad estable.</li>
-          <li>Preobtener por adelantado; cancelar cargas para celdas que se desplazan fuera.</li>
+        html: `<p>Los frames perdidos durante el scroll casi siempre significan que se está haciendo demasiado
+          trabajo en el hilo principal por frame — la solución es hacer menos trabajo ahí, no un dispositivo más
+          rápido.</p>
+        <ul>
+          <li>1. Renderice perezosamente, descodifique fuera del hilo principal, reduzca resolución, cachée y dé
+            identidad estable a las filas.</li>
+          <li>2. Preobtenga algunas filas por adelantado; cancele cargas para celdas que se desplazan fuera.</li>
         </ul>`,
       },
       {
@@ -471,11 +532,12 @@ final class ItemsModel {
           las celdas visibles. <b>Reduzca la resolución</b> de imágenes al tamaño de pantalla fuera del actor
           principal (nunca descodifique 4000px para una celda de 300px). <b>Cachée</b> miniaturas descodificadas
           en una caché respaldada por actor con clave por URL+tamaño, deduplicando cargas concurrentes. Dé a las
-          filas <b>identidad estable</b> para que SwiftUI reutilice vistas. <b>Obtenga</b> algunas filas por
+          filas <b>identidad estable</b> para que SwiftUI reutilice vistas. <b>Preobtenga</b> algunas filas por
           adelantado y <b>cancele</b> cargas cuando las celdas desaparezcan (vincule el trabajo a
           <code>.task</code>). Valide con Time Profiler (sin descodificación en el hilo principal) y Allocations
-          (memoria plana). La señal de senior: fluido = haga menos por frame, fuera del hilo
-          principal.</p>`,
+          (memoria plana).</p>
+        <p><b>Fluido = haga menos por frame, fuera del hilo principal</b> — esa es la frase para abrir cuando le
+          pregunten cómo abordaría cualquier problema de rendimiento de scroll, sea un feed de imágenes o no.</p>`,
       },
     ],
   },
@@ -490,9 +552,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>En capas: ViewModel → Repository → (APIClient + Store).</li>
-          <li>Protocolos en cada seam; auth/reintentos centralizados; política de caché.</li>
+        html: `<p>La lógica de red dispersa por los view models hace que la renovación de auth y el reintento se
+          reimplementen (y se rompan de nuevo) en cada pantalla — una arquitectura en capas pone cada
+          responsabilidad en exactamente un solo lugar.</p>
+        <ul>
+          <li>1. Organice en capas: ViewModel → Repository → (APIClient + Store).</li>
+          <li>2. Ponga un protocolo en cada seam para que las pruebas puedan inyectar fakes.</li>
+          <li>3. Centralice la política de renovación de auth y reintento en un solo lugar, no por sitio de
+            llamada.</li>
         </ul>`,
       },
       {
@@ -502,8 +569,10 @@ final class ItemsModel {
           encima, retornando modelos de dominio y poseyendo la decisión de fresco vs en caché (memoria/disco/
           tienda) y paginación. Los <b>ViewModels</b> dependen solo de protocolos de repository, por lo que las
           pruebas inyectan fakes. Centralice la <b>renovación de auth</b> (interceptar 401, renovar una vez,
-          reintentar solicitudes en cola) y <b>reintentos/backoff</b> en un solo lugar. La ventaja es una fuente
-          de verdad, seams claros para pruebas y lógica de red no duplicada en las vistas.</p>`,
+          reintentar solicitudes en cola) y <b>reintentos/backoff</b> en un solo lugar.</p>
+        <p><b>Una sola fuente de verdad para auth y reintentos, con seams claros para pruebas, gana frente a
+          lógica de red duplicada por las vistas.</b> Diga esa frase cuando le pregunten por qué molestarse con
+          una capa Repository en lugar de llamar a la API directamente desde el view model.</p>`,
       },
     ],
   },
@@ -518,9 +587,14 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Navegación como datos: una ruta de valores Route tipados.</li>
-          <li>Un router mapea rutas a destinos; enlaces/notificaciones se descodifican a rutas.</li>
+        html: `<p>Una navegación imperativa — pantallas que presentan otras pantallas directamente — no puede
+          activarse desde un evento externo como una notificación push o un deep link sin encadenar delegates al
+          estilo UIKit por toda la app. Modelar la navegación como datos elimina ese problema por completo.</p>
+        <ul>
+          <li>1. Modele la navegación como una ruta de valores <code>Route</code> tipados.</li>
+          <li>2. Un router mapea rutas a destinos.</li>
+          <li>3. Descodifique los deep links y las cargas de notificaciones a los mismos valores
+            <code>Route</code>.</li>
         </ul>`,
       },
       {
@@ -531,8 +605,10 @@ final class ItemsModel {
           de presentar pantallas directamente. Los <b>deep links y notificaciones</b> descodifican un
           URL/carga en valores <code>Route</code> que se agregan a la ruta — el mismo mecanismo que la
           navegación en la app. La <b>restauración de estado</b> se convierte en persistir y recargar la
-          ruta. Esto desacopla &quot;qué mostrar&quot; de &quot;cómo presentar&quot;, hace los flujos testables
-          y da un lugar para razonar sobre todo el grafo de navegación.</p>`,
+          ruta.</p>
+        <p><b>Esto desacopla "qué mostrar" de "cómo presentar", hace los flujos testables y da un lugar para
+          razonar sobre todo el grafo de navegación</b> — la frase para abrir cuando le pregunten por qué las
+          rutas como datos superan a las pantallas presentando pantallas.</p>`,
       },
     ],
   },
@@ -547,10 +623,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>El CI de PR ejecuta pruebas; main envía automáticamente TestFlight; los lanzamientos se promueven
-            con phased rollout.</li>
-          <li>Firmado reproducible; versionado; observabilidad + rollback.</li>
+        html: `<p>El firmado manual y las subidas manuales a TestFlight no escalan más allá de un par de
+          ingenieros y convierten "lanzarlo" en un ritual de medio día — automatizar build → firmar → distribuir
+          es lo que hace que los lanzamientos sean aburridos, que es el objetivo.</p>
+        <ul>
+          <li>1. En cada PR, ejecute pruebas y lint en CI.</li>
+          <li>2. Al merge a main, archive, firme y suba automáticamente un build de TestFlight.</li>
+          <li>3. Promueva los lanzamientos con un phased rollout, y mantenga un camino de rollback.</li>
         </ul>`,
       },
       {
@@ -560,9 +639,13 @@ final class ItemsModel {
           <code>CFBundleVersion</code>. <b>Lanzamiento:</b> promueva un build de TestFlight a App Store con un
           <b>phased rollout</b>. Use <b>Xcode Cloud</b> para integración estrecha con App Store Connect, o lanes
           de <b>Fastlane</b> en GitHub Actions para mayor control; gestione el firmado de forma reproducible
-          (Fastlane <i>match</i> o firmado automático). <b>Red de seguridad:</b> monitoreo de crashes + una
-          bandera de apagado de funcionalidad para que un lanzamiento defectuoso pueda desactivarse sin un nuevo
-          build. La señal es un camino repetible desde commit hasta tienda con un plan de rollback.</p>`,
+          (Fastlane <i>match</i> o firmado automático).</p>
+        <p>Montar esto cuesta tiempo real por adelantado, y el phased rollout significa que un fix tarda más en
+          llegar al 100% de los usuarios que un lanzamiento único de golpe — pero la alternativa es que un build
+          defectuoso llegue a todos a la vez sin forma de volver atrás salvo una revisión acelerada. Agregue
+          monitoreo de crashes + una bandera de apagado de funcionalidad como red de seguridad a largo plazo, para
+          que un lanzamiento defectuoso pueda desactivarse sin un nuevo build. <b>La señal es un camino repetible
+          desde commit hasta tienda con un plan de rollback</b>, no solo un CI en verde.</p>`,
       },
     ],
   },
@@ -577,9 +660,13 @@ final class ItemsModel {
     reveal: [
       {
         label: "Enfoque",
-        html: `<ul>
-          <li>Incruste contenido con un pequeño modelo en el dispositivo; almacene vectores localmente.</li>
-          <li>En el momento de la consulta, incruste la consulta y clasifique por similitud coseno.</li>
+        html: `<p>Enviar contenido a un servidor para calcular embeddings es el camino fácil, pero significa que
+          los datos del usuario salen del dispositivo y la funcionalidad deja de funcionar sin conexión — un
+          modelo de embeddings en el dispositivo cambia un cliente más pesado por privacidad y costo cero por
+          consulta.</p>
+        <ul>
+          <li>1. Incruste contenido con un pequeño modelo en el dispositivo; almacene vectores localmente.</li>
+          <li>2. En el momento de la consulta, incruste la consulta y clasifique por similitud coseno.</li>
         </ul>`,
       },
       {
@@ -589,9 +676,14 @@ final class ItemsModel {
           elementos localmente. <b>Consulta:</b> incruste la consulta con el mismo modelo y clasifique elementos
           por <b>similitud coseno</b> (top-k). Mantenga un respaldo por palabras clave y mezcle puntuaciones.
           <b>Ingeniería:</b> incruste perezosamente/incrementalmente, cachée vectores, cuantice el modelo para
-          ajustar memoria/latencia y ejecute la indexación fuera del actor principal. Es privado (nada sale del
-          dispositivo), funciona sin conexión y no tiene costo por consulta — exactamente la arquitectura que la
-          propia búsqueda de esta guía usa como demostración en vivo en su navegador.</p>`,
+          ajustar memoria/latencia y ejecute la indexación fuera del actor principal.</p>
+        <p>Un modelo en el dispositivo agrega tamaño a la app y necesita trabajo de cuantización que un modelo
+          del lado del servidor no exigiría — pero un viaje al servidor significa que el contenido del usuario
+          sale del dispositivo y la funcionalidad muere sin conexión, algo inaceptable para cualquier cosa
+          sensible a la privacidad. <b>Es privado (nada sale del dispositivo), funciona sin conexión y no tiene
+          costo por consulta</b> — exactamente la arquitectura que la propia búsqueda de esta guía usa como
+          demostración en vivo en su navegador. Planifique volver a calcular embeddings a medida que el modelo
+          mejore; trate el índice como algo que se versiona, no como una construcción de una sola vez.</p>`,
       },
     ],
   },

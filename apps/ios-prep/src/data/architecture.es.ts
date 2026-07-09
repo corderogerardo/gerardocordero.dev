@@ -17,8 +17,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
     <div class="callout tip"><span class="lbl">Cómo elegir</span> App pequeña/mediana o equipo nuevo en esto:
       MVVM con el framework de Observación. App grande, muchos ingenieros, mucha lógica, un premium en
       testeabilidad y consistencia: una arquitectura unidireccional (TCA o un equivalente hecho a mano) rinde
-      frutos. La jugada de senior es emparejar el patrón con el equipo y el producto, no copiar uno
-      ciegamente.</div>`,
+      frutos. <b>&quot;Emparejo la arquitectura con el equipo y la complejidad del producto — no copio un mismo
+      patrón en todas partes.&quot;</b></div>`,
   },
   {
     id: "arch-2",
@@ -42,9 +42,10 @@ export const ARCH_SECTIONS: ArchSection[] = [
       initializer o <code>@Environment</code> de SwiftUI) en lugar de recurrir a singletons. Esa única disciplina
       hace que los view models sean testeables con fakes, desacopla las funcionalidades de la infraestructura y
       le permite intercambiar implementaciones (por ejemplo, un stub API en previews).</p>
-    <div class="callout warn"><span class="lbl">Señal de alarma</span> Un view model que construye
-      <code>URLSession.shared</code> o un singleton global internamente no puede probarse sin la red. Inyecte un
-      protocolo <code>APIClient</code> en su lugar.</div>`,
+    <div class="callout warn"><span class="lbl">Señal de alerta</span> Un view model que construye
+      <code>URLSession.shared</code> o un singleton global internamente no puede probarse sin la red.
+      <b>&quot;Inyecto un protocolo APIClient para que el view model nunca hable con la red directamente — eso es
+      lo que lo hace testeable con un fake.&quot;</b></div>`,
   },
   {
     id: "arch-4",
@@ -68,8 +69,9 @@ export const ARCH_SECTIONS: ArchSection[] = [
       gana, servidor autoritativo o fusión por campo), rastreo de cambios y reintento de mutaciones
       fallidas.</p>
     <div class="callout warn"><span class="lbl">Partes difíciles</span> Orden e idempotencia de mutaciones
-      encoladas, desviación de reloj y fallos parciales. Diseñe la cola y la política de conflictos
-      explícitamente — esta es una prompt favorita de diseño de sistemas para senior/arquitecto.</div>`,
+      encoladas, desviación de reloj y fallos parciales. <b>&quot;Diseño la cola de mutaciones y la política de
+      conflictos de forma explícita desde el principio — la sincronización offline falla en los bordes, no en el
+      camino feliz.&quot;</b></div>`,
   },
   {
     id: "arch-6",
@@ -83,7 +85,8 @@ export const ARCH_SECTIONS: ArchSection[] = [
     <div class="callout tip"><span class="lbl">Por qué</span> Desacoplar &quot;qué mostrar&quot; de &quot;cómo
       presentarlo&quot; mantiene las funcionalidades independientes, hace que el deep linking y los flujos
       A/B-tested sean triviales, y le da un lugar para razonar sobre todo el grafo de
-      navegación.</div>`,
+      navegación. <b>&quot;La navegación es datos en mis apps — un router posee la ruta, así que los deep links,
+      las notificaciones push y la restauración de estado solo agregan una Route.&quot;</b></div>`,
   },
   {
     id: "arch-7",
@@ -95,9 +98,10 @@ export const ARCH_SECTIONS: ArchSection[] = [
       publicar resultados. Bajo Swift 6, hacer los tipos <code>Sendable</code> y respetar el aislamiento se
       aplica en tiempo de compilación — por lo que la arquitectura debe ser intencional, no
       accidental.</p>
-    <div class="callout warn"><span class="lbl">Anti-patrón</span> Esparcir <code>DispatchQueue.main.async</code>
-      y locks por todas partes. Reemplazar con límites de actor explícitos y <code>@MainActor</code> — el
-      compilador entonces demuestra que está libre de carreras.</div>`,
+    <div class="callout warn"><span class="lbl">Señal de alerta</span> Esparcir <code>DispatchQueue.main.async</code>
+      y locks por todas partes es síntoma de un aislamiento no diseñado. <b>&quot;Pongo el estado mutable
+      compartido detrás de actors y fijo la UI a @MainActor para que el compilador demuestre que estoy libre de
+      carreras, en vez de vigilarlo por convención.&quot;</b></div>`,
   },
   {
     id: "arch-8",
@@ -150,7 +154,9 @@ export const DEEP_DIVES: DeepDive[] = [
         cualquier lugar recompila el mundo y riesga romper funcionalidades no relacionadas.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Los paquetes de funcionalidad dependen
         solo de Core / DesignSystem; las compilaciones se paralelizan, los límites son forzados por el
-        compilador, y las funcionalidades se distribuyen y prueban independientemente.</div>
+        compilador, y las funcionalidades se distribuyen y prueban independientemente. <b>&quot;Dejo que el
+        compilador imponga los límites de módulo en lugar de una regla de lint o una convención de code
+        review.&quot;</b></div>
     </div>`,
   },
   {
@@ -166,7 +172,8 @@ export const DEEP_DIVES: DeepDive[] = [
         ingenuo pierde ediciones sin conexión y muestra spinners por todas partes.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Escriba localmente y renderice
         instantáneamente; encole mutaciones con claves de idempotencia; sincronice con una política de conflictos
-        definida y reintente al reconectar.</div>
+        definida y reintente al reconectar. <b>&quot;El almacenamiento local es la fuente de verdad — la UI nunca
+        espera a la red para mostrar lo que el usuario acaba de hacer.&quot;</b></div>
     </div>`,
   },
   {
@@ -182,7 +189,8 @@ export const DEEP_DIVES: DeepDive[] = [
         desde múltiples tareas falla o corrompe datos bajo carga.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Envuelva el caché en un actor; los
         llamadores <code>await</code> sus métodos. Swift 6 entonces demuestra la ausencia de carreras en tiempo
-        de compilación.</div>
+        de compilación. <b>&quot;Recurro a un actor en lugar de un lock porque hace la carrera imposible, no solo
+        improbable.&quot;</b></div>
     </div>`,
   },
   {
@@ -199,7 +207,9 @@ export const DEEP_DIVES: DeepDive[] = [
         principal.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Reduzca la resolución fuera del actor
         principal, cachée miniaturas descodificadas en un actor, use <code>LazyVStack</code> y dé a las filas
-        identidad estable para que SwiftUI las reutilice.</div>
+        identidad estable para que SwiftUI las reutilice. <b>&quot;Los frames perdidos casi siempre son trabajo
+        de decodificación filtrándose al hilo principal — muévalo, cachee el resultado, y el frame rate se
+        resuelve solo.&quot;</b></div>
     </div>`,
   },
   {
@@ -216,7 +226,9 @@ export const DEEP_DIVES: DeepDive[] = [
         costoso y un riesgo de privacidad.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Incruste contenido con un pequeño modelo
         Core ML en el Neural Engine, almacene vectores localmente y clasifique por similitud coseno — exactamente
-        lo que la propia búsqueda de esta guía hace en su navegador.</div>
+        lo que la propia búsqueda de esta guía hace en su navegador. <b>&quot;La inferencia en el dispositivo no
+        es solo un argumento de privacidad — es costo marginal cero por consulta y sigue funcionando sin
+        señal.&quot;</b></div>
     </div>`,
   },
   {
@@ -251,7 +263,9 @@ export const DEEP_DIVES: DeepDive[] = [
         él.</div>
       <div class="dd-block dd-solution"><span class="lbl">Solución</span> Empuje la lógica a view models
         inyectables cubiertos por pruebas unitarias rápidas; mantenga un puñado de pruebas de UI para los flujos
-        principales; paralice en clones de simulador mediante un plan de pruebas.</div>
+        principales; paralice en clones de simulador mediante un plan de pruebas. <b>&quot;Mantengo la forma de
+        pirámide a propósito — las pruebas de UI verifican que los flujos críticos siguen funcionando de extremo
+        a extremo, las pruebas unitarias cubren los casos límite de forma exhaustiva.&quot;</b></div>
     </div>`,
   },
 ];
