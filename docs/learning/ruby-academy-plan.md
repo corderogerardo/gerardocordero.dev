@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 18-module curriculum progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, deployment, and senior-level query performance and caching (N+1s, indexes, counter caches, HTTP conditional GET, Rails.cache/Solid Cache). The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 68 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cache for the app cache store, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
+The Ruby & Rails course teaches backend web development from zero by rebuilding PawWalk's production backend (`apps/pawwalk-api`). The 28-module curriculum (00–27) progresses from pure Ruby (variables, blocks, classes) through HTTP and Rails fundamentals, to building a full-featured dog-walking marketplace API: walkers, bookings, Stripe payments, live GPS tracking via Action Cable, background jobs, deployment, and senior-level query performance and caching (N+1s, indexes, counter caches, HTTP conditional GET, Rails.cache/Solid Cache). It closes with an interview tier (data structures, all 23 GoF patterns) and a deep-Ruby mastery tier (24–27: the object model, blocks/procs/lambdas, Enumerable & pattern matching, and metaprogramming — demystifying the Rails "magic" the earlier modules rely on), sourced from *The Well-Grounded Rubyist, 4th Ed.* (Ruby 3.4). The reference backend is a Rails 8.1 API-only app (Ruby 3.4 via mise) with 68 Minitest tests, rubocop-rails-omakase linting, Solid Queue jobs, Solid Cache for the app cache store, Solid Cable for real-time features, and a verified Kamal 2 deployment story (local Docker production boot proven).
 
 ## Modules
 
@@ -29,7 +29,13 @@ The Ruby & Rails course teaches backend web development from zero by rebuilding 
 | 18 | `18-hotwire-admin.js` | A Hotwire Admin Dashboard | Turbo Drive/Frames/Streams over Solid Cable, Stimulus controllers, adding an HTML admin surface alongside an `api_only` JSON app |
 | 19 | `19-money-ledger.js` | Money: Payouts & a Ledger | Integer cents vs `Float`/`BigDecimal`, idempotent payouts (unique idempotency key), a double-entry ledger (`ledger_entries`), reconciliation (balance = sum, never a cached counter) |
 | 20 | `20-api-hardening.js` | Hardening the Public API | URL vs Accept-header versioning (`namespace :v1`), capped pagination (offset vs keyset), rate limiting with rack-attack (IP throttle, disabled in test), brakeman static security scanning + strong params recap |
-| 21 | `21-observability-scale-graduation.js` | Observability, Scale & Graduation | `ActiveSupport::Notifications` (slow-query subscriber), lograge single-line structured request logs, PgBouncer + Rails multi-database `connects_to` (read replicas, automatic role switching), Solid Queue at volume (named/priority queues, `retry_on` backoff, idempotent jobs), Kamal deploy recap — **senior-tier graduation, caps modules 0-21** |
+| 21 | `21-observability-scale-graduation.js` | Observability, Scale & Graduation | `ActiveSupport::Notifications` (slow-query subscriber), lograge single-line structured request logs, PgBouncer + Rails multi-database `connects_to` (read replicas, automatic role switching), Solid Queue at volume (named/priority queues, `retry_on` backoff, idempotent jobs), Kamal deploy recap — **senior-tier graduation of the app-build track (modules 0-21)** |
+| 22 | `22-data-structures.js` | Data Structures & Problem-Solving | Big-O, arrays/hashes, stacks/queues, linked lists, trees/BSTs, graph BFS/DFS, heaps, hashing patterns — interview algorithm prep in Ruby |
+| 23 | `23-design-patterns.js` | Design Patterns (All 23 GoF) | The full Gang-of-Four catalog expressed idiomatically in Ruby, anchored in PawWalk scenarios |
+| 24 | `24-ruby-object-model.js` | The Ruby Object Model | Messages & arguments, `self` as default object, scope gates & visibility, the method lookup path (`ancestors`, include/prepend/extend), singleton classes & `class << self`, equality (`==`/`eql?`/`hash`) & copies — the deep-Ruby foundation |
+| 25 | `25-blocks-procs-lambdas.js` | Blocks, Procs & Lambdas | `yield`/`block_given?`, procs & closures, lambda-vs-proc arity/`return` semantics, `Symbol#to_proc` & Method objects, composition (`>>`/`curry`/`tap`/`then`), and a Threads/Fibers/Ractors + GVL survey |
+| 26 | `26-enumerable-mastery.js` | Enumerable, Enumerator & Pattern Matching | The Enumerable contract (one `each` → ~50 methods), the aggregation workhorses, Enumerators & lazy evaluation (→ `find_each`), Hash/Set toolkit, `case/in` structural pattern matching, and safe Regexp (`match?`, named captures, `\A...\z`) |
+| 27 | `27-metaprogramming.js` | Metaprogramming & Rails Magic | Introspection (`respond_to?`, `source_location`), `send`/`public_send`, `define_method` (how `enum` works), `method_missing`/`respond_to_missing?`, lifecycle hooks & a from-scratch `ActiveSupport::Concern`, capstone: build a working `validates` DSL — **"Rails isn't magic, it's Ruby"** |
 
 ## Reference Backend
 
@@ -90,12 +96,21 @@ STRIPE_SECRET_KEY=sk_live_...
 - [x] `ruby.html` shell with sidebar, progress bar, store key `pawwalk-academy-ruby-v1`
 - [x] `FORMAT-RUBY.md` — Rails/Ruby syntax and validator notes
 - [x] Modules 00–15 authored and validated (81 lessons, 590 steps, 67 exercises, 82 quizzes)
+- [x] **Interview tier COMPLETE** — modules 22–23 (data structures & problem-solving; all 23
+      Gang-of-Four design patterns in idiomatic Ruby)
+- [x] **Deep-Ruby mastery tier COMPLETE** — modules 24–27 (the Ruby object model; blocks, procs &
+      lambdas; Enumerable, Enumerator & pattern matching; metaprogramming & Rails magic), authored
+      from *The Well-Grounded Rubyist, 4th Ed.* Every code sample and exercise solution executed
+      under Ruby 3.4.10 (mise); the metaprogramming capstone builds a working `validates` DSL from
+      scratch, closing the "Rails is just Ruby" arc
 - [x] Backend features complete (auth, bookings, payments, jobs, live tracking, 66 tests, rubocop)
 - [x] Kamal/Docker verified (local production boot proven, deployment config ready)
 - [x] **Ruby senior tier COMPLETE** — modules 16-21 (query performance, caching, Hotwire admin,
-      money ledger, API hardening, observability/scale/graduation). Module 21 is the final,
-      senior-level graduation capping the entire Ruby track (0-21). Real-app capstone: lograge
-      added to `apps/pawwalk-api` for single-line structured request logs.
+      money ledger, API hardening, observability/scale/graduation). Module 21 caps the
+      app-build track (0-21) — the senior-level graduation of the Rails backend build. Real-app
+      capstone: lograge added to `apps/pawwalk-api` for single-line structured request logs.
+      (The course then continues into the interview tier (22-23) and deep-Ruby mastery tier
+      (24-27); module 27 is the final module of the full 00-27 curriculum.)
 
 ### Planned Items ⬜
 - [ ] First real VPS deployment (Kamal push to production server)
