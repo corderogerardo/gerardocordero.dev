@@ -178,6 +178,15 @@ func createBooking(w http.ResponseWriter, r *http.Request) {
         {
           type: "text",
           md: [
+            "### One thing the snippet above glosses over: JSON tags",
+            "The app has spoken **snake_case** JSON all along (`walker_id`, `scheduled_at`). Without struct tags, `Decode` matches Go's exported field names (`WalkerID`) and would silently leave those fields zero. In real code the request struct carries the tags — exactly as the REST module introduced them:",
+            "```go\ntype createBookingReq struct {\n\tWalkerID    string    `json:\"walker_id\"`\n\tUserID      string    `json:\"user_id\"`\n\tMinutes     int       `json:\"minutes\"`\n\tScheduledAt time.Time `json:\"scheduled_at\"`\n}\n```",
+            "> Struct tags live inside backticks, so this course shows them in read-only blocks like this one — never in the type-it-yourself exercises.",
+          ],
+        },
+        {
+          type: "text",
+          md: [
             "## A switch that returns",
             "Go's `switch` is tidy for this. There's no fall-through by default — each `case` runs and stops — and a `case` can just `return`. A `default` catches any duration you didn't sell (return `0`, and the validation in the next lesson will reject it before it ever reaches here):",
             "```go\nswitch minutes {\ncase 30:\n\treturn 1500\ncase 45:\n\treturn 2000\ncase 60:\n\treturn 2500\ndefault:\n\treturn 0\n}\n```",

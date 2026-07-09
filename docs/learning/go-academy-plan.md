@@ -33,6 +33,20 @@ courses. Format rules: `apps/learn/lessons-go/FORMAT-GO.md` on top of the shared
 | 12 | `12-testing.js` | Testing | `testing` pkg, table-driven tests, `httptest` |
 | 13 | `13-deploy-graduation.js` | Ship It & Graduation | `go build`, cross-compile, multi-stage Docker, graduation |
 
+### Interview-prep tier (post-graduation)
+
+Mirrors the Ruby/Python courses, which append `data-structures` + `design-patterns`
+modules after graduation. Content is original and PawWalk-anchored, informed by the
+standard topic checklists in the popular Go interview repos (e.g. `tmrts/go-patterns`,
+`loong/go-concurrency-exercises`, `Devinterview-io/golang-interview-questions`) —
+used as coverage guides, not copied.
+
+| # | File | Title | Focus |
+|---|---|---|---|
+| 14 | `14-data-structures.js` | Data Structures & Problem-Solving | Big-O, slices/maps, stacks/queues, two pointers, linked lists, trees & graphs |
+| 15 | `15-design-patterns.js` | Design Patterns in Go | Functional options, strategy, factory, `sync.Once` singleton, decorator/middleware, observer, adapter, composition-over-inheritance |
+| 16 | `16-concurrency-patterns.js` | Concurrency Patterns | Worker pools, fan-out/fan-in, pipelines + `context` cancellation, data races & the `-race` detector |
+
 ## Reference backend
 
 The course rebuilds a Go PawWalk backend from zero. Early modules (00–08) build
