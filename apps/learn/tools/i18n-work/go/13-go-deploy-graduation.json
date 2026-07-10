@@ -4,406 +4,507 @@
  "units": [
   {
    "path": "modules[13].title",
+   "src": "Ship It & Graduation",
    "text": "A producción y graduación"
   },
   {
    "path": "modules[13].lessons[0].title",
+   "src": "Building for production",
    "text": "Compilando para producción"
   },
   {
    "path": "modules[13].lessons[0].steps[0].md[0]",
+   "src": "## From `go run` to a shippable binary",
    "text": "## De `go run` a un binario listo para enviar"
   },
   {
    "path": "modules[13].lessons[0].steps[0].md[1]",
+   "src": "All course long your inner loop was `go run .` — compile and run in one step, nothing left on disk. To **ship**, you run `go build` instead. It produces a single, self-contained executable: your whole program plus every dependency, statically linked into one file.",
    "text": "Durante todo el curso tu bucle interno fue `go run .` — compilar y ejecutar en un solo paso, sin nada que quede en disco. Para **enviar a producción**, en cambio ejecutas `go build`. Eso produce un único ejecutable autocontenido: todo tu programa más cada dependencia, enlazadas estáticamente en un solo archivo."
   },
   {
    "path": "modules[13].lessons[0].steps[0].md[2]",
+   "src": "That's the payoff Go promised back in module 00. There's no runtime to install on the server, no `node_modules`, no interpreter. You copy one file and run it:",
    "text": "Esa es la recompensa que Go prometió allá en el módulo 00. No hay runtime que instalar en el servidor, no hay `node_modules`, no hay intérprete. Copias un archivo y lo ejecutas:"
   },
   {
    "path": "modules[13].lessons[0].steps[0].md[3]",
+   "src": "```sh\ngo build -o pawwalk .\n./pawwalk\n```",
    "text": "```sh\ngo build -o pawwalk .\n./pawwalk\n```"
   },
   {
    "path": "modules[13].lessons[0].steps[0].md[4]",
+   "src": "`-o pawwalk` names the output. Without it, Go names the binary after the folder. That's the artifact you deploy.",
    "text": "`-o pawwalk` nombra la salida. Sin él, Go nombra el binario según la carpeta. Ese es el artefacto que despliegas."
   },
   {
    "path": "modules[13].lessons[0].steps[1].md[0]",
+   "src": "## Building for the machine you deploy to",
    "text": "## Compilar para la máquina donde vas a desplegar"
   },
   {
    "path": "modules[13].lessons[0].steps[1].md[1]",
+   "src": "You develop on a Mac or Windows laptop, but production almost always runs **Linux on x86-64**. Go cross-compiles to any target from any host — no cross-toolchain to install — by setting two environment variables:",
    "text": "Desarrollas en una laptop Mac o Windows, pero producción casi siempre corre **Linux en x86-64**. Go compila de forma cruzada a cualquier destino desde cualquier host — sin instalar una toolchain cruzada — configurando dos variables de entorno:"
   },
   {
    "path": "modules[13].lessons[0].steps[1].md[2]",
+   "src": "```sh\nGOOS=linux GOARCH=amd64 go build -o pawwalk .\n```",
    "text": "```sh\nGOOS=linux GOARCH=amd64 go build -o pawwalk .\n```"
   },
   {
    "path": "modules[13].lessons[0].steps[1].md[3]",
+   "src": "- `GOOS` — the operating system: `linux`, `darwin` (macOS), `windows`.\n- `GOARCH` — the CPU: `amd64` (Intel/AMD), `arm64` (Apple Silicon, AWS Graviton, most cloud ARM).",
    "text": "- `GOOS` — el sistema operativo: `linux`, `darwin` (macOS), `windows`.\n- `GOARCH` — la CPU: `amd64` (Intel/AMD), `arm64` (Apple Silicon, AWS Graviton, la mayoría de ARM en la nube)."
   },
   {
    "path": "modules[13].lessons[0].steps[1].md[4]",
+   "src": "> This is why Go is a joy to deploy: one command on your laptop produces the exact Linux binary the server needs. Compare that to shipping an interpreter plus its dependency tree.",
    "text": "> Por esto es un gusto desplegar Go: un comando en tu laptop produce exactamente el binario de Linux que el servidor necesita. Compáralo con enviar un intérprete más todo su árbol de dependencias."
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[0]",
+   "src": "## Stamping a version into the binary",
    "text": "## Grabando una versión dentro del binario"
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[1]",
+   "src": "When a bug report comes in, the first question is *which build is running?* You answer it by baking the version straight into the binary at build time. Declare a package-level variable with a placeholder, and let the linker overwrite it:",
    "text": "Cuando llega un reporte de bug, la primera pregunta es *¿cuál build está corriendo?* La respondes horneando la versión directamente dentro del binario al momento de compilar. Declara una variable a nivel de paquete con un placeholder, y deja que el linker la sobrescriba:"
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[2]",
+   "src": "```go\nvar version = \"dev\"\n```",
    "text": "```go\nvar version = \"dev\"\n```"
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[3]",
+   "src": "The `-ldflags` flag passes options to the linker, and `-X importpath.name=value` sets a string variable during linking:",
    "text": "La bandera `-ldflags` pasa opciones al linker, y `-X importpath.name=value` configura una variable string durante el enlazado:"
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[4]",
+   "src": "```sh\ngo build -ldflags \"-X main.version=1.0.0\" -o pawwalk .\n```",
    "text": "```sh\ngo build -ldflags \"-X main.version=1.0.0\" -o pawwalk .\n```"
   },
   {
    "path": "modules[13].lessons[0].steps[2].md[5]",
+   "src": "Now `./pawwalk` reports `1.0.0` instead of `dev` — no source edit, no rebuild of your logic. CI usually feeds the git tag or commit SHA in here, exactly like the portfolio app stamps its build number.",
    "text": "Ahora `./pawwalk` reporta `1.0.0` en lugar de `dev` — sin editar el código fuente, sin recompilar tu lógica. Normalmente CI alimenta aquí el tag de git o el SHA del commit, exactamente como la app portfolio graba su número de build."
   },
   {
    "path": "modules[13].lessons[0].steps[3].md[0]",
+   "src": "## The load balancer's heartbeat: `/healthz`",
    "text": "## El latido del load balancer: `/healthz`"
   },
   {
    "path": "modules[13].lessons[0].steps[3].md[1]",
+   "src": "In production your binary sits behind a **load balancer** or an orchestrator (Kubernetes, ECS, a Cloud Run frontend). It needs a cheap way to ask each instance *are you alive and ready?* — many times a second, forever.",
    "text": "En producción tu binario está detrás de un **load balancer** o un orquestador (Kubernetes, ECS, un frontend de Cloud Run). Necesita una forma barata de preguntarle a cada instancia *¿estás viva y lista?* — muchas veces por segundo, para siempre."
   },
   {
    "path": "modules[13].lessons[0].steps[3].md[2]",
+   "src": "The convention is a tiny **health-check endpoint**, traditionally `/healthz`. It does no real work: no database call, no auth. It just answers `200 OK` the instant the server can respond. If it stops answering, the load balancer stops sending it traffic and (in an orchestrator) the instance gets replaced.",
    "text": "La convención es un pequeño **endpoint de health-check**, tradicionalmente `/healthz`. No hace trabajo real: sin llamada a base de datos, sin auth. Simplemente responde `200 OK` en el instante en que el servidor puede responder. Si deja de responder, el load balancer deja de enviarle tráfico y (en un orquestador) la instancia se reemplaza."
   },
   {
    "path": "modules[13].lessons[0].steps[3].md[3]",
+   "src": "> Keep `/healthz` dependency-free. If it checks the database and the database blips, every instance looks unhealthy at once and the whole service gets pulled out of rotation — an outage you caused yourself.",
    "text": "> Mantén `/healthz` libre de dependencias. Si revisa la base de datos y la base de datos falla brevemente, todas las instancias se ven poco saludables al mismo tiempo y todo el servicio se saca de rotación — una interrupción que tú mismo causaste."
   },
   {
    "path": "modules[13].lessons[0].steps[4].title",
+   "src": "cmd/pawwalk/main.go",
    "text": "cmd/pawwalk/main.go"
   },
   {
    "path": "modules[13].lessons[0].steps[4].caption",
+   "src": "The whole production entry point: print the linker-stamped version, register the health check, read the port from the environment, and serve. `healthz` is the endpoint you'll write next.",
    "text": "El punto de entrada completo para producción: imprime la versión grabada por el linker, registra el health check, lee el puerto del entorno, y sirve. `healthz` es el endpoint que vas a escribir a continuación."
   },
   {
    "path": "modules[13].lessons[0].steps[5].q",
+   "src": "Why should the `/healthz` handler avoid touching the database?",
    "text": "¿Por qué el handler `/healthz` debería evitar tocar la base de datos?"
   },
   {
    "path": "modules[13].lessons[0].steps[5].choices[0]",
+   "src": "A brief database blip would make every instance report unhealthy at once, pulling the whole service out of rotation",
    "text": "Una breve falla en la base de datos haría que todas las instancias se reporten como no saludables al mismo tiempo, sacando todo el servicio de rotación"
   },
   {
    "path": "modules[13].lessons[0].steps[5].choices[1]",
+   "src": "The database is too slow to ever answer in time",
    "text": "La base de datos es demasiado lenta para responder a tiempo alguna vez"
   },
   {
    "path": "modules[13].lessons[0].steps[5].choices[2]",
+   "src": "Load balancers cannot make database connections",
    "text": "Los load balancers no pueden hacer conexiones a bases de datos"
   },
   {
    "path": "modules[13].lessons[0].steps[5].choices[3]",
+   "src": "Health checks are not allowed to import other packages",
    "text": "Los health checks no pueden importar otros paquetes"
   },
   {
    "path": "modules[13].lessons[0].steps[5].explain",
+   "src": "A liveness check should answer 'is this process up and serving?' — nothing more. If it depends on the database and the database hiccups, all instances fail the check simultaneously and the load balancer removes every one of them, turning a minor blip into a full outage. Deeper 'readiness' checks that do probe dependencies are a separate, more careful concern.",
    "text": "Un chequeo de liveness debería responder 'este proceso, ¿está arriba y sirviendo?' — nada más. Si depende de la base de datos y esta tiene un tropiezo, todas las instancias fallan el chequeo simultáneamente y el load balancer las retira a todas, convirtiendo un tropiezo menor en una interrupción total. Chequeos de 'readiness' más profundos que sí prueban dependencias son una preocupación aparte y más cuidadosa."
   },
   {
    "path": "modules[13].lessons[0].steps[5].nudge",
+   "src": "Think about what happens to ALL your instances at once if the shared thing they all check goes down for a second.",
    "text": "Piensa en qué le pasa a TODAS tus instancias a la vez si lo compartido que todas revisan cae por un segundo."
   },
   {
    "path": "modules[13].lessons[0].steps[6].title",
+   "src": "Write the liveness endpoint",
    "text": "Escribe el endpoint de liveness"
   },
   {
    "path": "modules[13].lessons[0].steps[6].prompt[0]",
+   "src": "Write `healthz`, the handler the load balancer polls. It takes the standard `(w http.ResponseWriter, r *http.Request)`. Inside, send a `200` with `w.WriteHeader(http.StatusOK)`, then write the body `ok` with `fmt.Fprint(w, \"ok\")`.",
    "text": "Escribe `healthz`, el handler que el load balancer sondea. Recibe el estándar `(w http.ResponseWriter, r *http.Request)`. Dentro, envía un `200` con `w.WriteHeader(http.StatusOK)`, y luego escribe el body `ok` con `fmt.Fprint(w, \"ok\")`."
   },
   {
    "path": "modules[13].lessons[0].steps[6].success",
+   "src": "That's the heartbeat of every production Go service — a handful of lines the load balancer leans on to know you're alive.",
    "text": "Ese es el latido de todo servicio de Go en producción — un puñado de líneas en las que el load balancer se apoya para saber que estás vivo."
   },
   {
    "path": "modules[13].lessons[1].title",
+   "src": "Containerizing",
    "text": "Contenerización"
   },
   {
    "path": "modules[13].lessons[1].steps[0].md[0]",
+   "src": "## Why Go containers are famously tiny",
    "text": "## Por qué los contenedores de Go son famosamente diminutos"
   },
   {
    "path": "modules[13].lessons[1].steps[0].md[1]",
+   "src": "Most platforms deploy your service as a **container image** — a portable bundle of your program and everything it needs to run. For an interpreted language that bundle is huge: you ship the runtime, the package manager, and a whole base OS, often hundreds of megabytes.",
    "text": "La mayoría de las plataformas despliegan tu servicio como una **imagen de contenedor** — un paquete portable de tu programa y todo lo que necesita para correr. Para un lenguaje interpretado ese paquete es enorme: envías el runtime, el gestor de paquetes, y todo un sistema operativo base, a menudo cientos de megabytes."
   },
   {
    "path": "modules[13].lessons[1].steps[0].md[2]",
+   "src": "Go changes the math. `go build` already produced *one statically-linked binary* that needs nothing else. So the container doesn't need an OS, a runtime, or libraries — just the binary. A PawWalk image can be **a few megabytes**, and it starts in milliseconds.",
    "text": "Go cambia la ecuación. `go build` ya produjo *un binario enlazado estáticamente* que no necesita nada más. Así que el contenedor no necesita un OS, un runtime, ni bibliotecas — solo el binario. Una imagen de PawWalk puede pesar **unos pocos megabytes**, y arranca en milisegundos."
   },
   {
    "path": "modules[13].lessons[1].steps[0].md[3]",
+   "src": "Small images pull faster, deploy faster, scale up faster under load, and carry almost no packages an attacker could exploit. This is Go's deploy story paying off.",
    "text": "Las imágenes pequeñas se descargan más rápido, se despliegan más rápido, escalan más rápido bajo carga, y llevan casi ningún paquete que un atacante pueda explotar. Esta es la historia de despliegue de Go dando frutos."
   },
   {
    "path": "modules[13].lessons[1].steps[1].md[0]",
+   "src": "## The multi-stage Dockerfile",
    "text": "## El Dockerfile multi-etapa"
   },
   {
    "path": "modules[13].lessons[1].steps[1].md[1]",
+   "src": "There's a catch: *building* Go needs the full toolchain (hundreds of MB), but *running* the result needs none of it. A **multi-stage build** solves this. You use a fat image to compile, then copy just the binary into a near-empty final image and throw the build stage away.",
    "text": "Hay una trampa: *compilar* Go necesita la toolchain completa (cientos de MB), pero *correr* el resultado no necesita nada de eso. Un **build multi-etapa** resuelve esto. Usas una imagen gorda para compilar, luego copias solo el binario a una imagen final casi vacía y descartas la etapa de compilación."
   },
   {
    "path": "modules[13].lessons[1].steps[1].md[2]",
+   "src": "- **Build stage** — start `FROM golang:1.22`, copy your source, run `go build`. This stage has the whole compiler.\n- **Runtime stage** — start `FROM` a minimal base, `COPY --from=build` only the finished binary, set the entry point. This is the only stage that ships.",
    "text": "- **Etapa de build** — empieza con `FROM golang:1.22`, copia tu código fuente, ejecuta `go build`. Esta etapa tiene el compilador completo.\n- **Etapa de runtime** — empieza desde una base mínima con `FROM`, `COPY --from=build` solo el binario terminado, define el entry point. Esta es la única etapa que se envía."
   },
   {
    "path": "modules[13].lessons[1].steps[1].md[3]",
+   "src": "The build tools never make it into the final image — they lived in a stage that got discarded.",
    "text": "Las herramientas de build nunca llegan a la imagen final — vivieron en una etapa que se descartó."
   },
   {
    "path": "modules[13].lessons[1].steps[2].md[0]",
+   "src": "## The Dockerfile in full",
    "text": "## El Dockerfile completo"
   },
   {
    "path": "modules[13].lessons[1].steps[2].md[1]",
+   "src": "Here's a production-shaped Dockerfile for the PawWalk binary. Read it top to bottom — each line maps to something you just learned:",
    "text": "Aquí tienes un Dockerfile con forma de producción para el binario de PawWalk. Léelo de arriba a abajo — cada línea corresponde a algo que acabas de aprender:"
   },
   {
    "path": "modules[13].lessons[1].steps[2].md[2]",
+   "src": "```dockerfile\n# ---- build stage ----\nFROM golang:1.22 AS build\nWORKDIR /src\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 GOOS=linux go build -ldflags \"-X main.version=1.0.0\" -o /pawwalk ./cmd/pawwalk\n\n# ---- runtime stage ----\nFROM gcr.io/distroless/static\nCOPY --from=build /pawwalk /pawwalk\nEXPOSE 8080\nENTRYPOINT [\"/pawwalk\"]\n```",
    "text": "```dockerfile\n# ---- build stage ----\nFROM golang:1.22 AS build\nWORKDIR /src\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 GOOS=linux go build -ldflags \"-X main.version=1.0.0\" -o /pawwalk ./cmd/pawwalk\n\n# ---- runtime stage ----\nFROM gcr.io/distroless/static\nCOPY --from=build /pawwalk /pawwalk\nEXPOSE 8080\nENTRYPOINT [\"/pawwalk\"]\n```"
   },
   {
    "path": "modules[13].lessons[1].steps[2].md[3]",
+   "src": "`CGO_ENABLED=0` forces a pure-Go static binary with zero C dependencies — the thing that makes the tiny base image possible. Copying `go.mod`/`go.sum` and running `go mod download` *before* the rest of the source lets Docker cache your dependencies, so edits to your code don't re-download the world.",
    "text": "`CGO_ENABLED=0` fuerza un binario estático puro Go sin ninguna dependencia de C — lo que hace posible la imagen base diminuta. Copiar `go.mod`/`go.sum` y ejecutar `go mod download` *antes* del resto del código fuente permite que Docker cachee tus dependencias, así que editar tu código no vuelve a descargar el mundo entero."
   },
   {
    "path": "modules[13].lessons[1].steps[3].md[0]",
+   "src": "## `distroless` vs `scratch`",
    "text": "## `distroless` vs `scratch`"
   },
   {
    "path": "modules[13].lessons[1].steps[3].md[1]",
+   "src": "What minimal base should the runtime stage use? Two common choices:",
    "text": "¿Qué base mínima debería usar la etapa de runtime? Dos opciones comunes:"
   },
   {
    "path": "modules[13].lessons[1].steps[3].md[2]",
+   "src": "- **`scratch`** — literally empty. Zero bytes of OS. The smallest possible image, but it has no shell, no CA certificates, no `/tmp`. If your app makes outbound HTTPS calls you'd have to add certs yourself.\n- **`gcr.io/distroless/static`** — also has no shell or package manager, but *does* include CA certificates and timezone data. A tiny, safer default for a real service that talks to Stripe or another API over HTTPS.",
    "text": "- **`scratch`** — literalmente vacía. Cero bytes de OS. La imagen más pequeña posible, pero no tiene shell, ni certificados CA, ni `/tmp`. Si tu app hace llamadas HTTPS salientes tendrías que agregar los certificados tú mismo.\n- **`gcr.io/distroless/static`** — tampoco tiene shell ni gestor de paquetes, pero *sí* incluye certificados CA y datos de zona horaria. Una opción diminuta y más segura por defecto para un servicio real que habla con Stripe u otra API por HTTPS."
   },
   {
    "path": "modules[13].lessons[1].steps[3].md[3]",
+   "src": "> Both drop the shell on purpose. No shell means an attacker who breaks in can't `sh` around your container — a real, free security win that Go's static binary makes practical.",
    "text": "> Ambas eliminan el shell a propósito. Sin shell significa que un atacante que logre entrar no puede hacer `sh` dentro de tu contenedor — una ganancia de seguridad real y gratuita que el binario estático de Go hace práctica."
   },
   {
    "path": "modules[13].lessons[1].steps[4].label",
+   "src": "Over to the terminal",
    "text": "A la terminal"
   },
   {
    "path": "modules[13].lessons[1].steps[4].title",
+   "src": "Build and run the container",
    "text": "Compila y ejecuta el contenedor"
   },
   {
    "path": "modules[13].lessons[1].steps[4].intro[0]",
+   "src": "Save the Dockerfile above next to your module, then take the image for a spin. This is the exact loop a deploy pipeline runs.",
    "text": "Guarda el Dockerfile de arriba junto a tu módulo, y luego prueba la imagen. Este es exactamente el bucle que ejecuta un pipeline de despliegue."
   },
   {
    "path": "modules[13].lessons[1].steps[4].items[0]",
+   "src": "Build the image: `docker build -t pawwalk .`",
    "text": "Compila la imagen: `docker build -t pawwalk .`"
   },
   {
    "path": "modules[13].lessons[1].steps[4].items[1]",
+   "src": "Confirm it's tiny: `docker images pawwalk` — the size should be single-digit megabytes",
    "text": "Confirma que es diminuta: `docker images pawwalk` — el tamaño debería ser de un solo dígito de megabytes"
   },
   {
    "path": "modules[13].lessons[1].steps[4].items[2]",
+   "src": "Run it, mapping the port: `docker run -p 8080:8080 pawwalk`",
    "text": "Ejecútala, mapeando el puerto: `docker run -p 8080:8080 pawwalk`"
   },
   {
    "path": "modules[13].lessons[1].steps[4].items[3]",
+   "src": "In another terminal, hit the health check: `curl localhost:8080/healthz` — it should print `ok`",
    "text": "En otra terminal, prueba el health check: `curl localhost:8080/healthz` — debería imprimir `ok`"
   },
   {
    "path": "modules[13].lessons[1].steps[4].items[4]",
+   "src": "Stop the container with Ctrl-C. You just built and ran the same artifact production would.",
    "text": "Detén el contenedor con Ctrl-C. Acabas de compilar y correr el mismo artefacto que correría producción."
   },
   {
    "path": "modules[13].lessons[1].steps[5].q",
+   "src": "In the multi-stage Dockerfile, why doesn't the Go compiler end up in the final image?",
    "text": "En el Dockerfile multi-etapa, ¿por qué el compilador de Go no termina en la imagen final?"
   },
   {
    "path": "modules[13].lessons[1].steps[5].choices[0]",
+   "src": "The runtime stage starts from a fresh minimal base and copies only the built binary out of the build stage, which is then discarded",
    "text": "La etapa de runtime empieza desde una base mínima nueva y copia solo el binario compilado desde la etapa de build, la cual luego se descarta"
   },
   {
    "path": "modules[13].lessons[1].steps[5].choices[1]",
+   "src": "Docker automatically deletes compilers from every image",
    "text": "Docker elimina automáticamente los compiladores de toda imagen"
   },
   {
    "path": "modules[13].lessons[1].steps[5].choices[2]",
+   "src": "`gcr.io/distroless/static` uninstalls Go after the build",
    "text": "`gcr.io/distroless/static` desinstala Go después del build"
   },
   {
    "path": "modules[13].lessons[1].steps[5].choices[3]",
+   "src": "The compiler is stored in a separate cloud volume, never in the image",
    "text": "El compilador se guarda en un volumen aparte en la nube, nunca en la imagen"
   },
   {
    "path": "modules[13].lessons[1].steps[5].explain",
+   "src": "Each `FROM` begins a new stage with its own filesystem. The final stage starts from a minimal base and pulls in only what `COPY --from=build` names — here, just `/pawwalk`. Everything in the build stage, compiler included, is left behind and never shipped.",
    "text": "Cada `FROM` inicia una etapa nueva con su propio sistema de archivos. La etapa final empieza desde una base mínima y trae solo lo que nombra `COPY --from=build` — aquí, solo `/pawwalk`. Todo lo de la etapa de build, compilador incluido, queda atrás y nunca se envía."
   },
   {
    "path": "modules[13].lessons[1].steps[5].nudge",
+   "src": "Look at what the second `FROM` starts from, and what the single `COPY --from=build` line actually copies.",
    "text": "Fíjate desde qué parte el segundo `FROM` y qué copia en realidad la única línea `COPY --from=build`."
   },
   {
    "path": "modules[13].lessons[1].steps[6].title",
+   "src": "Read the port from the environment",
    "text": "Lee el puerto desde el entorno"
   },
   {
    "path": "modules[13].lessons[1].steps[6].prompt[0]",
+   "src": "Containers and platforms tell your app which port to listen on through the `PORT` environment variable. Inside `main`, read it with `port := os.Getenv(\"PORT\")`. Then, if it's empty, default it: `if port == \"\" {` set `port = \"8080\"`. Finally build the listen address with `addr := \":\" + port`.",
    "text": "Los contenedores y plataformas le dicen a tu app en qué puerto escuchar a través de la variable de entorno `PORT`. Dentro de `main`, léela con `port := os.Getenv(\"PORT\")`. Luego, si está vacía, define un valor por defecto: `if port == \"\" {` establece `port = \"8080\"`. Finalmente construye la dirección de escucha con `addr := \":\" + port`."
   },
   {
    "path": "modules[13].lessons[1].steps[6].success",
+   "src": "Now the same binary runs on port 8080 locally and whatever port the platform hands it in production — configuration by environment, no rebuild.",
    "text": "Ahora el mismo binario corre en el puerto 8080 localmente y en cualquier puerto que la plataforma le entregue en producción — configuración por entorno, sin recompilar."
   },
   {
    "path": "modules[13].lessons[2].title",
+   "src": "Graduation",
    "text": "Graduación"
   },
   {
    "path": "modules[13].lessons[2].steps[0].md[0]",
+   "src": "## Look how far you came",
    "text": "## Mira qué lejos llegaste"
   },
   {
    "path": "modules[13].lessons[2].steps[0].md[1]",
+   "src": "You started this course never having written a line of Go, knowing only that the PawWalk app you built in Part I *asked a server for data*. You are now the person who builds that server.",
    "text": "Empezaste este curso sin haber escrito nunca una línea de Go, sabiendo solo que la app PawWalk que construiste en la Parte I *le pedía datos a un servidor*. Ahora eres la persona que construye ese servidor."
   },
   {
    "path": "modules[13].lessons[2].steps[0].md[2]",
+   "src": "Retrace the climb:",
    "text": "Repasa la escalada:"
   },
   {
    "path": "modules[13].lessons[2].steps[0].md[3]",
+   "src": "- **The language** (00–05) — variables and `:=`, slices and maps, structs with methods, interfaces and Go's explicit `error` values, and the goroutines-and-channels model that makes Go *Go*.\n- **The standard-library server** (06–08) — `net/http`, JSON encoding, routing, middleware, and a real database. Go ships a production HTTP server in its standard library; you felt exactly what a request is.\n- **The real PawWalk backend** (09–12) — a proper service layout, config, walkers, JWT **auth**, **bookings** priced in cents, and **tests** that prove it works.\n- **Shipping** (13) — a single cross-compiled binary, a few-megabyte container, a `/healthz` heartbeat, and a deploy you understand end to end.",
    "text": "- **El lenguaje** (00–05) — variables y `:=`, slices y maps, structs con métodos, interfaces y los valores `error` explícitos de Go, y el modelo de goroutines y channels que hace que Go sea *Go*.\n- **El servidor de la biblioteca estándar** (06–08) — `net/http`, codificación JSON, ruteo, middleware, y una base de datos real. Go trae un servidor HTTP de producción en su biblioteca estándar; sentiste exactamente qué es una petición.\n- **El backend real de PawWalk** (09–12) — una estructura de servicio apropiada, configuración, walkers, **auth** con JWT, **reservas** con precio en centavos, y **pruebas** que demuestran que funciona.\n- **Despliegue** (13) — un solo binario compilado de forma cruzada, un contenedor de pocos megabytes, un latido `/healthz`, y un despliegue que entiendes de punta a punta."
   },
   {
    "path": "modules[13].lessons[2].steps[1].md[0]",
+   "src": "## What you can genuinely do now",
    "text": "## Lo que ahora puedes hacer de verdad"
   },
   {
    "path": "modules[13].lessons[2].steps[1].md[1]",
+   "src": "This wasn't a tour. You can sit down and build a real HTTP service in Go: model the domain with structs and interfaces, expose it over `net/http`, guard it with auth middleware, back it with a database, cover it with `go test`, and ship it in a tiny container behind a health check.",
    "text": "Esto no fue un tour. Puedes sentarte y construir un servicio HTTP real en Go: modelar el dominio con structs e interfaces, exponerlo por `net/http`, protegerlo con middleware de auth, respaldarlo con una base de datos, cubrirlo con `go test`, y enviarlo en un contenedor diminuto detrás de un health check."
   },
   {
    "path": "modules[13].lessons[2].steps[1].md[2]",
+   "src": "Those are the same bones under Docker, Kubernetes, and a huge share of the APIs running in production today. You now read that code as a native speaker, not a tourist.",
    "text": "Esos son los mismos huesos debajo de Docker, Kubernetes, y una gran parte de las APIs corriendo en producción hoy. Ahora lees ese código como hablante nativo, no como turista."
   },
   {
    "path": "modules[13].lessons[2].steps[2].md[0]",
+   "src": "## Where to go next",
    "text": "## Hacia dónde seguir"
   },
   {
    "path": "modules[13].lessons[2].steps[2].md[1]",
+   "src": "The service you built is real, but a production system keeps growing. The natural next steps, roughly in order:",
    "text": "El servicio que construiste es real, pero un sistema en producción sigue creciendo. Los siguientes pasos naturales, más o menos en orden:"
   },
   {
    "path": "modules[13].lessons[2].steps[2].md[2]",
+   "src": "- **`context.Context`** — the value threaded through every serious Go server for cancellation, timeouts, and deadlines. Wire it from the request down through your database calls so a client hang-up cancels the work.\n- **Observability** — structured logging with `log/slog`, plus metrics and traces, so you can *see* what production is doing.\n- **Graceful shutdown** — catch the shutdown signal and let in-flight requests finish before the process exits.\n- **gRPC** — when services talk to each other, a typed, high-performance alternative to REST that Go excels at.",
    "text": "- **`context.Context`** — el valor que atraviesa cada servidor Go serio para cancelación, timeouts y deadlines. Enhébralo desde la petición hasta tus llamadas a la base de datos para que si el cliente cuelga se cancele el trabajo.\n- **Observabilidad** — logging estructurado con `log/slog`, más métricas y trazas, para que puedas *ver* qué está haciendo producción.\n- **Apagado ordenado (graceful shutdown)** — captura la señal de apagado y deja que las peticiones en vuelo terminen antes de que el proceso salga.\n- **gRPC** — cuando los servicios se hablan entre sí, una alternativa tipada y de alto rendimiento a REST en la que Go sobresale."
   },
   {
    "path": "modules[13].lessons[2].steps[2].md[3]",
+   "src": "And you have a whole monorepo of neighbors to study: the Rails, iOS, and Android PawWalk apps all speak to a backend just like the one you built. Read how they shape the same walkers, bookings, and cents from the other side.",
    "text": "Y tienes todo un monorepo de vecinos para estudiar: las apps de PawWalk en Rails, iOS y Android hablan con un backend igual al que construiste. Lee cómo modelan los mismos walkers, reservas y centavos desde el otro lado."
   },
   {
    "path": "modules[13].lessons[2].steps[3].q",
+   "src": "You're extending the PawWalk server so a slow database query is abandoned the moment the client disconnects. Which Go tool is built for exactly that?",
    "text": "Estás extendiendo el servidor de PawWalk para que una consulta lenta a la base de datos se abandone en el momento en que el cliente se desconecta. ¿Qué herramienta de Go está hecha exactamente para eso?"
   },
   {
    "path": "modules[13].lessons[2].steps[3].choices[0]",
+   "src": "context.Context, threaded from the request through your database calls",
    "text": "context.Context, enhebrado desde la petición hasta tus llamadas a la base de datos"
   },
   {
    "path": "modules[13].lessons[2].steps[3].choices[1]",
+   "src": "A second goroutine that polls the connection every second",
    "text": "Una segunda goroutine que sondea la conexión cada segundo"
   },
   {
    "path": "modules[13].lessons[2].steps[3].choices[2]",
+   "src": "Setting GOARCH before the query runs",
    "text": "Configurar GOARCH antes de que corra la consulta"
   },
   {
    "path": "modules[13].lessons[2].steps[3].choices[3]",
+   "src": "A larger -ldflags version string",
    "text": "Un string de versión más largo en -ldflags"
   },
   {
    "path": "modules[13].lessons[2].steps[3].explain",
+   "src": "`context.Context` carries cancellation and deadlines through a call chain. `*http.Request` already has one via `r.Context()`; pass it into your database calls and the whole operation unwinds the instant the client goes away or a deadline passes. It's the single most important next thing to learn for real Go services.",
    "text": "`context.Context` lleva la cancelación y los deadlines a través de una cadena de llamadas. `*http.Request` ya tiene uno vía `r.Context()`; pásalo a tus llamadas a la base de datos y toda la operación se desenreda en el instante en que el cliente se va o pasa un deadline. Es lo siguiente más importante que aprender para servicios Go reales."
   },
   {
    "path": "modules[13].lessons[2].steps[3].nudge",
+   "src": "It's the value real Go servers thread through every layer to say 'stop, the caller is gone.'",
    "text": "Es el valor que los servidores Go reales enhebran por cada capa para decir 'detente, quien llamó ya no está'."
   },
   {
    "path": "modules[13].lessons[2].steps[4].md[0]",
+   "src": "## Congratulations",
    "text": "## Felicidades"
   },
   {
    "path": "modules[13].lessons[2].steps[4].md[1]",
+   "src": "You set out to learn the other side of the URL, and you built it: a real, tested, deployable Go backend for PawWalk, from zero. That's a genuine, hireable skill — the kind that turns 'I use APIs' into 'I build them.'",
    "text": "Te propusiste aprender el otro lado de la URL, y lo construiste: un backend de Go real, probado y desplegable para PawWalk, desde cero. Esa es una habilidad genuina y contratable — del tipo que convierte 'uso APIs' en 'las construyo'."
   },
   {
    "path": "modules[13].lessons[2].steps[4].md[2]",
+   "src": "Take a lap. Then open the terminal one more time and prove to yourself it all runs.",
    "text": "Date una vuelta de honor. Luego abre la terminal una vez más y demuéstrate a ti mismo que todo corre."
   },
   {
    "path": "modules[13].lessons[2].steps[5].label",
+   "src": "Over to the terminal",
    "text": "A la terminal"
   },
   {
    "path": "modules[13].lessons[2].steps[5].title",
+   "src": "You can now…",
    "text": "Ahora puedes…"
   },
   {
    "path": "modules[13].lessons[2].steps[5].intro[0]",
+   "src": "Your graduation checklist — every item is a real thing you're now able to do, start to finish, with the PawWalk backend you built.",
    "text": "Tu checklist de graduación — cada ítem es algo real que ahora eres capaz de hacer, de principio a fin, con el backend de PawWalk que construiste."
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[0]",
+   "src": "Run the whole service locally: `go run ./cmd/pawwalk` and hit `curl localhost:8080/healthz`",
    "text": "Corre todo el servicio localmente: `go run ./cmd/pawwalk` y prueba `curl localhost:8080/healthz`"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[1]",
+   "src": "Run the full test suite green: `go test ./...`",
    "text": "Corre toda la suite de pruebas en verde: `go test ./...`"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[2]",
+   "src": "Vet and format like a pro before every commit: `go vet ./...` and `go fmt ./...`",
    "text": "Vetea y formatea como pro antes de cada commit: `go vet ./...` y `go fmt ./...`"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[3]",
+   "src": "Cross-compile the deploy binary: `GOOS=linux GOARCH=amd64 go build -ldflags \"-X main.version=1.0.0\" -o pawwalk ./cmd/pawwalk`",
    "text": "Compila de forma cruzada el binario de despliegue: `GOOS=linux GOARCH=amd64 go build -ldflags \"-X main.version=1.0.0\" -o pawwalk ./cmd/pawwalk`"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[4]",
+   "src": "Containerize and run it: `docker build -t pawwalk .` then `docker run -p 8080:8080 pawwalk`",
    "text": "Contenerízalo y ejecútalo: `docker build -t pawwalk .` y luego `docker run -p 8080:8080 pawwalk`"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[5]",
+   "src": "Go read a neighbor: open the Rails, iOS, or Android PawWalk app in this repo and trace one request from the app to a handler you now understand",
    "text": "Ve a leer a un vecino: abre la app de PawWalk en Rails, iOS o Android en este repo y sigue una petición desde la app hasta un handler que ahora entiendes"
   },
   {
    "path": "modules[13].lessons[2].steps[5].items[6]",
+   "src": "Celebrate — you're a Go backend developer. 🐹🚀",
    "text": "Celebra — eres un desarrollador backend de Go. 🐹🚀"
   }
  ]

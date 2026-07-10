@@ -4,354 +4,442 @@
  "units": [
   {
    "path": "modules[10].title",
+   "src": "Authentication",
    "text": "Autenticación"
   },
   {
    "path": "modules[10].lessons[0].title",
+   "src": "Password hashing",
    "text": "Hashing de contraseñas"
   },
   {
    "path": "modules[10].lessons[0].steps[0].md[0]",
+   "src": "## Never store the password",
    "text": "## Nunca guardes la contraseña"
   },
   {
    "path": "modules[10].lessons[0].steps[0].md[1]",
+   "src": "PawWalk needs accounts: a walker signs up with an email and a password, and later logs back in. The tempting mistake is to save that password in the database as-is. **Don't.** If your database ever leaks — a backup goes missing, a query is logged, an intern runs the wrong `SELECT` — every plaintext password is exposed, and people reuse passwords everywhere.",
    "text": "PawWalk necesita cuentas: un walker se registra con un email y una contraseña, y luego vuelve a iniciar sesión. El error tentador es guardar esa contraseña en la base de datos tal cual. **No lo hagas.** Si tu base de datos alguna vez se filtra — se pierde un backup, se registra una query, un becario corre el `SELECT` equivocado — cada contraseña en texto plano queda expuesta, y la gente reutiliza contraseñas en todas partes."
   },
   {
    "path": "modules[10].lessons[0].steps[0].md[2]",
+   "src": "The rule every backend follows: **you never store the password, you store a one-way hash of it.** A hash is a fingerprint — you can compute it from the password, but you can't run it backwards to recover the password. At login you hash what the user typed and compare fingerprints.",
    "text": "La regla que sigue cualquier backend: **nunca guardas la contraseña, guardas un hash de un solo sentido de ella.** Un hash es una huella digital — puedes calcularla a partir de la contraseña, pero no puedes correrla al revés para recuperar la contraseña. En el login, hasheas lo que el usuario escribió y comparas huellas."
   },
   {
    "path": "modules[10].lessons[0].steps[0].md[3]",
+   "src": "> Even you, the person who runs the server, should be unable to recover a user's password. That's the whole point.",
    "text": "> Incluso tú, la persona que corre el servidor, deberías ser incapaz de recuperar la contraseña de un usuario. Ese es todo el punto."
   },
   {
    "path": "modules[10].lessons[0].steps[1].md[0]",
+   "src": "## Why not just SHA-256?",
    "text": "## ¿Por qué no simplemente SHA-256?"
   },
   {
    "path": "modules[10].lessons[0].steps[1].md[1]",
+   "src": "You may have heard of hash functions like SHA-256. They're the *wrong* tool here for one reason: they're **fast**. An attacker who steals your hashes can try billions of password guesses per second on a GPU, hashing each one and checking for a match.",
    "text": "Puede que hayas oído hablar de funciones hash como SHA-256. Son la herramienta *equivocada* aquí por una razón: son **rápidas**. Un atacante que roba tus hashes puede probar miles de millones de intentos de contraseña por segundo en una GPU, hasheando cada uno y comparando si coincide."
   },
   {
    "path": "modules[10].lessons[0].steps[1].md[2]",
+   "src": "Password hashing wants the opposite — a function that is *deliberately slow* and *salted* (so two users with the same password get different hashes). The industry-standard choice in Go is **bcrypt**, from `golang.org/x/crypto/bcrypt`. It builds in a salt and a tunable **cost** that makes each hash take a measurable fraction of a second — trivial for one honest login, ruinous for an attacker trying millions.",
    "text": "El hashing de contraseñas quiere lo opuesto — una función que sea *deliberadamente lenta* y con **salt** (para que dos usuarios con la misma contraseña obtengan hashes distintos). La opción estándar en Go es **bcrypt**, de `golang.org/x/crypto/bcrypt`. Incorpora un salt y un **cost** ajustable que hace que cada hash tome una fracción de segundo medible — trivial para un login honesto, ruinoso para un atacante probando millones."
   },
   {
    "path": "modules[10].lessons[0].steps[1].md[3]",
+   "src": "You add it to your module once:",
    "text": "Lo agregas a tu módulo una vez:"
   },
   {
    "path": "modules[10].lessons[0].steps[1].md[4]",
+   "src": "```\ngo get golang.org/x/crypto/bcrypt\n```",
    "text": "```\ngo get golang.org/x/crypto/bcrypt\n```"
   },
   {
    "path": "modules[10].lessons[0].steps[2].title",
+   "src": "internal/auth/password.go",
    "text": "internal/auth/password.go"
   },
   {
    "path": "modules[10].lessons[0].steps[2].caption",
+   "src": "bcrypt speaks bytes, not strings, so everything is wrapped in []byte(...). GenerateFromPassword returns (hash, error); CompareHashAndPassword returns a single error — nil means the password matched.",
    "text": "bcrypt trabaja con bytes, no strings, así que todo va envuelto en []byte(...). GenerateFromPassword devuelve (hash, error); CompareHashAndPassword devuelve un único error — nil significa que la contraseña coincidió."
   },
   {
    "path": "modules[10].lessons[0].steps[3].md[0]",
+   "src": "## Read the two calls closely",
    "text": "## Lee de cerca las dos llamadas"
   },
   {
    "path": "modules[10].lessons[0].steps[3].md[1]",
+   "src": "- **`bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)`** — takes the password as bytes and a *cost*. `bcrypt.DefaultCost` (currently 10) is a sensible default; a bigger number is slower and stronger. It returns `(hash, error)` — the hash already contains the salt and the cost baked in, so you store just that one string.",
    "text": "- **`bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)`** — recibe la contraseña como bytes y un *cost*. `bcrypt.DefaultCost` (actualmente 10) es un valor por defecto razonable; un número más alto es más lento y más fuerte. Devuelve `(hash, error)` — el hash ya contiene el salt y el cost incorporados, así que guardas solo ese único string.\n"
   },
   {
    "path": "modules[10].lessons[0].steps[3].md[2]",
+   "src": "- **`bcrypt.CompareHashAndPassword(hash, []byte(pw))`** — re-hashes the candidate password using the salt and cost it reads out of the stored hash, then compares. It returns an **`error`**: `nil` means a match, a non-nil error means no match. There is no `bool` — you check `err == nil`.",
    "text": "- **`bcrypt.CompareHashAndPassword(hash, []byte(pw))`** — vuelve a hashear la contraseña candidata usando el salt y el cost que lee del hash guardado, y luego compara. Devuelve un **`error`**: `nil` significa coincidencia, un error no nulo significa que no coincidió. No hay un `bool` — verificas `err == nil`."
   },
   {
    "path": "modules[10].lessons[0].steps[3].md[3]",
+   "src": "> Notice you never compare hashes yourself with `==`. bcrypt does the comparison for you, in constant time, because it has to re-derive the salt first.",
    "text": "> Nota que nunca comparas hashes tú mismo con `==`. bcrypt hace la comparación por ti, en tiempo constante, porque tiene que rederivar el salt primero."
   },
   {
    "path": "modules[10].lessons[0].steps[4].q",
+   "src": "`bcrypt.CompareHashAndPassword(storedHash, []byte(typed))` returns `nil`. What does that mean?",
    "text": "`bcrypt.CompareHashAndPassword(storedHash, []byte(typed))` devuelve `nil`. ¿Qué significa eso?"
   },
   {
    "path": "modules[10].lessons[0].steps[4].choices[0]",
+   "src": "The typed password matches the stored hash — the login is valid",
    "text": "La contraseña escrita coincide con el hash guardado — el login es válido"
   },
   {
    "path": "modules[10].lessons[0].steps[4].choices[1]",
+   "src": "Something went wrong and the comparison failed",
    "text": "Algo salió mal y la comparación falló"
   },
   {
    "path": "modules[10].lessons[0].steps[4].choices[2]",
+   "src": "The password was empty",
    "text": "La contraseña estaba vacía"
   },
   {
    "path": "modules[10].lessons[0].steps[4].choices[3]",
+   "src": "The hash needs to be regenerated",
    "text": "El hash necesita regenerarse"
   },
   {
    "path": "modules[10].lessons[0].steps[4].explain",
+   "src": "CompareHashAndPassword returns an error, and nil is the 'no error' value — the password matched. A non-nil error (like bcrypt.ErrMismatchedHashAndPassword) means it did not. That's why the idiom is `if err == nil` for a successful login.",
    "text": "CompareHashAndPassword devuelve un error, y nil es el valor de 'sin error' — la contraseña coincidió. Un error no nulo (como bcrypt.ErrMismatchedHashAndPassword) significa que no coincidió. Por eso el idiom es `if err == nil` para un login exitoso."
   },
   {
    "path": "modules[10].lessons[0].steps[4].nudge",
+   "src": "In Go, a returned error of nil means 'nothing went wrong.' Here 'nothing went wrong' means the passwords lined up.",
    "text": "En Go, un error devuelto como nil significa 'nada salió mal.' Aquí 'nada salió mal' significa que las contraseñas coincidieron."
   },
   {
    "path": "modules[10].lessons[0].steps[5].q",
+   "src": "Why is bcrypt preferred over a fast hash like SHA-256 for passwords?",
    "text": "¿Por qué se prefiere bcrypt sobre un hash rápido como SHA-256 para contraseñas?"
   },
   {
    "path": "modules[10].lessons[0].steps[5].choices[0]",
+   "src": "It is deliberately slow and salted, which cripples brute-force guessing",
    "text": "Es deliberadamente lento y usa salt, lo cual paraliza los intentos de fuerza bruta"
   },
   {
    "path": "modules[10].lessons[0].steps[5].choices[1]",
+   "src": "It produces shorter hashes that save database space",
    "text": "Produce hashes más cortos que ahorran espacio en la base de datos"
   },
   {
    "path": "modules[10].lessons[0].steps[5].choices[2]",
+   "src": "It can be reversed to recover the original password when needed",
    "text": "Se puede revertir para recuperar la contraseña original cuando haga falta"
   },
   {
    "path": "modules[10].lessons[0].steps[5].choices[3]",
+   "src": "It does not require importing any package",
    "text": "No requiere importar ningún paquete"
   },
   {
    "path": "modules[10].lessons[0].steps[5].explain",
+   "src": "bcrypt's slowness is a feature: a single honest login barely notices, but an attacker trying to test billions of guesses against a stolen database is throttled to a crawl. The built-in per-user salt also means identical passwords never share a hash.",
    "text": "La lentitud de bcrypt es una característica: un solo login honesto casi ni la nota, pero un atacante que intenta probar miles de millones de intentos contra una base de datos robada queda frenado a paso de tortuga. El salt incorporado por usuario también significa que contraseñas idénticas nunca comparten un hash."
   },
   {
    "path": "modules[10].lessons[0].steps[5].nudge",
+   "src": "Think about what an attacker with your leaked hashes wants to do, and which property gets in their way.",
    "text": "Piensa en qué quiere hacer un atacante con tus hashes filtrados, y qué propiedad se lo impide."
   },
   {
    "path": "modules[10].lessons[0].steps[6].title",
+   "src": "Hash a signup password",
    "text": "Hashea una contraseña de registro"
   },
   {
    "path": "modules[10].lessons[0].steps[6].prompt[0]",
+   "src": "A new walker is signing up. Inside `HashPassword`, call `bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)`, capturing `hash` and `err`. If `err != nil`, return `\"\", err`. Otherwise return `string(hash), nil`.",
    "text": "Un nuevo walker se está registrando. Dentro de `HashPassword`, llama a `bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)`, capturando `hash` y `err`. Si `err != nil`, devuelve `\"\", err`. Si no, devuelve `string(hash), nil`."
   },
   {
    "path": "modules[10].lessons[0].steps[6].success",
+   "src": "That's exactly the password.go you'll ship. Every account's stored 'password' is now an un-reversible bcrypt hash.",
    "text": "Eso es exactamente el password.go que vas a lanzar. La 'contraseña' guardada de cada cuenta ahora es un hash bcrypt irreversible."
   },
   {
    "path": "modules[10].lessons[1].title",
+   "src": "JWT tokens",
    "text": "Tokens JWT"
   },
   {
    "path": "modules[10].lessons[1].steps[0].md[0]",
+   "src": "## After login, then what?",
    "text": "## Después del login, ¿qué sigue?"
   },
   {
    "path": "modules[10].lessons[1].steps[0].md[1]",
+   "src": "Hashing solves *proving who you are once* — at login. But HTTP is **stateless**: the next request PawWalk makes (list my bookings, start a walk) arrives as a fresh connection that knows nothing about the login that just happened. Something has to travel with every request to say *\"I'm the walker who logged in a minute ago.\"*",
    "text": "El hashing resuelve *demostrar quién eres una vez* — en el login. Pero HTTP es **stateless**: la siguiente petición que hace PawWalk (lista mis reservas, empieza un paseo) llega como una conexión nueva que no sabe nada del login que acaba de pasar. Algo tiene que viajar con cada petición para decir *\"soy el walker que inició sesión hace un minuto.\"*"
   },
   {
    "path": "modules[10].lessons[1].steps[0].md[2]",
+   "src": "That something is a **token**. When login succeeds, the server hands the client a token; the app stores it and attaches it to every later request. The classic way to make that token trustworthy without a database lookup on every call is a **JWT** — a JSON Web Token.",
    "text": "Ese algo es un **token**. Cuando el login tiene éxito, el servidor le entrega un token al cliente; la app lo guarda y lo adjunta a cada petición posterior. La forma clásica de hacer ese token confiable sin una consulta a la base de datos en cada llamada es un **JWT** — un JSON Web Token."
   },
   {
    "path": "modules[10].lessons[1].steps[1].md[0]",
+   "src": "## What a JWT actually is",
    "text": "## Qué es en realidad un JWT"
   },
   {
    "path": "modules[10].lessons[1].steps[1].md[1]",
+   "src": "A JWT is three base64 chunks joined by dots: `header.payload.signature`. The **payload** is just JSON — a set of **claims** like *who this is* and *when it expires*. The **signature** is the important part: the server signs the header+payload with a **secret key** only it knows. Anyone can read a JWT (it isn't encrypted), but nobody can forge or tamper with one, because they can't reproduce the signature without the secret.",
    "text": "Un JWT son tres fragmentos base64 unidos por puntos: `header.payload.signature`. El **payload** es solo JSON — un conjunto de **claims** como *quién es este* y *cuándo expira*. La **signature** es la parte importante: el servidor firma el header+payload con una **clave secreta** que solo él conoce. Cualquiera puede leer un JWT (no está encriptado), pero nadie puede falsificarlo o alterarlo, porque no pueden reproducir la firma sin el secreto."
   },
   {
    "path": "modules[10].lessons[1].steps[1].md[2]",
+   "src": "So when a token comes back later, the server just re-checks the signature with its secret. Valid signature → this token really came from us → trust the claims inside. No session table, no database hit. That's why JWTs are called **stateless** auth.",
    "text": "Así que cuando un token vuelve más tarde, el servidor solo revalida la firma con su secreto. Firma válida → este token realmente vino de nosotros → confía en los claims de adentro. Sin tabla de sesiones, sin consulta a la base de datos. Por eso los JWT se llaman auth **stateless**."
   },
   {
    "path": "modules[10].lessons[1].steps[1].md[3]",
+   "src": "> Because anyone can *read* a JWT, never put secrets in the claims. A user id and an expiry are fine; a password is not.",
    "text": "> Como cualquiera puede *leer* un JWT, nunca pongas secretos en los claims. Un id de usuario y una expiración están bien; una contraseña no."
   },
   {
    "path": "modules[10].lessons[1].steps[2].md[0]",
+   "src": "## The library and the pieces",
    "text": "## La librería y las piezas"
   },
   {
    "path": "modules[10].lessons[1].steps[2].md[1]",
+   "src": "Go's go-to library is `github.com/golang-jwt/jwt/v5`. Three moving parts build a token:",
    "text": "La librería de referencia en Go es `github.com/golang-jwt/jwt/v5`. Tres piezas móviles construyen un token:"
   },
   {
    "path": "modules[10].lessons[1].steps[2].md[2]",
+   "src": "- **Claims** — `jwt.MapClaims{...}`, a `map` of the facts you're asserting. Two standard claim names: `\"sub\"` (the *subject* — who the token is about, i.e. the user id) and `\"exp\"` (the expiry, as a Unix timestamp).\n- **`jwt.NewWithClaims(method, claims)`** — bundles the claims with a **signing method**. `jwt.SigningMethodHS256` is HMAC-SHA256: one shared secret signs and verifies.\n- **`token.SignedString([]byte(secret))`** — actually signs it and returns the finished `header.payload.signature` string.",
    "text": "- **Claims** — `jwt.MapClaims{...}`, un `map` de los hechos que estás afirmando. Dos nombres de claim estándar: `\"sub\"` (el *subject* — de quién trata el token, es decir, el id de usuario) y `\"exp\"` (la expiración, como timestamp Unix).\n- **`jwt.NewWithClaims(method, claims)`** — agrupa los claims con un **método de firma**. `jwt.SigningMethodHS256` es HMAC-SHA256: un secreto compartido firma y verifica.\n- **`token.SignedString([]byte(secret))`** — de verdad lo firma y devuelve el string terminado `header.payload.signature`."
   },
   {
    "path": "modules[10].lessons[1].steps[2].md[3]",
+   "src": "```\ngo get github.com/golang-jwt/jwt/v5\n```",
    "text": "```\ngo get github.com/golang-jwt/jwt/v5\n```"
   },
   {
    "path": "modules[10].lessons[1].steps[3].title",
+   "src": "internal/auth/token.go",
    "text": "internal/auth/token.go"
   },
   {
    "path": "modules[10].lessons[1].steps[3].caption",
+   "src": "\"sub\" carries the walker's id; \"exp\" is a Unix timestamp 24 hours out so a stolen token can't live forever. NewWithClaims pairs the claims with HS256; SignedString turns it into the dotted string you send back to the app.",
    "text": "\"sub\" lleva el id del walker; \"exp\" es un timestamp Unix 24 horas adelante para que un token robado no viva para siempre. NewWithClaims empareja los claims con HS256; SignedString lo convierte en el string con puntos que le devuelves a la app."
   },
   {
    "path": "modules[10].lessons[1].steps[4].md[0]",
+   "src": "## Where the token lives on the app side",
    "text": "## Dónde vive el token del lado de la app"
   },
   {
    "path": "modules[10].lessons[1].steps[4].md[1]",
+   "src": "In the iOS course, `APIClient` sent requests to this backend. Once login returns a JWT, the app stores it (in the Keychain) and adds it to every request as a header — `Authorization: Bearer <token>`. That header is the thread that ties an anonymous HTTP request back to a logged-in walker. Verifying it is the next lesson.",
    "text": "En el curso de iOS, `APIClient` enviaba peticiones a este backend. Una vez que el login devuelve un JWT, la app lo guarda (en el Keychain) y lo agrega a cada petición como un header — `Authorization: Bearer <token>`. Ese header es el hilo que conecta una petición HTTP anónima con un walker que inició sesión. Verificarlo es la próxima lección."
   },
   {
    "path": "modules[10].lessons[1].steps[4].md[2]",
+   "src": "For now, focus on **minting** the token: correct claims, a signing method, a secret.",
    "text": "Por ahora, concéntrate en **emitir** el token: claims correctos, un método de firma, un secreto."
   },
   {
    "path": "modules[10].lessons[1].steps[5].q",
+   "src": "Why can a server trust a JWT's claims without looking anything up in a database?",
    "text": "¿Por qué puede un servidor confiar en los claims de un JWT sin buscar nada en una base de datos?"
   },
   {
    "path": "modules[10].lessons[1].steps[5].choices[0]",
+   "src": "The signature proves the token was made with the server's secret and hasn't been altered",
    "text": "La firma demuestra que el token se hizo con el secreto del servidor y no fue alterado"
   },
   {
    "path": "modules[10].lessons[1].steps[5].choices[1]",
+   "src": "The claims are encrypted so no one else can read them",
    "text": "Los claims están encriptados así que nadie más puede leerlos"
   },
   {
    "path": "modules[10].lessons[1].steps[5].choices[2]",
+   "src": "The token is stored in a sessions table the server checks",
    "text": "El token se guarda en una tabla de sesiones que el servidor revisa"
   },
   {
    "path": "modules[10].lessons[1].steps[5].choices[3]",
+   "src": "JWTs can only be created by the golang-jwt library",
    "text": "Los JWT solo pueden crearse con la librería golang-jwt"
   },
   {
    "path": "modules[10].lessons[1].steps[5].explain",
+   "src": "The signature is an HMAC of the header and payload using the server's secret. Re-computing it verifies both authenticity (it came from us) and integrity (nothing was changed). No lookup needed — that statelessness is the whole appeal. Note the claims are only signed, not encrypted, so they're readable by anyone.",
    "text": "La firma es un HMAC del header y el payload usando el secreto del servidor. Recalcularla verifica tanto la autenticidad (vino de nosotros) como la integridad (nada cambió). No hace falta ninguna consulta — ese carácter stateless es todo el atractivo. Nota que los claims solo están firmados, no encriptados, así que cualquiera puede leerlos."
   },
   {
    "path": "modules[10].lessons[1].steps[5].nudge",
+   "src": "One of the three parts of a JWT is what makes tampering detectable. It isn't the header or the payload.",
    "text": "Una de las tres partes de un JWT es lo que hace detectable la manipulación. No es el header ni el payload."
   },
   {
    "path": "modules[10].lessons[1].steps[6].title",
+   "src": "Mint a login token",
    "text": "Emite un token de login"
   },
   {
    "path": "modules[10].lessons[1].steps[6].prompt[0]",
+   "src": "Finish `IssueToken`. Build `claims` as a `jwt.MapClaims` with `\"sub\"` set to `userID` and `\"exp\"` set to `time.Now().Add(24 * time.Hour).Unix()`. Then create the token with `jwt.NewWithClaims(jwt.SigningMethodHS256, claims)`.",
    "text": "Termina `IssueToken`. Construye `claims` como un `jwt.MapClaims` con `\"sub\"` fijado a `userID` y `\"exp\"` fijado a `time.Now().Add(24 * time.Hour).Unix()`. Luego crea el token con `jwt.NewWithClaims(jwt.SigningMethodHS256, claims)`."
   },
   {
    "path": "modules[10].lessons[1].steps[6].success",
+   "src": "You just issued a signed, self-expiring token. Login can now return this string, and the app will send it back on every request.",
    "text": "Acabas de emitir un token firmado y auto-expirable. El login ya puede devolver este string, y la app lo enviará de vuelta en cada petición."
   },
   {
    "path": "modules[10].lessons[2].title",
+   "src": "Auth middleware",
    "text": "Middleware de auth"
   },
   {
    "path": "modules[10].lessons[2].steps[0].md[0]",
+   "src": "## One guard for every protected route",
    "text": "## Un guardián para cada ruta protegida"
   },
   {
    "path": "modules[10].lessons[2].steps[0].md[1]",
+   "src": "Now the app sends `Authorization: Bearer <token>` on each request. You *could* copy the same verify-the-token code into every handler — but that's the exact thing **middleware** exists to prevent. Middleware is a function that wraps a handler: it runs first, decides whether the request may proceed, and either calls the next handler or rejects the request.",
    "text": "Ahora la app envía `Authorization: Bearer <token>` en cada petición. *Podrías* copiar el mismo código de verificar el token en cada handler — pero eso es exactamente lo que existe el **middleware** para evitar. El middleware es una función que envuelve un handler: corre primero, decide si la petición puede continuar, y o llama al siguiente handler o rechaza la petición."
   },
   {
    "path": "modules[10].lessons[2].steps[0].md[2]",
+   "src": "One `RequireAuth` middleware, wrapped around your bookings and walk routes, means every protected endpoint is guarded by the same audited code. Public routes (login, signup, the health check) simply aren't wrapped.",
    "text": "Un solo middleware `RequireAuth`, envuelto alrededor de tus rutas de reservas y paseos, significa que cada endpoint protegido está resguardado por el mismo código auditado. Las rutas públicas (login, signup, el health check) simplemente no están envueltas."
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[0]",
+   "src": "## Pull the token out of the header",
    "text": "## Saca el token del header"
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[1]",
+   "src": "The token arrives inside a header whose value looks like `Bearer eyJhbGci...`. Two standard-library moves extract it:",
    "text": "El token llega dentro de un header cuyo valor se ve como `Bearer eyJhbGci...`. Dos movimientos de la librería estándar lo extraen:"
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[2]",
+   "src": "- **`r.Header.Get(\"Authorization\")`** — reads the header value (empty string if it's absent). `r` is the `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — strips the `\"Bearer \"` scheme prefix, leaving the raw token. `TrimPrefix` returns the string unchanged if the prefix isn't there, so a malformed header naturally yields something you can reject.",
    "text": "- **`r.Header.Get(\"Authorization\")`** — lee el valor del header (string vacío si no está presente). `r` es el `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — quita el prefijo de esquema `\"Bearer \"`, dejando el token en crudo. `TrimPrefix` devuelve el string sin cambios si el prefijo no está ahí, así que un header malformado naturalmente produce algo que puedes rechazar."
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[3]",
+   "src": "If the header was missing, `r.Header.Get` returned `\"\"` and after trimming you still have `\"\"` — that's your signal to reject.",
    "text": "Si el header no estaba, `r.Header.Get` devolvió `\"\"` y después de recortar sigues teniendo `\"\"` — esa es tu señal para rechazar."
   },
   {
    "path": "modules[10].lessons[2].steps[2].md[0]",
+   "src": "## Reject, or stash the user and continue",
    "text": "## Rechaza, o guarda al usuario y continúa"
   },
   {
    "path": "modules[10].lessons[2].steps[2].md[1]",
+   "src": "A missing or invalid token gets **`http.StatusUnauthorized`** (401): call `w.WriteHeader(http.StatusUnauthorized)` and `return` — do not call the next handler. `w` is the `http.ResponseWriter`.",
    "text": "Un token ausente o inválido recibe **`http.StatusUnauthorized`** (401): llama a `w.WriteHeader(http.StatusUnauthorized)` y `return` — no llames al siguiente handler. `w` es el `http.ResponseWriter`."
   },
   {
    "path": "modules[10].lessons[2].steps[2].md[2]",
+   "src": "When the token *is* valid, the middleware knows *who* the request is from (the `\"sub\"` claim). It attaches that to the request's **context** so downstream handlers can read it, using `context.WithValue` and `r.WithContext(...)`. Context is Go's standard way to carry request-scoped values down the call chain without changing every function signature.",
    "text": "Cuando el token *sí* es válido, el middleware sabe *de quién* es la petición (el claim `\"sub\"`). Lo adjunta al **context** de la petición para que los handlers posteriores puedan leerlo, usando `context.WithValue` y `r.WithContext(...)`. El context es la forma estándar de Go para llevar valores del alcance de la petición a lo largo de la cadena de llamadas sin cambiar cada firma de función."
   },
   {
    "path": "modules[10].lessons[2].steps[2].md[3]",
+   "src": "> The shape of every Go middleware: `func(next http.Handler) http.Handler`. It takes the handler to protect and returns a new handler that wraps it.",
    "text": "> La forma de todo middleware de Go: `func(next http.Handler) http.Handler`. Recibe el handler a proteger y devuelve un nuevo handler que lo envuelve."
   },
   {
    "path": "modules[10].lessons[2].steps[3].title",
+   "src": "internal/auth/middleware.go",
    "text": "internal/auth/middleware.go"
   },
   {
    "path": "modules[10].lessons[2].steps[3].caption",
+   "src": "parseToken (verifying the signature with the secret and reading \"sub\") is the token.go counterpart to last lesson's IssueToken. On success the user id rides down in the request context; on any failure the request never reaches next.",
    "text": "parseToken (que verifica la firma con el secreto y lee \"sub\") es la contraparte en token.go del IssueToken de la lección pasada. Si tiene éxito, el id del usuario viaja en el context de la petición; ante cualquier falla, la petición nunca llega a next."
   },
   {
    "path": "modules[10].lessons[2].steps[4].md[0]",
+   "src": "## Reading the user back out",
    "text": "## Leyendo de vuelta al usuario"
   },
   {
    "path": "modules[10].lessons[2].steps[4].md[1]",
+   "src": "Downstream, a booking handler pulls the id out of context with `r.Context().Value(userKey)` and knows exactly which walker is asking — no re-parsing, no globals. Because `RequireAuth` already rejected everyone without a valid token, the handler can trust that the id is there.",
    "text": "Más adelante, un handler de reservas saca el id del context con `r.Context().Value(userKey)` y sabe exactamente qué walker está preguntando — sin volver a parsear, sin globales. Como `RequireAuth` ya rechazó a todos los que no tenían un token válido, el handler puede confiar en que el id está ahí."
   },
   {
    "path": "modules[10].lessons[2].steps[4].md[2]",
+   "src": "This is the payoff of the whole module: password → hash at signup, verify at login, mint a JWT, and this middleware turns that JWT back into a trusted user id on every protected request.",
    "text": "Esta es la recompensa de todo el módulo: contraseña → hash al registrarse, verificación al iniciar sesión, se emite un JWT, y este middleware convierte ese JWT de vuelta en un id de usuario confiable en cada petición protegida."
   },
   {
    "path": "modules[10].lessons[2].steps[5].q",
+   "src": "In `RequireAuth`, after finding the token is missing you call `w.WriteHeader(http.StatusUnauthorized)` and then `return`. Why the `return`?",
    "text": "En `RequireAuth`, después de detectar que falta el token llamas a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`. ¿Por qué el `return`?"
   },
   {
    "path": "modules[10].lessons[2].steps[5].choices[0]",
+   "src": "To stop the middleware from calling the next handler, so the rejected request goes no further",
    "text": "Para evitar que el middleware llame al siguiente handler, así la petición rechazada no avanza más"
   },
   {
    "path": "modules[10].lessons[2].steps[5].choices[1]",
+   "src": "To restart the request from the top",
    "text": "Para reiniciar la petición desde el principio"
   },
   {
    "path": "modules[10].lessons[2].steps[5].choices[2]",
+   "src": "Because WriteHeader requires a return value",
    "text": "Porque WriteHeader requiere un valor de retorno"
   },
   {
    "path": "modules[10].lessons[2].steps[5].choices[3]",
+   "src": "To free the response writer's memory",
    "text": "Para liberar la memoria del response writer"
   },
   {
    "path": "modules[10].lessons[2].steps[5].explain",
+   "src": "Writing the 401 status doesn't by itself end the function — without `return`, execution would fall through and call next.ServeHTTP, letting an unauthenticated request reach the protected handler. The `return` is what actually blocks it.",
    "text": "Escribir el estado 401 no termina la función por sí solo — sin `return`, la ejecución seguiría y llamaría a next.ServeHTTP, dejando que una petición no autenticada llegue al handler protegido. El `return` es lo que en realidad la bloquea."
   },
   {
    "path": "modules[10].lessons[2].steps[5].nudge",
+   "src": "Think about what the next line of code would do if you didn't stop here.",
    "text": "Piensa en qué haría la siguiente línea de código si no te detuvieras aquí."
   },
   {
    "path": "modules[10].lessons[2].steps[6].title",
+   "src": "Guard a protected route",
    "text": "Resguarda una ruta protegida"
   },
   {
    "path": "modules[10].lessons[2].steps[6].prompt[0]",
+   "src": "Write the guard inside this handler. Read the header with `r.Header.Get(\"Authorization\")` into `h`, strip the scheme with `strings.TrimPrefix(h, \"Bearer \")` into `token`, and if `token == \"\"` call `w.WriteHeader(http.StatusUnauthorized)` then `return`.",
    "text": "Escribe el guardián dentro de este handler. Lee el header con `r.Header.Get(\"Authorization\")` en `h`, quita el esquema con `strings.TrimPrefix(h, \"Bearer \")` en `token`, y si `token == \"\"` llama a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`."
   },
   {
    "path": "modules[10].lessons[2].steps[6].success",
+   "src": "That's the heart of RequireAuth: no valid Bearer token, no entry. Wrap it around your bookings routes and they're protected.",
    "text": "Eso es el corazón de RequireAuth: sin un Bearer token válido, no hay entrada. Envuélvelo alrededor de tus rutas de reservas y quedan protegidas."
   }
  ]

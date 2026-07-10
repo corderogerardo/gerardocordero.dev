@@ -4,330 +4,412 @@
  "units": [
   {
    "path": "modules[12].title",
+   "src": "Testing",
    "text": "Pruebas"
   },
   {
    "path": "modules[12].lessons[0].title",
+   "src": "The testing package",
    "text": "El paquete testing"
   },
   {
    "path": "modules[12].lessons[0].steps[0].md[0]",
+   "src": "## Tests ship with the language",
    "text": "## Las pruebas vienen con el lenguaje"
   },
   {
    "path": "modules[12].lessons[0].steps[0].md[1]",
+   "src": "In Part I you leaned on Xcode's test target. Go needs no target, no framework, and no dependency: the standard library ships a `testing` package, and the `go test` command runs it. Write a function that starts with `Test`, and Go finds it and runs it.",
    "text": "En la Parte I dependías del test target de Xcode. Go no necesita target, ni framework, ni dependencia: la biblioteca estándar incluye un paquete `testing`, y el comando `go test` lo ejecuta. Escribe una función que empiece con `Test`, y Go la encuentra y la ejecuta."
   },
   {
    "path": "modules[12].lessons[0].steps[0].md[2]",
+   "src": "Tests live in files named `_test.go` next to the code they exercise. If you're testing `price.go` in package `walker`, you write `price_test.go` in the **same package** — it can see unexported helpers and all. Those `_test.go` files are invisible to a normal `go build`; they only compile when you run `go test`.",
    "text": "Las pruebas viven en archivos llamados `_test.go` junto al código que ejercitan. Si estás probando `price.go` en el paquete `walker`, escribes `price_test.go` en el **mismo paquete** — así puede ver los helpers no exportados y todo lo demás. Esos archivos `_test.go` son invisibles para un `go build` normal; solo se compilan cuando ejecutas `go test`."
   },
   {
    "path": "modules[12].lessons[0].steps[1].md[0]",
+   "src": "## The shape of a test function",
    "text": "## La forma de una función de prueba"
   },
   {
    "path": "modules[12].lessons[0].steps[1].md[1]",
+   "src": "A test is a function that takes one argument, `t *testing.T`, and returns nothing:",
    "text": "Una prueba es una función que recibe un argumento, `t *testing.T`, y no devuelve nada:"
   },
   {
    "path": "modules[12].lessons[0].steps[1].md[2]",
+   "src": "```\nfunc TestPriceLabel(t *testing.T) {\n    // ... check something ...\n}\n```",
    "text": "```\nfunc TestPriceLabel(t *testing.T) {\n    // ... check something ...\n}\n```"
   },
   {
    "path": "modules[12].lessons[0].steps[1].md[3]",
+   "src": "The name **must** start with a capital `Test`, and the `*testing.T` gives you the reporting tools. A test that never complains is a test that passed — you don't `return true` or assert; you only speak up when something is wrong.",
    "text": "El nombre **debe** empezar con `Test` en mayúscula, y el `*testing.T` te da las herramientas de reporte. Una prueba que nunca se queja es una prueba que pasó — no haces `return true` ni afirmas nada; solo hablas cuando algo está mal."
   },
   {
    "path": "modules[12].lessons[0].steps[1].md[4]",
+   "src": "> `*testing.T` is a pointer to a value the test runner owns. You'll see the `*` on pointers everywhere in Go; here it just means \"the test's control handle.\"",
    "text": "> `*testing.T` es un puntero a un valor que posee el ejecutor de pruebas. Vas a ver el `*` en punteros por todos lados en Go; aquí solo significa \"el mando de control de la prueba\"."
   },
   {
    "path": "modules[12].lessons[0].steps[2].title",
+   "src": "internal/walker/price_test.go",
    "text": "internal/walker/price_test.go"
   },
   {
    "path": "modules[12].lessons[0].steps[2].caption",
+   "src": "The whole test in one breath: compute got, state want, compare. If they differ, t.Errorf records the failure and moves on.",
    "text": "La prueba entera en un solo respiro: calcula got, define want, compara. Si difieren, t.Errorf registra el fallo y sigue adelante."
   },
   {
    "path": "modules[12].lessons[0].steps[3].md[0]",
+   "src": "## `got` and `want`, and how to fail",
    "text": "## `got` y `want`, y cómo fallar"
   },
   {
    "path": "modules[12].lessons[0].steps[3].md[1]",
+   "src": "That `got` / `want` pairing is a Go convention, not a rule — but it's everywhere, and following it makes failures instantly readable. Compute the real value into `got`, write the expected value into `want`, compare.",
    "text": "Ese par `got` / `want` es una convención de Go, no una regla — pero está en todas partes, y seguirla hace que los fallos se lean al instante. Calcula el valor real en `got`, escribe el valor esperado en `want`, compara."
   },
   {
    "path": "modules[12].lessons[0].steps[3].md[2]",
+   "src": "Two ways to report a failure:",
    "text": "Dos formas de reportar un fallo:"
   },
   {
    "path": "modules[12].lessons[0].steps[3].md[3]",
+   "src": "- **`t.Errorf(...)`** records the failure but lets the test keep running — good when later checks are still worth doing.\n- **`t.Fatalf(...)`** records it and stops this test immediately — use it when continuing makes no sense (e.g. a value you were about to dereference is nil).",
    "text": "- **`t.Errorf(...)`** registra el fallo pero deja que la prueba siga corriendo — bueno cuando vale la pena seguir con las siguientes verificaciones.\n- **`t.Fatalf(...)`** lo registra y detiene esta prueba de inmediato — úsalo cuando continuar no tiene sentido (por ejemplo, un valor que estabas por desreferenciar es nil)."
   },
   {
    "path": "modules[12].lessons[0].steps[3].md[4]",
+   "src": "Both take a format string just like `fmt.Printf`: `t.Errorf(\"got %s, want %s\", got, want)`.",
    "text": "Ambos reciben una cadena de formato igual que `fmt.Printf`: `t.Errorf(\"got %s, want %s\", got, want)`."
   },
   {
    "path": "modules[12].lessons[0].steps[4].q",
+   "src": "Where does a test for `PriceLabel` in package `walker` live, and what must its function be named?",
    "text": "¿Dónde vive una prueba para `PriceLabel` en el paquete `walker`, y cómo debe llamarse su función?"
   },
   {
    "path": "modules[12].lessons[0].steps[4].choices[0]",
+   "src": "In a `_test.go` file in the same package, in a function whose name starts with `Test`",
    "text": "En un archivo `_test.go` en el mismo paquete, en una función cuyo nombre empieza con `Test`"
   },
   {
    "path": "modules[12].lessons[0].steps[4].choices[1]",
+   "src": "In a `tests/` folder, in any function you register with the runner",
    "text": "En una carpeta `tests/`, en cualquier función que registres con el ejecutor"
   },
   {
    "path": "modules[12].lessons[0].steps[4].choices[2]",
+   "src": "In the same `price.go` file, in a function named `check_PriceLabel`",
    "text": "En el mismo archivo `price.go`, en una función llamada `check_PriceLabel`"
   },
   {
    "path": "modules[12].lessons[0].steps[4].choices[3]",
+   "src": "Anywhere, as long as you import a third-party test framework first",
    "text": "En cualquier lugar, siempre que primero importes un framework de pruebas de terceros"
   },
   {
    "path": "modules[12].lessons[0].steps[4].explain",
+   "src": "Go finds tests by convention: files ending in `_test.go`, functions starting with `Test` that take `t *testing.T`. No registration, no framework, no folder magic — `go test` does the discovery.",
    "text": "Go encuentra pruebas por convención: archivos que terminan en `_test.go`, funciones que empiezan con `Test` y reciben `t *testing.T`. Sin registro, sin framework, sin magia de carpetas — `go test` hace el descubrimiento."
   },
   {
    "path": "modules[12].lessons[0].steps[4].nudge",
+   "src": "Think about what `go test` scans for. It's all naming convention — file suffix and function prefix.",
    "text": "Piensa en qué escanea `go test`. Es todo convención de nombres — sufijo de archivo y prefijo de función."
   },
   {
    "path": "modules[12].lessons[0].steps[5].md[0]",
+   "src": "## Running them",
    "text": "## Ejecutarlas"
   },
   {
    "path": "modules[12].lessons[0].steps[5].md[1]",
+   "src": "One command runs every test in the current module:",
    "text": "Un comando ejecuta todas las pruebas del módulo actual:"
   },
   {
    "path": "modules[12].lessons[0].steps[5].md[2]",
+   "src": "```\ngo test ./...\n```",
    "text": "```\ngo test ./...\n```"
   },
   {
    "path": "modules[12].lessons[0].steps[5].md[3]",
+   "src": "The `./...` means \"this package and every package beneath it.\" You'll see a `PASS` or a list of failures with the file and line of each `t.Errorf`. Add `-v` (`go test -v ./...`) to see each test name as it runs — handy while you're writing them.",
    "text": "El `./...` significa \"este paquete y todos los paquetes debajo de él\". Vas a ver un `PASS` o una lista de fallos con el archivo y la línea de cada `t.Errorf`. Agrega `-v` (`go test -v ./...`) para ver el nombre de cada prueba mientras corre — útil mientras las escribes."
   },
   {
    "path": "modules[12].lessons[0].steps[6].title",
+   "src": "Write your first test",
    "text": "Escribe tu primera prueba"
   },
   {
    "path": "modules[12].lessons[0].steps[6].prompt[0]",
+   "src": "Fill in `TestPriceLabel`. Call `PriceLabel(2500)` into `got`, set `want` to `\"$25 / 30 min\"`, then compare with `if got != want {` and report a mismatch with `t.Errorf(\"got %s, want %s\", got, want)`.",
    "text": "Completa `TestPriceLabel`. Llama a `PriceLabel(2500)` guardando el resultado en `got`, define `want` como `\"$25 / 30 min\"`, y luego compara con `if got != want {` y reporta un desajuste con `t.Errorf(\"got %s, want %s\", got, want)`."
   },
   {
    "path": "modules[12].lessons[0].steps[6].success",
+   "src": "That's a real Go test. Drop it in `price_test.go`, run `go test ./...`, and it guards `PriceLabel` forever.",
    "text": "Eso es una prueba real de Go. Ponla en `price_test.go`, ejecuta `go test ./...`, y protege `PriceLabel` para siempre."
   },
   {
    "path": "modules[12].lessons[1].title",
+   "src": "Table-driven tests",
    "text": "Pruebas basadas en tablas"
   },
   {
    "path": "modules[12].lessons[1].steps[0].md[0]",
+   "src": "## One test, many cases",
    "text": "## Una prueba, muchos casos"
   },
   {
    "path": "modules[12].lessons[1].steps[0].md[1]",
+   "src": "You rarely want to check just one input. `PriceLabel` should be right for 2500, for 0, for an odd number of cents. Copy-pasting the `got`/`want` block three times is noisy and easy to get wrong.",
    "text": "Rara vez quieres verificar solo una entrada. `PriceLabel` debería funcionar bien para 2500, para 0, para un número impar de centavos. Copiar y pegar el bloque `got`/`want` tres veces es ruidoso y fácil de hacer mal."
   },
   {
    "path": "modules[12].lessons[1].steps[0].md[2]",
+   "src": "Go's answer is the **table-driven test**: list your cases as data in a slice, then loop over them running the same assertion for each. It's the single most common Go testing pattern — you'll see it in the standard library itself.",
    "text": "La respuesta de Go es la **prueba basada en tabla**: lista tus casos como datos en un slice, y luego recórrelos ejecutando la misma aserción para cada uno. Es el patrón de pruebas más común en Go — lo vas a ver en la propia biblioteca estándar."
   },
   {
    "path": "modules[12].lessons[1].steps[1].md[0]",
+   "src": "## The table is a slice of structs",
    "text": "## La tabla es un slice de structs"
   },
   {
    "path": "modules[12].lessons[1].steps[1].md[1]",
+   "src": "Each case is a little struct — a name for the case, the input, and the expected output. You declare the struct type inline (an *anonymous struct*) and fill it in the same expression:",
    "text": "Cada caso es un pequeño struct — un nombre para el caso, la entrada, y la salida esperada. Declaras el tipo struct en línea (un *struct anónimo*) y lo llenas en la misma expresión:"
   },
   {
    "path": "modules[12].lessons[1].steps[1].md[2]",
+   "src": "```\ntests := []struct {\n    name string\n    in   int\n    want string\n}{\n    {\"whole dollars\", 2500, \"$25 / 30 min\"},\n    {\"zero\", 0, \"$0 / 30 min\"},\n}\n```",
    "text": "```\ntests := []struct {\n    name string\n    in   int\n    want string\n}{\n    {\"whole dollars\", 2500, \"$25 / 30 min\"},\n    {\"zero\", 0, \"$0 / 30 min\"},\n}\n```"
   },
   {
    "path": "modules[12].lessons[1].steps[1].md[3]",
+   "src": "`[]struct{ ... }` is a slice whose element type is that struct. The `{...}` right after the closing brace is the slice literal holding the cases. Each inner `{...}` is one case, fields in order.",
    "text": "`[]struct{ ... }` es un slice cuyo tipo de elemento es ese struct. El `{...}` justo después de la llave de cierre es el literal del slice que contiene los casos. Cada `{...}` interno es un caso, con los campos en orden."
   },
   {
    "path": "modules[12].lessons[1].steps[2].md[0]",
+   "src": "## The loop and `t.Run`",
    "text": "## El loop y `t.Run`"
   },
   {
    "path": "modules[12].lessons[1].steps[2].md[1]",
+   "src": "Now walk the table with `range` and run each case as its own **subtest** using `t.Run`:",
    "text": "Ahora recorre la tabla con `range` y ejecuta cada caso como su propia **subprueba** usando `t.Run`:"
   },
   {
    "path": "modules[12].lessons[1].steps[2].md[2]",
+   "src": "```\nfor _, tt := range tests {\n    t.Run(tt.name, func(t *testing.T) {\n        got := PriceLabel(tt.in)\n        if got != tt.want {\n            t.Errorf(\"got %s, want %s\", got, tt.want)\n        }\n    })\n}\n```",
    "text": "```\nfor _, tt := range tests {\n    t.Run(tt.name, func(t *testing.T) {\n        got := PriceLabel(tt.in)\n        if got != tt.want {\n            t.Errorf(\"got %s, want %s\", got, tt.want)\n        }\n    })\n}\n```"
   },
   {
    "path": "modules[12].lessons[1].steps[2].md[3]",
+   "src": "`t.Run(name, fn)` gives each case its own named subtest, so a failure prints `TestPriceLabel/zero` — you know instantly *which* case broke. The convention `tt` (short for \"table test\") is what you'll see across Go codebases.",
    "text": "`t.Run(name, fn)` le da a cada caso su propia subprueba con nombre, así que un fallo imprime `TestPriceLabel/zero` — sabes al instante *cuál* caso se rompió. La convención `tt` (abreviatura de \"table test\") es lo que vas a ver en todos los proyectos de Go."
   },
   {
    "path": "modules[12].lessons[1].steps[2].md[4]",
+   "src": "> `_` is Go's blank identifier — here it throws away the index from `range` because we only want the case value `tt`.",
    "text": "> `_` es el identificador en blanco de Go — aquí descarta el índice de `range` porque solo queremos el valor del caso, `tt`."
   },
   {
    "path": "modules[12].lessons[1].steps[3].title",
+   "src": "internal/walker/price_test.go (table-driven)",
    "text": "internal/walker/price_test.go (basada en tabla)"
   },
   {
    "path": "modules[12].lessons[1].steps[3].caption",
+   "src": "Add a case by adding a line to the table — the loop and assertion never change. That's the whole appeal.",
    "text": "Agrega un caso agregando una línea a la tabla — el loop y la aserción nunca cambian. Ahí está todo el atractivo."
   },
   {
    "path": "modules[12].lessons[1].steps[4].q",
+   "src": "Why wrap each case in `t.Run(tt.name, func(t *testing.T) { ... })` instead of just asserting inside the loop?",
    "text": "¿Por qué envolver cada caso en `t.Run(tt.name, func(t *testing.T) { ... })` en lugar de simplemente afirmar dentro del loop?"
   },
   {
    "path": "modules[12].lessons[1].steps[4].choices[0]",
+   "src": "Each case becomes a named subtest, so a failure tells you exactly which case broke and the others still run",
    "text": "Cada caso se convierte en una subprueba con nombre, así que un fallo te dice exactamente cuál caso se rompió y los demás siguen corriendo"
   },
   {
    "path": "modules[12].lessons[1].steps[4].choices[1]",
+   "src": "It makes the test run faster by skipping cases",
    "text": "Hace que la prueba corra más rápido saltándose casos"
   },
   {
    "path": "modules[12].lessons[1].steps[4].choices[2]",
+   "src": "`t.Run` is required or Go won't discover the test",
    "text": "`t.Run` es obligatorio o Go no descubre la prueba"
   },
   {
    "path": "modules[12].lessons[1].steps[4].choices[3]",
+   "src": "It converts the test into a benchmark",
    "text": "Convierte la prueba en un benchmark"
   },
   {
    "path": "modules[12].lessons[1].steps[4].explain",
+   "src": "`t.Run` names each case as a subtest (`TestPriceLabel/zero`) and isolates it — one case failing doesn't stop the rest, and the output points straight at the culprit. Without it, all cases blur into one test.",
    "text": "`t.Run` nombra cada caso como subprueba (`TestPriceLabel/zero`) y lo aísla — que un caso falle no detiene a los demás, y la salida apunta directo al culpable. Sin eso, todos los casos se mezclan en una sola prueba."
   },
   {
    "path": "modules[12].lessons[1].steps[4].nudge",
+   "src": "Think about what you see in the output when case #2 of 10 fails.",
    "text": "Piensa en qué ves en la salida cuando el caso #2 de 10 falla."
   },
   {
    "path": "modules[12].lessons[1].steps[5].title",
+   "src": "Loop the table",
    "text": "Recorre la tabla"
   },
   {
    "path": "modules[12].lessons[1].steps[5].prompt[0]",
+   "src": "The `tests` table is already built. Write the loop: `for _, tt := range tests {`, and inside it run each case as a subtest with `t.Run(tt.name, func(t *testing.T) {` — compare `PriceLabel(tt.in)` against `tt.want` and `t.Errorf` on mismatch.",
    "text": "La tabla `tests` ya está construida. Escribe el loop: `for _, tt := range tests {`, y dentro ejecuta cada caso como subprueba con `t.Run(tt.name, func(t *testing.T) {` — compara `PriceLabel(tt.in)` contra `tt.want` y usa `t.Errorf` si no coinciden."
   },
   {
    "path": "modules[12].lessons[1].steps[5].success",
+   "src": "That's the pattern you'll reach for in nearly every Go test file. New case? Add a row.",
    "text": "Ese es el patrón al que vas a recurrir en casi todos los archivos de pruebas de Go. ¿Caso nuevo? Agrega una fila."
   },
   {
    "path": "modules[12].lessons[2].title",
+   "src": "Testing HTTP handlers",
    "text": "Probando handlers HTTP"
   },
   {
    "path": "modules[12].lessons[2].steps[0].md[0]",
+   "src": "## Testing the server without a server",
    "text": "## Probar el servidor sin un servidor"
   },
   {
    "path": "modules[12].lessons[2].steps[0].md[1]",
+   "src": "In module 06 you wrote HTTP handlers — functions with the signature `func(w http.ResponseWriter, r *http.Request)`. How do you test one without actually starting a server and firing real network requests at a port?",
    "text": "En el módulo 06 escribiste handlers HTTP — funciones con la firma `func(w http.ResponseWriter, r *http.Request)`. ¿Cómo pruebas uno sin realmente levantar un servidor y disparar peticiones de red reales contra un puerto?"
   },
   {
    "path": "modules[12].lessons[2].steps[0].md[2]",
+   "src": "The standard library's `net/http/httptest` package is the answer. It hands you a fake request and a fake response writer, you call your handler directly with them, and then you inspect what it wrote. No ports, no networking, no flakiness — just a function call.",
    "text": "El paquete `net/http/httptest` de la biblioteca estándar es la respuesta. Te entrega una petición falsa y un response writer falso, llamas a tu handler directamente con ellos, y luego inspeccionas lo que escribió. Sin puertos, sin redes, sin inestabilidad — solo una llamada a función."
   },
   {
    "path": "modules[12].lessons[2].steps[1].md[0]",
+   "src": "## The two helpers",
    "text": "## Los dos helpers"
   },
   {
    "path": "modules[12].lessons[2].steps[1].md[1]",
+   "src": "- **`httptest.NewRequest(method, target, body)`** builds an `*http.Request` in memory — exactly what your handler expects as its second argument. For a body-less GET, pass `nil`.\n- **`httptest.NewRecorder()`** returns an `*httptest.ResponseRecorder` — a stand-in for `http.ResponseWriter` that *remembers* everything the handler writes: the status code in `.Code`, the body in `.Body`, headers in `.Header()`.",
    "text": "- **`httptest.NewRequest(method, target, body)`** construye un `*http.Request` en memoria — exactamente lo que tu handler espera como su segundo argumento. Para un GET sin body, pasa `nil`.\n- **`httptest.NewRecorder()`** devuelve un `*httptest.ResponseRecorder` — un sustituto de `http.ResponseWriter` que *recuerda* todo lo que el handler escribe: el código de estado en `.Code`, el body en `.Body`, los headers en `.Header()`."
   },
   {
    "path": "modules[12].lessons[2].steps[1].md[2]",
+   "src": "```\nreq := httptest.NewRequest(\"GET\", \"/walkers\", nil)\nrec := httptest.NewRecorder()\n```",
    "text": "```\nreq := httptest.NewRequest(\"GET\", \"/walkers\", nil)\nrec := httptest.NewRecorder()\n```"
   },
   {
    "path": "modules[12].lessons[2].steps[1].md[3]",
+   "src": "You now have a request to send and a recorder to catch the response.",
    "text": "Ahora tienes una petición para enviar y un recorder para capturar la respuesta."
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[0]",
+   "src": "## Call the handler, then assert",
    "text": "## Llama al handler, luego afirma"
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[1]",
+   "src": "A handler is just a function, so you call it directly — passing the recorder as the writer and the request as the request:",
    "text": "Un handler es solo una función, así que lo llamas directamente — pasando el recorder como el writer y la petición como la petición:"
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[2]",
+   "src": "```\nWalkersHandler(rec, req)\n```",
    "text": "```\nWalkersHandler(rec, req)\n```"
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[3]",
+   "src": "After it returns, the recorder holds the outcome. Check the status code and the body:",
    "text": "Después de que retorna, el recorder tiene el resultado. Verifica el código de estado y el body:"
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[4]",
+   "src": "```\nif rec.Code != http.StatusOK {\n    t.Errorf(\"got status %d, want %d\", rec.Code, http.StatusOK)\n}\n```",
    "text": "```\nif rec.Code != http.StatusOK {\n    t.Errorf(\"got status %d, want %d\", rec.Code, http.StatusOK)\n}\n```"
   },
   {
    "path": "modules[12].lessons[2].steps[2].md[5]",
+   "src": "`rec.Body` is a buffer; `rec.Body.String()` gives you the response text to compare or scan for expected content.",
    "text": "`rec.Body` es un buffer; `rec.Body.String()` te da el texto de la respuesta para comparar o escanear buscando el contenido esperado."
   },
   {
    "path": "modules[12].lessons[2].steps[3].title",
+   "src": "internal/walker/handler_test.go",
    "text": "internal/walker/handler_test.go"
   },
   {
    "path": "modules[12].lessons[2].steps[3].caption",
+   "src": "A full handler test with no network: build a request, record the response, assert on status then body. Note t.Fatalf on the status — no point checking the body if the request failed.",
    "text": "Una prueba completa de handler sin red: construye una petición, graba la respuesta, verifica el estado y luego el body. Fíjate en el t.Fatalf sobre el estado — no tiene sentido revisar el body si la petición falló."
   },
   {
    "path": "modules[12].lessons[2].steps[4].q",
+   "src": "What does `httptest.NewRecorder()` give you, and why use it?",
    "text": "¿Qué te da `httptest.NewRecorder()`, y por qué usarlo?"
   },
   {
    "path": "modules[12].lessons[2].steps[4].choices[0]",
+   "src": "An in-memory `http.ResponseWriter` that captures the status, body, and headers your handler writes — so you can assert on them without a real server",
    "text": "Un `http.ResponseWriter` en memoria que captura el estado, el body y los headers que escribe tu handler — así puedes verificarlos sin un servidor real"
   },
   {
    "path": "modules[12].lessons[2].steps[4].choices[1]",
+   "src": "A running HTTP server on a random port that you send real requests to",
    "text": "Un servidor HTTP corriendo en un puerto aleatorio al que le envías peticiones reales"
   },
   {
    "path": "modules[12].lessons[2].steps[4].choices[2]",
+   "src": "A mock of the entire `net/http` package you configure by hand",
    "text": "Un mock de todo el paquete `net/http` que configuras a mano"
   },
   {
    "path": "modules[12].lessons[2].steps[4].choices[3]",
+   "src": "A tool that records your screen while the test runs",
    "text": "Una herramienta que graba tu pantalla mientras corre la prueba"
   },
   {
    "path": "modules[12].lessons[2].steps[4].explain",
+   "src": "`NewRecorder()` returns a `*httptest.ResponseRecorder`, a fake `ResponseWriter` that remembers everything written to it. Your handler can't tell the difference, and afterward you read `.Code` and `.Body` to check what it produced — all in a plain function call.",
    "text": "`NewRecorder()` devuelve un `*httptest.ResponseRecorder`, un `ResponseWriter` falso que recuerda todo lo escrito en él. Tu handler no puede notar la diferencia, y después lees `.Code` y `.Body` para verificar qué produjo — todo en una simple llamada a función."
   },
   {
    "path": "modules[12].lessons[2].steps[4].nudge",
+   "src": "It stands in for the thing a handler writes to. What would you need to read back afterward?",
    "text": "Sustituye a aquello donde un handler escribe. ¿Qué necesitarías leer de vuelta después?"
   },
   {
    "path": "modules[12].lessons[2].steps[5].title",
+   "src": "Set up a handler test",
    "text": "Configura una prueba de handler"
   },
   {
    "path": "modules[12].lessons[2].steps[5].prompt[0]",
+   "src": "Start `TestWalkersHandler`. Build the fake request with `req := httptest.NewRequest(\"GET\", \"/walkers\", nil)` and the response recorder with `rec := httptest.NewRecorder()`. (The next lines that call the handler and assert are already there.)",
    "text": "Empieza `TestWalkersHandler`. Construye la petición falsa con `req := httptest.NewRequest(\"GET\", \"/walkers\", nil)` y el recorder de respuesta con `rec := httptest.NewRecorder()`. (Las siguientes líneas que llaman al handler y verifican ya están puestas.)"
   },
   {
    "path": "modules[12].lessons[2].steps[5].success",
+   "src": "That's the httptest setup you'll reuse for every handler: a recorded request, a recorder, then call and assert. Your PawWalk backend now has tests at every layer.",
    "text": "Esa es la configuración httptest que vas a reutilizar en cada handler: una petición grabada, un recorder, y luego llamar y verificar. Tu backend de PawWalk ahora tiene pruebas en cada capa."
   }
  ]

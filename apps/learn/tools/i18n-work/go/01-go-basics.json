@@ -4,446 +4,557 @@
  "units": [
   {
    "path": "modules[1].title",
+   "src": "Go Basics",
    "text": "Fundamentos de Go"
   },
   {
    "path": "modules[1].lessons[0].title",
+   "src": "Variables & constants",
    "text": "Variables y constantes"
   },
   {
    "path": "modules[1].lessons[0].steps[0].md[0]",
+   "src": "## Two ways to name a value",
    "text": "## Dos formas de nombrar un valor"
   },
   {
    "path": "modules[1].lessons[0].steps[0].md[1]",
+   "src": "In Swift you reached for `let` (can't change) and `var` (can). Go has the same idea but different spelling, and it leans on **type inference** even harder.",
    "text": "En Swift recurrías a `let` (no puede cambiar) y `var` (sí puede). Go tiene la misma idea con otra ortografía, y se apoya aún más fuerte en la **inferencia de tipos**."
   },
   {
    "path": "modules[1].lessons[0].steps[0].md[2]",
+   "src": "- **`var name string = \"Mochi\"`** — the long form. Spell the type, or drop it and let Go infer.\n- **`name := \"Mochi\"`** — the short form. `:=` **declares and infers** in one move. This is Go's `let name = \"Mochi\"`, and it's what you'll write nearly all the time *inside a function*.",
    "text": "- **`var name string = \"Mochi\"`** — la forma larga. Escribe el tipo, o quítalo y deja que Go lo infiera.\n- **`name := \"Mochi\"`** — la forma corta. `:=` **declara e infiere** en un solo paso. Este es el `let name = \"Mochi\"` de Go, y es lo que escribirás casi siempre *dentro de una función*."
   },
   {
    "path": "modules[1].lessons[0].steps[0].md[3]",
+   "src": "The catch: `:=` only works inside a function. At the top level of a file (package scope) you must use `var` or `const`. Everywhere else, `:=` is the idiom.",
    "text": "El truco: `:=` solo funciona dentro de una función. En el nivel superior de un archivo (alcance de paquete) tienes que usar `var` o `const`. En todo lo demás, `:=` es el modismo."
   },
   {
    "path": "modules[1].lessons[0].steps[1].title",
+   "src": "playground/main.go",
    "text": "playground/main.go"
   },
   {
    "path": "modules[1].lessons[0].steps[1].caption",
+   "src": "Three declarations, three styles. `walkerName` spells its type, `pricePer30MinCents` infers `int` from `1800`, and `available` gets no value at all — watch what Go does with that next.",
    "text": "Tres declaraciones, tres estilos. `walkerName` escribe su tipo, `pricePer30MinCents` infiere `int` a partir de `1800`, y `available` no recibe ningún valor — observa qué hace Go con eso a continuación."
   },
   {
    "path": "modules[1].lessons[0].steps[2].q",
+   "src": "You write `var available bool` and never assign it. What is `available`?",
    "text": "Escribes `var available bool` y nunca le asignas nada. ¿Qué es `available`?"
   },
   {
    "path": "modules[1].lessons[0].steps[2].choices[0]",
+   "src": "`false` — Go initializes it to the type's zero value",
    "text": "`false` — Go lo inicializa con el valor cero del tipo"
   },
   {
    "path": "modules[1].lessons[0].steps[2].choices[1]",
+   "src": "`nil`",
    "text": "`nil`"
   },
   {
    "path": "modules[1].lessons[0].steps[2].choices[2]",
+   "src": "undefined — reading it is a compile error",
    "text": "indefinido — leerlo es un error de compilación"
   },
   {
    "path": "modules[1].lessons[0].steps[2].choices[3]",
+   "src": "a random true or false",
    "text": "un true o false aleatorio"
   },
   {
    "path": "modules[1].lessons[0].steps[2].explain",
+   "src": "Go has no uninitialized variables. Every type has a **zero value**: `0` for numbers, `\"\"` for strings, `false` for bools, and `nil` for pointers, slices, and maps. `var available bool` is already `false` — no surprises, no garbage memory.",
    "text": "Go no tiene variables sin inicializar. Cada tipo tiene un **valor cero**: `0` para números, `\"\"` para strings, `false` para bools, y `nil` para punteros, slices, y maps. `var available bool` ya es `false` — sin sorpresas, sin memoria basura."
   },
   {
    "path": "modules[1].lessons[0].steps[2].nudge",
+   "src": "Go never leaves a variable holding garbage. What's the natural 'empty' value for a bool?",
    "text": "Go nunca deja una variable con basura dentro. ¿Cuál es el valor 'vacío' natural para un bool?"
   },
   {
    "path": "modules[1].lessons[0].steps[3].md[0]",
+   "src": "## Zero values and constants",
    "text": "## Valores cero y constantes"
   },
   {
    "path": "modules[1].lessons[0].steps[3].md[1]",
+   "src": "Because every type has a **zero value**, `var count int` is `0`, `var name string` is `\"\"`, and `var w *Walker` is `nil`. You'll design around this a lot — an empty booking list is just the zero value of a slice, not a special case you have to check for.",
    "text": "Como cada tipo tiene un **valor cero**, `var count int` es `0`, `var name string` es `\"\"`, y `var w *Walker` es `nil`. Vas a diseñar mucho alrededor de esto — una lista de reservas vacía es solo el valor cero de un slice, no un caso especial que tengas que revisar."
   },
   {
    "path": "modules[1].lessons[0].steps[3].md[2]",
+   "src": "For values that never change, use **`const`**. Constants are set at compile time, so they can't hold anything computed at runtime (no function calls, no slices):",
    "text": "Para valores que nunca cambian, usa **`const`**. Las constantes se fijan en tiempo de compilación, así que no pueden contener nada calculado en tiempo de ejecución (sin llamadas a funciones, sin slices):"
   },
   {
    "path": "modules[1].lessons[0].steps[3].md[3]",
+   "src": "```const maxWalkers = 20```",
    "text": "```const maxWalkers = 20```"
   },
   {
    "path": "modules[1].lessons[0].steps[3].md[4]",
+   "src": "When you have a run of related integer constants, **`iota`** numbers them for you — it starts at `0` in a `const (...)` block and counts up each line. It's Go's tidy way to build enum-like values.",
    "text": "Cuando tienes una serie de constantes enteras relacionadas, **`iota`** las numera por ti — empieza en `0` dentro de un bloque `const (...)` y va sumando en cada línea. Es la forma prolija de Go de construir valores tipo enum."
   },
   {
    "path": "modules[1].lessons[0].steps[4].title",
+   "src": "playground/status.go",
    "text": "playground/status.go"
   },
   {
    "path": "modules[1].lessons[0].steps[4].caption",
+   "src": "Prints `20 0 1 2`. `iota` gives `Pending` the value 0, then each following line increments automatically — so `Confirmed` is 1 and `Completed` is 2. Change the order and the numbers follow.",
    "text": "Imprime `20 0 1 2`. `iota` le da a `Pending` el valor 0, y luego cada línea siguiente se incrementa automáticamente — así que `Confirmed` es 1 y `Completed` es 2. Cambia el orden y los números lo siguen."
   },
   {
    "path": "modules[1].lessons[0].steps[5].q",
+   "src": "Where can you use the short declaration `:=`?",
    "text": "¿Dónde puedes usar la declaración corta `:=`?"
   },
   {
    "path": "modules[1].lessons[0].steps[5].choices[0]",
+   "src": "Only inside a function body",
    "text": "Solo dentro del cuerpo de una función"
   },
   {
    "path": "modules[1].lessons[0].steps[5].choices[1]",
+   "src": "Anywhere, including at the top (package) level of a file",
    "text": "En cualquier parte, incluyendo el nivel superior (paquete) de un archivo"
   },
   {
    "path": "modules[1].lessons[0].steps[5].choices[2]",
+   "src": "Only when declaring constants",
    "text": "Solo al declarar constantes"
   },
   {
    "path": "modules[1].lessons[0].steps[5].choices[3]",
+   "src": "Only for string values",
    "text": "Solo para valores string"
   },
   {
    "path": "modules[1].lessons[0].steps[5].explain",
+   "src": "`:=` is function-scoped. At package level — the top of the file, outside any function — you must use `var` or `const` with an explicit keyword. Inside a function, `:=` is the everyday choice.",
    "text": "`:=` tiene alcance de función. En el nivel de paquete — el inicio del archivo, fuera de cualquier función — tienes que usar `var` o `const` con una palabra clave explícita. Dentro de una función, `:=` es la opción de todos los días."
   },
   {
    "path": "modules[1].lessons[0].steps[5].nudge",
+   "src": "One of these declarations needs an explicit keyword when it lives at the top of the file.",
    "text": "Una de estas declaraciones necesita una palabra clave explícita cuando vive en el inicio del archivo."
   },
   {
    "path": "modules[1].lessons[0].steps[6].title",
+   "src": "Declare a walker",
    "text": "Declara un paseador"
   },
   {
    "path": "modules[1].lessons[0].steps[6].prompt[0]",
+   "src": "Inside `main`, use `:=` to declare `walkerName` as `\"Mochi\"` and `pricePer30MinCents` as `1800`. Above `main`... actually keep it simple: also add a package-level `const maxWalkers = 20` — put it right inside `main` is fine too. Declare all three.",
    "text": "Dentro de `main`, usa `:=` para declarar `walkerName` como `\"Mochi\"` y `pricePer30MinCents` como `1800`. Arriba de `main`... en realidad, mantenlo simple: agrega también un `const maxWalkers = 20` a nivel de paquete — ponerlo justo dentro de `main` también está bien. Declara los tres."
   },
   {
    "path": "modules[1].lessons[0].steps[6].prompt[1]",
+   "src": "Use `:=` for the two variables and `const` for `maxWalkers`.",
    "text": "Usa `:=` para las dos variables y `const` para `maxWalkers`."
   },
   {
    "path": "modules[1].lessons[0].steps[6].success",
+   "src": "That's Go's declaration toolkit: `:=` for locals you infer, `const` for values fixed at compile time. Zero values cover the rest.",
    "text": "Ese es el kit de declaración de Go: `:=` para locales que infieres, `const` para valores fijados en tiempo de compilación. Los valores cero cubren el resto."
   },
   {
    "path": "modules[1].lessons[1].title",
+   "src": "Functions",
    "text": "Funciones"
   },
   {
    "path": "modules[1].lessons[1].steps[0].md[0]",
+   "src": "## `func`, with types after the names",
    "text": "## `func`, con los tipos después de los nombres"
   },
   {
    "path": "modules[1].lessons[1].steps[0].md[1]",
+   "src": "A Go function starts with `func`, then the name, then parameters, then the return type. The twist coming from Swift: **the type comes after the name**, both for parameters and for the return.",
    "text": "Una función en Go empieza con `func`, luego el nombre, luego los parámetros, luego el tipo de retorno. La vuelta de tuerca viniendo de Swift: **el tipo va después del nombre**, tanto para los parámetros como para el retorno."
   },
   {
    "path": "modules[1].lessons[1].steps[0].md[2]",
+   "src": "- Swift: `func greet(name: String) -> String`\n- Go: `func greet(name string) string`",
    "text": "- Swift: `func greet(name: String) -> String`\n- Go: `func greet(name string) string`"
   },
   {
    "path": "modules[1].lessons[1].steps[0].md[3]",
+   "src": "No `->`, no argument labels, no `String` with a capital S. Just `name string`, then the return type sitting bare after the parameter list.",
    "text": "Sin `->`, sin etiquetas de argumento, sin `String` con S mayúscula. Solo `name string`, y luego el tipo de retorno solo, después de la lista de parámetros."
   },
   {
    "path": "modules[1].lessons[1].steps[1].title",
+   "src": "playground/greet.go",
    "text": "playground/greet.go"
   },
   {
    "path": "modules[1].lessons[1].steps[1].caption",
+   "src": "`fmt.Sprintf` is Go's string formatter — `%s` slots in a string, `%d` an integer. It *returns* the built string instead of printing it, which is exactly what a function like this wants.",
    "text": "`fmt.Sprintf` es el formateador de strings de Go — `%s` inserta un string, `%d` un entero. *Devuelve* el string construido en lugar de imprimirlo, que es exactamente lo que quiere una función como esta."
   },
   {
    "path": "modules[1].lessons[1].steps[2].q",
+   "src": "In `func priceLabel(cents int) string`, what does the bare `string` at the end mean?",
    "text": "En `func priceLabel(cents int) string`, ¿qué significa el `string` que va solo al final?"
   },
   {
    "path": "modules[1].lessons[1].steps[2].choices[0]",
+   "src": "The function returns a `string`",
    "text": "La función devuelve un `string`"
   },
   {
    "path": "modules[1].lessons[1].steps[2].choices[1]",
+   "src": "There is a second parameter named `string`",
    "text": "Hay un segundo parámetro llamado `string`"
   },
   {
    "path": "modules[1].lessons[1].steps[2].choices[2]",
+   "src": "The function is named `string`",
    "text": "La función se llama `string`"
   },
   {
    "path": "modules[1].lessons[1].steps[2].choices[3]",
+   "src": "It's a type alias for `cents`",
    "text": "Es un alias de tipo para `cents`"
   },
   {
    "path": "modules[1].lessons[1].steps[2].explain",
+   "src": "The type after the parameter list is the **return type**. `func priceLabel(cents int) string` takes one `int` and returns one `string`. No `->` needed — Go just puts the return type there.",
    "text": "El tipo después de la lista de parámetros es el **tipo de retorno**. `func priceLabel(cents int) string` recibe un `int` y devuelve un `string`. No hace falta `->` — Go simplemente pone el tipo de retorno ahí."
   },
   {
    "path": "modules[1].lessons[1].steps[2].nudge",
+   "src": "Everything after the closing `)` and before the `{` describes what comes back out.",
    "text": "Todo lo que va después del `)` de cierre y antes del `{` describe lo que sale de vuelta."
   },
   {
    "path": "modules[1].lessons[1].steps[3].md[0]",
+   "src": "## Go's signature move: multiple return values",
    "text": "## El movimiento característico de Go: valores de retorno múltiples"
   },
   {
    "path": "modules[1].lessons[1].steps[3].md[1]",
+   "src": "This is the one that surprises everyone. A Go function can return **more than one value**, and the language leans on it constantly — especially the pair `(result, error)`.",
    "text": "Este es el que sorprende a todos. Una función en Go puede devolver **más de un valor**, y el lenguaje se apoya en eso constantemente — especialmente el par `(resultado, error)`."
   },
   {
    "path": "modules[1].lessons[1].steps[3].md[2]",
+   "src": "```func bookingPrice(minutes int) (int, error)```",
    "text": "```func bookingPrice(minutes int) (int, error)```"
   },
   {
    "path": "modules[1].lessons[1].steps[3].md[3]",
+   "src": "That returns *both* an `int` and an `error`. The caller receives both: `cents, err := bookingPrice(30)`. If `err` is `nil`, the call succeeded and `cents` is good. If `err` is set, something went wrong. This is how Go does error handling — no exceptions, just an extra return value you're expected to check.",
    "text": "Eso devuelve *ambos*, un `int` y un `error`. Quien llama recibe los dos: `cents, err := bookingPrice(30)`. Si `err` es `nil`, la llamada tuvo éxito y `cents` es válido. Si `err` tiene valor, algo salió mal. Así es como Go hace el manejo de errores — sin excepciones, solo un valor de retorno extra que se espera que revises."
   },
   {
    "path": "modules[1].lessons[1].steps[4].title",
+   "src": "playground/price.go",
    "text": "playground/price.go"
   },
   {
    "path": "modules[1].lessons[1].steps[4].caption",
+   "src": "Two return values, comma-separated in the signature `(int, error)` and comma-separated in every `return`. The caller unpacks them into `cents, err` and checks `err != nil` before trusting `cents`. You'll write this shape hundreds of times.",
    "text": "Dos valores de retorno, separados por coma en la firma `(int, error)` y separados por coma en cada `return`. Quien llama los desempaqueta en `cents, err` y revisa `err != nil` antes de confiar en `cents`. Vas a escribir esta forma cientos de veces."
   },
   {
    "path": "modules[1].lessons[1].steps[5].q",
+   "src": "A function is declared `func bookingPrice(minutes int) (int, error)`. How many values does it return?",
    "text": "Una función se declara `func bookingPrice(minutes int) (int, error)`. ¿Cuántos valores devuelve?"
   },
   {
    "path": "modules[1].lessons[1].steps[5].choices[0]",
+   "src": "Two — an `int` and an `error`",
    "text": "Dos — un `int` y un `error`"
   },
   {
    "path": "modules[1].lessons[1].steps[5].choices[1]",
+   "src": "One — a single tuple object",
    "text": "Uno — un solo objeto tupla"
   },
   {
    "path": "modules[1].lessons[1].steps[5].choices[2]",
+   "src": "Zero — the parentheses mean no return",
    "text": "Cero — los paréntesis significan que no hay retorno"
   },
   {
    "path": "modules[1].lessons[1].steps[5].choices[3]",
+   "src": "It depends on how the caller calls it",
    "text": "Depende de cómo la llame quien invoca"
   },
   {
    "path": "modules[1].lessons[1].steps[5].explain",
+   "src": "The `(int, error)` return list declares **two** independent values. The caller writes `cents, err := bookingPrice(30)` to receive both. Returning `(value, error)` is the backbone of Go error handling.",
    "text": "La lista de retorno `(int, error)` declara **dos** valores independientes. Quien llama escribe `cents, err := bookingPrice(30)` para recibir ambos. Devolver `(valor, error)` es la columna vertebral del manejo de errores en Go."
   },
   {
    "path": "modules[1].lessons[1].steps[5].nudge",
+   "src": "Count the comma-separated types inside the return parentheses.",
    "text": "Cuenta los tipos separados por coma dentro de los paréntesis de retorno."
   },
   {
    "path": "modules[1].lessons[1].steps[6].md[0]",
+   "src": "## A quick word on named returns",
    "text": "## Una palabra rápida sobre los retornos con nombre"
   },
   {
    "path": "modules[1].lessons[1].steps[6].md[1]",
+   "src": "You can *name* the return values in the signature. When you do, they act like pre-declared variables, and a bare `return` sends back their current values:",
    "text": "Puedes *nombrar* los valores de retorno en la firma. Cuando lo haces, actúan como variables ya predeclaradas, y un `return` solo devuelve sus valores actuales:"
   },
   {
    "path": "modules[1].lessons[1].steps[6].md[2]",
+   "src": "```func split(total int) (walk int, tip int) {\n    walk = total - 200\n    tip = 200\n    return\n}```",
    "text": "```func split(total int) (walk int, tip int) {\n    walk = total - 200\n    tip = 200\n    return\n}```"
   },
   {
    "path": "modules[1].lessons[1].steps[6].md[3]",
+   "src": "Named returns can make short functions read nicely, but they get confusing in long ones — use them sparingly. Most Go code returns values explicitly, like the `bookingPrice` example above.",
    "text": "Los retornos con nombre pueden hacer que funciones cortas se lean bien, pero se vuelven confusos en las largas — úsalos con moderación. La mayoría del código Go devuelve valores explícitamente, como el ejemplo de `bookingPrice` de arriba."
   },
   {
    "path": "modules[1].lessons[1].steps[7].title",
+   "src": "Write priceLabel",
    "text": "Escribe priceLabel"
   },
   {
    "path": "modules[1].lessons[1].steps[7].prompt[0]",
+   "src": "Write a function `priceLabel` that takes `cents int` and returns a `string`. It should return `fmt.Sprintf(\"$%d\", cents/100)` — the dollar amount, integer-divided from cents.",
    "text": "Escribe una función `priceLabel` que reciba `cents int` y devuelva un `string`. Debe devolver `fmt.Sprintf(\"$%d\", cents/100)` — el monto en dólares, dividido enteramente a partir de los centavos."
   },
   {
    "path": "modules[1].lessons[1].steps[7].prompt[1]",
+   "src": "Type the whole function, including its signature.",
    "text": "Escribe la función completa, incluyendo su firma."
   },
   {
    "path": "modules[1].lessons[1].steps[7].success",
+   "src": "A real Go function: `func`, typed parameter, bare return type, and a `Sprintf` that builds the label. This exact shape shows up all over the PawWalk backend.",
    "text": "Una función Go real: `func`, parámetro con tipo, tipo de retorno solo, y un `Sprintf` que construye la etiqueta. Esta misma forma aparece por todo el backend de PawWalk."
   },
   {
    "path": "modules[1].lessons[2].title",
+   "src": "Control flow",
    "text": "Flujo de control"
   },
   {
    "path": "modules[1].lessons[2].steps[0].md[0]",
+   "src": "## `if`, with an optional head start",
    "text": "## `if`, con un arranque opcional"
   },
   {
    "path": "modules[1].lessons[2].steps[0].md[1]",
+   "src": "Go's `if` looks familiar — but **no parentheses around the condition**, and the braces are required even for one line. The bonus: `if` can run a short **init statement** first, separated by a semicolon:",
    "text": "El `if` de Go se ve familiar — pero **sin paréntesis alrededor de la condición**, y las llaves son obligatorias incluso para una sola línea. El plus: `if` puede ejecutar primero una breve **sentencia de inicialización**, separada por un punto y coma:"
   },
   {
    "path": "modules[1].lessons[2].steps[0].md[2]",
+   "src": "```if price := minutes * 40; price > 1000 {\n    // price is in scope here (and in the else)\n}```",
    "text": "```if price := minutes * 40; price > 1000 {\n    // price está en alcance aquí (y en el else)\n}```"
   },
   {
    "path": "modules[1].lessons[2].steps[0].md[3]",
+   "src": "That declares `price`, then tests it. `price` lives only inside the `if`/`else` — a tidy way to scope a value to exactly where it's used. You'll see this constantly with the `err` pattern: `if err := doThing(); err != nil { ... }`.",
    "text": "Eso declara `price`, y luego lo evalúa. `price` vive solo dentro del `if`/`else` — una forma prolija de acotar un valor exactamente a donde se usa. Vas a ver esto constantemente con el patrón de `err`: `if err := doThing(); err != nil { ... }`."
   },
   {
    "path": "modules[1].lessons[2].steps[1].title",
+   "src": "playground/decide.go",
    "text": "playground/decide.go"
   },
   {
    "path": "modules[1].lessons[2].steps[1].caption",
+   "src": "No parentheses around the conditions, braces always required. The second `if` declares `price` in its init statement — it exists only inside that `if`.",
    "text": "Sin paréntesis alrededor de las condiciones, las llaves siempre son obligatorias. El segundo `if` declara `price` en su sentencia de inicialización — solo existe dentro de ese `if`."
   },
   {
    "path": "modules[1].lessons[2].steps[2].q",
+   "src": "What does the init statement do in `if price := minutes * 40; price > 1000 {`?",
    "text": "¿Qué hace la sentencia de inicialización en `if price := minutes * 40; price > 1000 {`?"
   },
   {
    "path": "modules[1].lessons[2].steps[2].choices[0]",
+   "src": "Declares `price` scoped to the `if`, then tests the condition after the semicolon",
    "text": "Declara `price` con alcance limitado al `if`, y luego evalúa la condición después del punto y coma"
   },
   {
    "path": "modules[1].lessons[2].steps[2].choices[1]",
+   "src": "Runs the loop body 1000 times",
    "text": "Ejecuta el cuerpo del bucle 1000 veces"
   },
   {
    "path": "modules[1].lessons[2].steps[2].choices[2]",
+   "src": "Declares `price` as a package-level constant",
    "text": "Declara `price` como una constante a nivel de paquete"
   },
   {
    "path": "modules[1].lessons[2].steps[2].choices[3]",
+   "src": "It's a syntax error — Go `if` can't declare variables",
    "text": "Es un error de sintaxis — el `if` de Go no puede declarar variables"
   },
   {
    "path": "modules[1].lessons[2].steps[2].explain",
+   "src": "The part before the `;` is an init statement — it runs first and its variables are scoped to the `if`/`else`. Then the part after the `;` is the actual condition. It keeps short-lived values like `err` from leaking into the surrounding function.",
    "text": "La parte antes del `;` es una sentencia de inicialización — se ejecuta primero y sus variables quedan acotadas al `if`/`else`. Luego la parte después del `;` es la condición real. Eso evita que valores de vida corta como `err` se filtren a la función que los rodea."
   },
   {
    "path": "modules[1].lessons[2].steps[2].nudge",
+   "src": "The semicolon splits a setup step from the real condition.",
    "text": "El punto y coma separa un paso de preparación de la condición real."
   },
   {
    "path": "modules[1].lessons[2].steps[3].md[0]",
+   "src": "## `for` is the only loop",
    "text": "## `for` es el único bucle"
   },
   {
    "path": "modules[1].lessons[2].steps[3].md[1]",
+   "src": "Go threw out `while` and `do-while`. There is exactly **one** loop keyword — `for` — and it wears three hats:",
    "text": "Go se deshizo de `while` y `do-while`. Hay exactamente **una** palabra clave de bucle — `for` — y cumple tres papeles:"
   },
   {
    "path": "modules[1].lessons[2].steps[3].md[2]",
+   "src": "- **C-style:** `for i := 0; i < n; i++ { }` — init, condition, post.\n- **While-style:** `for n < 3 { }` — just a condition, no semicolons. This *is* Go's `while`.\n- **Infinite:** `for { }` — no condition at all; you `break` out when you're done.",
    "text": "- **Estilo C:** `for i := 0; i < n; i++ { }` — inicialización, condición, paso.\n- **Estilo while:** `for n < 3 { }` — solo una condición, sin puntos y coma. Este *es* el `while` de Go.\n- **Infinito:** `for { }` — sin ninguna condición; sales con `break` cuando terminas."
   },
   {
    "path": "modules[1].lessons[2].steps[3].md[3]",
+   "src": "There's also `for i, v := range xs { }` for walking a slice or map — you'll meet `range` properly in a later module. One keyword, every loop.",
    "text": "También está `for i, v := range xs { }` para recorrer un slice o map — vas a conocer bien `range` en un módulo posterior. Una sola palabra clave, todos los bucles."
   },
   {
    "path": "modules[1].lessons[2].steps[4].title",
+   "src": "playground/loops.go",
    "text": "playground/loops.go"
   },
   {
    "path": "modules[1].lessons[2].steps[4].caption",
+   "src": "Same keyword, three shapes: a C-style counted loop, a while-style condition loop, and a bare infinite loop that `break`s out. No `while` keyword exists — `for n < 3` is how you write one.",
    "text": "La misma palabra clave, tres formas: un bucle contado estilo C, un bucle con condición estilo while, y un bucle infinito puro que sale con `break`. No existe la palabra clave `while` — `for n < 3` es cómo escribes uno."
   },
   {
    "path": "modules[1].lessons[2].steps[5].q",
+   "src": "How many looping keywords does Go have?",
    "text": "¿Cuántas palabras clave de bucle tiene Go?"
   },
   {
    "path": "modules[1].lessons[2].steps[5].choices[0]",
+   "src": "One — `for` covers every kind of loop",
    "text": "Una — `for` cubre todo tipo de bucle"
   },
   {
    "path": "modules[1].lessons[2].steps[5].choices[1]",
+   "src": "Three — `for`, `while`, and `do-while`",
    "text": "Tres — `for`, `while`, y `do-while`"
   },
   {
    "path": "modules[1].lessons[2].steps[5].choices[2]",
+   "src": "Two — `for` and `while`",
    "text": "Dos — `for` y `while`"
   },
   {
    "path": "modules[1].lessons[2].steps[5].choices[3]",
+   "src": "None — Go uses recursion instead of loops",
    "text": "Ninguna — Go usa recursión en lugar de bucles"
   },
   {
    "path": "modules[1].lessons[2].steps[5].explain",
+   "src": "Go deliberately ships a single loop keyword, `for`. Drop the init and post and it's a `while`; drop everything and it's an infinite loop. Fewer keywords, fewer decisions.",
    "text": "Go deliberadamente incluye una sola palabra clave de bucle, `for`. Quita la inicialización y el paso y es un `while`; quita todo y es un bucle infinito. Menos palabras clave, menos decisiones."
   },
   {
    "path": "modules[1].lessons[2].steps[5].nudge",
+   "src": "Go's motto is 'less is more.' How many loop keywords fit that?",
    "text": "El lema de Go es 'menos es más.' ¿Cuántas palabras clave de bucle encajan con eso?"
   },
   {
    "path": "modules[1].lessons[2].steps[6].md[0]",
+   "src": "## `switch`, without the footguns",
    "text": "## `switch`, sin las trampas de siempre"
   },
   {
    "path": "modules[1].lessons[2].steps[6].md[1]",
+   "src": "Go's `switch` fixes two C annoyances. First, **no automatic fallthrough** — after a matching `case` runs, the switch is done. You never write `break`; you'd write `fallthrough` on the rare occasion you actually want to continue.",
    "text": "El `switch` de Go arregla dos molestias de C. Primero, **sin fallthrough automático** — después de que un `case` coincidente se ejecuta, el switch termina. Nunca escribes `break`; escribirías `fallthrough` en la rara ocasión en que realmente quieras continuar."
   },
   {
    "path": "modules[1].lessons[2].steps[6].md[2]",
+   "src": "Second, you can **switch on nothing**: `switch { case x > 10: ... }` acts like a clean `if`/`else if` chain. And `case` can hold multiple values: `case 30, 45, 60:`.",
    "text": "Segundo, puedes **hacer switch sin nada**: `switch { case x > 10: ... }` actúa como una cadena `if`/`else if` limpia. Y un `case` puede contener varios valores: `case 30, 45, 60:`."
   },
   {
    "path": "modules[1].lessons[2].steps[7].title",
+   "src": "playground/switch.go",
    "text": "playground/switch.go"
   },
   {
    "path": "modules[1].lessons[2].steps[7].caption",
+   "src": "Left: a `switch` on a value, one `case` per duration, no `break` needed. Right: a `switch` on nothing — a tidy `if`/`else if` chain. `default` catches everything else.",
    "text": "Izquierda: un `switch` sobre un valor, un `case` por duración, sin necesidad de `break`. Derecha: un `switch` sin nada — una cadena `if`/`else if` prolija. `default` atrapa todo lo demás."
   },
   {
    "path": "modules[1].lessons[2].steps[8].q",
+   "src": "After a matching `case` runs in a Go `switch`, what happens by default?",
    "text": "Después de que un `case` coincidente se ejecuta en un `switch` de Go, ¿qué pasa por defecto?"
   },
   {
    "path": "modules[1].lessons[2].steps[8].choices[0]",
+   "src": "It stops — no fallthrough unless you explicitly write `fallthrough`",
    "text": "Se detiene — sin fallthrough a menos que escribas explícitamente `fallthrough`"
   },
   {
    "path": "modules[1].lessons[2].steps[8].choices[1]",
+   "src": "It falls through to the next `case`, like C",
    "text": "Cae al siguiente `case`, como en C"
   },
   {
    "path": "modules[1].lessons[2].steps[8].choices[2]",
+   "src": "It loops back to the top of the switch",
    "text": "Vuelve al inicio del switch"
   },
   {
    "path": "modules[1].lessons[2].steps[8].choices[3]",
+   "src": "It returns `nil` automatically",
    "text": "Devuelve `nil` automáticamente"
   },
   {
    "path": "modules[1].lessons[2].steps[8].explain",
+   "src": "Go breaks out of the switch automatically after a matching case. You never write `break`. On the rare occasion you *want* to continue into the next case, you write the keyword `fallthrough` — but that's unusual.",
    "text": "Go sale del switch automáticamente después de un case coincidente. Nunca escribes `break`. En la rara ocasión en que *quieras* continuar hacia el siguiente case, escribes la palabra clave `fallthrough` — pero eso es inusual."
   },
   {
    "path": "modules[1].lessons[2].steps[8].nudge",
+   "src": "Go removes a classic C bug here. Which behavior is the bug-prone one?",
    "text": "Go elimina aquí un bug clásico de C. ¿Cuál comportamiento es el propenso a bugs?"
   },
   {
    "path": "modules[1].lessons[2].steps[9].title",
+   "src": "Price by duration",
    "text": "Precio según duración"
   },
   {
    "path": "modules[1].lessons[2].steps[9].prompt[0]",
+   "src": "Write `func priceForDuration(minutes int) int` that uses a `switch minutes` to return the price in cents: `30` -> `1800`, `45` -> `2500`, `60` -> `3200`, and `default` -> `0`.",
    "text": "Escribe `func priceForDuration(minutes int) int` que use un `switch minutes` para devolver el precio en centavos: `30` -> `1800`, `45` -> `2500`, `60` -> `3200`, y `default` -> `0`."
   },
   {
    "path": "modules[1].lessons[2].steps[9].prompt[1]",
+   "src": "Use a `switch`, not a chain of `if` statements.",
    "text": "Usa un `switch`, no una cadena de sentencias `if`."
   },
   {
    "path": "modules[1].lessons[2].steps[9].success",
+   "src": "A `switch` that maps durations to cents, no `break` anywhere. This is the shape the real booking price logic takes.",
    "text": "Un `switch` que mapea duraciones a centavos, sin `break` en ningún lado. Esta es la forma que toma la lógica real de precio de reservas."
   }
  ]

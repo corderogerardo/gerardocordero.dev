@@ -4,186 +4,232 @@
  "units": [
   {
    "path": "modules[0].title",
+   "src": "Welcome to Go",
    "text": "Bienvenido a Go"
   },
   {
    "path": "modules[0].lessons[0].title",
+   "src": "Why Go",
    "text": "Por qué Go"
   },
   {
    "path": "modules[0].lessons[0].steps[0].md[0]",
+   "src": "## The language that servers are built in",
    "text": "## El lenguaje en el que se construyen los servidores"
   },
   {
    "path": "modules[0].lessons[0].steps[0].md[1]",
+   "src": "In the iOS course you built the PawWalk app. Every screen — the walker list, the booking form, login — worked by **asking a server for data** over HTTP. This course teaches you to build that server in **Go**: the other side of the URL. (Never written Go? Perfect — this course assumes zero Go and explains the app side as it goes.)",
    "text": "En el curso de iOS construiste la app PawWalk. Cada pantalla — la lista de paseadores, el formulario de reserva, el login — funcionaba **pidiéndole datos a un servidor** por HTTP. Este curso te enseña a construir ese servidor en **Go**: el otro lado de la URL. (¿Nunca escribiste Go? Perfecto — este curso asume cero conocimiento de Go y va explicando el lado de la app sobre la marcha.)"
   },
   {
    "path": "modules[0].lessons[0].steps[0].md[2]",
+   "src": "Go was designed at Google to make **fast, concurrent network services** that a large team can maintain. It compiles to a single self-contained binary, starts in milliseconds, and its concurrency model (goroutines) makes handling thousands of simultaneous requests feel natural. That's why so much of modern infrastructure — Docker, Kubernetes, and countless APIs — is written in Go.",
    "text": "Go fue diseñado en Google para crear **servicios de red rápidos y concurrentes** que un equipo grande pueda mantener. Compila a un único binario autocontenido, arranca en milisegundos, y su modelo de concurrencia (goroutines) hace que manejar miles de peticiones simultáneas se sienta natural. Por eso gran parte de la infraestructura moderna — Docker, Kubernetes, e innumerables APIs — está escrita en Go."
   },
   {
    "path": "modules[0].lessons[0].steps[1].md[0]",
+   "src": "## The course map",
    "text": "## El mapa del curso"
   },
   {
    "path": "modules[0].lessons[0].steps[1].md[1]",
+   "src": "- **Go the language** (modules 01–05) — variables to structs, interfaces, and the concurrency model that makes Go *Go*, with Swift comparisons so it clicks fast.\n- **The standard library server** (06–08) — `net/http`, JSON, routing, middleware, and a real database. Go ships a production HTTP server in its standard library; you'll feel exactly what a request is.\n- **Rebuild the PawWalk backend** (09–12) — a real service layout: config, walkers, JWT auth, bookings, and tests.\n- **Ship it** (13) — build a single binary, containerize it, deploy, and graduate.",
    "text": "- **Go el lenguaje** (módulos 01–05) — de variables a structs, interfaces, y el modelo de concurrencia que hace que Go sea *Go*, con comparaciones con Swift para que encaje rápido.\n- **El servidor de la biblioteca estándar** (06–08) — `net/http`, JSON, ruteo, middleware, y una base de datos real. Go incluye un servidor HTTP de nivel producción en su biblioteca estándar; sentirás exactamente qué es una petición.\n- **Reconstruye el backend de PawWalk** (09–12) — una estructura de servicio real: configuración, paseadores, autenticación con JWT, reservas, y pruebas.\n- **Publícalo** (13) — construye un único binario, contenerízalo, despliégalo, y gradúate."
   },
   {
    "path": "modules[0].lessons[0].steps[1].md[2]",
+   "src": "> Go's motto is *\"less is more.\"* One way to format code (`gofmt`), one loop keyword (`for`), explicit error handling, and no inheritance. It feels strict at first and liberating soon after.",
    "text": "> El lema de Go es *\"menos es más\"*. Una sola forma de formatear código (`gofmt`), una sola palabra clave de bucle (`for`), manejo explícito de errores, y sin herencia. Al principio se siente estricto y poco después se siente liberador."
   },
   {
    "path": "modules[0].lessons[0].steps[2].title",
+   "src": "internal/walker/walker.go (a taste)",
    "text": "internal/walker/walker.go (una probadita)"
   },
   {
    "path": "modules[0].lessons[0].steps[2].caption",
+   "src": "Real code you'll build. In Part I you typed its Swift mirror — `struct Walker`. Same contract, different language: no classes, a method hangs off the struct with a receiver `(w Walker)`.",
    "text": "Código real que vas a construir. En la Parte I escribiste su espejo en Swift — `struct Walker`. El mismo contrato, otro lenguaje: sin clases, un método cuelga del struct con un receiver `(w Walker)`."
   },
   {
    "path": "modules[0].lessons[0].steps[3].q",
+   "src": "What makes Go especially suited to backend web services?",
    "text": "¿Qué hace a Go especialmente adecuado para servicios web de backend?"
   },
   {
    "path": "modules[0].lessons[0].steps[3].choices[0]",
+   "src": "Lightweight concurrency (goroutines) and a fast, self-contained compiled binary",
    "text": "Concurrencia ligera (goroutines) y un binario compilado rápido y autocontenido"
   },
   {
    "path": "modules[0].lessons[0].steps[3].choices[1]",
+   "src": "It runs in the browser without a server",
    "text": "Corre en el navegador sin necesidad de un servidor"
   },
   {
    "path": "modules[0].lessons[0].steps[3].choices[2]",
+   "src": "It has the most object-oriented inheritance features",
    "text": "Tiene las características de herencia orientada a objetos más completas"
   },
   {
    "path": "modules[0].lessons[0].steps[3].choices[3]",
+   "src": "It is interpreted, so there is no build step",
    "text": "Es interpretado, así que no hay paso de compilación"
   },
   {
    "path": "modules[0].lessons[0].steps[3].explain",
+   "src": "Goroutines let one Go program juggle thousands of connections cheaply, and `go build` produces one binary you can copy to a server and run — no runtime to install. That combination is why Go dominates cloud infrastructure.",
    "text": "Las goroutines dejan que un solo programa Go maneje miles de conexiones a bajo costo, y `go build` produce un único binario que puedes copiar a un servidor y ejecutar — sin necesidad de instalar ningún runtime. Esa combinación es la razón por la que Go domina la infraestructura en la nube."
   },
   {
    "path": "modules[0].lessons[0].steps[3].nudge",
+   "src": "Think about what a server does all day: handle many requests at once, and be easy to deploy.",
    "text": "Piensa en qué hace un servidor todo el día: manejar muchas peticiones a la vez, y ser fácil de desplegar."
   },
   {
    "path": "modules[0].lessons[0].steps[4].md[0]",
+   "src": "## How Go reads, coming from Swift",
    "text": "## Cómo se lee Go, viniendo de Swift"
   },
   {
    "path": "modules[0].lessons[0].steps[4].md[1]",
+   "src": "- **`:=` declares and infers** — `name := \"Mochi\"` is Go's `let name = \"Mochi\"`. Types are inferred; you rarely write them for locals.\n- **Braces, not indentation** — like Swift, blocks use `{ }`. But Go formats itself: `gofmt` is law, so every Go file everywhere looks the same.\n- **`fmt.Println`** is Go's `print()`. The `fmt` package handles formatted I/O.\n- **Every file starts with `package`** — code lives in packages, and `package main` with a `func main()` is what makes a runnable program.",
    "text": "- **`:=` declara e infiere** — `name := \"Mochi\"` es el `let name = \"Mochi\"` de Go. Los tipos se infieren; casi nunca los escribes para variables locales.\n- **Llaves, no indentación** — como Swift, los bloques usan `{ }`. Pero Go se formatea a sí mismo: `gofmt` es ley, así que cualquier archivo Go en cualquier parte se ve igual.\n- **`fmt.Println`** es el `print()` de Go. El paquete `fmt` maneja la entrada/salida formateada.\n- **Todo archivo empieza con `package`** — el código vive en paquetes, y `package main` con una `func main()` es lo que hace que un programa sea ejecutable."
   },
   {
    "path": "modules[0].lessons[0].steps[4].md[2]",
+   "src": "> The exercises check your Go right here in the browser, exactly like Part I. Same rules: type it, don't paste it.",
    "text": "> Los ejercicios revisan tu código Go aquí mismo en el navegador, exactamente igual que en la Parte I. Las mismas reglas: escríbelo, no lo pegues."
   },
   {
    "path": "modules[0].lessons[0].steps[5].title",
+   "src": "Your first Go program",
    "text": "Tu primer programa en Go"
   },
   {
    "path": "modules[0].lessons[0].steps[5].prompt[0]",
+   "src": "Inside `main`, declare `name` as `\"Mochi\"` using `:=`, then print `Welcome, Mochi` with `fmt.Println(\"Welcome,\", name)`.",
    "text": "Dentro de `main`, declara `name` como `\"Mochi\"` usando `:=`, y luego imprime `Welcome, Mochi` con `fmt.Println(\"Welcome,\", name)`."
   },
   {
    "path": "modules[0].lessons[0].steps[5].success",
+   "src": "That's a complete Go program: a package, an import, and a main function. `go run` it and it prints your greeting.",
    "text": "Eso es un programa Go completo: un paquete, un import, y una función main. Ejecútalo con `go run` y va a imprimir tu saludo."
   },
   {
    "path": "modules[0].lessons[1].title",
+   "src": "Set up your toolchain",
    "text": "Configura tu toolchain"
   },
   {
    "path": "modules[0].lessons[1].steps[0].md[0]",
+   "src": "## One install, one command",
    "text": "## Una instalación, un comando"
   },
   {
    "path": "modules[0].lessons[1].steps[0].md[1]",
+   "src": "Swift needed Xcode. Go needs just the Go toolchain:",
    "text": "Swift necesitaba Xcode. Go solo necesita el toolchain de Go:"
   },
   {
    "path": "modules[0].lessons[1].steps[0].md[2]",
+   "src": "1. **Go 1.22+** — the compiler, formatter, and tools in one download (macOS: `brew install go`, or grab the installer from go.dev).\n2. That's it. No separate package manager to install — `go` itself fetches dependencies, builds, tests, and formats.",
    "text": "1. **Go 1.22+** — el compilador, el formateador, y las herramientas en una sola descarga (macOS: `brew install go`, o consigue el instalador en go.dev).\n2. Eso es todo. No hay un gestor de paquetes separado que instalar — `go` mismo obtiene dependencias, compila, prueba, y formatea."
   },
   {
    "path": "modules[0].lessons[1].steps[0].md[3]",
+   "src": "A Go project is defined by a **`go.mod`** file at its root — the equivalent of `Package.swift`. It names the module and pins dependency versions. You create it once with `go mod init`.",
    "text": "Un proyecto Go se define con un archivo **`go.mod`** en su raíz — el equivalente de `Package.swift`. Nombra el módulo y fija las versiones de las dependencias. Lo creas una sola vez con `go mod init`."
   },
   {
    "path": "modules[0].lessons[1].steps[1].md[0]",
+   "src": "## The commands you'll live in",
    "text": "## Los comandos en los que vas a vivir"
   },
   {
    "path": "modules[0].lessons[1].steps[1].md[1]",
+   "src": "- **`go run .`** — compile and run the current package, no binary left behind. Your inner-loop command.\n- **`go build`** — produce the standalone binary.\n- **`go test ./...`** — run every test in the module.\n- **`go fmt ./...`** and **`go vet ./...`** — format and catch suspicious code. Run before every commit.\n- **`go mod tidy`** — sync `go.mod` with what your code actually imports.",
    "text": "- **`go run .`** — compila y ejecuta el paquete actual, sin dejar ningún binario. Tu comando del ciclo interno.\n- **`go build`** — produce el binario independiente.\n- **`go test ./...`** — ejecuta todas las pruebas del módulo.\n- **`go fmt ./...`** y **`go vet ./...`** — formatea y detecta código sospechoso. Ejecútalos antes de cada commit.\n- **`go mod tidy`** — sincroniza `go.mod` con lo que tu código realmente importa."
   },
   {
    "path": "modules[0].lessons[1].steps[2].label",
+   "src": "Over to the terminal",
    "text": "A la terminal"
   },
   {
    "path": "modules[0].lessons[1].steps[2].title",
+   "src": "Create and run your first module",
    "text": "Crea y ejecuta tu primer módulo"
   },
   {
    "path": "modules[0].lessons[1].steps[2].intro[0]",
+   "src": "Get the toolchain working end to end. Keep this workflow — every Go module in the course starts this way.",
    "text": "Haz que el toolchain funcione de principio a fin. Guarda este flujo de trabajo — todo módulo Go del curso empieza así."
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[0]",
+   "src": "Install Go (skip if `go version` already prints 1.22 or newer): `brew install go`",
    "text": "Instala Go (sáltate esto si `go version` ya imprime 1.22 o más reciente): `brew install go`"
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[1]",
+   "src": "Make a scratch project: `mkdir pawwalk-go && cd pawwalk-go`",
    "text": "Crea un proyecto de prueba: `mkdir pawwalk-go && cd pawwalk-go`"
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[2]",
+   "src": "`go mod init pawwalk` — creates `go.mod`, marking this folder a Go module",
    "text": "`go mod init pawwalk` — crea `go.mod`, marcando esta carpeta como un módulo Go"
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[3]",
+   "src": "Save your first-program code from the last lesson as `main.go`",
    "text": "Guarda el código de tu primer programa de la última lección como `main.go`"
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[4]",
+   "src": "`go run .` — should print `Welcome, Mochi`",
    "text": "`go run .` — debería imprimir `Welcome, Mochi`"
   },
   {
    "path": "modules[0].lessons[1].steps[2].items[5]",
+   "src": "`go build` then `./pawwalk` (or `pawwalk.exe`) — run the compiled binary directly",
    "text": "`go build` y luego `./pawwalk` (o `pawwalk.exe`) — ejecuta el binario compilado directamente"
   },
   {
    "path": "modules[0].lessons[1].steps[3].q",
+   "src": "You ran `go build` and got a single file you can copy to a server and execute with no Go installed there. Why is that possible?",
    "text": "Ejecutaste `go build` y obtuviste un solo archivo que puedes copiar a un servidor y ejecutar sin que Go esté instalado ahí. ¿Por qué es posible eso?"
   },
   {
    "path": "modules[0].lessons[1].steps[3].choices[0]",
+   "src": "Go compiles your code and its dependencies into one statically-linked binary",
    "text": "Go compila tu código y sus dependencias en un único binario enlazado estáticamente"
   },
   {
    "path": "modules[0].lessons[1].steps[3].choices[1]",
+   "src": "The binary secretly downloads Go at startup",
    "text": "El binario descarga Go en secreto al arrancar"
   },
   {
    "path": "modules[0].lessons[1].steps[3].choices[2]",
+   "src": "It only works if the server already has the Go runtime installed",
    "text": "Solo funciona si el servidor ya tiene instalado el runtime de Go"
   },
   {
    "path": "modules[0].lessons[1].steps[3].choices[3]",
+   "src": "`go build` uploads your code to go.dev and returns a link",
    "text": "`go build` sube tu código a go.dev y devuelve un enlace"
   },
   {
    "path": "modules[0].lessons[1].steps[3].explain",
+   "src": "Go statically links everything into the output binary by default. Deployment is often just `scp` the binary and run it — which is why Go containers can be tiny and start instantly. That property shapes the whole deploy story in module 13.",
    "text": "Go enlaza todo estáticamente en el binario de salida por defecto. El despliegue muchas veces es solo hacer `scp` del binario y ejecutarlo — por eso los contenedores de Go pueden ser diminutos y arrancar al instante. Esa propiedad define toda la historia de despliegue del módulo 13."
   },
   {
    "path": "modules[0].lessons[1].steps[3].nudge",
+   "src": "Think about what 'self-contained' means for putting the program on a machine that has never seen Go.",
    "text": "Piensa en qué significa 'autocontenido' para poner el programa en una máquina que nunca ha visto Go."
   }
  ]

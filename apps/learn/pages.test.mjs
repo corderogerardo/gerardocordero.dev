@@ -39,15 +39,16 @@ test("go.html sets the go-specific store key before loading lesson scripts", () 
   assert.ok(storeIdx < firstLessonIdx, "STORE_KEY must be set before any lesson script tag");
 });
 
-test("go.html loads all 14 lessons-go modules, in numeric order, before app.js", () => {
+test("go.html loads every lessons-go module, in numeric order, before app.js", () => {
   const html = read(join(LEARN_ROOT, "go.html"));
   const scriptSrcs = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
   const expectedLessons = readdirSync(join(LEARN_ROOT, "lessons-go"))
     .filter((f) => f.endsWith(".js"))
     .sort()
     .map((f) => `lessons-go/${f}`);
-  assert.equal(expectedLessons.length, 14);
-  assert.deepEqual(scriptSrcs.slice(0, 14), expectedLessons);
+  // Derived from the directory, not hardcoded: adding a module should not fail this.
+  assert.ok(expectedLessons.length > 0, "expected at least one lessons-go module");
+  assert.deepEqual(scriptSrcs.slice(0, expectedLessons.length), expectedLessons);
   assert.equal(scriptSrcs[scriptSrcs.length - 1], "app.js");
 });
 
@@ -124,10 +125,13 @@ function loadModule(file) {
 test("go-academy-plan.md's module table matches the id/title of every lessons-go/*.js module", () => {
   const plan = read(join(REPO_ROOT, "docs", "learning", "go-academy-plan.md"));
   const rows = [...plan.matchAll(/\|\s*\d+\s*\|\s*`([^`]+)`\s*\|\s*([^|]+?)\s*\|/g)];
-  assert.ok(rows.length >= 14, "expected at least 14 module rows in the plan's table");
 
   const files = readdirSync(join(LEARN_ROOT, "lessons-go")).filter((f) => f.endsWith(".js")).sort();
-  assert.equal(files.length, 14);
+  assert.ok(files.length > 0, "expected at least one lessons-go module");
+  assert.ok(
+    rows.length >= files.length,
+    `plan table has ${rows.length} rows for ${files.length} lessons-go modules`
+  );
 
   const docFileToTitle = new Map(rows.map((m) => [m[1], m[2].trim()]));
   for (const file of files) {

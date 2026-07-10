@@ -4,354 +4,442 @@
  "units": [
   {
    "path": "modules[5].title",
+   "src": "Goroutines & Channels",
    "text": "Goroutines y channels"
   },
   {
    "path": "modules[5].lessons[0].title",
+   "src": "Goroutines",
    "text": "Goroutines"
   },
   {
    "path": "modules[5].lessons[0].steps[0].md[0]",
+   "src": "## The reason Go runs servers",
    "text": "## La razón por la que Go corre servidores"
   },
   {
    "path": "modules[5].lessons[0].steps[0].md[1]",
+   "src": "A PawWalk server is never doing one thing. While it answers the walker-list request for one phone, it is also streaming GPS fixes to a client watching a live walk, charging a card, and accepting a brand-new booking — all at the same instant. A backend's whole job is **many things at once**.",
    "text": "Un servidor de PawWalk nunca está haciendo una sola cosa. Mientras responde la petición de lista de walkers para un teléfono, también está transmitiendo coordenadas GPS a un cliente viendo un paseo en vivo, cobrando una tarjeta, y aceptando una reserva nueva — todo en el mismo instante. El trabajo completo de un backend es **muchas cosas a la vez**."
   },
   {
    "path": "modules[5].lessons[0].steps[0].md[2]",
+   "src": "Go's answer is the **goroutine**: a function that runs concurrently with everything else. You launch one by putting the word `go` in front of a call. That's the entire syntax.",
    "text": "La respuesta de Go es la **goroutine**: una función que corre de forma concurrente con todo lo demás. Lanzas una poniendo la palabra `go` antes de una llamada. Esa es toda la sintaxis."
   },
   {
    "path": "modules[5].lessons[0].steps[0].md[3]",
+   "src": "> A goroutine is not an OS thread. Go multiplexes thousands of them onto a handful of real threads, so starting one costs about 2 KB of stack. Spinning up 10,000 goroutines is normal; spinning up 10,000 threads would melt the machine.",
    "text": "> Una goroutine no es un hilo del sistema operativo. Go multiplexa miles de ellas sobre un puñado de hilos reales, así que arrancar una cuesta cerca de 2 KB de pila. Levantar 10 000 goroutines es normal; levantar 10 000 hilos derretiría la máquina."
   },
   {
    "path": "modules[5].lessons[0].steps[1].title",
+   "src": "playground/goroutines.go",
    "text": "playground/goroutines.go"
   },
   {
    "path": "modules[5].lessons[0].steps[1].caption",
+   "src": "Three goroutines launched instantly. main does not wait for track() to finish — it fires each one off and keeps going. (Run this and you may see NONE of the tracking lines — read on for why.)",
    "text": "Tres goroutines lanzadas al instante. main no espera a que track() termine — dispara cada una y sigue adelante. (Ejecuta esto y puede que no veas NINGUNA de las líneas de tracking — sigue leyendo para saber por qué.)"
   },
   {
    "path": "modules[5].lessons[0].steps[2].md[0]",
+   "src": "## The main goroutine is special",
    "text": "## La goroutine main es especial"
   },
   {
    "path": "modules[5].lessons[0].steps[2].md[1]",
+   "src": "`func main` runs in its own goroutine — the **main goroutine**. Here is the rule that surprises everyone once: **when `main` returns, the whole program exits immediately**, killing every other goroutine still running, finished or not.",
    "text": "`func main` corre en su propia goroutine — la **goroutine main**. Aquí está la regla que sorprende a todos una vez: **cuando `main` retorna, todo el programa termina de inmediato**, matando cualquier otra goroutine que siga corriendo, terminada o no."
   },
   {
    "path": "modules[5].lessons[0].steps[2].md[2]",
+   "src": "In the last snippet, `main` launched three goroutines and then reached the end. The program exited before `track` got a chance to print. The goroutines were real — they just got cut off. You almost never want to `go` something and hope it finishes in time. You need to **wait**.",
    "text": "En el fragmento anterior, `main` lanzó tres goroutines y luego llegó al final. El programa terminó antes de que `track` tuviera oportunidad de imprimir. Las goroutines eran reales — solo se cortaron. Casi nunca quieres hacer `go` de algo y esperar que termine a tiempo. Necesitas **esperar**."
   },
   {
    "path": "modules[5].lessons[0].steps[3].md[0]",
+   "src": "## Waiting with a WaitGroup",
    "text": "## Esperar con un WaitGroup"
   },
   {
    "path": "modules[5].lessons[0].steps[3].md[1]",
+   "src": "`sync.WaitGroup` is a counter that lets `main` block until a batch of goroutines is done. Three calls:",
    "text": "`sync.WaitGroup` es un contador que deja que `main` bloquee hasta que un lote de goroutines termine. Tres llamadas:"
   },
   {
    "path": "modules[5].lessons[0].steps[3].md[2]",
+   "src": "- **`wg.Add(1)`** before you launch — \"one more goroutine to wait for.\"\n- **`wg.Done()`** inside the goroutine when it finishes — \"this one is done\" (decrements the counter). Idiomatically `defer wg.Done()` at the top, so it fires no matter how the function returns.\n- **`wg.Wait()`** in `main` — blocks until the counter hits zero.",
    "text": "- **`wg.Add(1)`** antes de lanzar — \"una goroutine más que esperar.\"\n- **`wg.Done()`** dentro de la goroutine cuando termina — \"esta ya terminó\" (decrementa el contador). Idiomáticamente `defer wg.Done()` al inicio, para que se dispare sin importar cómo retorne la función.\n- **`wg.Wait()`** en `main` — bloquea hasta que el contador llegue a cero."
   },
   {
    "path": "modules[5].lessons[0].steps[4].title",
+   "src": "playground/waitgroup.go",
    "text": "playground/waitgroup.go"
   },
   {
    "path": "modules[5].lessons[0].steps[4].caption",
+   "src": "Now main blocks at wg.Wait() until all three goroutines call wg.Done(). This prints all three tracking lines, then the summary — every time.",
    "text": "Ahora main bloquea en wg.Wait() hasta que las tres goroutines llamen wg.Done(). Esto imprime las tres líneas de tracking, luego el resumen — siempre."
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[0]",
+   "src": "## The loop-variable gotcha (and why Go 1.22 fixed it)",
    "text": "## La trampa de la variable de loop (y por qué Go 1.22 la arregló)"
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[1]",
+   "src": "That `range` loop hides Go's most famous historical bug. Before **Go 1.22**, the loop variable `id` was a *single* variable reused across every iteration. All three goroutines captured the *same* `id`, and by the time they ran, the loop had raced ahead — so you'd often see `walk-3` printed three times.",
    "text": "Ese loop `range` esconde el bug histórico más famoso de Go. Antes de **Go 1.22**, la variable de loop `id` era una *única* variable reutilizada en cada iteración. Las tres goroutines capturaban el *mismo* `id`, y para cuando corrían, el loop ya había avanzado — así que solías ver `walk-3` impreso tres veces."
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[2]",
+   "src": "In **Go 1.22 and later, each iteration gets a fresh `id`**, so the code above is correct as written. But you'll still see the old fix in tutorials and older codebases: pass the value as an argument, `go func(id string) { ... }(id)`, which copies it per goroutine.",
    "text": "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. Pero seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine."
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[3]",
+   "src": "> Know both. On Go 1.22+ the plain capture is safe. On anything older, copy the loop variable in — or you'll ship a heisenbug.",
    "text": "> Conoce ambos. En Go 1.22+ la captura simple es segura. En cualquier versión anterior, copia la variable de loop al entrar — o vas a lanzar un heisenbug."
   },
   {
    "path": "modules[5].lessons[0].steps[6].q",
+   "src": "You launch three goroutines from `main` and then `main` returns right away, without a WaitGroup. What happens?",
    "text": "Lanzas tres goroutines desde `main` y luego `main` retorna de inmediato, sin un WaitGroup. ¿Qué pasa?"
   },
   {
    "path": "modules[5].lessons[0].steps[6].choices[0]",
+   "src": "The program exits immediately and the goroutines may never finish",
    "text": "El programa termina de inmediato y las goroutines puede que nunca terminen"
   },
   {
    "path": "modules[5].lessons[0].steps[6].choices[1]",
+   "src": "Go automatically waits for every goroutine before exiting",
    "text": "Go espera automáticamente a cada goroutine antes de terminar"
   },
   {
    "path": "modules[5].lessons[0].steps[6].choices[2]",
+   "src": "The program panics because goroutines outlived main",
    "text": "El programa entra en panic porque las goroutines sobrevivieron a main"
   },
   {
    "path": "modules[5].lessons[0].steps[6].choices[3]",
+   "src": "The goroutines keep running in the background after the program exits",
    "text": "Las goroutines siguen corriendo en segundo plano después de que el programa termina"
   },
   {
    "path": "modules[5].lessons[0].steps[6].explain",
+   "src": "When the main goroutine returns, the process exits and takes every other goroutine down with it — finished or not. That's exactly why you need something like sync.WaitGroup to make main wait.",
    "text": "Cuando la goroutine main retorna, el proceso termina y se lleva consigo a cualquier otra goroutine — terminada o no. Por eso exactamente necesitas algo como sync.WaitGroup para hacer que main espere."
   },
   {
    "path": "modules[5].lessons[0].steps[6].nudge",
+   "src": "Think about which goroutine controls the lifetime of the whole program.",
    "text": "Piensa en qué goroutine controla el tiempo de vida de todo el programa."
   },
   {
    "path": "modules[5].lessons[0].steps[7].title",
+   "src": "Track a walk in a goroutine",
    "text": "Rastrea un paseo en una goroutine"
   },
   {
    "path": "modules[5].lessons[0].steps[7].prompt[0]",
+   "src": "Inside `main`, register one goroutine with the WaitGroup and launch it. Call `wg.Add(1)`, then start `go func() { ... }()` whose body first `defer wg.Done()` and then prints `tracking walk`.",
    "text": "Dentro de `main`, registra una goroutine con el WaitGroup y lánzala. Llama `wg.Add(1)`, luego inicia `go func() { ... }()` cuyo cuerpo primero hace `defer wg.Done()` y luego imprime `tracking walk`."
   },
   {
    "path": "modules[5].lessons[0].steps[7].prompt[1]",
+   "src": "The `wg.Wait()` line is already there — you just need the three lines above it.",
    "text": "La línea `wg.Wait()` ya está ahí — solo necesitas las tres líneas antes de ella."
   },
   {
    "path": "modules[5].lessons[0].steps[7].success",
+   "src": "That's the goroutine + WaitGroup pattern you'll use everywhere: Add before launch, defer Done inside, Wait to block main.",
    "text": "Ese es el patrón goroutine + WaitGroup que usarás en todas partes: Add antes de lanzar, defer Done adentro, Wait para bloquear main."
   },
   {
    "path": "modules[5].lessons[1].title",
+   "src": "Channels",
    "text": "Channels"
   },
   {
    "path": "modules[5].lessons[1].steps[0].md[0]",
+   "src": "## Passing values between goroutines",
    "text": "## Pasar valores entre goroutines"
   },
   {
    "path": "modules[5].lessons[1].steps[0].md[1]",
+   "src": "Goroutines run concurrently — but they need to hand results back. A walker-search goroutine finds three matches; how does it deliver them to `main`? The Go answer is a **channel**: a typed pipe that connects goroutines. One goroutine sends a value in, another receives it out.",
    "text": "Las goroutines corren de forma concurrente — pero necesitan devolver resultados. Una goroutine de búsqueda de walkers encuentra tres coincidencias; ¿cómo se las entrega a `main`? La respuesta de Go es un **channel**: una tubería tipada que conecta goroutines. Una goroutine envía un valor adentro, otra lo recibe afuera."
   },
   {
    "path": "modules[5].lessons[1].steps[0].md[2]",
+   "src": "Go's guiding proverb: **\"Don't communicate by sharing memory; share memory by communicating.\"** Instead of two goroutines poking at the same variable behind a lock, one *sends* the value down a channel to the other. The channel handles the hand-off safely.",
    "text": "El proverbio guía de Go: **\"No te comuniques compartiendo memoria; comparte memoria comunicándote.\"** En vez de que dos goroutines toquen la misma variable detrás de un lock, una *envía* el valor por un channel a la otra. El channel maneja la entrega de forma segura."
   },
   {
    "path": "modules[5].lessons[1].steps[1].md[0]",
+   "src": "## Make, send, receive",
    "text": "## Make, send, receive"
   },
   {
    "path": "modules[5].lessons[1].steps[1].md[1]",
+   "src": "A channel has a type — a `chan int` only ever carries `int` values, checked at compile time. Three operations:",
    "text": "Un channel tiene un tipo — un `chan int` solo transporta valores `int`, comprobado en tiempo de compilación. Tres operaciones:"
   },
   {
    "path": "modules[5].lessons[1].steps[1].md[2]",
+   "src": "- **`ch := make(chan int)`** — create a channel of `int`.\n- **`ch <- v`** — *send* `v` into the channel. The arrow points *into* `ch`.\n- **`v := <-ch`** — *receive* the next value out of `ch`. The arrow points *out of* `ch`.",
    "text": "- **`ch := make(chan int)`** — crea un channel de `int`.\n- **`ch <- v`** — *envía* `v` dentro del channel. La flecha apunta *hacia dentro* de `ch`.\n- **`v := <-ch`** — *recibe* el siguiente valor de `ch`. La flecha apunta *hacia afuera* de `ch`."
   },
   {
    "path": "modules[5].lessons[1].steps[1].md[3]",
+   "src": "> Read the arrow like a direction of flow. `ch <- v` moves `v` toward `ch` (in). `<-ch` pulls a value away from `ch` (out).",
    "text": "> Lee la flecha como una dirección de flujo. `ch <- v` mueve `v` hacia `ch` (adentro). `<-ch` saca un valor de `ch` (afuera)."
   },
   {
    "path": "modules[5].lessons[1].steps[2].title",
+   "src": "playground/channel.go",
    "text": "playground/channel.go"
   },
   {
    "path": "modules[5].lessons[1].steps[2].caption",
+   "src": "The goroutine sends 30 into ch; main receives it into price. On an unbuffered channel the send blocks until main is ready to receive — the two goroutines rendezvous. That blocking is also the synchronization: no WaitGroup needed here.",
    "text": "La goroutine envía 30 dentro de ch; main lo recibe en price. En un channel sin buffer, el envío se bloquea hasta que main esté listo para recibir — las dos goroutines se encuentran. Ese bloqueo también es la sincronización: no se necesita WaitGroup aquí."
   },
   {
    "path": "modules[5].lessons[1].steps[3].md[0]",
+   "src": "## Buffered channels",
    "text": "## Channels con buffer"
   },
   {
    "path": "modules[5].lessons[1].steps[3].md[1]",
+   "src": "The channel above is **unbuffered**: a send blocks until someone receives. Give it a buffer and sends only block when the buffer is full — handy for queuing GPS fixes without making the sender wait on each one.",
    "text": "El channel de arriba es **sin buffer**: un envío se bloquea hasta que alguien reciba. Dale un buffer y los envíos solo se bloquean cuando el buffer está lleno — útil para poner en cola coordenadas GPS sin hacer que el emisor espere en cada una."
   },
   {
    "path": "modules[5].lessons[1].steps[3].md[2]",
+   "src": "`make(chan int, 3)` holds up to three values. The producer can drop in three fixes and keep walking; the consumer drains them at its own pace.",
    "text": "`make(chan int, 3)` guarda hasta tres valores. El productor puede meter tres coordenadas y seguir caminando; el consumidor las drena a su propio ritmo."
   },
   {
    "path": "modules[5].lessons[1].steps[4].title",
+   "src": "playground/buffered.go",
    "text": "playground/buffered.go"
   },
   {
    "path": "modules[5].lessons[1].steps[4].caption",
+   "src": "Three sends fit in the buffer without a receiver waiting. close(fixes) signals no more values are coming, which lets `for f := range fixes` loop over what's buffered and then stop cleanly.",
    "text": "Tres envíos caben en el buffer sin que un receptor espere. close(fixes) señala que ya no vendrán más valores, lo que permite que `for f := range fixes` recorra lo que está en buffer y luego pare de forma limpia."
   },
   {
    "path": "modules[5].lessons[1].steps[5].md[0]",
+   "src": "## Directions and closing",
    "text": "## Direcciones y cierre"
   },
   {
    "path": "modules[5].lessons[1].steps[5].md[1]",
+   "src": "A function can declare which *way* it uses a channel, and the compiler enforces it:",
    "text": "Una función puede declarar en qué *sentido* usa un channel, y el compilador lo hace cumplir:"
   },
   {
    "path": "modules[5].lessons[1].steps[5].md[2]",
+   "src": "- **`chan<- int`** — send-only. The function may only put values in.\n- **`<-chan int`** — receive-only. The function may only take values out.",
    "text": "- **`chan<- int`** — solo envío. La función solo puede meter valores.\n- **`<-chan int`** — solo recepción. La función solo puede sacar valores."
   },
   {
    "path": "modules[5].lessons[1].steps[5].md[3]",
+   "src": "This is a real safety net: a `producer(out chan<- int)` physically cannot accidentally read from the pipe. And **`close(ch)`** marks a channel finished — receivers can still drain buffered values, and `v, ok := <-ch` sets `ok` to `false` once it's empty and closed. Rule of thumb: **the sender closes, never the receiver.**",
    "text": "Esto es una red de seguridad real: un `producer(out chan<- int)` no puede, físicamente, leer accidentalmente de la tubería. Y **`close(ch)`** marca un channel como terminado — los receptores todavía pueden drenar valores en buffer, y `v, ok := <-ch` pone `ok` en `false` una vez que está vacío y cerrado. Regla general: **el que envía cierra, nunca el que recibe.**"
   },
   {
    "path": "modules[5].lessons[1].steps[6].q",
+   "src": "What does the expression `price := <-ch` do?",
    "text": "¿Qué hace la expresión `price := <-ch`?"
   },
   {
    "path": "modules[5].lessons[1].steps[6].choices[0]",
+   "src": "Receives the next value out of the channel `ch` and stores it in `price`",
    "text": "Recibe el siguiente valor del channel `ch` y lo guarda en `price`"
   },
   {
    "path": "modules[5].lessons[1].steps[6].choices[1]",
+   "src": "Sends `price` into the channel `ch`",
    "text": "Envía `price` dentro del channel `ch`"
   },
   {
    "path": "modules[5].lessons[1].steps[6].choices[2]",
+   "src": "Creates a new channel named `price`",
    "text": "Crea un channel nuevo llamado `price`"
   },
   {
    "path": "modules[5].lessons[1].steps[6].choices[3]",
+   "src": "Closes the channel `ch` and returns its length",
    "text": "Cierra el channel `ch` y retorna su longitud"
   },
   {
    "path": "modules[5].lessons[1].steps[6].explain",
+   "src": "The arrow points away from ch, so the value flows out of the channel into price. `ch <- price` (arrow toward ch) would be the send. Direction of the arrow tells you which operation it is.",
    "text": "La flecha apunta alejándose de ch, así que el valor fluye hacia afuera del channel hacia price. `ch <- price` (flecha hacia ch) sería el envío. La dirección de la flecha te dice cuál operación es."
   },
   {
    "path": "modules[5].lessons[1].steps[6].nudge",
+   "src": "Which way is the `<-` arrow pointing relative to `ch`?",
    "text": "¿Hacia dónde apunta la flecha `<-` respecto a `ch`?"
   },
   {
    "path": "modules[5].lessons[1].steps[7].title",
+   "src": "Send a price down a channel",
    "text": "Envía un precio por un channel"
   },
   {
    "path": "modules[5].lessons[1].steps[7].prompt[0]",
+   "src": "Inside `main`, create a channel of `int` named `ch` with `make`. Launch a goroutine that sends `30` on it, then receive the value into `v` and print it.",
    "text": "Dentro de `main`, crea un channel de `int` llamado `ch` con `make`. Lanza una goroutine que envíe `30` por él, luego recibe el valor en `v` e imprímelo."
   },
   {
    "path": "modules[5].lessons[1].steps[7].prompt[1]",
+   "src": "You'll write three lines: the `make`, the send inside the goroutine, and the receive into `v`.",
    "text": "Escribirás tres líneas: el `make`, el envío dentro de la goroutine, y la recepción en `v`."
   },
   {
    "path": "modules[5].lessons[1].steps[7].success",
+   "src": "You just passed a value between two goroutines with zero shared memory — the channel did the hand-off and the synchronization at once.",
    "text": "Acabas de pasar un valor entre dos goroutines con cero memoria compartida — el channel hizo la entrega y la sincronización a la vez."
   },
   {
    "path": "modules[5].lessons[2].title",
+   "src": "select, context & mutex",
    "text": "select, context y mutex"
   },
   {
    "path": "modules[5].lessons[2].steps[0].md[0]",
+   "src": "## Waiting on several channels at once",
    "text": "## Esperar en varios channels a la vez"
   },
   {
    "path": "modules[5].lessons[2].steps[0].md[1]",
+   "src": "A live-tracking handler waits on more than one thing: a new GPS fix on one channel, *or* a signal that the walk ended on another, *or* a timeout so it never hangs forever. **`select`** is a `switch` for channel operations — it blocks until one of its `case`s can proceed, then runs that one.",
    "text": "Un handler de rastreo en vivo espera más de una cosa: una nueva coordenada GPS en un channel, *o* una señal de que el paseo terminó en otro, *o* un timeout para que nunca se quede colgado para siempre. **`select`** es un `switch` para operaciones de channel — se bloquea hasta que uno de sus `case` pueda proceder, y luego ejecuta ese."
   },
   {
    "path": "modules[5].lessons[2].steps[0].md[2]",
+   "src": "If several cases are ready, `select` picks one at random. A `default` case (optional) runs immediately when nothing else is ready, so you can poll without blocking.",
    "text": "Si varios cases están listos, `select` elige uno al azar. Un case `default` (opcional) corre de inmediato cuando nada más está listo, así puedes hacer polling sin bloquear."
   },
   {
    "path": "modules[5].lessons[2].steps[1].title",
+   "src": "internal/tracking/stream.go",
    "text": "internal/tracking/stream.go"
   },
   {
    "path": "modules[5].lessons[2].steps[1].caption",
+   "src": "The loop blocks in select until EITHER a fix arrives or done fires. On done it returns, ending the goroutine. This is the heart of a live-tracking connection: react to whichever event happens next.",
    "text": "El loop se bloquea en select hasta que O llega una coordenada O se dispara done. En done, retorna, terminando la goroutine. Este es el corazón de una conexión de rastreo en vivo: reaccionar a cualquier evento que ocurra primero."
   },
   {
    "path": "modules[5].lessons[2].steps[2].md[0]",
+   "src": "## context: cancellation and timeouts",
    "text": "## context: cancelación y timeouts"
   },
   {
    "path": "modules[5].lessons[2].steps[2].md[1]",
+   "src": "What cuts a request off when the client hangs up, or a slow database call runs too long? In Go the answer is **`context.Context`** — a value threaded through a request that carries a cancellation signal. Every `net/http` handler receives one, and every function that might block should accept one as its first argument, by convention named `ctx`.",
    "text": "¿Qué corta una petición cuando el cliente cuelga, o una llamada lenta a la base de datos tarda demasiado? En Go la respuesta es **`context.Context`** — un valor que se pasa a través de una petición y lleva una señal de cancelación. Cada handler de `net/http` recibe uno, y cada función que pueda bloquearse debería aceptar uno como su primer argumento, por convención llamado `ctx`."
   },
   {
    "path": "modules[5].lessons[2].steps[2].md[2]",
+   "src": "The key channel is **`ctx.Done()`**: it's closed when the context is cancelled or its deadline passes. You `select` on it. `context.WithTimeout` gives you a context that cancels itself after a duration.",
    "text": "El channel clave es **`ctx.Done()`**: se cierra cuando el context se cancela o pasa su deadline. Haces `select` sobre él. `context.WithTimeout` te da un context que se cancela solo después de una duración."
   },
   {
    "path": "modules[5].lessons[2].steps[3].title",
+   "src": "internal/tracking/wait.go",
    "text": "internal/tracking/wait.go"
   },
   {
    "path": "modules[5].lessons[2].steps[3].caption",
+   "src": "select races a real fix against ctx.Done(). If no fix arrives within 5 seconds the context times out, ctx.Done() fires, and the function bails instead of hanging forever. Always defer cancel() to release the timer.",
    "text": "select compite una coordenada real contra ctx.Done(). Si no llega ninguna coordenada en 5 segundos el context expira, ctx.Done() se dispara, y la función se retira en vez de quedarse colgada para siempre. Siempre haz defer cancel() para liberar el timer."
   },
   {
    "path": "modules[5].lessons[2].steps[4].md[0]",
+   "src": "## Mutex: guarding shared state",
    "text": "## Mutex: protegiendo estado compartido"
   },
   {
    "path": "modules[5].lessons[2].steps[4].md[1]",
+   "src": "Channels are the preferred way to coordinate, but sometimes you genuinely have one piece of shared state — say an in-memory count of active walks — that several goroutines update. Reading and writing it from multiple goroutines at once is a **data race**: undefined behavior Go's `-race` detector will flag.",
    "text": "Los channels son la forma preferida de coordinar, pero a veces de verdad tienes una sola pieza de estado compartido — digamos un conteo en memoria de paseos activos — que varias goroutines actualizan. Leerlo y escribirlo desde varias goroutines a la vez es una **carrera de datos** (data race): comportamiento indefinido que el detector `-race` de Go va a marcar."
   },
   {
    "path": "modules[5].lessons[2].steps[4].md[2]",
+   "src": "A **`sync.Mutex`** is a lock that ensures one goroutine at a time touches the state. `mu.Lock()` acquires it; `mu.Unlock()` releases it. The idiom is `mu.Lock()` then immediately `defer mu.Unlock()`, so the lock is always released when the function returns — even on an early return or panic.",
    "text": "Un **`sync.Mutex`** es un lock que asegura que solo una goroutine a la vez toque el estado. `mu.Lock()` lo adquiere; `mu.Unlock()` lo libera. El idioma es `mu.Lock()` e inmediatamente después `defer mu.Unlock()`, para que el lock siempre se libere cuando la función retorne — incluso en un retorno anticipado o un panic."
   },
   {
    "path": "modules[5].lessons[2].steps[5].title",
+   "src": "internal/tracking/counter.go",
    "text": "internal/tracking/counter.go"
   },
   {
    "path": "modules[5].lessons[2].steps[5].caption",
+   "src": "Both methods lock before touching count and defer the unlock. Now any number of goroutines can call Start() concurrently and the count stays correct — the mutex serializes access to that one field.",
    "text": "Ambos métodos bloquean antes de tocar count y difieren el unlock. Ahora cualquier número de goroutines puede llamar Start() de forma concurrente y el conteo se mantiene correcto — el mutex serializa el acceso a ese único campo."
   },
   {
    "path": "modules[5].lessons[2].steps[6].q",
+   "src": "Why is `defer mu.Unlock()` written immediately after `mu.Lock()`?",
    "text": "¿Por qué se escribe `defer mu.Unlock()` inmediatamente después de `mu.Lock()`?"
   },
   {
    "path": "modules[5].lessons[2].steps[6].choices[0]",
+   "src": "It guarantees the lock is released when the function returns, even on an early return or panic",
    "text": "Garantiza que el lock se libere cuando la función retorne, incluso en un retorno anticipado o un panic"
   },
   {
    "path": "modules[5].lessons[2].steps[6].choices[1]",
+   "src": "It unlocks the mutex before the protected code runs",
    "text": "Desbloquea el mutex antes de que corra el código protegido"
   },
   {
    "path": "modules[5].lessons[2].steps[6].choices[2]",
+   "src": "It makes the lock faster by deferring the work",
    "text": "Hace el lock más rápido al diferir el trabajo"
   },
   {
    "path": "modules[5].lessons[2].steps[6].choices[3]",
+   "src": "It is required syntax — a Lock without a deferred Unlock won't compile",
    "text": "Es sintaxis obligatoria — un Lock sin un Unlock diferido no compila"
   },
   {
    "path": "modules[5].lessons[2].steps[6].explain",
+   "src": "defer schedules the Unlock to run as the function exits, by any path. That means you can't forget to unlock and you won't leave the mutex held after an early return or panic — a deadlock waiting to happen otherwise.",
    "text": "defer programa que el Unlock corra cuando la función salga, por cualquier camino. Eso significa que no puedes olvidar desbloquear y no dejarás el mutex tomado tras un retorno anticipado o un panic — un deadlock esperando a suceder de otra forma."
   },
   {
    "path": "modules[5].lessons[2].steps[6].nudge",
+   "src": "Think about every way a function can return, including ones you didn't plan for.",
    "text": "Piensa en cada forma en que una función puede retornar, incluyendo las que no planeaste."
   },
   {
    "path": "modules[5].lessons[2].steps[7].title",
+   "src": "select on two channels",
    "text": "select en dos channels"
   },
   {
    "path": "modules[5].lessons[2].steps[7].prompt[0]",
+   "src": "Inside `main`, finish the `select`. Add two cases: one that receives a value into `v` from `ch` and prints it, and one that receives from `done`.",
    "text": "Dentro de `main`, termina el `select`. Agrega dos cases: uno que reciba un valor en `v` desde `ch` y lo imprima, y uno que reciba desde `done`."
   },
   {
    "path": "modules[5].lessons[2].steps[7].prompt[1]",
+   "src": "Write `select { ... }` with `case v := <-ch:` and `case <-done:`. The channels and the sending goroutine are already set up.",
    "text": "Escribe `select { ... }` con `case v := <-ch:` y `case <-done:`. Los channels y la goroutine que envía ya están configurados."
   },
   {
    "path": "modules[5].lessons[2].steps[7].success",
+   "src": "That's a live-tracking loop in miniature: select blocks until either a fix arrives or the walk ends, then handles whichever came first.",
    "text": "Ese es un loop de rastreo en vivo en miniatura: select se bloquea hasta que llega una coordenada o el paseo termina, y luego maneja lo que haya llegado primero."
   }
  ]

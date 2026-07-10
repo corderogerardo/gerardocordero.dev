@@ -6,9 +6,16 @@
 //     moduleIndex: 0-based; omit to list modules with word counts.
 //
 // Writes tools/i18n-work/<course>/<NN>-<moduleId>.json — a flat list of
-// { path, text } units. Translate each `text` in place (leave `path` alone,
-// keep ``` fenced code, `inline code`, and URLs untranslated), then run
-// i18n-merge.mjs to fold the translations into public/data/es/<course>.json.
+// { path, src, text } units. Translate each `text` in place (leave `path` and
+// `src` alone, keep ``` fenced code, `inline code`, and URLs untranslated),
+// then run i18n-merge.mjs to fold the translations into
+// public/data/es/<course>.json.
+//
+// `src` is the English string `text` was translated from. Paths are positional,
+// so inserting a step upstream re-points every later unit; build-data.mjs
+// compares `src` against the English at `path` and refuses to apply a unit that
+// no longer matches. Never hand-edit `src` to silence tools/i18n-check.mjs —
+// that check is telling you the path now aims at the wrong content.
 //
 // PROSE fields are extracted; code/mechanical fields (starter, solution,
 // checks, mustNot, source, answer, ids) are never extracted — merge copies
@@ -34,7 +41,8 @@ const words = (s) => String(s).split(/\s+/).filter(Boolean).length;
 
 function collect(node, path, out) {
   if (typeof node === "string") {
-    out.push({ path, text: node });
+    // `src` is the drift baseline and stays English; `text` is what gets translated.
+    out.push({ path, src: node, text: node });
   } else if (Array.isArray(node)) {
     node.forEach((v, i) => collect(v, `${path}[${i}]`, out));
   }
