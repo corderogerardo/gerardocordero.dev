@@ -1,8 +1,8 @@
-# JavaScript — Andersen S2 (ES6+: 8 skills · ES5: 12 skills)
+# JavaScript — Senior (ES6+: 8 skills · ES5: 12 skills)
 
 Language depth: the ES6+ rows probe modern primitives (WeakMap, Proxy, generators, Promise combinators as polyfills); the ES5 rows probe fundamentals most seniors have forgotten how to articulate (GC generations, lexical environments, the event loop's "fake multithreading").
 
-> Part of the [Andersen React Native S2 study guide](README.md). Drill these with [flashcards.md](flashcards.md).
+> Part of the [Senior React Native study guide](README.md). Drill these with [flashcards.md](flashcards.md).
 
 ## JS (ES6+)
 

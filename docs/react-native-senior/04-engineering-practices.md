@@ -1,8 +1,8 @@
-# Software Engineering Practices — Andersen S2 (16 skills)
+# Software Engineering Practices — Senior (16 skills)
 
 The breadth rows: architecture qualities and GRASP, reactive systems, CI/CD ownership, HTTP-layer trivia (REST constraints, CORS vs JSONP, WebSocket subprotocols), OWASP, refactoring policy, and testing process. Short answers, wide surface.
 
-> Part of the [Andersen React Native S2 study guide](README.md). Drill these with [flashcards.md](flashcards.md).
+> Part of the [Senior React Native study guide](README.md). Drill these with [flashcards.md](flashcards.md).
 
 ## Architecture and Craft
 

@@ -1,4 +1,4 @@
-# Flashcards — Andersen React Native S2
+# Flashcards — Senior React Native
 
 All 91 matrix rows as interviewer-style questions. Answer out loud in English, then check yourself against the linked entry (each ends with a **Say it** line you can deliver verbatim). Cards where you stumble go back into tomorrow's pile.
 

@@ -1,8 +1,8 @@
-# Software Development Processes — Andersen S2 (5 skills)
+# Software Development Processes — Senior (5 skills)
 
 Process maturity: SDLC-aware planning, estimation with historical data and parametric models, Git as infrastructure, and scrum/kanban end-to-end. These are asked to confirm you can *lead* delivery, not just code inside it.
 
-> Part of the [Andersen React Native S2 study guide](README.md). Drill these with [flashcards.md](flashcards.md).
+> Part of the [Senior React Native study guide](README.md). Drill these with [flashcards.md](flashcards.md).
 
 ## Processes
 
