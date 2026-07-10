@@ -339,13 +339,13 @@
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[2]",
-   "src": "- **`r.Header.Get(\"Authorization\")`** — reads the header value (empty string if it's absent). `r` is the `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — strips the `\"Bearer \"` scheme prefix, leaving the raw token. `TrimPrefix` returns the string unchanged if the prefix isn't there, so a malformed header naturally yields something you can reject.",
-   "text": "- **`r.Header.Get(\"Authorization\")`** — lee el valor del header (string vacío si no está presente). `r` es el `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — quita el prefijo de esquema `\"Bearer \"`, dejando el token en crudo. `TrimPrefix` devuelve el string sin cambios si el prefijo no está ahí, así que un header malformado naturalmente produce algo que puedes rechazar."
+   "src": "- **`r.Header.Get(\"Authorization\")`** — reads the header value (empty string if it's absent). `r` is the `*http.Request`.\n- **`strings.CutPrefix(h, \"Bearer \")`** — returns the remainder *and* a bool saying whether the `\"Bearer \"` prefix was actually there. Two results, one call.",
+   "text": "- **`r.Header.Get(\"Authorization\")`** — lee el valor del header (cadena vacía si no está). `r` es el `*http.Request`.\n- **`strings.CutPrefix(h, \"Bearer \")`** — devuelve el resto *y* un bool que indica si el prefijo `\"Bearer \"` realmente estaba. Dos resultados, una llamada."
   },
   {
    "path": "modules[10].lessons[2].steps[1].md[3]",
-   "src": "If the header was missing, `r.Header.Get` returned `\"\"` and after trimming you still have `\"\"` — that's your signal to reject.",
-   "text": "Si el header no estaba, `r.Header.Get` devolvió `\"\"` y después de recortar sigues teniendo `\"\"` — esa es tu señal para rechazar."
+   "src": "Reach for `CutPrefix`, never `TrimPrefix`. `TrimPrefix` returns the string **unchanged** when the prefix is absent, so `Authorization: Basic YWxhZGRpbg==` trims to `\"Basic YWxhZGRpbg==\"` — non-empty, and a `token != \"\"` guard waves the wrong scheme straight through. Validate the *scheme*, not just that some bytes arrived: reject when `!ok` (wrong scheme, or no header at all) or when `token == \"\"` (scheme with nothing after it). Footnote worth knowing: RFC 7235 makes the scheme name case-insensitive, so a strict server also accepts `bearer`; exact-match `\"Bearer \"` is what most Go codebases ship.",
+   "text": "Usa `CutPrefix`, nunca `TrimPrefix`. `TrimPrefix` devuelve la cadena **sin cambios** cuando el prefijo no está, así que `Authorization: Basic YWxhZGRpbg==` queda como `\"Basic YWxhZGRpbg==\"` — no vacía, y un guardián con `token != \"\"` deja pasar el esquema equivocado. Valida el *esquema*, no solo que llegaron algunos bytes: rechaza cuando `!ok` (esquema equivocado, o sin header) o cuando `token == \"\"` (esquema sin nada después). Nota al pie que vale la pena saber: el RFC 7235 hace que el nombre del esquema sea insensible a mayúsculas, así que un servidor estricto también acepta `bearer`; la coincidencia exacta con `\"Bearer \"` es lo que envía la mayoría de las bases de código en Go."
   },
   {
    "path": "modules[10].lessons[2].steps[2].md[0]",
@@ -434,13 +434,13 @@
   },
   {
    "path": "modules[10].lessons[2].steps[6].prompt[0]",
-   "src": "Write the guard inside this handler. Read the header with `r.Header.Get(\"Authorization\")` into `h`, strip the scheme with `strings.TrimPrefix(h, \"Bearer \")` into `token`, and if `token == \"\"` call `w.WriteHeader(http.StatusUnauthorized)` then `return`.",
-   "text": "Escribe el guardián dentro de este handler. Lee el header con `r.Header.Get(\"Authorization\")` en `h`, quita el esquema con `strings.TrimPrefix(h, \"Bearer \")` en `token`, y si `token == \"\"` llama a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`."
+   "src": "Write the guard inside this handler. Read the header with `r.Header.Get(\"Authorization\")` into `h`, cut the scheme with `token, ok := strings.CutPrefix(h, \"Bearer \")`, and if `!ok || token == \"\"` call `w.WriteHeader(http.StatusUnauthorized)` then `return`. The `!ok` is what stops a `Basic ...` header from getting through.",
+   "text": "Escribe el guardián dentro de este handler. Lee el header con `r.Header.Get(\"Authorization\")` en `h`, corta el esquema con `token, ok := strings.CutPrefix(h, \"Bearer \")`, y si `!ok || token == \"\"` llama a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`. El `!ok` es lo que impide que pase un header `Basic ...`."
   },
   {
    "path": "modules[10].lessons[2].steps[6].success",
-   "src": "That's the heart of RequireAuth: no valid Bearer token, no entry. Wrap it around your bookings routes and they're protected.",
-   "text": "Eso es el corazón de RequireAuth: sin un Bearer token válido, no hay entrada. Envuélvelo alrededor de tus rutas de reservas y quedan protegidas."
+   "src": "That's the heart of RequireAuth: the scheme must be Bearer *and* the token non-empty, or no entry. Wrap it around your bookings routes and they're protected.",
+   "text": "Eso es el corazón de RequireAuth: el esquema debe ser Bearer *y* el token no vacío, o no hay entrada. Envuélvelo alrededor de tus rutas de reservas y quedan protegidas."
   }
  ]
 }

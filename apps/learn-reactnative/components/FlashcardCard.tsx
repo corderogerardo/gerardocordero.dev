@@ -20,7 +20,12 @@ export default function FlashcardCard({ card, showAnswer, onFlip, onCorrect, onW
     <Card
       className="w-full cursor-pointer"
       onClick={onFlip}
-      onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onFlip(); }}}
+      onKeyDown={e => {
+        // Ignore keys bubbling up from the footer buttons — preventDefault here
+        // would cancel their own Enter/Space activation.
+        if (e.target !== e.currentTarget) return
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); onFlip(); }
+      }}
       tabIndex={0}
       role="button"
       aria-label={showAnswer ? 'Flip to question' : 'Flip to answer'}

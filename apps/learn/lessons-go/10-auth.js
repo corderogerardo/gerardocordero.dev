@@ -259,8 +259,8 @@ func IssueToken(userID, secret string) (string, error) {
           md: [
             "## Pull the token out of the header",
             "The token arrives inside a header whose value looks like `Bearer eyJhbGci...`. Two standard-library moves extract it:",
-            "- **`r.Header.Get(\"Authorization\")`** — reads the header value (empty string if it's absent). `r` is the `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — strips the `\"Bearer \"` scheme prefix, leaving the raw token. `TrimPrefix` returns the string unchanged if the prefix isn't there, so a malformed header naturally yields something you can reject.",
-            "If the header was missing, `r.Header.Get` returned `\"\"` and after trimming you still have `\"\"` — that's your signal to reject.",
+            "- **`r.Header.Get(\"Authorization\")`** — reads the header value (empty string if it's absent). `r` is the `*http.Request`.\n- **`strings.CutPrefix(h, \"Bearer \")`** — returns the remainder *and* a bool saying whether the `\"Bearer \"` prefix was actually there. Two results, one call.",
+            "Reach for `CutPrefix`, never `TrimPrefix`. `TrimPrefix` returns the string **unchanged** when the prefix is absent, so `Authorization: Basic YWxhZGRpbg==` trims to `\"Basic YWxhZGRpbg==\"` — non-empty, and a `token != \"\"` guard waves the wrong scheme straight through. Validate the *scheme*, not just that some bytes arrived: reject when `!ok` (wrong scheme, or no header at all) or when `token == \"\"` (scheme with nothing after it). Footnote worth knowing: RFC 7235 makes the scheme name case-insensitive, so a strict server also accepts `bearer`; exact-match `\"Bearer \"` is what most Go codebases ship.",
           ],
         },
         {
@@ -292,8 +292,8 @@ func RequireAuth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h := r.Header.Get("Authorization")
-			token := strings.TrimPrefix(h, "Bearer ")
-			if token == "" {
+			token, ok := strings.CutPrefix(h, "Bearer ")
+			if !ok || token == "" {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -334,7 +334,7 @@ func RequireAuth(secret string) func(http.Handler) http.Handler {
           type: "exercise",
           title: "Guard a protected route",
           prompt: [
-            "Write the guard inside this handler. Read the header with `r.Header.Get(\"Authorization\")` into `h`, strip the scheme with `strings.TrimPrefix(h, \"Bearer \")` into `token`, and if `token == \"\"` call `w.WriteHeader(http.StatusUnauthorized)` then `return`.",
+            "Write the guard inside this handler. Read the header with `r.Header.Get(\"Authorization\")` into `h`, cut the scheme with `token, ok := strings.CutPrefix(h, \"Bearer \")`, and if `!ok || token == \"\"` call `w.WriteHeader(http.StatusUnauthorized)` then `return`. The `!ok` is what stops a `Basic ...` header from getting through.",
           ],
           starter: String.raw`package auth
 
@@ -356,8 +356,8 @@ import (
 
 func guard(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	h := r.Header.Get("Authorization")
-	token := strings.TrimPrefix(h, "Bearer ")
-	if token == "" {
+	token, ok := strings.CutPrefix(h, "Bearer ")
+	if !ok || token == "" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -365,14 +365,15 @@ func guard(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 }`,
           checks: [
             { re: /h:=r\.Header\.Get\("Authorization"\)/, hint: "Read the header value — `h := r.Header.Get(\"Authorization\")`." },
-            { re: /strings\.TrimPrefix\(h,"Bearer"\)/, hint: "Strip the scheme prefix — `strings.TrimPrefix(h, \"Bearer \")`." },
-            { re: /token==""/, hint: "Reject an empty token — `if token == \"\" { ... }`." },
+            { re: /token,ok:=strings\.CutPrefix\(h,"Bearer"\)/, hint: "Cut the scheme prefix and keep the bool — `token, ok := strings.CutPrefix(h, \"Bearer \")`." },
+            { re: /!ok\|\|token==""/, hint: "Reject a wrong scheme *or* an empty token — `if !ok || token == \"\" { ... }`." },
             { re: /w\.WriteHeader\(http\.StatusUnauthorized\)/, hint: "Send a 401 — `w.WriteHeader(http.StatusUnauthorized)`." },
           ],
           mustNot: [
             { re: /StatusOK/, hint: "A missing token is unauthorized (401), not OK (200)." },
+            { re: /TrimPrefix/, hint: "`TrimPrefix` returns the header unchanged when the scheme is wrong, so `Basic abc` would pass. Use `CutPrefix` and check its bool." },
           ],
-          success: "That's the heart of RequireAuth: no valid Bearer token, no entry. Wrap it around your bookings routes and they're protected.",
+          success: "That's the heart of RequireAuth: the scheme must be Bearer *and* the token non-empty, or no entry. Wrap it around your bookings routes and they're protected.",
         },
       ],
     },

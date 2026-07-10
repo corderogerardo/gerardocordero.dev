@@ -1591,8 +1591,8 @@
               "md": [
                 "## La trampa de la variable de loop (y por qué Go 1.22 la arregló)",
                 "Ese loop `range` esconde el bug histórico más famoso de Go. Antes de **Go 1.22**, la variable de loop `id` era una *única* variable reutilizada en cada iteración. Las tres goroutines capturaban el *mismo* `id`, y para cuando corrían, el loop ya había avanzado — así que solías ver `walk-3` impreso tres veces.",
-                "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. Pero seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine.",
-                "> Conoce ambos. En Go 1.22+ la captura simple es segura. En cualquier versión anterior, copia la variable de loop al entrar — o vas a lanzar un heisenbug."
+                "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. La trampa que nadie menciona: las nuevas semánticas dependen de la **directiva `go` en tu `go.mod`**, no del toolchain con el que compilas. Un módulo que declara `go 1.21` conserva el viejo comportamiento de variable compartida incluso si lo compilas con un toolchain de Go 1.25. También seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine.",
+                "> Conoce ambos. La captura simple solo es segura cuando `go.mod` declara `go 1.22` o superior. Con una directiva de módulo más antigua — sin importar el toolchain con el que compiles — copia la variable de loop al entrar, o vas a lanzar un heisenbug."
               ],
               "lang": "go"
             },
@@ -3461,8 +3461,8 @@
               "md": [
                 "## Saca el token del header",
                 "El token llega dentro de un header cuyo valor se ve como `Bearer eyJhbGci...`. Dos movimientos de la librería estándar lo extraen:",
-                "- **`r.Header.Get(\"Authorization\")`** — lee el valor del header (string vacío si no está presente). `r` es el `*http.Request`.\n- **`strings.TrimPrefix(h, \"Bearer \")`** — quita el prefijo de esquema `\"Bearer \"`, dejando el token en crudo. `TrimPrefix` devuelve el string sin cambios si el prefijo no está ahí, así que un header malformado naturalmente produce algo que puedes rechazar.",
-                "Si el header no estaba, `r.Header.Get` devolvió `\"\"` y después de recortar sigues teniendo `\"\"` — esa es tu señal para rechazar."
+                "- **`r.Header.Get(\"Authorization\")`** — lee el valor del header (cadena vacía si no está). `r` es el `*http.Request`.\n- **`strings.CutPrefix(h, \"Bearer \")`** — devuelve el resto *y* un bool que indica si el prefijo `\"Bearer \"` realmente estaba. Dos resultados, una llamada.",
+                "Usa `CutPrefix`, nunca `TrimPrefix`. `TrimPrefix` devuelve la cadena **sin cambios** cuando el prefijo no está, así que `Authorization: Basic YWxhZGRpbg==` queda como `\"Basic YWxhZGRpbg==\"` — no vacía, y un guardián con `token != \"\"` deja pasar el esquema equivocado. Valida el *esquema*, no solo que llegaron algunos bytes: rechaza cuando `!ok` (esquema equivocado, o sin header) o cuando `token == \"\"` (esquema sin nada después). Nota al pie que vale la pena saber: el RFC 7235 hace que el nombre del esquema sea insensible a mayúsculas, así que un servidor estricto también acepta `bearer`; la coincidencia exacta con `\"Bearer \"` es lo que envía la mayoría de las bases de código en Go."
               ],
               "lang": "go"
             },
@@ -3479,7 +3479,7 @@
             {
               "type": "code",
               "title": "internal/auth/middleware.go",
-              "source": "package auth\n\nimport (\n\t\"context\"\n\t\"net/http\"\n\t\"strings\"\n)\n\ntype ctxKey string\n\nconst userKey ctxKey = \"userID\"\n\n// RequireAuth rejects requests without a valid Bearer token.\nfunc RequireAuth(secret string) func(http.Handler) http.Handler {\n\treturn func(next http.Handler) http.Handler {\n\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t\th := r.Header.Get(\"Authorization\")\n\t\t\ttoken := strings.TrimPrefix(h, \"Bearer \")\n\t\t\tif token == \"\" {\n\t\t\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tuserID, err := parseToken(token, secret)\n\t\t\tif err != nil {\n\t\t\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tctx := context.WithValue(r.Context(), userKey, userID)\n\t\t\tnext.ServeHTTP(w, r.WithContext(ctx))\n\t\t})\n\t}\n}",
+              "source": "package auth\n\nimport (\n\t\"context\"\n\t\"net/http\"\n\t\"strings\"\n)\n\ntype ctxKey string\n\nconst userKey ctxKey = \"userID\"\n\n// RequireAuth rejects requests without a valid Bearer token.\nfunc RequireAuth(secret string) func(http.Handler) http.Handler {\n\treturn func(next http.Handler) http.Handler {\n\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t\th := r.Header.Get(\"Authorization\")\n\t\t\ttoken, ok := strings.CutPrefix(h, \"Bearer \")\n\t\t\tif !ok || token == \"\" {\n\t\t\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tuserID, err := parseToken(token, secret)\n\t\t\tif err != nil {\n\t\t\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tctx := context.WithValue(r.Context(), userKey, userID)\n\t\t\tnext.ServeHTTP(w, r.WithContext(ctx))\n\t\t})\n\t}\n}",
               "caption": "parseToken (que verifica la firma con el secreto y lee \"sub\") es la contraparte en token.go del IssueToken de la lección pasada. Si tiene éxito, el id del usuario viaja en el context de la petición; ante cualquier falla, la petición nunca llega a next.",
               "lang": "go"
             },
@@ -3510,10 +3510,10 @@
               "type": "exercise",
               "title": "Resguarda una ruta protegida",
               "prompt": [
-                "Escribe el guardián dentro de este handler. Lee el header con `r.Header.Get(\"Authorization\")` en `h`, quita el esquema con `strings.TrimPrefix(h, \"Bearer \")` en `token`, y si `token == \"\"` llama a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`."
+                "Escribe el guardián dentro de este handler. Lee el header con `r.Header.Get(\"Authorization\")` en `h`, corta el esquema con `token, ok := strings.CutPrefix(h, \"Bearer \")`, y si `!ok || token == \"\"` llama a `w.WriteHeader(http.StatusUnauthorized)` y luego `return`. El `!ok` es lo que impide que pase un header `Basic ...`."
               ],
               "starter": "package auth\n\nimport (\n\t\"net/http\"\n\t\"strings\"\n)\n\nfunc guard(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {\n\t// your code here\n\tnext(w, r)\n}",
-              "solution": "package auth\n\nimport (\n\t\"net/http\"\n\t\"strings\"\n)\n\nfunc guard(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {\n\th := r.Header.Get(\"Authorization\")\n\ttoken := strings.TrimPrefix(h, \"Bearer \")\n\tif token == \"\" {\n\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\treturn\n\t}\n\tnext(w, r)\n}",
+              "solution": "package auth\n\nimport (\n\t\"net/http\"\n\t\"strings\"\n)\n\nfunc guard(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {\n\th := r.Header.Get(\"Authorization\")\n\ttoken, ok := strings.CutPrefix(h, \"Bearer \")\n\tif !ok || token == \"\" {\n\t\tw.WriteHeader(http.StatusUnauthorized)\n\t\treturn\n\t}\n\tnext(w, r)\n}",
               "checks": [
                 {
                   "re": {
@@ -3524,17 +3524,17 @@
                 },
                 {
                   "re": {
-                    "source": "strings\\.TrimPrefix\\(h,\"Bearer\"\\)",
+                    "source": "token,ok:=strings\\.CutPrefix\\(h,\"Bearer\"\\)",
                     "flags": ""
                   },
-                  "hint": "Strip the scheme prefix — `strings.TrimPrefix(h, \"Bearer \")`."
+                  "hint": "Cut the scheme prefix and keep the bool — `token, ok := strings.CutPrefix(h, \"Bearer \")`."
                 },
                 {
                   "re": {
-                    "source": "token==\"\"",
+                    "source": "!ok\\|\\|token==\"\"",
                     "flags": ""
                   },
-                  "hint": "Reject an empty token — `if token == \"\" { ... }`."
+                  "hint": "Reject a wrong scheme *or* an empty token — `if !ok || token == \"\" { ... }`."
                 },
                 {
                   "re": {
@@ -3551,9 +3551,16 @@
                     "flags": ""
                   },
                   "hint": "A missing token is unauthorized (401), not OK (200)."
+                },
+                {
+                  "re": {
+                    "source": "TrimPrefix",
+                    "flags": ""
+                  },
+                  "hint": "`TrimPrefix` returns the header unchanged when the scheme is wrong, so `Basic abc` would pass. Use `CutPrefix` and check its bool."
                 }
               ],
-              "success": "Eso es el corazón de RequireAuth: sin un Bearer token válido, no hay entrada. Envuélvelo alrededor de tus rutas de reservas y quedan protegidas.",
+              "success": "Eso es el corazón de RequireAuth: el esquema debe ser Bearer *y* el token no vacío, o no hay entrada. Envuélvelo alrededor de tus rutas de reservas y quedan protegidas.",
               "lang": "go"
             }
           ]
