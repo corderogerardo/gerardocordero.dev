@@ -276,8 +276,11 @@ The \`pairs\` map (closer → opener) keeps the loop to one comparison instead o
     category: 'JS ES5',
     difficulty: 'medium',
     timeEstimate: '5 min',
-    prompt: `Given an array of integers, find the one that appears an odd number of times.
-There will always be exactly one such number.`,
+    prompt: `Given an array of signed 32-bit integers (−2³¹ … 2³¹−1), find the one that
+appears an odd number of times. There will always be exactly one such number.
+
+The range is part of the contract: the intended O(1)-space answer relies on JavaScript's
+bitwise operators, which coerce to signed 32-bit. Say so in your answer.`,
     starterCode: `function findOdd(arr) {
   // Your code here
   return 0
@@ -475,7 +478,7 @@ The idiomatic core is \`(counts[key] || 0) + 1\`: initialize-or-increment in one
 
 The naive alternative: collect unique languages first, then \`filter().length\` per language — O(n·k), plus two data structures. \`reduce\` into an object is the common one-expression variant; \`forEach\` with a mutation-local accumulator reads just as clearly and the mutation never escapes the function, which is the actual immutability boundary that matters.
 
-The accumulator is \`Object.create(null)\`, not \`{}\`, and that is not pedantry: \`{}\` inherits from \`Object.prototype\`, so a developer whose language is \`"constructor"\` makes \`counts["constructor"]\` return an inherited *function*. It's truthy, \`|| 0\` never fires, and \`fn + 1\` yields a string — the count silently becomes garbage. Any accumulator keyed by untrusted input wants a null prototype. Return type stays a plain object, so the caller sees no difference.
+The accumulator is \`Object.create(null)\`, not \`{}\`, and that is not pedantry: \`{}\` inherits from \`Object.prototype\`, so a developer whose language is \`"constructor"\` makes \`counts["constructor"]\` return an inherited *function*. It's truthy, \`|| 0\` never fires, and \`fn + 1\` yields a string — the count silently becomes garbage. Any accumulator keyed by untrusted input wants a null prototype. What you return is a dictionary-shaped object: property access and \`Object.keys\` work exactly as before, but it has *no* inherited methods — no \`hasOwnProperty\`, no \`toString\` — which is the whole point, since those are what a key like \`"constructor"\` was colliding with.
 
 Scaling note: for non-string keys or huge cardinality, \`Map\` beats an object entirely — keys keep their type and there's no prototype to dodge. Worth one sentence out loud.
 

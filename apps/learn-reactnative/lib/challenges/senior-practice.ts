@@ -491,6 +491,7 @@ function visibleRange(scrollY, viewportHeight, rowHeight, itemCount) {
 }
 
 function visibleRange(scrollY, viewportHeight, rowHeight, itemCount) {
+  if (itemCount <= 0) return { first: 0, last: -1 }
   const maxIndex = itemCount - 1
   const first = Math.min(maxIndex, Math.max(0, Math.floor(scrollY / rowHeight)))
   const last = Math.max(0, Math.min(
@@ -505,6 +506,7 @@ Why each piece exists:
 - **Without \`getItemLayout\`, FlatList must render every row above index N to know where N sits.** Async measurement is why \`scrollToIndex\` throws without it and why fast scrolls show blanks. Providing \`offset = rowHeight × index\` turns layout into O(1) math — no rendering, no measurement, instant jumps. That's the real answer to "why does keyExtractor + getItemLayout matter": identity and geometry are the two things the virtualizer can't guess cheaply.
 - **\`visibleRange\` is the virtualizer's core loop**: \`floor(scrollY / rowHeight)\` finds the first intersecting row; the last one comes from the viewport's bottom edge — \`ceil\` then \`-1\` because a row that *touches* the bottom edge pixel is still visible. Off-by-one here is exactly the class of bug that shows as a blank strip at the bottom of a fast scroll.
 - **The clamps aren't decoration.** Overscroll (iOS bounce) sends negative \`scrollY\`; scroll-to-end sends a bottom edge past the content. Both would index outside the data. Handling the physical world's inputs — bounce, momentum — is the difference between the whiteboard version and the shipping version.
+- **The empty list is its own case.** With zero items there is no valid index, so clamping to \`itemCount - 1\` (= \`-1\`) is nonsense. Return an *empty range* — \`{ first: 0, last: -1 }\`, where \`last < first\` means "iterate nothing" — before the arithmetic runs. A list that renders and then empties (filter, search) hits this every time.
 - Real FlatList renders \`windowSize\` viewports around this range as a buffer; the math is identical with padding added to both ends.
 
 **Red flag:** claiming \`getItemLayout\` speeds up *rendering*. It doesn't render anything faster — it removes measurement as a dependency for *positioning*, which unlocks scrollToIndex and eliminates layout passes. Precision about what it skips is the seniority signal.
@@ -517,11 +519,13 @@ Why each piece exists:
       { it: 'clamps negative scroll (iOS bounce)', run: 'visibleRange(-50, 600, 80, 100)', expected: { first: 0, last: 6 } },
       { it: 'clamps past the end of content', run: 'visibleRange(7900, 600, 80, 100)', expected: { first: 98, last: 99 } },
       { it: 'both ends stay inside [0, itemCount-1] under extreme scroll', run: '[visibleRange(1e6, 600, 80, 100), visibleRange(-1e6, 600, 80, 100)]', expected: [{ first: 99, last: 99 }, { first: 0, last: 0 }] },
+      { it: 'empty list returns an empty range (last < first), not an invalid index', run: 'visibleRange(0, 600, 80, 0)', expected: { first: 0, last: -1 } },
     ],
     hints: [
       'offset = rowHeight * index — that is the entire getItemLayout win',
       'first = floor(scrollY / rowHeight); last from the bottom edge with ceil − 1',
       'Clamp both ends: bounce gives negative scrollY, momentum overshoots the end',
+      'Guard itemCount === 0 first — return { first: 0, last: -1 }, an empty range',
     ],
   },
   {

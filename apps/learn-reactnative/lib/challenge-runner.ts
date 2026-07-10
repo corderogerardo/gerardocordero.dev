@@ -1,4 +1,5 @@
 import type { TestCase } from './challenges'
+import { stripToTopLevel } from './strip-code'
 
 export interface TestResult {
   name: string
@@ -31,25 +32,6 @@ function normalizeValue(val: unknown): unknown {
 
 function deepEqual(a: unknown, b: unknown): boolean {
   return JSON.stringify(normalizeValue(a)) === JSON.stringify(normalizeValue(b))
-}
-
-/** Remove ES module boilerplate and component-function bodies.
- *  Keeps top-level declarations (const, let, var, function) so tests can eval them. */
-function stripToTopLevel(code: string): string {
-  let result = code
-    .replace(/^import\s+.*?;?\s*$/gm, '')
-    .replace(/import\s*\{[\s\S]*?\}\s*from\s*['"][\s\S]*?['"]\s*;?\s*/g, '')
-
-  // Remove `export default function Foo(...) { ... }` component bodies at end of code
-  result = result.replace(
-    /export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*?\}\s*;?\s*$/,
-    ''
-  )
-
-  // Remove `export default` from any remaining location
-  result = result.replace(/^export\s+default\s+/gm, '')
-
-  return result.trim()
 }
 
 /** Run pattern-based check: verify all required strings exist in user code */
