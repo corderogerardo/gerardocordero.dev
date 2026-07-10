@@ -102,13 +102,21 @@ test("README.md documents five courses including Go", () => {
 
 // ---------- CLAUDE.md ----------
 
-test("CLAUDE.md's apps/learn row mentions the Go course and all five lesson dirs", () => {
+test("CLAUDE.md's apps/learn row names every lessons* dir that exists", () => {
   const claude = read(join(REPO_ROOT, "CLAUDE.md"));
   const row = claude.split("\n").find((line) => line.includes("`apps/learn`"));
   assert.ok(row, "expected a table row documenting apps/learn in CLAUDE.md");
   assert.match(row, /Go\/net-http\+backend/);
-  assert.match(row, /validates all five lesson dirs/);
-  assert.match(row, /lessons-go/);
+
+  // Derived from the filesystem: adding a course must be documented, and the row
+  // can't go stale by claiming a count ("all five lesson dirs") that drifts.
+  const lessonDirs = readdirSync(LEARN_ROOT, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && /^lessons(-[a-z]+)?$/.test(d.name))
+    .map((d) => d.name);
+  assert.ok(lessonDirs.length > 0, "expected at least one lessons* dir");
+  for (const dir of lessonDirs) {
+    assert.ok(row.includes(dir), `CLAUDE.md's apps/learn row should mention ${dir}`);
+  }
 });
 
 // ---------- docs/learning/go-academy-plan.md stays in sync with lessons-go/*.js ----------

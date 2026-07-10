@@ -10,6 +10,11 @@ in-browser checking. Five courses share one engine:
 - **Python** (`python.html`) — Python → Flask → Django → FastAPI → LLM agents → RAG
 - **Go** (`go.html`) — Go → net/http → database/sql → a production PawWalk backend
 
+Alongside the courses, **React Native practice** lives at `/reactnative/` — a separate
+Next.js app in [`apps/learn-reactnative`](../learn-reactnative) (flashcards + 150 coding
+challenges with an in-browser test runner). It is built and folded into this directory
+by the `deploy-learn` CI job; it is not part of the no-build engine below.
+
 Each course's header links to the others so you can hop between them. Build plans and per-module tasks:
 [`docs/learning/python-academy-plan.md`](../../docs/learning/python-academy-plan.md),
 [`docs/learning/ruby-academy-plan.md`](../../docs/learning/ruby-academy-plan.md).
