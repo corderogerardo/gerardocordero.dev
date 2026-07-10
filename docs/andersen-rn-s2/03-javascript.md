@@ -55,7 +55,7 @@ Two ESM-vs-CJS differences worth naming: ESM exports are **live bindings** (impo
 ### Classes
 **They ask:** "class is syntactic sugar over prototypes — can you rewrite a class hierarchy with constructor functions, and how do you compose behavior without multiple inheritance?"
 
-Understanding that `class` is sugar over the prototype chain is what separates engineers who use the language from engineers who can debug it — every `extends`, `super`, and `instanceof` question reduces to prototype links. The desugaring: methods live on `Constructor.prototype`, inheritance is two links — `Child.prototype = Object.create(Parent.prototype)` for instances, plus `Object.setPrototypeOf(Child, Parent)` for statics — and `super(...)` is `Parent.call(this, ...)`. Converting back is mechanical: constructor function body → `constructor`, prototype methods → class methods.
+Understanding that `class` is sugar over the prototype chain is what separates engineers who use the language from engineers who can debug it — every `extends`, `super`, and `instanceof` question reduces to prototype links. The desugaring: methods live on `Constructor.prototype`, inheritance is two links — `Child.prototype = Object.create(Parent.prototype)` for instances, plus `Object.setPrototypeOf(Child, Parent)` for statics — and `super(...)` invokes the superclass constructor — `Parent.call(this, ...)` is only the old constructor-function approximation, not an equivalence: real `super` also handles derived-class `this` initialization and `new.target`, and it's the only way to correctly subclass built-ins like `Array` or `Error`. Converting back is mechanical: constructor function body → `constructor`, prototype methods → class methods.
 
 JavaScript has single inheritance, so behavior composition uses **mixins**: a function that takes a superclass and returns a class expression extending it —
 
@@ -82,8 +82,9 @@ Decorators are functions that wrap or annotate classes and members. Two incompat
 Combinators are how you control the failure semantics of concurrent work — `all` is all-or-nothing, and picking the wrong one turns one failed request into a blank screen. The polyfill test checks three things: index preservation (results in input order, not settlement order), a counter (not `results.length` — sparse assignment lies), and fail-fast rejection:
 
 ```js
-function promiseAll(promises) {
+function promiseAll(iterable) {
   return new Promise((resolve, reject) => {
+    const promises = Array.from(iterable); // the spec takes any iterable, not just arrays
     const results = [];
     let remaining = promises.length;
     if (remaining === 0) return resolve(results);
@@ -97,7 +98,7 @@ function promiseAll(promises) {
 }
 ```
 
-`Promise.resolve(p)` handles non-promise values; `reject` passed directly makes the first error win. The empty-array early resolve is the edge case interviewers wait for.
+`Promise.resolve(p)` handles non-promise values; `reject` passed directly makes the first error win; `Array.from` up front honors the real contract — `Promise.all` accepts any iterable (a `Set`, a generator), so materialize before touching `length`. The empty-iterable early resolve is the edge case interviewers wait for.
 
 The rest of the family: `race` settles (fulfills *or* rejects) with the first settled promise — the standard timeout pattern is racing a fetch against a rejecting timer. `allSettled` never rejects; it returns `{status, value|reason}` records, right for independent batch operations where partial success is acceptable. `any` is the mirror of `all`: first fulfillment wins, and it rejects with an `AggregateError` only when every input rejects — fastest-mirror/fallback-endpoint scenarios.
 
