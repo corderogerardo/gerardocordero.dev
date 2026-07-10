@@ -42,7 +42,10 @@ function withFixtureDir(files, fn) {
 test("validates the real lessons-go directory with zero errors", () => {
   const res = runValidate(["lessons-go"]);
   assert.equal(res.status, 0, `expected success, stderr:\n${res.stderr}`);
-  assert.match(res.stdout, /Checked \d+ files: \d+ modules, \d+ lessons, \d+ steps/);
+  // Counts stay flexible as content grows, but "Checked 0 files" must not pass:
+  // a typo'd path or an empty dir would otherwise be a green run.
+  const checked = res.stdout.match(/Checked (\d+) files: \d+ modules, \d+ lessons, \d+ steps/);
+  assert.ok(checked && Number(checked[1]) > 0, `expected a positive file count, got:\n${res.stdout}`);
   assert.match(res.stdout, /✓ All lesson files valid\./);
   assert.equal(res.stderr, "");
 });

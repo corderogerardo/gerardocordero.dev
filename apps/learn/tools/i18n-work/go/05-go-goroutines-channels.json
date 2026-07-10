@@ -94,13 +94,13 @@
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[2]",
-   "src": "In **Go 1.22 and later, each iteration gets a fresh `id`**, so the code above is correct as written. But you'll still see the old fix in tutorials and older codebases: pass the value as an argument, `go func(id string) { ... }(id)`, which copies it per goroutine.",
-   "text": "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. Pero seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine."
+   "src": "In **Go 1.22 and later, each iteration gets a fresh `id`**, so the code above is correct as written. The catch nobody mentions: the new semantics are gated on the **`go` directive in your `go.mod`**, not on the toolchain you compile with. A module declaring `go 1.21` keeps the old shared-variable behaviour even when built with a Go 1.25 toolchain. You'll also still see the old fix in tutorials and older codebases: pass the value as an argument, `go func(id string) { ... }(id)`, which copies it per goroutine.",
+   "text": "En **Go 1.22 y versiones posteriores, cada iteración obtiene un `id` fresco**, así que el código de arriba es correcto tal como está escrito. La trampa que nadie menciona: las nuevas semánticas dependen de la **directiva `go` en tu `go.mod`**, no del toolchain con el que compilas. Un módulo que declara `go 1.21` conserva el viejo comportamiento de variable compartida incluso si lo compilas con un toolchain de Go 1.25. También seguirás viendo el arreglo antiguo en tutoriales y bases de código más viejas: pasar el valor como argumento, `go func(id string) { ... }(id)`, que lo copia por goroutine."
   },
   {
    "path": "modules[5].lessons[0].steps[5].md[3]",
-   "src": "> Know both. On Go 1.22+ the plain capture is safe. On anything older, copy the loop variable in — or you'll ship a heisenbug.",
-   "text": "> Conoce ambos. En Go 1.22+ la captura simple es segura. En cualquier versión anterior, copia la variable de loop al entrar — o vas a lanzar un heisenbug."
+   "src": "> Know both. Plain capture is safe only when `go.mod` declares `go 1.22` or higher. On an older module directive — whatever toolchain you build with — copy the loop variable in, or you'll ship a heisenbug.",
+   "text": "> Conoce ambos. La captura simple solo es segura cuando `go.mod` declara `go 1.22` o superior. Con una directiva de módulo más antigua — sin importar el toolchain con el que compiles — copia la variable de loop al entrar, o vas a lanzar un heisenbug."
   },
   {
    "path": "modules[5].lessons[0].steps[6].q",

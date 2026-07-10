@@ -85,8 +85,8 @@ func main() {
           md: [
             "## The loop-variable gotcha (and why Go 1.22 fixed it)",
             "That `range` loop hides Go's most famous historical bug. Before **Go 1.22**, the loop variable `id` was a *single* variable reused across every iteration. All three goroutines captured the *same* `id`, and by the time they ran, the loop had raced ahead — so you'd often see `walk-3` printed three times.",
-            "In **Go 1.22 and later, each iteration gets a fresh `id`**, so the code above is correct as written. But you'll still see the old fix in tutorials and older codebases: pass the value as an argument, `go func(id string) { ... }(id)`, which copies it per goroutine.",
-            "> Know both. On Go 1.22+ the plain capture is safe. On anything older, copy the loop variable in — or you'll ship a heisenbug.",
+            "In **Go 1.22 and later, each iteration gets a fresh `id`**, so the code above is correct as written. The catch nobody mentions: the new semantics are gated on the **`go` directive in your `go.mod`**, not on the toolchain you compile with. A module declaring `go 1.21` keeps the old shared-variable behaviour even when built with a Go 1.25 toolchain. You'll also still see the old fix in tutorials and older codebases: pass the value as an argument, `go func(id string) { ... }(id)`, which copies it per goroutine.",
+            "> Know both. Plain capture is safe only when `go.mod` declares `go 1.22` or higher. On an older module directive — whatever toolchain you build with — copy the loop variable in, or you'll ship a heisenbug.",
           ],
         },
         {

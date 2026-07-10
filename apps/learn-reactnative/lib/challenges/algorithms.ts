@@ -124,9 +124,9 @@ Preserve the original order based on first occurrence. Include each qualifying e
   return []
 }`,
     solution: `function evenOccurrences(arr) {
-  const count = {}
-  arr.forEach(x => { count[x] = (count[x] || 0) + 1 })
-  return [...new Set(arr)].filter(x => count[x] % 2 === 0)
+  const count = new Map()
+  arr.forEach(x => count.set(x, (count.get(x) || 0) + 1))
+  return [...new Set(arr)].filter(x => count.get(x) % 2 === 0)
 }`,
     explanation: `This is the **frequency-map pattern** — the workhorse behind duplicate counting, anagram grouping, and "find the element that appears k times" questions. One pass builds a histogram (element → count), then a second pass filters by whatever predicate the question asks. Two passes, each O(n): **O(n) time, O(n) space** total.
 
@@ -134,11 +134,11 @@ The naive version puts \`arr.filter(y => y === x).length\` (or \`indexOf\`-style
 
 The second trick is order preservation with deduplication: \`[...new Set(arr)]\` yields each distinct element **in first-occurrence order**, because Sets iterate in insertion order. Filtering that (instead of the raw array) gives you each qualifying element exactly once without a separate "seen" check.
 
-One caveat worth saying aloud: object keys are strings, so \`count[1]\` and \`count['1']\` collide. For mixed-type arrays you'd use a \`Map\`, which keys by identity.
+Why \`Map\` and not \`{}\`: a plain object stringifies its keys, so \`count[1]\` and \`count['1']\` are the same bucket, and a value like \`'constructor'\` reads an inherited function instead of \`undefined\` — \`(fn || 0) + 1\` then produces a string, not a count. \`Map\` keys by identity and has no prototype. Reaching for \`{}\` here is the reflex; knowing the two ways it corrupts a histogram is the senior signal. (If you do want an object, \`Object.create(null)\` kills the prototype half of the problem.)
 
 **Red flag:** \`filter\` + \`includes\`/\`indexOf\` inside the callback — O(n²) dressed up as idiomatic code. Also returning duplicates ([2,2] instead of [2]) by filtering the original array instead of the deduplicated one.
 
-**Say it:** "I build a frequency map in one O(n) pass, then filter the Set of the array — Sets keep insertion order, so I get first-occurrence order and dedup for free."`,
+**Say it:** "I build a frequency map in one O(n) pass with a Map — object keys would coerce 1 and '1' into one bucket — then filter the Set of the array, which keeps insertion order so I get first-occurrence order and dedup for free."`,
     tests: [
       { it: '[1,2,2,3,3] -> [2,3]', run: 'evenOccurrences([1,2,2,3,3])', expected: [2, 3] },
       { it: '[1,1,2,2,2] -> [1]', run: 'evenOccurrences([1,1,2,2,2])', expected: [1] },
@@ -146,8 +146,9 @@ One caveat worth saying aloud: object keys are strings, so \`count[1]\` and \`co
       { it: 'single element -> []', run: 'evenOccurrences([7])', expected: [] },
       { it: 'empty array -> []', run: 'evenOccurrences([])', expected: [] },
       { it: 'order follows first occurrence', run: 'evenOccurrences([3,1,1,3,2,2])', expected: [3, 1, 2] },
+      { it: 'number 1 and string "1" are different values', run: 'evenOccurrences([1,"1",1])', expected: [1] },
     ],
-    hints: ['Count occurrences first', 'Filter by even count', 'Use Set to deduplicate for order'],
+    hints: ['Count occurrences first — a Map, so 1 and "1" stay distinct', 'Filter by even count', 'Use Set to deduplicate for order'],
   },
   {
     id: 105,
@@ -292,9 +293,11 @@ The honest alternatives are worth naming, because they're what most candidates r
 
 So XOR is the only O(1)-space answer, but it leans hard on the problem's guarantee of *exactly one* odd-count number. If two values appeared an odd number of times, XOR would return their combined bits — garbage. Stating that precondition is what separates "memorized the trick" from "understands it". It also works fine with negative numbers, since XOR operates on two's-complement bit patterns.
 
+The second precondition is the one candidates miss: **JavaScript's bitwise operators coerce both operands to signed 32-bit integers.** \`^\` on anything outside ±2³¹ silently truncates, so \`findOdd\` returns a wrong number rather than throwing — and it can't handle non-integers at all. In a language with real 64-bit ints the trick is unconditional; in JS it carries a range contract. Name that contract, or fall back to the frequency map, which has none.
+
 **Red flag:** using the XOR trick without saying why it works or when it breaks — an interviewer will immediately ask "what if there are two odd ones?" Also the O(n²) count-inside-loop if you skip the trick entirely.
 
-**Say it:** "XOR cancels pairs — n^n is 0 and 0 is the identity — so folding the array leaves the odd-count element in O(n) time and O(1) space, relying on the guarantee that exactly one exists."`,
+**Say it:** "XOR cancels pairs — n^n is 0 and 0 is the identity — so folding the array leaves the odd-count element in O(n) time and O(1) space. Two preconditions: exactly one odd-count value, and the values fit in signed 32 bits, because that's what JS bitwise operators coerce to."`,
     tests: [
       { it: '[1,1,2] -> 2', run: 'findOdd([1,1,2])', expected: 2 },
       { it: '[4,3,4,3,5] -> 5', run: 'findOdd([4,3,4,3,5])', expected: 5 },
@@ -462,7 +465,7 @@ use each language. Return an object { language: count }.`,
   return {}
 }`,
     solution: `function countLanguages(devs) {
-  const counts = {}
+  const counts = Object.create(null)
   devs.forEach(d => { counts[d.language] = (counts[d.language] || 0) + 1 })
   return counts
 }`,
@@ -472,19 +475,22 @@ The idiomatic core is \`(counts[key] || 0) + 1\`: initialize-or-increment in one
 
 The naive alternative: collect unique languages first, then \`filter().length\` per language — O(n·k), plus two data structures. \`reduce\` into an object is the common one-expression variant; \`forEach\` with a mutation-local accumulator reads just as clearly and the mutation never escapes the function, which is the actual immutability boundary that matters.
 
-Scaling note: for huge cardinality or non-string keys, \`Map\` beats a plain object (no prototype-key collisions like \`"constructor"\`, keys keep their type). Worth one sentence out loud.
+The accumulator is \`Object.create(null)\`, not \`{}\`, and that is not pedantry: \`{}\` inherits from \`Object.prototype\`, so a developer whose language is \`"constructor"\` makes \`counts["constructor"]\` return an inherited *function*. It's truthy, \`|| 0\` never fires, and \`fn + 1\` yields a string — the count silently becomes garbage. Any accumulator keyed by untrusted input wants a null prototype. Return type stays a plain object, so the caller sees no difference.
+
+Scaling note: for non-string keys or huge cardinality, \`Map\` beats an object entirely — keys keep their type and there's no prototype to dodge. Worth one sentence out loud.
 
 **Red flag:** \`counts[d.language]++\` without initialization — \`undefined++\` is \`NaN\`, and every subsequent increment keeps it \`NaN\`. The \`|| 0\` isn't decoration; it's the algorithm.
 
-**Say it:** "It's GROUP BY COUNT in one pass — initialize-or-increment with (counts[key] ?? 0) + 1, because incrementing undefined gives NaN."`,
+**Say it:** "It's GROUP BY COUNT in one pass — initialize-or-increment with (counts[key] ?? 0) + 1, over a null-prototype object so a key like 'constructor' can't inherit a function and poison the count."`,
     tests: [
       { it: 'counts correctly', run: 'countLanguages([{name:"A",language:"JS"},{name:"B",language:"JS"},{name:"C",language:"TS"}])', expected: { JS: 2, TS: 1 } },
       { it: 'empty input -> {}', run: 'countLanguages([])', expected: {} },
       { it: 'single dev', run: 'countLanguages([{name:"A",language:"Rust"}])', expected: { Rust: 1 } },
       { it: 'all same language', run: 'countLanguages([{name:"A",language:"Go"},{name:"B",language:"Go"}]).Go', expected: 2 },
       { it: 'three languages', run: 'Object.keys(countLanguages([{name:"A",language:"JS"},{name:"B",language:"TS"},{name:"C",language:"Go"}])).length', expected: 3 },
+      { it: 'a prototype key like "constructor" counts as 1, not a function', run: 'countLanguages([{name:"A",language:"constructor"}]).constructor', expected: 1 },
     ],
-    hints: ['forEach over devs', 'Increment count per language', 'Use ||0 for missing keys — undefined++ is NaN'],
+    hints: ['forEach over devs', 'Increment count per language', 'Use ||0 for missing keys — undefined++ is NaN', 'Object.create(null) — an inherited "constructor" would break ||0'],
   },
   {
     id: 114,

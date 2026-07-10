@@ -4,15 +4,13 @@ import React from 'react'
 import { useMemo } from 'react'
 
 function stripToTopLevel(code: string): string {
-  let result = code
+  return code
     .replace(/^import\s+.*?;?\s*$/gm, '')
     .replace(/import\s*\{[\s\S]*?\}\s*from\s*['"][\s\S]*?['"]\s*;?\s*/g, '')
-  result = result.replace(
-    /export\s+default\s+function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*?\}\s*;?\s*$/,
-    ''
-  )
-  result = result.replace(/^export\s+default\s+/gm, '')
-  return result.trim()
+    // Strip the export keyword only: the declaration itself has to survive, or
+    // the names in `extract` resolve to nothing.
+    .replace(/^export\s+(?:default\s+)?/gm, '')
+    .trim()
 }
 
 /** Compile user code and return extracted top-level bindings. */

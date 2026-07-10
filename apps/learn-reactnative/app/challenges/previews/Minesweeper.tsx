@@ -80,7 +80,7 @@ export default function MinesweeperPreview({ createBoard, revealCell, checkWin }
 
   return (
     <div className="flex flex-col items-center p-4 gap-3">
-      <div className="text-sm font-medium">
+      <div className="text-sm font-medium" aria-live="polite">
         {gameOver === 'win' ? '🎉 You won!' : gameOver === 'lose' ? '💥 Boom! Game over' : `Mines: ${BOMB_COUNT}`}
       </div>
       <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, 36px)` }}>
@@ -89,6 +89,12 @@ export default function MinesweeperPreview({ createBoard, revealCell, checkWin }
             key={`${r}-${c}`}
             onClick={() => handleClick(r, c)}
             disabled={cell.revealed || !!gameOver}
+            aria-label={`Row ${r + 1}, column ${c + 1}: ${
+              !cell.revealed ? 'hidden'
+                : cell.bomb ? 'bomb'
+                : cell.adjacent > 0 ? `${cell.adjacent} adjacent mines`
+                : 'empty'
+            }`}
             className={`w-9 h-9 text-xs font-mono border rounded ${
               cell.revealed
                 ? cell.bomb

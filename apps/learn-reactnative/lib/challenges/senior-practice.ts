@@ -50,6 +50,8 @@ The design decisions that read as senior:
       { it: 'exposes .cancel()', run: 'typeof debounce(() => {}, 100).cancel', expected: 'function' },
       { it: 'trailing mode does not fire synchronously', run: '(() => { let n = 0; const d = debounce(() => n++, 1000); d(); d(); return n })()', expected: 0 },
       { it: 'leading mode fires exactly once immediately', run: '(() => { let n = 0; const d = debounce(() => n++, 1000, { leading: true }); d(); d(); d(); return n })()', expected: 1 },
+      { it: 'trailing edge fires once, with the last call\'s args and this', run: '(() => { const rs = globalThis.setTimeout, rc = globalThis.clearTimeout; let cb = null; globalThis.setTimeout = f => { cb = f; return 1 }; globalThis.clearTimeout = () => { cb = null }; try { const calls = []; const d = debounce(function (x) { calls.push([this && this.tag, x]) }, 100); d.call({ tag: "a" }, 1); d.call({ tag: "b" }, 2); const before = calls.length; if (cb) cb(); return [before, calls.length, calls[0] && calls[0][1], calls[0] && calls[0][0]] } finally { globalThis.setTimeout = rs; globalThis.clearTimeout = rc } })()', expected: [0, 1, 2, 'b'] },
+      { it: '.cancel() drops the pending trailing call', run: '(() => { const rs = globalThis.setTimeout, rc = globalThis.clearTimeout; let cb = null; globalThis.setTimeout = f => { cb = f; return 1 }; globalThis.clearTimeout = () => { cb = null }; try { let n = 0; const d = debounce(() => { n++ }, 100); d(); d.cancel(); if (cb) cb(); return n } finally { globalThis.setTimeout = rs; globalThis.clearTimeout = rc } })()', expected: 0 },
       { it: 'uses clearTimeout to reset the quiet period', check: ['clearTimeout'] },
     ],
     hints: [
@@ -489,11 +491,12 @@ function visibleRange(scrollY, viewportHeight, rowHeight, itemCount) {
 }
 
 function visibleRange(scrollY, viewportHeight, rowHeight, itemCount) {
-  const first = Math.max(0, Math.floor(scrollY / rowHeight))
-  const last = Math.min(
-    itemCount - 1,
+  const maxIndex = itemCount - 1
+  const first = Math.min(maxIndex, Math.max(0, Math.floor(scrollY / rowHeight)))
+  const last = Math.max(0, Math.min(
+    maxIndex,
     Math.ceil((scrollY + viewportHeight) / rowHeight) - 1
-  )
+  ))
   return { first, last }
 }`,
     explanation: `This is the arithmetic that makes a 10,000-row list scroll at 60fps, and knowing it cold is what separates "I pass \`getItemLayout\` because the docs said so" from understanding virtualization.
@@ -513,6 +516,7 @@ Why each piece exists:
       { it: 'row touching the bottom edge is NOT included when exactly flush', run: 'visibleRange(0, 160, 80, 100)', expected: { first: 0, last: 1 } },
       { it: 'clamps negative scroll (iOS bounce)', run: 'visibleRange(-50, 600, 80, 100)', expected: { first: 0, last: 6 } },
       { it: 'clamps past the end of content', run: 'visibleRange(7900, 600, 80, 100)', expected: { first: 98, last: 99 } },
+      { it: 'both ends stay inside [0, itemCount-1] under extreme scroll', run: '[visibleRange(1e6, 600, 80, 100), visibleRange(-1e6, 600, 80, 100)]', expected: [{ first: 99, last: 99 }, { first: 0, last: 0 }] },
     ],
     hints: [
       'offset = rowHeight * index — that is the entire getItemLayout win',
