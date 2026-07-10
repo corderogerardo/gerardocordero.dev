@@ -364,6 +364,19 @@ jobs:
         if: steps.detect.outputs.changed == 'true'
         working-directory: apps/learn
         run: node tools/validate.mjs
+      # Positional translation overlays silently re-point when a step is inserted
+      # upstream. This compares each unit against the English it was translated
+      # from and fails on drift.
+      - name: Check translation overlays
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/learn
+        run: node tools/i18n-check.mjs
+      # pages.test.mjs / app.test.mjs / tools/validate.test.mjs. Root `pnpm test`
+      # is filtered to the portfolio, so without this nothing runs them.
+      - name: Unit tests
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/learn
+        run: node --test
 
   # Compiles apps/ios (the SwiftUI reference app extracted from the iOS
   # course) whenever it changes. Same change-detection idiom as
@@ -494,10 +507,17 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
 
   # Same pattern for apps/learn -> Pages project academy
-  # (academy.gerardocordero.dev). Unlike the prep sites this is a pure static,
-  # no-build site, so there's no `pnpm build`/`pnpm install` step — we deploy the
-  # directory itself. Pages auto-ignores dotfiles (`.claude`) and node_modules,
-  # so nothing extra needs excluding.
+  # (academy.gerardocordero.dev). apps/learn itself is the pure static, no-build
+  # course engine (index.html + lessons*/*.js + app.js) and ships as-is. Bolted
+  # onto it at /reactnative/ is apps/learn-reactnative, a Next.js static export
+  # (basePath=/reactnative) that has to be built first.
+  #
+  # The upload is assembled into a fresh `dist-academy/` rather than deployed
+  # from the checkout: `pnpm install` creates apps/learn/node_modules, and
+  # uploading that would blow past the Pages 20k-file limit.
+  #
+  # Trigger paths: the static engine, the RN app, and the markdown the RN app's
+  # flashcards are generated from at build time.
   deploy-learn:
     needs: verify
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -506,26 +526,52 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Detect changes under apps/learn
+      - name: Detect changes under apps/learn, apps/learn-reactnative or docs/react-native-senior
         id: detect
         run: |
+          PATHS='^(apps/learn/|apps/learn-reactnative/|docs/react-native-senior/)'
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/learn/'; then
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE "$PATHS"; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes under apps/learn — skipping deploy."
+            echo "No changes under apps/learn, apps/learn-reactnative or docs/react-native-senior — skipping deploy."
           fi
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.changed == 'true'
       - uses: actions/setup-node@v4
         if: steps.detect.outputs.changed == 'true'
         with:
           node-version: 20
-      # No package.json in apps/learn, so wrangler-action installs wrangler via
-      # npm here — safe because there are no workspace:* deps to choke on (that's
-      # the failure the portfolio deploy above avoids by forcing pnpm).
+          cache: pnpm
+      - name: Install
+        if: steps.detect.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build the React Native practice app
+        if: steps.detect.outputs.changed == 'true'
+        working-directory: apps/learn-reactnative
+        run: pnpm build
+      - name: Assemble the Pages upload
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          rm -rf dist-academy
+          rsync -a \
+            --exclude='node_modules/' \
+            --exclude='.next/' \
+            --exclude='out/' \
+            --exclude='.turbo/' \
+            apps/learn/ dist-academy/
+          cp -R apps/learn-reactnative/out dist-academy/reactnative
+          # Fail loudly rather than shipping an academy without the practice app.
+          test -f dist-academy/index.html
+          test -f dist-academy/reactnative/index.html
+          test -f dist-academy/reactnative/challenges/index.html
+      # Runs from apps/learn because that workspace declares wrangler; the upload
+      # dir sits at the repo root so rsync isn't copying a directory into itself.
       - name: Deploy to Cloudflare Pages
         if: steps.detect.outputs.changed == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -533,4 +579,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/learn
-          command: pages deploy . --project-name=academy --branch=main
+          packageManager: pnpm
+          command: pages deploy ../../dist-academy --project-name=academy --branch=main

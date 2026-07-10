@@ -47,3 +47,6 @@ yarn-error.log*
 
 # learn-academy throwaway lesson projects
 apps/learn/playground/
+
+# Assembled Cloudflare Pages upload for academy.gerardocordero.dev (deploy-learn)
+dist-academy/

@@ -1,8 +1,8 @@
-# React — Andersen S2 (12 skills)
+# React — Senior (12 skills)
 
 React internals at the S2 bar: Fiber, batching, lifecycle order, memoization, refs, context, Redux plumbing, and the rules of hooks — the questions that separate "uses React" from "can explain React".
 
-> Part of the [Andersen React Native S2 study guide](README.md). Drill these with [flashcards.md](flashcards.md).
+> Part of the [Senior React Native study guide](README.md). Drill these with [flashcards.md](flashcards.md).
 
 ## Reconciliation
 
@@ -141,7 +141,7 @@ const logger = (store) => (next) => (action) => {
 redux-thunk, the default async solution, is about 14 lines — worth writing live: if the action is a function, call it with `dispatch` and `getState` instead of forwarding it. Order matters: middlewares compose left to right around dispatch, so thunk must sit early in the chain — otherwise a logger placed before it receives function actions it can't serialize.
 
 **Say it:** "Middleware is a curried `store => next => action` function sitting between dispatch and the reducer; the currying separates setup, chain composition, and per-dispatch execution — and thunk itself is just fourteen lines of 'if the action is a function, call it.'"
-**Red flag:** Reciting "thunk vs saga" library trivia without being able to write the `store => next => action` shape — Andersen asks for the signature, and fumbling it reads as never having stepped outside library defaults.
+**Red flag:** Reciting "thunk vs saga" library trivia without being able to write the `store => next => action` shape — interviewers ask for the signature, and fumbling it reads as never having stepped outside library defaults.
 
 ### Selectors
 **They ask:** "What are selectors for? Explain in your own words why you wouldn't just read state directly in components."

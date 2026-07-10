@@ -1,0 +1,8 @@
+# Next.js build outputs
+.next/
+out/
+*.log
+*.tsbuildinfo
+
+# Runtime
+node_modules/

@@ -1,7 +1,6 @@
-# Andersen React Native S2 — Study Guide
+# Senior React Native — Study Guide
 
-Senior-depth answers to **every row of Andersen's React Native S2 knowledge matrix**
-([source](https://people-andersenlab.com/knowledge-matrix?specialization=React+Native&level=S2)) —
+Senior-depth answers to **every row of a senior React Native knowledge matrix** —
 all six skill categories, 91 skills total:
 
 | Category | Skills | File |
@@ -14,10 +13,9 @@ all six skill categories, 91 skills total:
 
 ## How the matrix works
 
-- **Levels are cumulative.** The S2 page only lists what is *new* at S2 on top of J1→S1.
-  The interviewer assumes everything below S2 as well — worth a skim of the
-  [S1 matrix](https://people-andersenlab.com/knowledge-matrix?specialization=React+Native&level=S1)
-  once this guide feels solid.
+- **Levels are cumulative.** This guide only covers what is *new* at the senior tier.
+  The interviewer assumes every level below it as well — worth a skim of mid-level
+  material once this guide feels solid.
 - **All six categories are fair game.** The assessment draws from the whole matrix,
   not just the React Native tab.
 - **The matrix is a few years old in places.** Rows name Flipper, the standalone React

@@ -1,8 +1,8 @@
-# React Native — Andersen S2 (38 skills, 12 themes)
+# React Native — Senior (38 skills, 12 themes)
 
 The core category — every row of the React Native S2 matrix, answered at senior depth. Where the matrix names a dated tool (Flipper, RN Debugger, eject, CodePush-era OTA) the answer covers the classic concept *and* today's replacement; knowing both is itself a seniority signal.
 
-> Part of the [Andersen React Native S2 study guide](README.md). Drill these with [flashcards.md](flashcards.md).
+> Part of the [Senior React Native study guide](README.md). Drill these with [flashcards.md](flashcards.md).
 
 ## Environment and Expo
 

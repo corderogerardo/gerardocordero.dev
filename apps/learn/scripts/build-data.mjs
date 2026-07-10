@@ -3,7 +3,7 @@
 // Supports English (en) and Spanish (es) locales with fallback.
 // Usage: node scripts/build-data.mjs   (from apps/learn/)
 import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
@@ -11,7 +11,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = join(root, "public", "data");
 
 // Course definitions: directory → course slug, store key suffix, display meta
-const COURSES = [
+export const COURSES = [
   { dir: "lessons",          id: "ios",     storeKey: "pawwalk-academy-ios-v1",     title: "iOS & Swift",   emoji: "📱" },
   { dir: "lessons-android",  id: "android", storeKey: "pawwalk-academy-android-v1", title: "Android & Kotlin", emoji: "🤖" },
   { dir: "lessons-ruby",     id: "ruby",    storeKey: "pawwalk-academy-ruby-v1",    title: "Ruby & Rails",  emoji: "💎" },
@@ -20,7 +20,7 @@ const COURSES = [
   { dir: "lessons-node",     id: "node",    storeKey: "pawwalk-academy-node-v1",    title: "Node & NestJS", emoji: "🟢" },
 ];
 
-const LOCALES = ["en", "es"];
+export const LOCALES = ["en", "es"];
 
 // Spanish lesson directories mirror English ones with "-es" suffix
 function localeDir(baseDir, locale) {
@@ -29,7 +29,7 @@ function localeDir(baseDir, locale) {
   return baseDir + "-es";
 }
 
-function loadCourse(courseDef, locale) {
+export function loadCourse(courseDef, locale) {
   const { dir, id, storeKey, title, emoji } = courseDef;
   const lessonsDir = localeDir(dir, locale);
   const fullPath = join(root, lessonsDir);
@@ -81,31 +81,51 @@ function loadCourse(courseDef, locale) {
 // produced by tools/i18n-extract.mjs and translated in place) onto a course
 // built from the English lessons. Lets es ship translated JSON without
 // duplicating the lesson .js sources; untranslated modules stay English.
-function applyTranslationOverlay(course, locale) {
-  if (locale === "en") return 0;
+//
+// Units address content by position (`modules[3].lessons[1].steps[4].q`), so
+// inserting a step upstream silently re-points every unit after it. Each unit
+// therefore carries `src`: the English string it was translated from. A unit
+// only applies when the English still matches — otherwise the target is not
+// what the translator saw, and we leave it in English rather than write the
+// wrong Spanish onto it. `tools/i18n-check.mjs` turns any such staleness into
+// a CI failure; the build itself degrades instead of crashing or corrupting.
+export function applyTranslationOverlay(course, locale) {
+  if (locale === "en") return { applied: 0, stale: [] };
   const workDir = join(root, "tools", "i18n-work", course.id);
-  if (!existsSync(workDir)) return 0;
-  let applied = 0;
-  const setByPath = (obj, path, value) => {
+  if (!existsSync(workDir)) return { applied: 0, stale: [] };
+
+  const resolveParent = (obj, path) => {
     const segs = path.match(/[^.[\]]+/g);
     let node = obj;
     for (let i = 0; i < segs.length - 1; i++) {
+      if (node === undefined || node === null) return null;
       node = node[/^\d+$/.test(segs[i]) ? Number(segs[i]) : segs[i]];
-      if (node === undefined) throw new Error(`bad path: ${path}`);
     }
+    if (node === undefined || node === null) return null;
     const last = segs[segs.length - 1];
-    const key = /^\d+$/.test(last) ? Number(last) : last;
-    if (node[key] === undefined) throw new Error(`bad path: ${path}`);
-    node[key] = value;
+    return { node, key: /^\d+$/.test(last) ? Number(last) : last };
   };
+
+  let applied = 0;
+  const stale = [];
   for (const f of readdirSync(workDir).filter((f) => f.endsWith(".json")).sort()) {
     const work = JSON.parse(readFileSync(join(workDir, f), "utf8"));
     for (const u of work.units) {
-      setByPath(course, u.path, u.text);
+      const target = resolveParent(course, u.path);
+      const current = target ? target.node[target.key] : undefined;
+      if (current === undefined) {
+        stale.push({ file: f, path: u.path, reason: "path no longer exists" });
+        continue;
+      }
+      if (u.src !== undefined && current !== u.src) {
+        stale.push({ file: f, path: u.path, reason: "English source changed since translation" });
+        continue;
+      }
+      target.node[target.key] = u.text;
       applied++;
     }
   }
-  return applied;
+  return { applied, stale };
 }
 
 function main() {
@@ -119,7 +139,7 @@ function main() {
         console.warn(`Skipping ${courseDef.dir} — directory not found`);
         continue;
       }
-      const applied = applyTranslationOverlay(course, locale);
+      const { applied, stale } = applyTranslationOverlay(course, locale);
       const filePath = join(localeDataDir, `${course.id}.json`);
       writeFileSync(filePath, JSON.stringify(course, null, 2));
       const moduleCount = course.modules.length;
@@ -127,8 +147,14 @@ function main() {
       const sourceDir = localeDir(courseDef.dir, locale);
       const actualDir = existsSync(join(root, sourceDir)) ? sourceDir : courseDef.dir;
       console.log(`✓ ${locale}/${course.id}: ${moduleCount} modules, ${lessonCount} lessons ← ${actualDir}${applied ? ` (+${applied} translated units)` : ""}`);
+      if (stale.length) {
+        console.warn(`  ⚠ ${stale.length} stale ${locale} unit(s) left in English — run: node tools/i18n-check.mjs`);
+      }
     }
   }
 }
 
-main();
+// Importable by tools/i18n-check.mjs without running the build.
+if (process.argv[1] && resolvePath(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}
