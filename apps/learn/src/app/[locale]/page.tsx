@@ -36,6 +36,14 @@ export default async function HomePage({
             <span className="course-title">{c.title}</span>
           </Link>
         ))}
+        {/* Not a lesson course — the senior-RN practice app (flashcards + coding
+            challenges) lives at its own /reactnative route, not /learn/<id>. */}
+        <Link href="/reactnative" className="course-card">
+          <span className="course-emoji">🧠</span>
+          <span className="course-title">
+            {locale === "es" ? "Práctica RN (senior)" : "RN Interview Practice"}
+          </span>
+        </Link>
       </div>
     </div>
   );
