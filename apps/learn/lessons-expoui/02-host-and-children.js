@@ -47,6 +47,7 @@ struct HStackView: ExpoSwiftUI.View {
             "`Host` is the **root boundary** where the React tree hands off to a native SwiftUI tree. Every `@expo/ui` subtree must be wrapped in one:",
             "- It creates the top-level SwiftUI hosting surface inside a React Native view.\n- It measures and sizes that surface (`matchContents` sizes the native content to fit; otherwise it fills like a normal RN view).\n- Everything *below* `Host` is native and composes via `Children()`; everything *above* is ordinary React Native.",
             "So the boundary is: **`Host` = the JS→native handoff; `Children()` = native views re-entering the tree at each container.** To embed an RN component back *inside* a native tree, `@expo/ui` provides `RNHostView` — the inverse boundary.",
+            "> Red flag: wrapping every native control in its own `Host`. `Host` is a per-subtree boundary with a real cost (a hosting controller + a measurement pass); nest with one `Host` at the root and compose the rest with `Children()`. Reach for `RNHostView` only when you must drop an RN view back into a native subtree.",
           ],
         },
         {

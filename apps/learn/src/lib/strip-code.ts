@@ -11,11 +11,14 @@
  * has to survive as `function Foo(){}`, not be deleted wholesale.
  */
 export function stripToTopLevel(code: string): string {
+  // Anchored to line starts so a string/comment that merely contains the word
+  // "import"/"export" isn't mangled. This is a lightweight strip, not a real
+  // tokenizer — fine for the throwaway single-file challenge snippets it runs on.
   return code
     // `import … from '…'` — default, named, namespace, or multiline — plus bare
     // side-effect imports. Non-greedy so it stops at the first `from`.
-    .replace(/\bimport\b[\s\S]*?\bfrom\b\s*['"][^'"]*['"]\s*;?/g, '')
-    .replace(/\bimport\s*['"][^'"]*['"]\s*;?/g, '')
+    .replace(/^\s*import\b[\s\S]*?\bfrom\b\s*['"][^'"]*['"]\s*;?\s*$/gm, '')
+    .replace(/^\s*import\s*['"][^'"]*['"]\s*;?\s*$/gm, '')
     // Strip the export keyword only (tolerating indentation); declaration stays.
     .replace(/^\s*export\s+(?:default\s+)?/gm, '')
     .trim()

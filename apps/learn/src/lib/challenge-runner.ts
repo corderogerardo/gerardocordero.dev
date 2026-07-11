@@ -21,9 +21,12 @@ function normalizeValue(val: unknown): unknown {
   if (typeof val === 'number') return Math.round(val * 100) / 100
   if (Array.isArray(val)) return val.map(normalizeValue)
   if (val !== null && typeof val === 'object') {
+    // Sort keys so two structurally-equal objects with different insertion order
+    // stringify identically — otherwise a correct solution can fail on key order.
+    const src = val as Record<string, unknown>
     const obj: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
-      obj[k] = normalizeValue(v)
+    for (const k of Object.keys(src).sort()) {
+      obj[k] = normalizeValue(src[k])
     }
     return obj
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const POKEMONS = ['PIKACHU', 'CHARMANDER', 'BULBASAUR', 'SQUIRTLE', 'JIGGLYPUFF', 'MEOWTH', 'PSYDUCK', 'SNORLAX', 'GENGAR', 'MAGIKARP']
 const MAX_WRONG = 6
@@ -18,9 +18,16 @@ function defaultCheckGuess(pokemon: string, guessed: string[]) {
 }
 
 export default function PokemonGuessPreview({ checkGuess }: PokemonGuessProps) {
-  const [pokemon, setPokemon] = useState(() => POKEMONS[Math.floor(Math.random() * POKEMONS.length)])
+  // Deterministic first render (SSR-safe), then pick a random Pokémon after mount
+  // so the exported HTML and the hydrated client tree match.
+  const [pokemon, setPokemon] = useState(POKEMONS[0])
   const [guessed, setGuessed] = useState<string[]>([])
   const [gameOver, setGameOver] = useState<'win' | 'lose' | null>(null)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate: hydration-safe deferred randomize
+    setPokemon(POKEMONS[Math.floor(Math.random() * POKEMONS.length)])
+  }, [])
 
   const handleGuess = (letter: string) => {
     if (gameOver || guessed.includes(letter)) return

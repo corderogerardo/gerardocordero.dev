@@ -51,8 +51,19 @@ const CHALLENGES: Challenge[] = [
   ...seniorPracticeChallenges,
 ]
 
+// Fail loudly in dev if two source modules ever assign the same id — otherwise
+// getChallenge() silently resolves to the first, and generateStaticParams emits
+// duplicate params for one route.
+if (process.env.NODE_ENV !== 'production') {
+  const seen = new Set<number>()
+  for (const c of CHALLENGES) {
+    if (seen.has(c.id)) throw new Error(`Duplicate challenge id: ${c.id}`)
+    seen.add(c.id)
+  }
+}
+
 export function getAllChallenges(): Challenge[] {
-  return CHALLENGES
+  return [...CHALLENGES]
 }
 
 export function getChallenge(id: number): Challenge | undefined {

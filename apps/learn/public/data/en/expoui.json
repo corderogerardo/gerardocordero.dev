@@ -101,7 +101,8 @@
               "md": [
                 "## The shift: conform, don't wrap",
                 "In the sensor course your view was `class DepthScannerView: ExpoView` — a UIKit view that *hosted* something. Here your view is a `struct` that conforms to **`ExpoSwiftUI.View`** — it doesn't host SwiftUI, it *is* SwiftUI. That one change unlocks everything `@expo/ui` does.",
-                "Three pieces make a primitive:\n1. a **props class** (`@Field`-annotated, an observable object),\n2. a **SwiftUI struct** conforming to `ExpoSwiftUI.View` with `@ObservedObject var props`,\n3. **registration** in the module definition."
+                "Three pieces make a primitive:\n1. a **props class** (`@Field`-annotated, an observable object),\n2. a **SwiftUI struct** conforming to `ExpoSwiftUI.View` with `@ObservedObject var props`,\n3. **registration** in the module definition.",
+                "> Red flag: reaching for the UIKit-wrapping `ExpoView` style here. That's right for an AR camera surface, but for a *native control* it means re-hosting SwiftUI by hand and losing the reactive `@Field` → body binding. When the view genuinely is SwiftUI, conform to `ExpoSwiftUI.View` instead of wrapping."
               ],
               "lang": "swift"
             },
@@ -241,7 +242,8 @@
                 "## What Host actually does",
                 "`Host` is the **root boundary** where the React tree hands off to a native SwiftUI tree. Every `@expo/ui` subtree must be wrapped in one:",
                 "- It creates the top-level SwiftUI hosting surface inside a React Native view.\n- It measures and sizes that surface (`matchContents` sizes the native content to fit; otherwise it fills like a normal RN view).\n- Everything *below* `Host` is native and composes via `Children()`; everything *above* is ordinary React Native.",
-                "So the boundary is: **`Host` = the JS→native handoff; `Children()` = native views re-entering the tree at each container.** To embed an RN component back *inside* a native tree, `@expo/ui` provides `RNHostView` — the inverse boundary."
+                "So the boundary is: **`Host` = the JS→native handoff; `Children()` = native views re-entering the tree at each container.** To embed an RN component back *inside* a native tree, `@expo/ui` provides `RNHostView` — the inverse boundary.",
+                "> Red flag: wrapping every native control in its own `Host`. `Host` is a per-subtree boundary with a real cost (a hosting controller + a measurement pass); nest with one `Host` at the root and compose the rest with `Children()`. Reach for `RNHostView` only when you must drop an RN view back into a native subtree."
               ],
               "lang": "swift"
             },
@@ -321,7 +323,7 @@
               "lang": "kotlin",
               "title": "android/.../ButtonView.kt — Compose in an ExpoView",
               "source": "class ButtonView(context: Context, appContext: AppContext) :\n  ExpoView(context, appContext) {\n\n  private val onPress by EventDispatcher()\n  private val title = mutableStateOf(\"\")\n\n  fun setTitle(value: String) { title.value = value }   // prop -> state -> recompose\n\n  private val composeView = ComposeView(context).also { addView(it) }\n\n  init {\n    composeView.setContent {\n      Button(onClick = { onPress(mapOf()) }) {\n        Text(title.value)                                // reactive read\n      }\n    }\n  }\n}",
-              "caption": "title is mutableStateOf, so reading title.value inside setContent subscribes the composable: setTitle() updates state and Compose recomposes the Button. onPress is the same EventDispatcher up-channel as iOS."
+              "caption": "Excerpt — the Expo, Android, Compose, and state imports are omitted for focus. title is mutableStateOf, so reading title.value inside setContent subscribes the composable: setTitle() updates state and Compose recomposes the Button. onPress is the same EventDispatcher up-channel as iOS."
             },
             {
               "type": "code",
@@ -408,7 +410,8 @@
                 "## Controlled from JS, always",
                 "A `Button` only emits. A `Slider`, `Switch`, or `Picker` also *holds a value* — which raises the question every senior gets asked: **who owns the state?** The answer for a well-behaved native control is the same as for a well-behaved React input: **the JS layer owns it.** The native view is *controlled*.",
                 "- **Value flows down** — a `value` prop tells the native control what to display.\n- **Change flows up** — an `onValueChange` event proposes a new value; JS decides whether to accept it and set `value` back down.",
-                "> In an interview, say: **\"I build native inputs as controlled components: `value` down, `onValueChange` up, JS owns the source of truth. It keeps the native view stateless and prevents the classic bug where native state and JS state silently diverge.\"**"
+                "> In an interview, say: **\"I build native inputs as controlled components: `value` down, `onValueChange` up, JS owns the source of truth. It keeps the native view stateless and prevents the classic bug where native state and JS state silently diverge.\"**",
+                "> Red flag: letting the native control hold its own state and only emitting on change (an *uncontrolled* input). It feels simpler, but the native value and your JS state drift the moment anything else sets the value — and you can't reset or validate from JS. Keep it controlled: `value` down, `onValueChange` up."
               ],
               "lang": "swift"
             },

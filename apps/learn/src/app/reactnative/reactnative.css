@@ -60,6 +60,7 @@
   }
   .rn-root {
     @apply bg-background text-foreground;
+
     min-height: 100vh;
   }
 }

@@ -9,11 +9,18 @@ interface WordleProps {
 }
 
 function defaultCheckGuess(guess: string) {
-  return guess.split('').map((letter, i) => {
-    if (TARGET[i] === letter) return { letter, color: '#4CAF50' }
-    if (TARGET.includes(letter)) return { letter, color: '#FFC107' }
-    return { letter, color: '#9E9E9E' }
+  const result = guess.split('').map(letter => ({ letter, color: '#9E9E9E' }))
+  // Count-aware: consume exact matches first, then spend remaining counts on
+  // present-but-misplaced letters, so RRRRR vs REACT marks only the real R.
+  const remaining: Record<string, number> = {}
+  for (const c of TARGET) remaining[c] = (remaining[c] || 0) + 1
+  result.forEach((r, i) => {
+    if (TARGET[i] === r.letter) { r.color = '#4CAF50'; remaining[r.letter]-- }
   })
+  result.forEach(r => {
+    if (r.color === '#9E9E9E' && remaining[r.letter] > 0) { r.color = '#FFC107'; remaining[r.letter]-- }
+  })
+  return result
 }
 
 export default function WordlePreview({ checkGuess }: WordleProps) {

@@ -34,7 +34,7 @@ Expo Module definition()  — the DSL you write
         ▲
 Native view + sensor
   iOS:  ExpoView -> ARSCNView -> ARKit sceneDepth.depthMap
-  And:  ExpoView -> ARScene(Compose) -> ARCore DEPTH16`,
+  Android: ExpoView -> ARScene(Compose) -> ARCore DEPTH16`,
           caption: "Memorize this. When something breaks, you'll know which of the three layers to inspect — and that diagnostic instinct is what an interviewer is listening for.",
         },
         {
@@ -43,8 +43,8 @@ Native view + sensor
             "## Props down, events up — and why it's fast",
             "Two directions, both crossing the same boundary:",
             "- **Props flow down.** JS sets `active={true}` → the module maps it to a native setter (`view.setActive(true)`). Props are how JS *configures* the native view.\n- **Events flow up.** The sensor produces a depth reading → the native view fires an event dispatcher → your `onDepth` JS callback runs. Events are how native *reports back*.",
-            "Modern Expo Modules ride **JSI** (the JavaScript Interface), not the legacy React Native bridge. The old bridge serialized every call to JSON and batched it asynchronously — fine for a button tap, a bottleneck for a sensor emitting 30–60 readings a second. JSI lets JS and native share memory and call each other directly, so streaming depth at 60 Hz is comfortable.",
-            "> Red flag: describing all RN native comms as \"the bridge\" that serializes JSON. That's the *old* architecture. The senior answer: **\"Expo Modules use JSI, so prop-setting and event dispatch are direct calls, not async JSON serialization — which is what makes 60 Hz sensor streaming viable.\"**",
+            "Modern Expo Modules use **JSI** (the JavaScript Interface) as their fast path instead of the legacy bridge. The old bridge serialized every call to JSON and batched it asynchronously — fine for a button tap, a bottleneck for a sensor emitting 30–60 readings a second. JSI lets JS call native directly (and, via shared objects / typed arrays, pass buffers without serializing), so high-frequency streaming becomes viable — how close you get to a steady 60 Hz still depends on the module's implementation and the device. (A module can fall back to the older proxy bridge when a JSI path isn't available.)",
+            "> Red flag: describing all RN native comms as \"the bridge\" that serializes JSON. That's the *old* architecture. The senior answer: **\"Expo Modules use JSI, so prop-setting and event dispatch are direct calls rather than async JSON serialization — which removes the tax that throttled high-frequency work on the old bridge.\"**",
           ],
         },
         {
@@ -65,8 +65,8 @@ Native view + sensor
           md: [
             "## Two ways to author the native view (know both)",
             "When an interviewer asks how you'd build a native view, naming both authoring styles signals depth:",
-            "1. **`ExpoView` wrapping a platform view** — your registered view subclasses `ExpoView` (a UIKit `UIView` / Android `View`) and hosts the real native view inside it. Rock-solid, well-documented. ARKit's `ARSCNView` and ARCore's renderer are UIKit/Android-View objects anyway, so wrapping is the *natural* fit for an AR camera surface. **This is what we'll use.**\n2. **`ExpoSwiftUI.View` / Compose-native registration** — newer: the registered view *is* a SwiftUI or Jetpack Compose view directly. This is the modern, expo-ui-style path.",
-            "> In an interview, say: **\"For an AR camera surface I wrapped the platform view in an `ExpoView` — it's the sturdiest path and ARKit/ARCore are UIKit/Android views already. I'd reach for the newer `ExpoSwiftUI.View` registration when the view is genuinely a SwiftUI/Compose tree, which is how expo-ui itself is built.\"** Naming the trade-off, not just one option, is the seniority signal.",
+            "1. **`ExpoView` wrapping a platform view** — your registered view subclasses `ExpoView` (a UIKit `UIView` / Android `View`) and hosts the real native view inside it. Rock-solid, well-documented. ARKit's `ARSCNView` and ARCore's renderer are UIKit/Android-View objects anyway, so wrapping is the *natural* fit for an AR camera surface. **This is what we'll use.**\n2. **`ExpoSwiftUI.View` / Compose-native registration** — newer: the registered view *is* a SwiftUI or Jetpack Compose view directly. This is the registration API `@expo/ui` builds its primitives on; its `Host`/children *composition* model is a separate layer that sits on top (you'll rebuild both in the @expo/ui course).",
+            "> In an interview, say: **\"For an AR camera surface I wrapped the platform view in an `ExpoView` — it's the sturdiest path and ARKit/ARCore are UIKit/Android views already. I'd reach for the newer `ExpoSwiftUI.View` registration when the view is genuinely a SwiftUI/Compose tree — that's the primitive `@expo/ui` registers its controls with, under its `Host` composition layer.\"** Naming the trade-off, not just one option, is the seniority signal.",
           ],
         },
         {

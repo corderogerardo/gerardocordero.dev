@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface GameState {
   phase: 'idle' | 'wait' | 'active' | 'result'
@@ -35,6 +35,9 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
   const [state, setState] = useState<GameState>(() => startGame ? startGame() : defaultStartGame())
   const [gameOver, setGameOver] = useState(false)
   const [lastReaction, setLastReaction] = useState<number | null>(null)
+  // One deadline per game, set on mount / restart — NOT reset on every tap, so
+  // the 10s limit is real rather than renewed each time the phase goes active.
+  const deadlineRef = useRef(0)
 
   useEffect(() => {
     if (state.phase !== 'wait') return
@@ -45,11 +48,11 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
   }, [state.phase, state.delay])
 
   useEffect(() => {
-    if (state.phase === 'active') {
-      const timer = setTimeout(() => setGameOver(true), GAME_DURATION)
-      return () => clearTimeout(timer)
-    }
-  }, [state.phase])
+    if (gameOver) return
+    if (deadlineRef.current === 0) deadlineRef.current = Date.now() + GAME_DURATION
+    const timer = setTimeout(() => setGameOver(true), Math.max(0, deadlineRef.current - Date.now()))
+    return () => clearTimeout(timer)
+  }, [gameOver])
 
   const handleClick = () => {
     if (gameOver) return
@@ -60,6 +63,7 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
   }
 
   const restart = () => {
+    deadlineRef.current = Date.now() + GAME_DURATION
     setState(startGame ? startGame() : defaultStartGame())
     setGameOver(false)
     setLastReaction(null)
@@ -71,7 +75,7 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
       <div className="text-3xl font-bold">Score: {state.score}</div>
       {lastReaction !== null && <div className="text-sm text-green-600">Last: {lastReaction}ms</div>}
       {state.phase === 'wait' && <div className="text-xl text-muted-foreground">Wait...</div>}
-      {state.phase === 'active' && (
+      {!gameOver && state.phase === 'active' && (
         <button
           onClick={handleClick}
           className="w-24 h-24 rounded-full bg-red-500 text-white text-xl font-bold flex items-center justify-center shadow-lg hover:scale-105 transition-transform"

@@ -16,6 +16,7 @@ window.COURSE.push({
             "A `Button` only emits. A `Slider`, `Switch`, or `Picker` also *holds a value* — which raises the question every senior gets asked: **who owns the state?** The answer for a well-behaved native control is the same as for a well-behaved React input: **the JS layer owns it.** The native view is *controlled*.",
             "- **Value flows down** — a `value` prop tells the native control what to display.\n- **Change flows up** — an `onValueChange` event proposes a new value; JS decides whether to accept it and set `value` back down.",
             "> In an interview, say: **\"I build native inputs as controlled components: `value` down, `onValueChange` up, JS owns the source of truth. It keeps the native view stateless and prevents the classic bug where native state and JS state silently diverge.\"**",
+            "> Red flag: letting the native control hold its own state and only emitting on change (an *uncontrolled* input). It feels simpler, but the native value and your JS state drift the moment anything else sets the value — and you can't reset or validate from JS. Keep it controlled: `value` down, `onValueChange` up.",
           ],
         },
         {

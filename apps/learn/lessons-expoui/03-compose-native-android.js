@@ -39,7 +39,7 @@ window.COURSE.push({
     }
   }
 }`,
-          caption: "title is mutableStateOf, so reading title.value inside setContent subscribes the composable: setTitle() updates state and Compose recomposes the Button. onPress is the same EventDispatcher up-channel as iOS.",
+          caption: "Excerpt — the Expo, Android, Compose, and state imports are omitted for focus. title is mutableStateOf, so reading title.value inside setContent subscribes the composable: setTitle() updates state and Compose recomposes the Button. onPress is the same EventDispatcher up-channel as iOS.",
         },
         {
           type: "code",

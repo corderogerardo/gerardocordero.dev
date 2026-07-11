@@ -83,7 +83,7 @@ export type DepthEvent = { meters: number; confidence: number };`,
           md: [
             "## The binding: name the native view",
             "The TS side of the bridge is tiny. `requireNativeView('DepthScanner')` looks up the native view your module registered under the name `'DepthScanner'` and returns a React component. You wrap it so the rest of your app imports a normal-looking component.",
-            "The string `'DepthScanner'` is a **contract in three places**: here in `requireNativeView`, in the native `Name(\"DepthScanner\")`, and implicitly in autolinking. A typo in any one is the classic \"Cannot find native view\" crash.",
+            "The string `'DepthScanner'` is a **contract in two places**: here in `requireNativeView('DepthScanner')` and in the native `Name(\"DepthScanner\")` — a mismatch is the classic \"Cannot find native view\" crash, so check those two names first. Autolinking is a *separate* concern: `expo-module.config.json` must list the **module class** so Expo finds the module at all; get that wrong and the whole module is missing, not just the view.",
           ],
         },
         {

@@ -64,11 +64,13 @@ the production flip** — it is the gating risk.
     `ChallengeListClient.tsx`, `components/`, `hooks/`, `lib/`, `previews/`)
   - `app/layout.tsx` → `apps/learn/src/app/reactnative/layout.tsx` (nested layout — this is the
     Tailwind scope boundary, see below)
-- **Shared code** → move into the Next app's aliased dirs:
+- **Shared code** → merged directly into the Next app's `@/` dirs (no `reactnative/`
+  sub-namespace — there were no filename collisions, so this kept `@/lib/*` and
+  `@/components/*` imports valid with near-zero rewrites):
   - `lib/{challenges.ts,challenge-runner.ts,flashcards.ts,progress.ts,strip-code.ts,utils.ts}`
-    and `lib/challenges/*` → `apps/learn/src/lib/reactnative/**`
+    and `lib/challenges/*` → `apps/learn/src/lib/*`
   - `components/{FlashcardDeck,FlashcardCard}.tsx` and `components/ui/*` →
-    `apps/learn/src/components/reactnative/**`
+    `apps/learn/src/components/*`
   - Fix the `@/` import paths to the new locations. `flashcards.ts`'s
     `path.join(process.cwd(), '../../docs/react-native-senior')` **needs no change** — `apps/learn`
     is the same depth as `apps/learn-reactnative`, so it still resolves to `<repo>/docs/react-native-senior`.
@@ -124,8 +126,8 @@ the production flip** — it is the gating risk.
 
 ## Files touched (representative, not exhaustive)
 
-- **New/moved**: `apps/learn/src/app/reactnative/**`, `apps/learn/src/lib/reactnative/**`,
-  `apps/learn/src/components/reactnative/**`, `apps/learn/tailwind.config.js`,
+- **New/moved**: `apps/learn/src/app/reactnative/**`, RN shared code merged into
+  `apps/learn/src/lib/*` and `apps/learn/src/components/*`, `apps/learn/tailwind.config.js`,
   `apps/learn/postcss.config.js`, `apps/learn/src/app/reactnative/reactnative.css`.
 - **Edited**: `apps/learn/package.json` (deps), `.github/workflows/ci.yml` (`deploy-learn`),
   `CLAUDE.md`, `apps/learn/README.md`.

@@ -15,6 +15,7 @@ window.COURSE.push({
             "## The shift: conform, don't wrap",
             "In the sensor course your view was `class DepthScannerView: ExpoView` — a UIKit view that *hosted* something. Here your view is a `struct` that conforms to **`ExpoSwiftUI.View`** — it doesn't host SwiftUI, it *is* SwiftUI. That one change unlocks everything `@expo/ui` does.",
             "Three pieces make a primitive:\n1. a **props class** (`@Field`-annotated, an observable object),\n2. a **SwiftUI struct** conforming to `ExpoSwiftUI.View` with `@ObservedObject var props`,\n3. **registration** in the module definition.",
+            "> Red flag: reaching for the UIKit-wrapping `ExpoView` style here. That's right for an AR camera surface, but for a *native control* it means re-hosting SwiftUI by hand and losing the reactive `@Field` → body binding. When the view genuinely is SwiftUI, conform to `ExpoSwiftUI.View` instead of wrapping.",
           ],
         },
         {
