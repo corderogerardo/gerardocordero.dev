@@ -1,12 +1,14 @@
 /** @type {import('tailwindcss').Config} */
+// Scoped to the /reactnative section only. preflight is DISABLED so Tailwind's
+// global reset never touches the plain-CSS course pages (styles.css owns those);
+// the RN section opts into a minimal scoped reset via `.rn-root` in reactnative.css.
 module.exports = {
-  // 'class' keeps dark: variants tied to a .dark class (which the app never sets),
-  // instead of the OS preference — the theme variables in globals.css are class-based too.
   darkMode: 'class',
+  corePlugins: { preflight: false },
   content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/reactnative/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -52,7 +54,5 @@ module.exports = {
       },
     },
   },
-  // tailwindcss-animate: the animate-in/animate-out utilities the Select popover uses.
-  // typography: the `prose` classes that render each challenge's mentor explanation.
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 }

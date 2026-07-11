@@ -140,7 +140,7 @@ export default function ChallengeListClient({ challenges, categories }: Props) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map(challenge => (
-              <Link key={challenge.id} href={`/challenges/${challenge.id}`}>
+              <Link key={challenge.id} href={`/reactnative/challenges/${challenge.id}`}>
                 <ChallengeCard challenge={challenge} completed={!!completed[challenge.id]} />
               </Link>
             ))}

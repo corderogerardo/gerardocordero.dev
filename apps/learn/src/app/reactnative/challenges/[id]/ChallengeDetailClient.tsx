@@ -5,8 +5,8 @@ import Link from 'next/link'
 import type { Challenge } from '@/lib/challenges'
 import { runTests, type TestResult } from '@/lib/challenge-runner'
 import { CHALLENGE_PROGRESS_KEY, loadProgress, saveProgress } from '@/lib/progress'
-import { usePreviewBridge } from '@/app/challenges/hooks/usePreviewBridge'
-import { previewComponents } from '@/app/challenges/previews'
+import { usePreviewBridge } from '@/app/reactnative/challenges/hooks/usePreviewBridge'
+import { previewComponents } from '@/app/reactnative/challenges/previews'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -88,7 +88,7 @@ export default function ChallengeDetailClient({ challenge }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/challenges">
+            <Link href="/reactnative/challenges">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -108,14 +108,14 @@ export default function ChallengeDetailClient({ challenge }: Props) {
           </div>
           <div className="flex items-center gap-2">
             {prevChallenge && (
-              <Link href={`/challenges/${prevChallenge.id}`}>
+              <Link href={`/reactnative/challenges/${prevChallenge.id}`}>
                 <Button variant="outline" size="sm">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               </Link>
             )}
             {nextChallenge && (
-              <Link href={`/challenges/${nextChallenge.id}`}>
+              <Link href={`/reactnative/challenges/${nextChallenge.id}`}>
                 <Button variant="outline" size="sm">
                   <ChevronRight className="h-4 w-4" />
                 </Button>

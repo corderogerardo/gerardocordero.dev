@@ -50,10 +50,16 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  /* preflight is disabled globally (see tailwind.config.js) so the course pages'
+     plain CSS is untouched. The RN section opts into a minimal reset + tokens,
+     scoped under .rn-root — never the global body/*. */
+  .rn-root,
+  .rn-root * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
   }
-  body {
+  .rn-root {
     @apply bg-background text-foreground;
+    min-height: 100vh;
   }
 }

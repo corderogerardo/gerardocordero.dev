@@ -1,0 +1,578 @@
+{
+  "id": "expoui",
+  "title": "Rebuild @expo/ui",
+  "emoji": "🎛️",
+  "storeKey": "pawwalk-academy-expoui-v1",
+  "modules": [
+    {
+      "id": "expoui-welcome",
+      "title": "What @expo/ui really is",
+      "emoji": "🎛️",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "welcome",
+          "title": "Build your own native-UI library",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The course that finishes the job",
+                "In the LiDAR course you built an Expo native view by **wrapping** a UIKit view (`ExpoView` hosting an `ARSCNView`) and pointing it at a sensor. That taught the foundation `@expo/ui` stands on — but it stopped one floor short of `@expo/ui` itself.",
+                "`@expo/ui` does something the sensor course didn't: the view you register **is** a SwiftUI (or Jetpack Compose) view, and it **renders React children as native children**. That's what makes `<Host><Button/><Slider/></Host>` compose real native controls. This course rebuilds that pattern from scratch — a mini `@expo/ui`: a `Host`, a `Button`, a `Slider`, a `Picker`/`Switch`, and a `ContextMenu`, on both platforms.",
+                "> In an interview, say: **\"`@expo/ui` renders real SwiftUI and Jetpack Compose from React. Each control is an Expo Module view that conforms to `ExpoSwiftUI.View` (or the Compose equivalent) and renders its React children natively via `Children()`. I rebuilt that pattern to understand it end to end.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Why render native UI at all?",
+                "You *could* draw a button in JavaScript. So why does `@expo/ui` exist?",
+                "- **Platform fidelity for free** — a native `Picker`, `DateTimePicker`, or `ContextMenu` matches the OS exactly, updates with OS versions, and inherits system behaviors you'd otherwise reimplement.\n- **Accessibility and input** — VoiceOver/TalkBack, Dynamic Type, haptics, and gesture semantics come from the real widget, not a JS approximation.\n- **The stuff you literally can't fake** — a native context menu, a SwiftUI `Menu`, a Compose `ModalBottomSheet` behave in ways a `<View>` never will.",
+                "> Red flag: \"I'd just build the control in React Native for full control.\" Sometimes right — but a senior names the trade: **\"For anything the OS ships a widget for — pickers, menus, sheets — I reach for the native control so I inherit platform behavior and a11y instead of reimplementing (and drifting from) it.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The two layers of @expo/ui (and which one you'll build)",
+                "Being precise here is a seniority signal, because `@expo/ui` is *two* things stacked:",
+                "1. **The public primitive you can reuse** — an Expo Module view conforming to `ExpoSwiftUI.View` on iOS (a Compose-native view on Android), with `@Field` props, an `EventDispatcher`, and `Children()` to host React children. **This is what you'll build** — the reusable floor.\n2. **`@expo/ui`'s own plumbing on top** — internal helpers like `UIBaseViewProps` / `ExpoUIView` / `ModifierRegistry` (iOS) and `@OptimizedComposeProps` / `ComposeProps` (Android) that add its `modifiers` system and the universal cross-platform layer. These are **versioned and private** — not a stable API to build against.",
+                "> The honest rule (and the docs say the same): the installed package's TypeScript types (`node_modules/@expo/ui/**/*.d.ts`) and the `expo/expo` source are the source of truth for the *exact* current API. This course teaches the durable pattern; confirm signatures against your SDK version before you ship."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "What's the core difference between the LiDAR course's native view and an @expo/ui control?",
+              "choices": [
+                "The @expo/ui control IS a SwiftUI/Compose view and renders React children natively (Children()); the LiDAR view WRAPPED a UIKit view and had no children",
+                "The @expo/ui control uses JavaScript to draw; the LiDAR view used native code",
+                "There is no difference — both wrap UIKit views",
+                "The @expo/ui control runs on the old RN bridge; the LiDAR view uses JSI"
+              ],
+              "answer": 0,
+              "explain": "Both are Expo Modules — same foundation. The leap is composition: an @expo/ui view conforms to ExpoSwiftUI.View (it IS SwiftUI) and calls Children() to render its React children as native subviews, which is what makes <Host><Button/></Host> work. The sensor view just wrapped a UIKit camera surface with no children.",
+              "nudge": "Think about what <Host> composes, and where the children go.",
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The prerequisites (same hardware story, lighter)",
+                "Unlike depth sensing, native UI doesn't need special hardware — but `@expo/ui` still renders through native views, so you develop on a real device or simulator with a build that includes the module. On SDK 56+, `@expo/ui` itself runs in Expo Go; a *from-scratch* module like the one you're building is local native code, so it needs a dev build (`npx expo run:ios` / `run:android`)."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "xcode",
+              "label": "Over to your setup",
+              "title": "Get ready to build a native-UI module",
+              "intro": [
+                "You'll scaffold a local Expo module and fill it with SwiftUI/Compose views. Confirm:"
+              ],
+              "items": [
+                "An Expo app (SDK 56+) with expo-dev-client installed.",
+                "Xcode with a signing team (SwiftUI views build to a real/simulated iOS device).",
+                "Android SDK + a device or emulator for the Compose side.",
+                "You'll run a dev build (`npx expo run:ios` / `run:android`) — a local native-UI module needs it, even though @expo/ui itself runs in Expo Go on SDK 56+.",
+                "Optional but recommended: install @expo/ui (`npx expo install @expo/ui`) so you can read its .d.ts and source as the source of truth while you build your own."
+              ],
+              "lang": "ts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expoui-swiftui-primitive",
+      "title": "The SwiftUI-native primitive",
+      "emoji": "🍎",
+      "lang": "swift",
+      "lessons": [
+        {
+          "id": "button",
+          "title": "A view that IS SwiftUI",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The shift: conform, don't wrap",
+                "In the sensor course your view was `class DepthScannerView: ExpoView` — a UIKit view that *hosted* something. Here your view is a `struct` that conforms to **`ExpoSwiftUI.View`** — it doesn't host SwiftUI, it *is* SwiftUI. That one change unlocks everything `@expo/ui` does.",
+                "Three pieces make a primitive:\n1. a **props class** (`@Field`-annotated, an observable object),\n2. a **SwiftUI struct** conforming to `ExpoSwiftUI.View` with `@ObservedObject var props`,\n3. **registration** in the module definition."
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "swift",
+              "title": "ios/ExpoUIButton.swift — props + the SwiftUI view",
+              "source": "import ExpoModulesCore\nimport SwiftUI\n\n// 1) Props: an observable object. @Field maps a JS prop to a Swift field.\nfinal class ButtonProps: ExpoSwiftUI.ViewProps {\n  @Field var title: String = \"\"\n  var onPress = EventDispatcher()\n}\n\n// 2) The view IS SwiftUI. @ObservedObject re-renders body when a prop changes.\nstruct ButtonView: ExpoSwiftUI.View {\n  @ObservedObject var props: ButtonProps\n\n  var body: some View {\n    SwiftUI.Button(props.title) {\n      props.onPress()               // fire the event up to JS\n    }\n    .buttonStyle(.borderedProminent)\n  }\n}",
+              "caption": "Because props is @ObservedObject and title is @Field, setting title from JS re-runs body automatically — no manual setter like setActive(). That reactivity is the SwiftUI-native payoff."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## @expo/ui's real code, for contrast",
+                "`@expo/ui`'s shipped `Button` looks almost identical — but its props extend `UIBaseViewProps` (not `ExpoSwiftUI.ViewProps`) and it registers with `ExpoUIView(...)` (not `View(...)`). Those are `@expo/ui`'s **internal** base classes that bolt on the `modifiers` system. You can't import them into your own module — which is exactly why you build on the public `ExpoSwiftUI.View` primitive instead.",
+                "> In an interview, say: **\"@expo/ui's controls conform to `ExpoSwiftUI.View`; it just wraps the public primitive in internal base classes (`UIBaseViewProps`, `ExpoUIView`) to add a modifiers system. Rebuilding on the public primitive is how I proved I understood where the seam is.\"**"
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Write the SwiftUI-native view",
+              "prompt": [
+                "The `ButtonProps` class is given. Declare the view: a `struct ButtonView` conforming to `ExpoSwiftUI.View`, with `@ObservedObject var props: ButtonProps`, whose `body` is a `SwiftUI.Button(props.title)` that calls `props.onPress()` when tapped."
+              ],
+              "starter": "final class ButtonProps: ExpoSwiftUI.ViewProps {\n  @Field var title: String = \"\"\n  var onPress = EventDispatcher()\n}\n\n// declare the SwiftUI-native ButtonView here",
+              "solution": "final class ButtonProps: ExpoSwiftUI.ViewProps {\n  @Field var title: String = \"\"\n  var onPress = EventDispatcher()\n}\n\nstruct ButtonView: ExpoSwiftUI.View {\n  @ObservedObject var props: ButtonProps\n\n  var body: some View {\n    SwiftUI.Button(props.title) {\n      props.onPress()\n    }\n  }\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "struct ButtonView:ExpoSwiftUI\\.View\\{",
+                    "flags": ""
+                  },
+                  "hint": "Conform, don't wrap: `struct ButtonView: ExpoSwiftUI.View { … }` — the view IS SwiftUI."
+                },
+                {
+                  "re": {
+                    "source": "@ObservedObject var props:ButtonProps",
+                    "flags": ""
+                  },
+                  "hint": "Bind the props with `@ObservedObject var props: ButtonProps` so body re-renders when a @Field changes."
+                },
+                {
+                  "re": {
+                    "source": "SwiftUI\\.Button\\(props\\.title\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Build `SwiftUI.Button(props.title) { … }` — read the title straight off props."
+                },
+                {
+                  "re": {
+                    "source": "props\\.onPress\\(\\)",
+                    "flags": ""
+                  },
+                  "hint": "In the action closure, fire the event up: `props.onPress()`."
+                }
+              ],
+              "success": "That's a real native SwiftUI button, reactive to JS props. No manual setters — @ObservedObject + @Field do the wiring. This is the exact shape @expo/ui's Button uses."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Register it, and bind it in TS",
+                "Registration is one line: `View(ButtonView.self)`. And because a UI library ships **many** views from **one** module, the TS binding uses the **two-argument** form: `requireNativeView(moduleName, viewName)`."
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "src/Button.tsx — the two-arg binding",
+              "source": "import { requireNativeView } from 'expo';\n\ntype ButtonProps = { title: string; onPress?: () => void };\n\n// Two args: module name + view name — one module, many views.\nconst NativeButton = requireNativeView('ExpoUI', 'Button');\n\nexport function Button(props: ButtonProps) {\n  return <NativeButton {...props} />;\n}",
+              "caption": "Compare the sensor course's single-arg requireNativeView('DepthScanner') — that module had one view. A UI library registers Button, Slider, Picker in one module, so each view needs a name."
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Register the view",
+              "prompt": [
+                "Complete `definition()`: after `Name(\"ExpoUI\")`, register the button with `View(ButtonView.self)`."
+              ],
+              "starter": "public func definition() -> ModuleDefinition {\n  Name(\"ExpoUI\")\n\n  // register ButtonView here\n}",
+              "solution": "public func definition() -> ModuleDefinition {\n  Name(\"ExpoUI\")\n\n  View(ButtonView.self)\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "Name\\(\"ExpoUI\"\\)",
+                    "flags": ""
+                  },
+                  "hint": "Keep the module name `Name(\"ExpoUI\")` — it's the first arg of the two-arg requireNativeView on the JS side."
+                },
+                {
+                  "re": {
+                    "source": "View\\(ButtonView\\.self\\)",
+                    "flags": ""
+                  },
+                  "hint": "Register with `View(ButtonView.self)` — a SwiftUI-native view registers the same way a UIKit ExpoView does."
+                }
+              ],
+              "success": "One module can now register View after View — Button, then Slider, then Picker — each looked up by name from JS. That's a UI library taking shape."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expoui-host-children",
+      "title": "Host & the children model",
+      "emoji": "🪆",
+      "lang": "swift",
+      "lessons": [
+        {
+          "id": "children",
+          "title": "Composing native children",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The magic word is Children()",
+                "How does `<Host><HStack><Button/><Button/></HStack></Host>` turn React children into *native* SwiftUI subviews? One function: **`Children()`**. Inside a SwiftUI-native view's `body`, calling `Children()` renders whatever React children were passed, as native views, right at that spot.",
+                "This is the whole composition model. A container view (an `HStack`, a `VStack`, a card) is just a SwiftUI layout whose `body` places `Children()` inside it.",
+                "> In an interview, say: **\"`@expo/ui` composes native children through a `Children()` call in the SwiftUI body — React children are mounted as native subviews at that point in the layout. That's what lets you nest native controls declaratively from JS.\"**"
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "swift",
+              "title": "ios/ExpoUIHStack.swift — a container that hosts children",
+              "source": "import ExpoModulesCore\nimport SwiftUI\n\nfinal class HStackProps: ExpoSwiftUI.ViewProps {\n  @Field var spacing: Double = 8\n}\n\nstruct HStackView: ExpoSwiftUI.View {\n  @ObservedObject var props: HStackProps\n\n  var body: some View {\n    HStack(spacing: props.spacing) {\n      Children()          // React children render here, as native subviews\n    }\n  }\n}",
+              "caption": "props.spacing flows down; Children() renders the nested <Button/>, <Slider/>, etc. as real SwiftUI views inside the HStack. Layout is native; the tree came from JS."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## What Host actually does",
+                "`Host` is the **root boundary** where the React tree hands off to a native SwiftUI tree. Every `@expo/ui` subtree must be wrapped in one:",
+                "- It creates the top-level SwiftUI hosting surface inside a React Native view.\n- It measures and sizes that surface (`matchContents` sizes the native content to fit; otherwise it fills like a normal RN view).\n- Everything *below* `Host` is native and composes via `Children()`; everything *above* is ordinary React Native.",
+                "So the boundary is: **`Host` = the JS→native handoff; `Children()` = native views re-entering the tree at each container.** To embed an RN component back *inside* a native tree, `@expo/ui` provides `RNHostView` — the inverse boundary."
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "app usage — Host wraps, containers nest",
+              "source": "import { Host, HStack, Button } from '../modules/expo-ui/src';\n\nexport function Toolbar() {\n  return (\n    <Host matchContents>\n      <HStack spacing={12}>\n        <Button title=\"Book\" onPress={book} />\n        <Button title=\"Cancel\" onPress={cancel} />\n      </HStack>\n    </Host>\n  );\n}",
+              "caption": "One Host at the root; HStack.body calls Children(), so the two Buttons mount as native SwiftUI subviews. No .ios/.android split needed for this platform-specific tree beyond the import."
+            },
+            {
+              "type": "quiz",
+              "q": "In a SwiftUI-native container view, what does calling Children() in the body do?",
+              "choices": [
+                "Renders the React children passed from JS as native SwiftUI subviews at that position in the layout",
+                "Fetches child components over the network",
+                "Creates a new React context for descendants",
+                "Returns the number of child views for layout math"
+              ],
+              "answer": 0,
+              "explain": "Children() is the composition primitive: it mounts the JS-provided children as real native subviews inside the container's SwiftUI layout. Without it, a container would render its own chrome but drop everything nested inside it.",
+              "nudge": "Where do the <Button/>s inside <HStack> actually get placed?",
+              "lang": "swift"
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Make a container that hosts its children",
+              "prompt": [
+                "Finish `VStackView`'s body: a SwiftUI `VStack(spacing: props.spacing)` that renders the React children inside it. The one call that mounts the children is `Children()`."
+              ],
+              "starter": "struct VStackView: ExpoSwiftUI.View {\n  @ObservedObject var props: VStackProps\n\n  var body: some View {\n    VStack(spacing: props.spacing) {\n      // render the React children here\n    }\n  }\n}",
+              "solution": "struct VStackView: ExpoSwiftUI.View {\n  @ObservedObject var props: VStackProps\n\n  var body: some View {\n    VStack(spacing: props.spacing) {\n      Children()\n    }\n  }\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "VStack\\(spacing:props\\.spacing\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Lay out with `VStack(spacing: props.spacing) { … }` — the spacing prop flows down."
+                },
+                {
+                  "re": {
+                    "source": "Children\\(\\)",
+                    "flags": ""
+                  },
+                  "hint": "Mount the nested React views with `Children()` — this is the entire composition trick."
+                }
+              ],
+              "success": "That's a real native container. Nest <Button/>, <Slider/>, another <VStack/> inside it from JS and they all render as native SwiftUI subviews. You've rebuilt @expo/ui's composition core."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expoui-compose-android",
+      "title": "The Compose-native primitive (Android)",
+      "emoji": "🤖",
+      "lang": "kotlin",
+      "lessons": [
+        {
+          "id": "compose",
+          "title": "The same Button, in Jetpack Compose",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## One contract, a Compose backend",
+                "Same lesson as the sensor course's second half: the JS `<Button>` doesn't change; you write a second native adapter. On Android the durable, public way to render Compose from an Expo view is to host a `ComposeView` inside an `ExpoView` and drive it with `setContent { … }`.",
+                "The reactivity model differs from iOS in an instructive way. SwiftUI gave you automatic re-render via `@ObservedObject` + `@Field`. In Compose you hold **`mutableStateOf`**, update it from a `Prop` setter, and Compose recomposes when that state changes."
+              ],
+              "lang": "kotlin"
+            },
+            {
+              "type": "code",
+              "lang": "kotlin",
+              "title": "android/.../ButtonView.kt — Compose in an ExpoView",
+              "source": "class ButtonView(context: Context, appContext: AppContext) :\n  ExpoView(context, appContext) {\n\n  private val onPress by EventDispatcher()\n  private val title = mutableStateOf(\"\")\n\n  fun setTitle(value: String) { title.value = value }   // prop -> state -> recompose\n\n  private val composeView = ComposeView(context).also { addView(it) }\n\n  init {\n    composeView.setContent {\n      Button(onClick = { onPress(mapOf()) }) {\n        Text(title.value)                                // reactive read\n      }\n    }\n  }\n}",
+              "caption": "title is mutableStateOf, so reading title.value inside setContent subscribes the composable: setTitle() updates state and Compose recomposes the Button. onPress is the same EventDispatcher up-channel as iOS."
+            },
+            {
+              "type": "code",
+              "lang": "kotlin",
+              "title": "android/.../ExpoUIModule.kt — register it the same way",
+              "source": "override fun definition() = ModuleDefinition {\n  Name(\"ExpoUI\")\n\n  View(ButtonView::class) {\n    Events(\"onPress\")\n\n    Prop(\"title\") { view: ButtonView, value: String ->\n      view.setTitle(value)\n    }\n  }\n}",
+              "caption": "Identical DSL to the sensor course and to iOS: View(...::class), Events, Prop. The name 'ExpoUI' matches the iOS module and the two-arg requireNativeView('ExpoUI', 'Button')."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## @expo/ui's real Android code, for honesty",
+                "`@expo/ui` doesn't use the `ComposeView`-in-`ExpoView` path above for its shipped controls — it uses newer **internal** helpers: an `@OptimizedComposeProps` data class implementing `ComposeProps`, a `@Composable` content function, and `ExpoUIView<Props>(\"Name\") { Content { … } }` registration, with children via `Children(UIComposableScope())`. Those types are `@expo/ui`-private and versioned.",
+                "> In an interview, say: **\"The public, reusable Android path is hosting Compose in an `ExpoView` via `setContent`. `@expo/ui` ships its own Compose-native registration (`ExpoUIView` + `ComposeProps`) that adds its modifiers system — but that's internal API, so I built on the public primitive.\"** Naming the line between public and private API is a strong senior signal."
+              ],
+              "lang": "kotlin"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The cross-platform diff — memorize it",
+                "- **The view** — iOS: `struct: ExpoSwiftUI.View`  ·  Android: `ExpoView` hosting `ComposeView.setContent`.\n- **Reactivity** — iOS: `@Field` + `@ObservedObject` (auto re-render)  ·  Android: `mutableStateOf` + a `Prop` setter (manual state, then recompose).\n- **Event up-channel** — **identical**: an `EventDispatcher` fired with a map.\n- **Registration** — iOS: `View(ButtonView.self)`  ·  Android: `View(ButtonView::class)`.\n- **The JS component** — **identical**: one `<Button title onPress>`."
+              ],
+              "lang": "kotlin"
+            },
+            {
+              "type": "quiz",
+              "q": "Why does the Android view use mutableStateOf where iOS used @Field + @ObservedObject?",
+              "choices": [
+                "Compose recomposes when observed state changes; mutableStateOf is how you make a prop reactive, mirroring what @ObservedObject does automatically in SwiftUI",
+                "mutableStateOf is faster than @Field on all devices",
+                "Android can't use the Expo Modules DSL, so state is manual",
+                "It's a stylistic choice with no functional difference"
+              ],
+              "answer": 0,
+              "explain": "Both platforms need a prop change to trigger a re-render. SwiftUI's @ObservedObject + @Field wires that automatically; Compose's equivalent is reading mutableStateOf inside the composable, so updating it from the Prop setter recomposes. Same goal, each framework's idiom.",
+              "nudge": "What has to happen when 'title' changes so the button updates?",
+              "lang": "kotlin"
+            },
+            {
+              "type": "exercise",
+              "lang": "kotlin",
+              "title": "Write the Compose body",
+              "prompt": [
+                "Fill in `setContent`: a Compose `Button` whose `onClick` fires `onPress(mapOf())`, containing a `Text(title.value)`. Reading `title.value` is what makes it reactive."
+              ],
+              "starter": "composeView.setContent {\n  // a Compose Button showing title.value that fires onPress on click\n}",
+              "solution": "composeView.setContent {\n  Button(onClick = { onPress(mapOf()) }) {\n    Text(title.value)\n  }\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "Button\\(onClick=\\{onPress\\(mapOf\\(\\)\\)\\}\\)",
+                    "flags": ""
+                  },
+                  "hint": "Wire the click to the up-channel: `Button(onClick = { onPress(mapOf()) }) { … }`."
+                },
+                {
+                  "re": {
+                    "source": "Text\\(title\\.value\\)",
+                    "flags": ""
+                  },
+                  "hint": "Show `Text(title.value)` — reading the mutableStateOf's `.value` subscribes the composable so it recomposes when the prop changes."
+                }
+              ],
+              "success": "Both platforms now render a native button from the same <Button title onPress>. The reactivity idioms differ; the JS contract is byte-identical."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expoui-value-primitives",
+      "title": "Stateful primitives: Slider, Switch, Picker",
+      "emoji": "🎚️",
+      "lang": "swift",
+      "lessons": [
+        {
+          "id": "values",
+          "title": "Value down, change up",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## Controlled from JS, always",
+                "A `Button` only emits. A `Slider`, `Switch`, or `Picker` also *holds a value* — which raises the question every senior gets asked: **who owns the state?** The answer for a well-behaved native control is the same as for a well-behaved React input: **the JS layer owns it.** The native view is *controlled*.",
+                "- **Value flows down** — a `value` prop tells the native control what to display.\n- **Change flows up** — an `onValueChange` event proposes a new value; JS decides whether to accept it and set `value` back down.",
+                "> In an interview, say: **\"I build native inputs as controlled components: `value` down, `onValueChange` up, JS owns the source of truth. It keeps the native view stateless and prevents the classic bug where native state and JS state silently diverge.\"**"
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "swift",
+              "title": "ios/ExpoUISlider.swift — a controlled Slider",
+              "source": "final class SliderProps: ExpoSwiftUI.ViewProps {\n  @Field var value: Double = 0\n  var onValueChange = EventDispatcher()\n}\n\nstruct SliderView: ExpoSwiftUI.View {\n  @ObservedObject var props: SliderProps\n\n  var body: some View {\n    Slider(value: Binding(\n      get: { props.value },\n      set: { props.onValueChange([\"value\": $0]) }\n    ))\n  }\n}",
+              "caption": "The Binding is the trick: get reads the JS-owned value; set doesn't mutate locally — it fires the change up and lets JS set value back down. That's a controlled component in SwiftUI."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Switch and Picker are the same shape",
+                "Every value control is this pattern with a different SwiftUI view:",
+                "- **Switch** → `Toggle(isOn: Binding(get:…, set:…))` with a `Bool` value.\n- **Picker** → `Picker(selection: Binding(…))` over an `options: [String]` prop, firing the selected index up.\n- **DateTimePicker** → `DatePicker(selection: Binding(…))` with a date value.",
+                "The props class gains an `options` or a differently-typed `value`; the body swaps the SwiftUI view; the down/up contract is unchanged. On Android each maps to its Compose twin (`Slider`, `Switch`, exposed dropdown) with `mutableStateOf` + the same event."
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "quiz",
+              "q": "In the controlled Slider, why does the Binding's `set` fire onValueChange instead of storing the value locally?",
+              "choices": [
+                "So JS stays the single source of truth — the native view proposes a change and JS confirms it by setting value back down, preventing state divergence",
+                "Because SwiftUI Bindings can't store values",
+                "To make the slider run faster",
+                "Because EventDispatcher requires it for compilation"
+              ],
+              "answer": 0,
+              "explain": "A controlled component never trusts its own local state as truth. set() proposes (onValueChange up); JS decides and sets value down. If you stored locally instead, the native slider and the JS state could drift apart — exactly the bug controlled components exist to prevent.",
+              "nudge": "What goes wrong if the native view and JS both think they own the value?",
+              "lang": "swift"
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Wire the Slider's up-channel",
+              "prompt": [
+                "Complete the Binding's `set` closure: fire `props.onValueChange` with the new value (`$0`) under the key `\"value\"`. Don't store anything locally — just propose the change upward."
+              ],
+              "starter": "Slider(value: Binding(\n  get: { props.value },\n  set: { /* fire the change up with the new value */ }\n))",
+              "solution": "Slider(value: Binding(\n  get: { props.value },\n  set: { props.onValueChange([\"value\": $0]) }\n))",
+              "checks": [
+                {
+                  "re": {
+                    "source": "get:\\{props\\.value\\}",
+                    "flags": ""
+                  },
+                  "hint": "Keep `get: { props.value }` — the displayed value is the JS-owned one."
+                },
+                {
+                  "re": {
+                    "source": "set:\\{props\\.onValueChange\\(\\[\"value\":\\$0\\]\\)\\}",
+                    "flags": ""
+                  },
+                  "hint": "In `set`, fire it up: `props.onValueChange([\"value\": $0])` — `$0` is the new value the user dragged to."
+                }
+              ],
+              "success": "That's a fully controlled native Slider. JS owns the value; the slider only ever proposes changes. Same Binding shape powers Switch, Picker, and DateTimePicker."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expoui-modifiers-ship",
+      "title": "Modifiers, ContextMenu, and shipping",
+      "emoji": "🚀",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "ship",
+          "title": "The layer on top, and the pitch",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## What @expo/ui adds on top of your primitive",
+                "You've built the reusable floor: `ExpoSwiftUI.View` primitives, `Children()` composition, controlled values. `@expo/ui`'s value-add on top is a **modifiers system** — a `modifiers` prop carrying a list of SwiftUI-style modifiers (`padding`, `frame`, `background`, `onTapGesture`) that get applied to the native view.",
+                "That's why `@expo/ui`'s props extend `UIBaseViewProps` and the TS binding wraps events with `createViewModifierEventListener` — event-based modifiers like `onTapGesture` and `onAppear` need their callbacks routed through the same EventDispatcher machinery you already know.",
+                "> In an interview, say: **\"`@expo/ui` = SwiftUI/Compose-native primitives + a `Children()` composition model + a `modifiers` system layered on the base view props. I built the first two on the public primitive; the modifiers layer is its internal `UIBaseViewProps`/`ModifierRegistry` plumbing.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "the modifiers idea, from the consumer side",
+              "source": "import { Host, VStack, Button } from '@expo/ui/swift-ui';\nimport { padding, frame } from '@expo/ui/swift-ui/modifiers';\n\n<Host matchContents>\n  <VStack modifiers={[padding({ all: 16 }), frame({ height: 200 })]}>\n    <Button variant=\"borderedProminent\">Book a walk</Button>\n  </VStack>\n</Host>;",
+              "caption": "Each modifier is data in a list; the native side reads modifiers and applies the matching SwiftUI modifier. onTapGesture-style modifiers carry a callback that createViewModifierEventListener wires to a native event."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## ContextMenu is just composition again",
+                "A `ContextMenu` looks fancy but it's the `Children()` model you already built. The view attaches SwiftUI's `.contextMenu { }` and renders the menu items — which are React children — inside it. `Host` at the root, `Children()` for the menu content: same two primitives, a different SwiftUI modifier.",
+                "That's the payoff of learning the pattern instead of the catalog: once `Host` + `Children()` + a props class click, **every** `@expo/ui` component is a variation you could rebuild."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "src/Slider.tsx — the two-arg binding, one per view",
+              "source": "import { requireNativeView } from 'expo';\n\ntype SliderProps = { value: number; onValueChange?: (e: { nativeEvent: { value: number } }) => void };\n\nconst NativeSlider = requireNativeView('ExpoUI', 'Slider');\n\nexport function Slider(props: SliderProps) {\n  return <NativeSlider {...props} />;\n}",
+              "caption": "Every primitive gets its own tiny binding file, all pointing at the same module 'ExpoUI' with a different view name. That naming is why one module can ship a whole library."
+            },
+            {
+              "type": "exercise",
+              "lang": "ts",
+              "title": "Bind another view from the same module",
+              "prompt": [
+                "Your module 'ExpoUI' already registers a 'Picker' view. Write its binding: `requireNativeView` with the module name `'ExpoUI'` and the view name `'Picker'`, assigned to `NativePicker`."
+              ],
+              "starter": "import { requireNativeView } from 'expo';\n\nconst NativePicker = requireNativeView(/* module, view */);",
+              "solution": "import { requireNativeView } from 'expo';\n\nconst NativePicker = requireNativeView('ExpoUI', 'Picker');",
+              "checks": [
+                {
+                  "re": {
+                    "source": "const NativePicker=requireNativeView\\('ExpoUI','Picker'\\)",
+                    "flags": ""
+                  },
+                  "hint": "Two args: `requireNativeView('ExpoUI', 'Picker')` — module first, view second. Same module as Button and Slider, different view name."
+                }
+              ],
+              "success": "That's how a whole native-UI library ships from one module: many named views, one requireNativeView(module, view) per binding."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Packaging: how @expo/ui splits its imports",
+                "`@expo/ui` ships three surfaces, and knowing which to reach for is a real design call:",
+                "1. **Universal** (`@expo/ui`) — one tree, runs on iOS/Android/web. Start here.\n2. **Platform-specific** (`@expo/ui/swift-ui`, `@expo/ui/jetpack-compose`) — richer, but you split into `.ios.tsx` / `.android.tsx` and maintain two trees. Drop to this only when the universal layer lacks a component or modifier.\n3. **Drop-in replacements** (`@expo/ui/community/*`) — API-compatible swaps for libraries like `@react-native-community/datetimepicker`, for migrations.",
+                "> In an interview, say: **\"I start on `@expo/ui`'s universal layer for one cross-platform tree, and only drop to `/swift-ui` or `/jetpack-compose` when I need a platform-specific component — accepting the `.ios`/`.android` split as the cost.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Verify, then defend",
+                "Verification is the same layered framework as the sensor course: 1) **native compiles** (`expo run:ios`/`run:android`), 2) **the view mounts** (a `Host` with your `Button` renders a real native control), 3) **props flow down** (change `title`, the button updates), 4) **events flow up** (`onPress`/`onValueChange` log in Metro), 5) **composition works** (`Children()` nests controls natively).",
+                "And the source-of-truth rule, one more time: for the *exact* current API, read `node_modules/@expo/ui/**/*.d.ts` and the `expo/expo` package source. This course taught the durable pattern; the private helpers (`UIBaseViewProps`, `ExpoUIView`, `ComposeProps`) move with the SDK."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "Having rebuilt the pattern, what's the one-sentence explanation of how @expo/ui works?",
+              "choices": [
+                "Each control is an Expo Module view conforming to ExpoSwiftUI.View (or Compose-native) that renders React children via Children(), with a modifiers system layered on top",
+                "It compiles React components into SwiftUI at build time",
+                "It's a JavaScript reimplementation of native controls styled to look native",
+                "It uses the legacy RN bridge to serialize native views as JSON"
+              ],
+              "answer": 0,
+              "explain": "That's the whole thing: SwiftUI/Compose-native Expo Module views + Children() composition + a modifiers layer, all wrapped by Host at the root. Being able to compress it to one sentence — and know which parts are public primitive vs internal plumbing — is exactly the depth this course was for.",
+              "nudge": "Name the three pieces: what the view conforms to, how children compose, what's layered on top.",
+              "lang": "ts"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
