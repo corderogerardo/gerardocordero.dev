@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LOCALES, COURSE_IDS } from "@/lib/i18n-config";
+import { getSpecs } from "@/lib/andersen-decks";
 
 const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "ios",     title: "iOS & Swift",      emoji: "📱" },
@@ -44,6 +45,15 @@ export default async function HomePage({
             {locale === "es" ? "Práctica RN (senior)" : "RN Interview Practice"}
           </span>
         </Link>
+        {/* Per-specialization interview decks generated from the Andersen matrix. */}
+        {getSpecs().map((s) => (
+          <Link key={s.slug} href={`/practice/${s.slug}`} className="course-card">
+            <span className="course-emoji">{s.emoji}</span>
+            <span className="course-title">
+              {s.title} {locale === "es" ? "(práctica)" : "Practice"}
+            </span>
+          </Link>
+        ))}
       </div>
     </div>
   );

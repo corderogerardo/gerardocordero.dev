@@ -14,6 +14,7 @@ interface FlashcardDeckProps {
   initialCards: Flashcard[]
   initialCategories: string[]
   initialLevels: string[]
+  title?: string
 }
 
 type CardResult = 'correct' | 'wrong'
@@ -28,7 +29,7 @@ function shuffle<T>(items: T[]): T[] {
   return out
 }
 
-export default function FlashcardDeck({ initialCards, initialCategories, initialLevels }: FlashcardDeckProps) {
+export default function FlashcardDeck({ initialCards, initialCategories, initialLevels, title = 'React Native — Senior Practice' }: FlashcardDeckProps) {
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterLevel, setFilterLevel] = useState<string>('all')
   // A shuffle is an event, not a derivation: keeping the order in state stops React
@@ -136,7 +137,7 @@ export default function FlashcardDeck({ initialCards, initialCategories, initial
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">React Native — Senior Practice</h1>
+        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
         <p className="text-muted-foreground mt-1">
           {initialCards.length} flashcards • {initialCategories.length} categories
         </p>
