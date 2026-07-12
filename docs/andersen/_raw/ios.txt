@@ -1,0 +1,219 @@
+SPEC: iOS (Andersen knowledge matrix) — 215 rows, target deck ~68 cards
+Format: <n> <TAB> category <TAB> skill <TAB> [levels] <TAB> question/topic
+NOTE: rich matrix. CURATE DOWN to the highest-signal ~68 for a senior iOS/Swift deck (favor Swift, SwiftUI, UIKit, Multithreading/Concurrency, Architecture, Reactive/Combine, Data Persistence, Networking, App lifecycle). Drop tvOS-only and the most trivial J1 rows.
+
+1	Software and Development Process	Version Control System	[J1 J2]	What is version control system? Examples
+2	Software and Development Process	Version Control System	[J1 J2]	Why do we need version control systems?
+3	Software and Development Process	Version Control System	[J1 J2]	Working with Git repository
+4	Software and Development Process	Development Methodologies	[J1 J2 J3]	What development methodologies exist. Why adhere to a methodology?
+5	Languages	Swift	[J1 J2]	Language syntax and basic operators. Optionals. Protocols. Access modifiers. Interoperability with Obj-C (bridging). Extensions, structures, tuples, enums, computed properties
+6	Languages	Swift	[J1 J2]	Closure. What is it. Why useful
+7	SDK	UIKit	[J1 J2 J3]	frame vs. bounds
+8	SDK	UIKit	[J1 J2 J3]	Subview/superview
+9	SDK	UIKit	[J1 J2 J3]	Classes hierarchy in UIKit. UIView hierarchy on a screen
+10	SDK	UIKit	[J1 J2 J3]	ViewController lifecycle
+11	SDK	UIKit	[J1 J2 J3]	Interface Builder (Storyboard and Xib)
+12	SDK	UIKit	[J1 J2 J3]	UI development using AutoLayout and Autoresizing Masks
+13	SDK	UIKit	[J1 J2 J3]	UIAppearance
+14	SDK	SwiftUI	[J1 J2 J3]	Property wrappers: State, Binding, ObservedObject, StateObject, Published
+15	SDK	SwiftUI	[J1 J2 J3]	Views: VStack, HStack, ZStack, Group, Spacer, AnyView
+16	SDK	SwiftUI	[J1 J2 J3]	Why order of modifiers is important (background() vs padding())? Which pattern is this?
+17	SDK	SwiftUI	[J1 J2 J3]	Environment
+18	SDK	SwiftUI	[J1 J2 J3]	UIKit and SwiftUI compatibility: UIHostingController, UIViewRepresentable, UIViewControllerRepresentable
+19	SDK	SwiftUI	[J1 J2 J3]	@ViewBuilder
+20	SDK	Network	[J1 J2 J3 M1]	NSURLSession
+21	SDK	Network	[J1 J2 J3 M1]	Codable, JSONSerialization
+22	SDK	Network	[J1 J2 J3 M1]	Using frameworks for the network layer (requests, response parsing)
+23	SDK	Network	[J1 J2 J3 M1]	Tools: Postman, Swagger
+24	Software and Development Process	Code Standards/Code Review	[J2 J3]	Which code standards and programming principles exist
+25	Software and Development Process	Code Standards/Code Review	[J2 J3]	What is Code Review
+26	Software and Development Process	Algorithms/Data Structures	[J2 J3 M1]	What is an algorithm? Examples
+27	Software and Development Process	Algorithms/Data Structures	[J2 J3 M1]	Basic data structures (arrays, lists, queues)
+28	Software and Development Process	Troubleshooting/Logging/Monitoring	[J2 J3 M1]	Working with Breakpoints and LLDB
+29	Software and Development Process	Troubleshooting/Logging/Monitoring	[J2 J3 M1]	Stack trace: what, how to extract, why useful. Debugging UI
+30	SDK	Multithreading	[J2 J3]	Tools to work with threads in iOS, advantages/disadvantages
+31	SDK	Multithreading	[J2 J3]	Grand Central Dispatch (GCD): async, sync, queues, QoS
+32	SDK	Multithreading	[J2 J3]	Structured Concurrency: base syntax, work principles. async, await, Task
+33	Software and Development Process	Architecture Knowledge	[J3 M1]	Architecture patterns: MVC. Apple MVC vs MVC. Massive View Controller - avoid. Passive vs active model. LVC
+34	Software and Development Process	Architecture Knowledge	[J3 M1]	General patterns: KVC/KVO, Singleton, Delegate, Observer, Chain of Responsibility
+35	Software and Development Process	Architecture Knowledge	[J3 M1]	OOP principles
+36	Software and Development Process	Version Control System	[J3 M1 M2]	Differences between existing version control systems
+37	Software and Development Process	Version Control System	[J3 M1 M2]	Git flow: attributes, main operations
+38	Software and Development Process	Version Control System	[J3 M1 M2]	Patch: what, creating and applying
+39	Languages	Swift	[J3 M1 M2 M3]	class vs struct vs enum. Generics. Protocol-oriented programming. Memory management. Collection types. Opaque return types. Existential any, limitations. Noncopyable (~Copyable)
+40	SDK	Data Persistence	[J3 M1]	Keychain, UserDefaults, .plist
+41	SDK	Data Persistence	[J3 M1]	AppGroups. UserDefaults sharing
+42	SDK	Data Persistence	[J3 M1]	Core Data: what; its stack (Managed object context, Persistent store coordinator), store types. NSFetchedResultsController, @FetchRequest
+43	Software and Development Process	Code Standards/Code Review	[M1 M2 M3 S1]	Why have code standards? Tools to achieve them
+44	Software and Development Process	Code Standards/Code Review	[M1 M2 M3 S1]	Which problems does Code Review solve. Tools to automate it
+45	Software and Development Process	Testing processes	[M1 M2]	Why are tests needed?
+46	Software and Development Process	Testing processes	[M1 M2]	Types of tests
+47	Software and Development Process	Testing processes	[M1 M2]	Mock testing
+48	Software and Development Process	Estimations	[M1 M2]	Why estimate a task before working on it?
+49	Software and Development Process	Estimations	[M1 M2]	How estimation is done?
+50	Software and Development Process	Development Methodologies	[M1 M2 M3 S1 S2]	Agile vs Waterfall
+51	Software and Development Process	Development Methodologies	[M1 M2 M3 S1 S2]	Scrum vs Kanban. Agile flow from sprint launch to release
+52	SDK	UIKit	[M1 M2]	Which thread is for UI operations?
+53	SDK	UIKit	[M1 M2]	Debugging TableView/CollectionView visual artifacts and stuttering
+54	SDK	UIKit	[M1 M2]	ReuseCell mechanism (CollectionView & TableView)
+55	SDK	UIKit	[M1 M2]	UIGestureRecognizers, combinations. Parent/Child controllers. UIStackView. Constraints
+56	SDK	UIKit	[M1 M2]	Intrinsic content size, content hugging & compression resistance priority
+57	SDK	UIKit	[M1 M2]	Universal UI layouts for different screen sizes. SizeClasses
+58	SDK	UIKit	[M1 M2]	UIResponder chain. UIView vs CALayer. ShapeLayer, UIBezierPath
+59	SDK	UIKit	[M1 M2]	IBDesignable, IBInspectable
+60	SDK	UIKit	[M1 M2]	UI localization
+61	SDK	SwiftUI	[M1 M2 M3 S1]	Layout process in SwiftUI. ViewModifier, GeometryReader, Preference, Anchor, AlignmentGuide
+62	SDK	SwiftUI	[M1]	List vs ForEach
+63	SDK	SwiftUI	[M1 M2 M3 S1]	Lazy containers: LazyVStack, LazyHStack, LazyVGrid, LazyHGrid
+64	SDK	SwiftUI	[M1 M2 M3 S1]	Grid
+65	SDK	SwiftUI	[M1 M2 M3 S1]	Section, Form
+66	SDK	SwiftUI	[M1 M2 M3 S1]	GroupBox
+67	SDK	SwiftUI	[M1 M2 M3 S1]	ScrollViewReader
+68	SDK	SwiftUI	[M1 M2 M3 S1]	Drawing/animation: Path, Shape, Canvas. AsyncImage. Basic animations. Gestures, combining gestures
+69	SDK	SwiftUI	[M1 M2 M3 S1]	onAppear() vs task(): when used, difference
+70	SDK	Multithreading	[M1 M2 M3 S1]	Multithreading pitfalls (deadlock, race condition, data race, priority inversion, livelock)
+71	SDK	Multithreading	[M1 M2 M3 S1]	GCD: asyncAfter, concurrentPerform, DispatchGroup, DispatchWorkItem
+72	SDK	Multithreading	[M1 M2 M3 S1]	OperationQueue: NSOperation/NSOperationQueue, dependencies. vs GCD
+73	SDK	Multithreading	[M1 M2 M3 S1]	Thread Safety APIs: semaphore, mutex, barrier
+74	SDK	Multithreading	[M1 M2 M3 S1]	atomic property with Swift
+75	SDK	Multithreading	[M1 M2 M3 S1]	Grouping simultaneous async calls (async let)
+76	SDK	Multithreading	[M1 M2 M3 S1]	Actors: what, how they work. @MainActor, @globalActor
+77	SDK	Multithreading	[M1 M2 M3 S1]	TaskGroup
+78	SDK	Multithreading	[M1 M2 M3 S1]	Task(priority:operation), Task.detached, Task cancellation (CancellationError)
+79	SDK	Multithreading	[M1 M2 M3 S1]	AsyncSequence
+80	SDK	User Notifications	[M1 M2]	APNS work principles
+81	SDK	User Notifications	[M1 M2]	Local and remote notifications
+82	SDK	User Notifications	[M1 M2]	Notification body, fields
+83	SDK	Reactive Programming	[M1 M2]	Main principles of reactive programming
+84	SDK	Reactive Programming	[M1 M2]	Basic types: Publisher (Observable in RxSwift), Subscriber, Operator
+85	SDK	Reactive Programming	[M1 M2]	Publishers: Just, Empty, Sequence, Future, Deferred
+86	SDK	Reactive Programming	[M1 M2]	Operators: map, flatMap, compactMap, filter
+87	SDK	Reactive Programming	[M1 M2]	Subscribers: sink, assign
+88	Tools	Xcode Build/Distribution	[M1 M2 M3]	Project file, Workspace file. Builds (AppStore, AdHoc, Debug)
+89	App Store	Account	[M1 M2]	Setting up Xcode for a provided account
+90	App Store	Account	[M1 M2]	Provisioning profile, certificate: what, how to get/create
+91	Software and Development Process	Architecture Knowledge	[M2 M3]	MVVM, VIPER, VIP, Clean Swift, RIBs, Redux, TCA
+92	Software and Development Process	Architecture Knowledge	[M2 M3]	General patterns: Factory, Builder, Adapter
+93	Software and Development Process	Architecture Knowledge	[M2 M3]	SOLID, KISS, DRY, YAGNI, DI
+94	Software and Development Process	Architecture Knowledge	[M2 M3]	OOP vs POP (protocol oriented programming)
+95	Software and Development Process	Algorithms/Data Structures	[M2 M3 S1]	Algorithm complexity: Big O, time/space complexity
+96	Software and Development Process	Algorithms/Data Structures	[M2 M3 S1]	Search and sort algorithms; default algorithms in iOS. Comparison
+97	Software and Development Process	Algorithms/Data Structures	[M2 M3 S1]	Complex data structures (linked list, graph)
+98	Software and Development Process	Troubleshooting/Logging/Monitoring	[M2 M3]	Symbolic breakpoints. LLDB instructions
+99	Software and Development Process	Troubleshooting/Logging/Monitoring	[M2 M3]	Network connection manipulation (latency/bandwidth), sniffing on device/simulator
+100	Software and Development Process	Troubleshooting/Logging/Monitoring	[M2 M3]	Crashlog: how to get, structure
+101	Software and Development Process	Troubleshooting/Logging/Monitoring	[M2 M3]	Profiler: memory leaks (memory graph, leaks debugger, watch list)
+102	SDK	SwiftUI	[M2 M3 S1]	List vs ForEach (deep)
+103	SDK	Data Persistence	[M2 M3]	Core Data multithreading, multiple contexts. Lazy loading, delete rules, merge policy. Cache
+104	SDK	Data Persistence	[M2 M3]	Realm: multithreading and thread safety, EmbeddedObject. vs Core Data
+105	SDK	Data Persistence	[M2 M3]	NSFileManager, Archiving and serialising
+106	SDK	Network	[M2 M3]	Requests caching. NSURLCache, NSURLProtocol
+107	SDK	Network	[M2 M3]	NSURLSessionTask subtypes
+108	SDK	Network	[M2 M3]	Authenticating via NSURLSessionDelegate, raw data, custom headers, REST-API, OAuth2
+109	SDK	Deep Linking	[M2 M3]	Native URL schemes, creating URL scheme for app
+110	SDK	Maps	[M2 M3]	User's location. MapKit maps and default pins. Location service modes
+111	App Store	inApp	[M2 M3]	Purchase types in AppStore
+112	Software and Development Process	CI/CD	[M3]	Continuous Integration/Delivery/Deployment: differences
+113	Software and Development Process	Testing processes	[M3 S1 S2]	Unit testing. Code coverage. XCTest alternatives: Quick, Nimble
+114	Software and Development Process	Testing processes	[M3 S1 S2]	Test doubles: dummy, fake, stub, spy, mock
+115	Software and Development Process	Testing processes	[M3 S1 S2]	UI testing, snapshot testing
+116	Software and Development Process	Version Control System	[M3 S1 S2]	Cherry Pick, Rebase, Merge. Rebase vs Merge. What commands 'git pull' consists of
+117	Software and Development Process	Version Control System	[M3 S1 S2]	Changing commit history, editing commit. Restoring deleted branch/commit
+118	Software and Development Process	Version Control System	[M3 S1 S2]	Feature branch, Trunk-based development, feature flags
+119	Software and Development Process	Estimations	[M3 S1]	How to estimate a task new to you
+120	Languages	Objective-C	[M3 S1]	Syntax and operators. Properties/ivars, setters/getters. Categories
+121	Languages	Objective-C	[M3 S1]	Difference between '.' and '->'
+122	Languages	Objective-C	[M3 S1]	Root classes
+123	Languages	Objective-C	[M3 S1]	Iteration through collections (NSEnumerator, for, for-in)
+124	Languages	Objective-C	[M3 S1]	Why 2 methods called upon object creation?
+125	SDK	UIKit	[M3 S1 S2]	Safe Area Layout. Custom transition. Core Animation, Core Graphics. Complex UICollectionView. UITraitCollection. RTL/hieroglyphic localisation. Merging Storyboard/Xib conflicts
+126	SDK	User Notifications	[M3 S1]	Notifications from system's POV. Silent pushes. Badges. Regenerating device token. Limitations
+127	SDK	User Notifications	[M3 S1]	Notifications debugging in simulator
+128	SDK	User Notifications	[M3 S1]	App extensions: service extension, content extension
+129	SDK	User Notifications	[M3 S1]	Provisional authorization, critical alerts
+130	SDK	Reactive Programming	[M3 S1]	Subject vs Publisher, subject types (CurrentValueSubject, PassthroughSubject)
+131	SDK	Reactive Programming	[M3 S1]	Operators: throttle, debounce, switchToLatest, handleEvents, print
+132	SDK	Reactive Programming	[M3 S1]	Scheduler: built-in schedulers (DispatchQueue, RunLoop, ImmediateScheduler)
+133	SDK	Reactive Programming	[M3 S1]	receive(on:), subscribe(on:)
+134	SDK	Reactive Programming	[M3 S1]	Error handling
+135	SDK	Reactive Programming	[M3 S1]	Type erasure: AnyPublisher, eraseToAnyPublisher()
+136	SDK	Reactive Programming	[M3 S1]	AnyCancellable (DisposeBag in RxSwift)
+137	SDK	Reactive Programming	[M3 S1]	Retain cycle upon subscribing to an event stream, weak/unowned self
+138	SDK	Security	[M3 S1]	App Transport Security
+139	SDK	Security	[M3 S1]	Private data storage
+140	SDK	Security	[M3 S1]	Privacy policy. Getting user consent to store private data
+141	SDK	Application Lifecycle	[M3 S1]	AppDelegate methods
+142	SDK	Application Lifecycle	[M3 S1]	Application states and transitions
+143	SDK	Application Lifecycle	[M3 S1]	Handle view state changes in ViewController
+144	App Store	Account	[M3 S1 S2]	Setting up developer account from scratch
+145	Software and Development Process	Architecture Knowledge	[S1 S2]	Modular architecture (refactoring monolith or building from scratch)
+146	Software and Development Process	Architecture Knowledge	[S1 S2]	SuperApp product architecture
+147	Software and Development Process	Architecture Knowledge	[S1 S2]	Service-oriented (microservice) architecture
+148	Software and Development Process	Architecture Knowledge	[S1 S2]	Choosing architecture based on comparison (problem, advantages/disadvantages, when worth it)
+149	Software and Development Process	CI/CD	[S1]	CI/CD/CD differences
+150	Software and Development Process	Troubleshooting/Logging/Monitoring	[S1 S2]	Complex LLDB. Changing a variable in LLDB at runtime
+151	Software and Development Process	Troubleshooting/Logging/Monitoring	[S1 S2]	Symbolising a crashlog. Main Profiler templates
+152	Languages	Swift	[S1 S2]	Performance tuning
+153	Languages	Swift	[S1 S2]	Static/dynamic dispatch. Autoreleasepool. RunLoop; why timer doesn't fire while touching screen
+154	Languages	Swift	[S1 S2]	Reusable generic components development
+155	Languages	Swift	[S1 S2]	@resultBuilder
+156	SDK	Data Persistence	[S1 S2]	Debug Core Data. Migrations. Performance bottlenecks
+157	SDK	Data Persistence	[S1 S2]	Database schema: normalization and denormalization
+158	SDK	Data Persistence	[S1 S2]	SQLite. NSCache. UIDocument-based application
+159	SDK	Network	[S1 S2]	Custom APIClient. Processing response codes, SOAP, Long Polling
+160	SDK	Deep Linking	[S1 S2]	Universal Links
+161	SDK	Deep Linking	[S1 S2]	Universal Links vs URL Schemes: advantages/disadvantages
+162	SDK	Deep Linking	[S1 S2]	3rd party services like Branch.io (why needed)
+163	SDK	Maps	[S1 S2]	SDK for maps (routes calc, drawing)
+164	SDK	Maps	[S1 S2]	Custom pins, zooming, custom annotations
+165	SDK	Maps	[S1 S2]	Location in background. Direct/reverse geocoding
+166	SDK	Bluetooth	[S1 S2]	CoreBluetooth basics, BLE protocol stack
+167	Tools	Xcode Build/Distribution	[S1 S2]	Linker, Frameworks, Targets. Resource/framework paths. Optimisation flags. Target schemes
+168	App Store	inApp	[S1 S2]	Managing purchases in AppStoreConnect, StoreKit, transactions. Review Guidelines
+169	Software and Development Process	Code Standards/Code Review	[S2]	Tools to automate code standards
+170	Software and Development Process	Code Standards/Code Review	[S2]	Organising code review pipelines: tools, conditions, limitations
+171	Software and Development Process	Algorithms/Data Structures	[S2]	Graph theory. Math behind algorithm complexity
+172	Software and Development Process	Algorithms/Data Structures	[S2]	Complex data structures (trees, prefix trees, hash tables)
+173	Software and Development Process	CI/CD	[S2]	Job, Stage, Pipeline, Artifacts, Scheduler
+174	Software and Development Process	CI/CD	[S2]	Examples of CI/CD/CD
+175	Software and Development Process	Estimations	[S2]	Estimation techniques considering team size/composition/capacity
+176	Languages	Objective-C	[S2]	edit modifiers (readonly/readwrite)
+177	Languages	Objective-C	[S2]	ownership attributes (retain/strong/copy/assign/unsafe_unretained/weak)
+178	Languages	Objective-C	[S2]	atomic attributes (atomic/nonatomic)
+179	Languages	Objective-C	[S2]	nullability attributes (null_unspecified/null_resettable/nullable/nonnull)
+180	Languages	Objective-C	[S2]	@synthesize/@dynamic
+181	Languages	Objective-C	[S2]	ARC. Memory management pitfalls
+182	Languages	Objective-C	[S2]	Collection classes: what makes them special
+183	Languages	Objective-C	[S2]	id vs instancetype
+184	SDK	SwiftUI	[S2]	Custom animations. Custom view transitions. Layout protocol. Swift Charts. SwiftUI navigation pitfalls. UI performance tuning
+185	SDK	SwiftUI	[S2]	DrawingGroup - high performance rendering
+186	SDK	SwiftUI	[S2]	Shaders in SwiftUI code
+187	SDK	SwiftUI	[S2]	Accessibility
+188	SDK	Multithreading	[S2]	Thread Safety APIs: NSLock, NSRecursiveLock, OSSpinLock, os_unfair_lock, OSAllocatedUnfairLock
+189	SDK	Multithreading	[S2]	Suspension point, partial tasks - when executing thread might change?
+190	SDK	Multithreading	[S2]	@TaskLocal, Sendable, nonisolated
+191	SDK	Multithreading	[S2]	AsyncStream. Continuations
+192	SDK	Multithreading	[S2]	Bridging Combine and AsyncSequence
+193	SDK	Multithreading	[S2]	How to test async/await code
+194	SDK	Multithreading	[S2]	NSThread, thread vs queue
+195	SDK	Multithreading	[S2]	Thread explosion
+196	SDK	Multithreading	[S2]	POSIX threads in iOS (pthread_create)
+197	SDK	User Notifications	[S2]	VoIP push notifications, payload size. PushKit
+198	SDK	User Notifications	[S2]	Darwin Notifications
+199	SDK	Reactive Programming	[S2]	Operators: combineLatest(), merge(), zip()
+200	SDK	Reactive Programming	[S2]	share(), multicast()
+201	SDK	Reactive Programming	[S2]	ConnectablePublisher: makeConnectable(), connect(), autoconnect()
+202	SDK	Reactive Programming	[S2]	Creating a publisher from constant/array? Just
+203	SDK	Reactive Programming	[S2]	Publisher for callback-based API? Future + Deferred. Why Deferred if Future exists?
+204	SDK	Reactive Programming	[S2]	Publisher for delegate-based API? Subject
+205	SDK	Reactive Programming	[S2]	Backpressure
+206	SDK	Reactive Programming	[S2]	Debugging
+207	SDK	Reactive Programming	[S2]	receive(on: RunLoop.main) vs receive(on: DispatchQueue.main)
+208	SDK	Reactive Programming	[S2]	Testing async code with Combine
+209	SDK	Security	[S2]	Photo gallery export in iOS
+210	SDK	Security	[S2]	SSL usage. Disk/database encryption
+211	SDK	Security	[S2]	Touch/Face ID, Apple Pay, iCloud
+212	SDK	Application Lifecycle	[S2]	Background modes. Background tasks. Setup and recommendations
+213	tvOS	tvOS	[S2]	Design guidelines
+214	tvOS	tvOS	[S2]	Focus Engine. UI elements with native Focus Engine support
+215	tvOS	tvOS	[S2]	Parallax. UI elements with native parallax support

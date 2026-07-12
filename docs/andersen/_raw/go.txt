@@ -1,0 +1,69 @@
+SPEC: GO (Andersen knowledge matrix)  — 65 topic rows, target deck ~150 cards
+Format: <n> <TAB> category <TAB> skill <TAB> [levels] <TAB> topics (| separated)
+NOTE: GO's matrix is topic-style, not full questions. Phrase each topic into 1-2 senior interview questions.
+
+1	Software Engineering Practices	Architecture knowledge	[J1 J2 J3 M1 M2 M3 S1 S2]	OOP | Functional Programming | SOLID | Design Patterns | DDD | Event Sourcing | Microservices architechure
+2	Software Engineering Practices	Algorithms and data structures	[J1 J2 J3 M1 M2 M3 S1 S2]	Big-O Notation for Algorithm Complexity | Data Structures | Basic fundamental algorithms
+3	Software Engineering Practices	Testing	[J1 J2 J3 M1 M2 M3 S1 S2]	Unit Testing | Integration Testing | Automation Testing | Performance Testing | Security Testing | Testing Frameworks | Fakes | Attributes, Assertions, FluentAssertions | Gherkin | TDD | BDD
+4	Software Development Processes	Version Control System(Git,tfs...)	[J1 J2 J3 M1 M2 M3 S1 S2]	Git | Gitflow
+5	Development	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Basic (string/rune/byte/int/uint/float/constants/pointer)
+6	Development	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Array/Slice
+7	Development	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Maps
+8	Development	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Interfaces (Empty Interface/Conversion/ Checking)
+9	Development	Object-Oriented Programming	[J1 J2 J3 M1 M2 M3 S1 S2]	Struct
+10	Development	Object-Oriented Programming	[J1 J2 J3 M1 M2 M3 S1 S2]	Encapsulation
+11	Development	Object-Oriented Programming	[J1 J2 J3 M1 M2 M3 S1 S2]	Inheritance/Composition/ Embedding
+12	Development	Object-Oriented Programming	[J1 J2 J3 M1 M2 M3 S1 S2]	Polymorphism
+13	Development	Functions	[J1 J2 J3 M1 M2 M3 S1 S2]	Lambda/Variadic
+14	Development	Functions	[J1 J2 J3 M1 M2 M3 S1 S2]	Recursion/Closure
+15	Development	Functions	[J1 J2 J3 M1 M2 M3 S1 S2]	First-class function
+16	Development	Concurrency	[J1 J2 J3 M1 M2 M3 S1 S2]	Scheduler models
+17	Development	Concurrency	[J1 J2 J3 M1 M2 M3 S1 S2]	Goroutine/Scheduler
+18	Development	Concurrency	[J1 J2 J3 M1 M2 M3 S1 S2]	Channel/Select
+19	Development	Concurrency	[J1 J2 J3 M1 M2 M3 S1 S2]	Race Condition
+20	Development	Package sync	[J1 J2 J3 M1 M2 M3 S1 S2]	Atomic | Mutex | WaitGroup | Once | Pool | Map
+21	Development	Patterns	[J1 J2 J3 M1 M2 M3 S1 S2]	Worker Pool (Thread pool) | Pipeline | Barrier | Future
+22	Development	Runtime	[J1 J2 J3 M1 M2 M3 S1 S2]	Structure size optimization (alignment/padding).
+23	Development	Runtime	[J1 J2 J3 M1 M2 M3 S1 S2]	Memory model. Escape analysis.
+24	Development	Runtime	[J1 J2 J3 M1 M2 M3 S1 S2]	Extra. Package runtime (Garbage Collector)
+25	Development	Runtime	[J1 J2 J3 M1 M2 M3 S1 S2]	Main/init
+26	Development	Runtime	[J1 J2 J3 M1 M2 M3 S1 S2]	Defer
+27	Development	Applications	[J1 J2 J3 M1 M2 M3 S1 S2]	Context (key-value/cancel/tracing)
+28	Development	Applications	[J1 J2 J3 M1 M2 M3 S1 S2]	Errors handling (Panic/Recover/Errors)
+29	Development	Tools	[J1 J2 J3 M1 M2 M3 S1 S2]	Godoc | Gofmt | Go vet
+30	Development	Tools	[J1 J2 J3 M1 M2 M3 S1 S2]	Pprof
+31	Development	Tools	[J1 J2 J3 M1 M2 M3 S1 S2]	Linters (GolangCI, golint and etc)
+32	Development	Tools	[J1 J2 J3 M1 M2 M3 S1 S2]	Dependencies Management. Mod
+33	Development	Testing	[J1 J2 J3 M1 M2 M3 S1 S2]	Go test/benchmark
+34	Development	Testing	[J1 J2 J3 M1 M2 M3 S1 S2]	Mocking
+35	Development	Testing	[J1 J2 J3 M1 M2 M3 S1 S2]	Package httptest
+36	Development	Testing	[J1 J2 J3 M1 M2 M3 S1 S2]	Testify | Ginkgo | Goconvey
+37	Development	Database	[J1 J2 J3 M1 M2 M3 S1 S2]	SQL
+38	Development	Others	[J1 J2 J3 M1 M2 M3 S1 S2]	Docker
+39	Development	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	OSI
+40	Development	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	HTTP1/HTTP2
+41	Development	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	API
+42	Development	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	WebSocket
+43	Development	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	gRPC
+44	Software Engineering Practices	Code Standards&Code Review Process	[J2 J3 M1 M2 M3 S1 S2]	Code Standards | Code Smells | Refactoring | Code Review Process&Experience
+45	Software Engineering Practices	Continuous Integration&Continuous Delivery & Deployment	[J2 J3 M1 M2 M3 S1 S2]	Jenkins | Gitlab
+46	Software Engineering Practices	Troubleshooting / Logging / Monitoring	[J2 J3 M1 M2 M3 S1 S2]	Tracing | Logging process | Profiling | Profilers
+47	Software Development Processes	Estimations	[J2 J3 M1 M2 M3 S1 S2]	Estimations experience
+48	Software Development Processes	Development metodologies	[J2 J3 M1 M2 M3 S1 S2]	Agile | Scrum/Kanban Structure | Processes Documentation | Waterfall
+49	Development	Frameworks	[J2 J3 M1 M2 M3 S1 S2]	Gin | Echo | Go-Kit | Beego
+50	Development	Database	[J2 J3 M1 M2 M3 S1 S2]	Indexes
+51	Development	Database	[J2 J3 M1 M2 M3 S1 S2]	Transactions
+52	Development	Database	[J2 J3 M1 M2 M3 S1 S2]	Sharding/Replication
+53	Development	Database.Message Broker	[J2 J3 M1 M2 M3 S1 S2]	Amazon SQS
+54	Development	Database.Message Broker	[J2 J3 M1 M2 M3 S1 S2]	Kafka
+55	Development	Database.Message Broker	[J2 J3 M1 M2 M3 S1 S2]	RabbitMQ
+56	Development	Database.Message Broker	[J2 J3 M1 M2 M3 S1 S2]	NATS
+57	Development	Database. Caching	[J2 J3 M1 M2 M3 S1 S2]	Redis | Memcached | Cashing principles
+58	Development	Database. NOSQL	[J2 J3 M1 M2 M3 S1 S2]	ClickHouse
+59	Development	Database. NOSQL	[J2 J3 M1 M2 M3 S1 S2]	MongoDB
+60	Development	Database. Search Engine	[J2 J3 M1 M2 M3 S1 S2]	Elasticsearch
+61	Development	Others	[J2 J3 M1 M2 M3 S1 S2]	Virtualization (OS level virtualization (Docker) / x86 Virtualization (VirtualBox))
+62	Development	OS	[J2 J3 M1 M2 M3 S1 S2]	OS. Common Language (Bash and etc)
+63	Development	OS	[J2 J3 M1 M2 M3 S1 S2]	OS. Processes and Threads (Threads, Multi-Threading, Scheduling)
+64	Development	Orchestration	[J3 M1 M2 M3 S1 S2]	Kubernetes
+65	Development	Database. NOSQL	[M1 M2 M3 S1 S2]	Neo4J, Cassandra, DynamoDB

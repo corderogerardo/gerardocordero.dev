@@ -1,0 +1,89 @@
+SPEC: Node.js (Andersen knowledge matrix) — 85 topic rows, target deck ~236 cards
+Format: <n> <TAB> category <TAB> skill <TAB> [levels] <TAB> topic
+NOTE: topic-style matrix. Enrich each topic into 2-3 senior interview questions to reach the target.
+
+1	JS (ES5)	Common	[J1 J2 J3 M1 M2 M3 S1 S2]	Common
+2	JS (ES5)	Objects	[J1 J2 J3 M1 M2 M3 S1 S2]	Common
+3	JS (ES5)	Objects	[J1 J2 J3 M1 M2 M3 S1 S2]	Garbage collector
+4	JS (ES5)	Data types	[J1 J2 J3 M1 M2 M3]	Common
+5	JS (ES5)	Data types	[J1 J2 J3 M1 M2 M3 S1 S2]	Date and time
+6	JS (ES5)	Data types	[J1 J2 J3 M1 M2 M3 S1 S2]	JSON
+7	JS (ES5)	Functions	[J1 J2 J3 M1 M2 M3 S1 S2]	Common
+8	JS (ES5)	Functions	[J1 J2 J3 M1 M2 M3 S1 S2]	Execution context
+9	JS (ES5)	Prototypes, inheritance	[J1 J2 J3 M1 M2 M3 S1 S2]	Prototypes, inheritance
+10	JS (ES5)	Asynchronous programming	[J1 J2 J3 M1 M2 M3 S1 S2]	Event loop
+11	JS (ES5)	Asynchronous programming	[J1 M2 M3 S1 S2]	Scheduling
+12	JS (ES5)	Regular expressions	[J1 J2 J3 M1 M2 M3 S1 S2]	Regular expressions
+13	JS (ES6+)	Common	[J1 J2 J3 M1 M2 M3 S1 S2]	Common
+14	JS (ES6+)	Modules	[J1 J2 J3 M1 M2 M3 S1 S2]	Modules
+15	JS (ES6+)	Classes	[J1 J2 J3 M1 M2 M3 S1 S2]	Classes
+16	JS (ES6+)	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	Fetch
+17	Node.js	Async programming	[J1 J2 J3 M1 M2 M3 S1 S2]	blocking / non-blocking IO
+18	Node.js	Async programming	[J1 J2 J3 M1 M2 M3]	callback pattern
+19	Node.js	Async programming	[J1 J2 J3 M1 M2 M3 S1 S2]	fibers, coroutines*
+20	Node.js	Module system	[J1 J2 J3 M1 M2 M3 S1 S2]	exports, globals
+21	Node.js	Module system	[J1 J2 J3 M1 M2 M3 S1 S2]	npm
+22	Node.js	Module system	[J1 J2 J3 M1 M2 M3]	commonJS modules
+23	Databases	SQL	[J1 J2 J3 M1 M2 M3 S1 S2]	Types
+24	Databases	SQL	[J1 J2 J3 M1 M2 M3 S1 S2]	Keys
+25	Databases	SQL	[J1 J2 J3 M1 M2 M3]	Relationship
+26	Databases	SQL	[J1 J2 J3 M1 M2 M3 S1 S2]	Constraints
+27	Databases	SQL	[J1 J2 J3 M1 M2 M3 S1 S2]	Migrations
+28	Databases	NoSQL	[J1 J2 J3 M1 M2 M3 S1 S2]	NoSQL
+29	Databases	Database common operations	[J1 J2 J3 M1 M2 M3 S1 S2]	Database common operations
+30	Typescript	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Basic
+31	Typescript	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Interface
+32	Typescript	Types	[J1 J2 J3 M1 M2 M3 S1 S2]	Functions
+33	Typescript	Classes	[J1 J2 J3 M1 M2 M3 S1 S2]	Modifiers
+34	Typescript	Extra	[J1 J2 J3 S2]	Enums
+35	Typescript	Extra	[J1 J2 J3 M1 M2 M3 S1 S2]	Declaration files
+36	Software Development Processes	Bug tracking systems(Jira,Redmine,Tfs)	[J1 J2 J3 M1 M2 M3 S1 S2]	Bug tracking systems
+37	Software Development Processes	Version Control System (Git)	[J1 J2 J3 M1 M2 M3 S1 S2]	Version Control System (Git)
+38	Software Engineering Practices	OOP	[J1 J2 J3 M1 M2 M3 S1 S2]	OOP
+39	Software Engineering Practices	Algorithms and data structures	[J1 J2 J3 M1 M2 M3 S1 S2]	Algorithms and data structures
+40	Software Engineering Practices	Troubleshooting / Logging / Monitoring	[J1 J2 J3 M1 M2 M3 S1 S2]	Troubleshooting / Logging / Monitoring
+41	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	REST
+42	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1]	GraphQL
+43	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	AJAX
+44	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	CORS
+45	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1]	Long polling
+46	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	Web Socket
+47	Software Engineering Practices	Network	[J1 J2 J3 M1 M2 M3 S1 S2]	Server Sent Events
+48	Software Engineering Practices	Refactoring	[J1 J2 J3 M1 M2 M3 S1 S2]	Refactoring
+49	Software Engineering Practices	Testing processes	[J1 J2 J3 M1 M2 M3 S1 S2]	Testing processes
+50	JS (ES5)	Error handling	[J2 J3 M1 M2 M3 S1 S2]	Error handling
+51	Node.js	EventLoop	[J2 J3 M1 M2 M3 S1 S2]	EventLoop pattern
+52	Node.js	EventLoop	[J2 J3 M1 M2 M3 S1 S2]	Thread pool
+53	Node.js	EventLoop	[J2 J3 M1 M2 M3 S1 S2]	polling, kqueue, epoll*
+54	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Express
+55	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Nest
+56	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Loopback
+57	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Hapi
+58	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Socket.io
+59	Node.js	Web frameworks	[J2 J3 M1 M2 M3 S1 S2]	Koa
+60	Software Development Processes	Estimations	[J2 J3 M1 M2 M3 S1 S2]	Estimations
+61	Software Development Processes	Development methodologies	[J2 J3 M1 M2 M3 S1 S2]	Development methodologies (agile, scrum/kanban, waterfall etc.)
+62	Software Engineering Practices	Functional programming	[J2 J3 M1 M2 M3 S1 S2]	Functional programming
+63	Software Engineering Practices	Code review and code standards	[J2 J3 M1 M2 M3 S1 S2]	Code review and code standards
+64	JS (ES6+)	Asynchronous programming	[J3 M1 M2 M3 S1 S2]	Promise
+65	JS (ES6+)	Asynchronous programming	[J3 M1 M2 M3 S1 S2]	Async/await
+66	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	Http
+67	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	Timers
+68	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	File System
+69	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	Events
+70	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	Process
+71	Node.js	Node.js API	[J3 M1 M2 M3 S1 S2]	Child Process
+72	Node.js	Node.js API	[J3 M1 M2 M3 S1]	Errors
+73	Node.js	Node.js API	[J3 M1 M2 M3 S1]	Cluster
+74	Node.js	Node.js API	[J3 M1 M2 M3 S1]	Stream
+75	Databases	Database deployment	[J3 M1 M2 M3 S1 S2]	Database deployment
+76	Software Development Processes	Process Planning (SDLC)	[J3 M1 M2 M3 S1 S2]	Process Planning (SDLC)
+77	Software Engineering Practices	Reactive programming	[J3 M1 M2 M3 S1 S2]	Reactive programming
+78	Software Engineering Practices	Builds and CI/CD	[J3 M1 M2 M3 S1 S2]	Builds and CI/CD
+79	Software Engineering Practices	Security and Cryptography	[J3 M1 M2 M3 S1 S2]	Security and Cryptography
+80	JS (ES6+)	Data types	[M1 M2 M3 S1 S2]	Data types
+81	Node.js	Native Modules	[M1 M2 M3 S1 S2]	N-API, C++ Addons
+82	Databases	SQL	[M1 M2 M3 S1 S2]	Triggers
+83	Databases	SQL	[M1 M2 M3 S1 S2]	Transactions
+84	JS (ES6+)	Asynchronous programming	[M2 M3 S1 S2]	Generators/iterators
+85	Software Engineering Practices	Architecture and Design	[S1 S2]	Architecture and Design

@@ -15,8 +15,18 @@ export interface AndersenSpec {
 }
 
 // Registered specs — add one line per spec as its deck lands.
+// getSpecs() filters to those whose flashcards.md exists, so a registered-but-unbuilt spec
+// simply doesn't render until its content lands under docs/andersen/<slug>/.
 export const ANDERSEN_SPECS: AndersenSpec[] = [
   { slug: 'react', title: 'React', emoji: '⚛️' },
+  { slug: 'node', title: 'Node.js', emoji: '🟢' },
+  { slug: 'python', title: 'Python', emoji: '🐍' },
+  { slug: 'go', title: 'Go', emoji: '🐹' },
+  { slug: 'android', title: 'Android', emoji: '🤖' },
+  { slug: 'ios', title: 'iOS', emoji: '🍎' },
+  { slug: 'devops', title: 'DevOps', emoji: '⚙️' },
+  { slug: 'business-analyst', title: 'Business Analyst', emoji: '📊' },
+  { slug: 'system-analyst', title: 'System Analyst', emoji: '🧩' },
 ]
 
 function githubSlug(text: string): string {
