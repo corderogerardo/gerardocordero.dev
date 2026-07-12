@@ -46,9 +46,9 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How does Swift decide between static and dynamic dispatch, and why does it matter for performance? — [answer](swift.md#static-vs-dynamic-dispatch)
 - What is `@resultBuilder` and how does SwiftUI use it? — [answer](swift.md#resultbuilder)
 
-## Swiftui
+## SwiftUI
 
-### Swiftui
+### SwiftUI
 
 - Walk me through `@State`, `@Binding`, `@ObservedObject`, `@StateObject`, and `@Published` — what does each one actually own? — [answer](swiftui.md#property-wrappers)
 - What do `VStack`, `HStack`, `ZStack`, `Group`, `Spacer`, and `AnyView` each actually do? — [answer](swiftui.md#stacks-and-layout-containers)
@@ -61,9 +61,9 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Walk me through SwiftUI's drawing and animation primitives — `Path`, `Shape`, `Canvas` — and the difference between `onAppear` and `.task`. — [answer](swiftui.md#drawing-animation-and-gestures)
 - You've got a SwiftUI screen with hundreds of animating elements and it's dropping frames — what tools do you reach for? — [answer](swiftui.md#high-performance-swiftui)
 
-## Uikit
+## UIKit
 
-### Uikit
+### UIKit
 
 - What's the actual difference between `frame` and `bounds`, and how does the subview/superview hierarchy work? — [answer](uikit.md#frame-vs-bounds-and-the-view-hierarchy)
 - Walk me through the `UIViewController` lifecycle — what happens, in order, and where do you put what? — [answer](uikit.md#viewcontroller-lifecycle)

@@ -50,7 +50,7 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Give examples of data structures in Python. Why is the dict data structure necessary? Name the main methods for working with list and dict. — [answer](python-types.md#collections-overview-list-dict-set-tuple)
 - What keys will be in the dict as a result of {1: 'a', True: 'b', 1.0: 'c'}? Does the insertion order store the dict data structure? Is it possible to make any object the key of a dict? — [answer](python-types.md#dict-internals-hashing-equal-keys-and-insertion-order)
 - What methods exist in the set data structure to perform operations between two sets? What is a frozenset and how is it different from a regular set? — [answer](python-types.md#set-operations-and-frozenset)
-- What is comprehension? What data structures can be created through comprehension? Is it possible to write a comprehension of 2+ levels of nesting? Are there asynchronous comprehensions? — [answer](python-types.md#comprehensions)
+- What is comprehension? What data structures can be created through comprehension? How do you write a comprehension with two or more nesting levels? Are there asynchronous comprehensions? — [answer](python-types.md#comprehensions)
 - What is the difference between shallow copy and deep copy in the context of collections in Python? — [answer](python-types.md#shallow-copy-vs-deep-copy)
 - What is tuple unpacking? Can a tuple be a key in a dict? Are there any exceptions to this rule? — [answer](python-types.md#tuple-unpacking-and-tuples-as-dict-keys)
 - Why is the Decimal type needed if there is a float type? What will decimal.Decimal(0.3) != decimal.Decimal('0.3') return and why? — [answer](python-types.md#decimal-vs-float)

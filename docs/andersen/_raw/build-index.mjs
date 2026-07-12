@@ -15,9 +15,9 @@ const ACRONYMS = { api: 'API', cicd: 'CI/CD', iac: 'IaC', k8s: 'K8s', ui: 'UI', 
 const humanize = (file) => file.replace(/\.md$/, '').split('-')
   .map((w) => ACRONYMS[w.toLowerCase()] || w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
-// Title map + preferred file order per spec (files not listed fall to the end, alpha).
-const TITLES = { node: 'Node.js', go: 'Go', python: 'Python', android: 'Android', ios: 'iOS',
-  devops: 'DevOps', 'business-analyst': 'Business Analyst', 'system-analyst': 'System Analyst' }
+// Display title per spec. Files within a spec are emitted in alphabetical order.
+const TITLES = { react: 'React', node: 'Node.js', go: 'Go', python: 'Python', android: 'Android',
+  ios: 'iOS', devops: 'DevOps', 'business-analyst': 'Business Analyst', 'system-analyst': 'System Analyst' }
 
 function extractCards(md) {
   const lines = md.split('\n')

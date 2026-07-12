@@ -40,9 +40,9 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How do you write an integration test for an Express or Nest endpoint without hitting a real database? — [answer](frameworks.md#testing-an-express-or-nest-endpoint)
 - How do you test code that uses setTimeout or fs without slowing down your test suite? — [answer](frameworks.md#mocking-timers-and-io-in-node-tests)
 
-## Nodejs Core
+## Node.js Core
 
-### Nodejs Core
+### Node.js Core
 
 - Why is Node's I/O non-blocking by default, and what does that actually save you? — [answer](nodejs-core.md#blocking-vs-non-blocking-io)
 - Walk through what happens when you call fs.readFile — where does control go while the disk read happens? — [answer](nodejs-core.md#what-actually-happens-on-an-async-io-call)
