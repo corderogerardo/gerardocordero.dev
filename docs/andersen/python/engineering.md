@@ -182,6 +182,7 @@ Both, for different guarantees, is the honest answer. Pure business logic that h
 Test coverage is the percentage of your code that's actually executed while the test suite runs, most often measured per line (line coverage) or per branch (branch coverage — did both sides of every `if` get exercised, not just one). It's a diagnostic for *finding untested code*, not a proof of correctness — a line can execute during a test without that test actually asserting anything meaningful about its behavior, which is why 100% coverage doesn't mean bug-free (mutation testing exists precisely to catch that gap). In Python, `pytest-cov` (built on `coverage.py`) is the standard tool, run as `pytest --cov=mypackage`.
 
 ```bash
+# the --cov flags come from pytest-cov, so it must be installed (pip install pytest-cov)
 pytest --cov=mypackage --cov-report=term-missing
 # shows % covered per file, and which specific line numbers were never executed
 ```
@@ -192,7 +193,7 @@ pytest --cov=mypackage --cov-report=term-missing
 ### Why use a virtual environment
 **They ask:** "Why is a virtual environment (`venv`) necessary, and what problem does it solve?"
 
-Without one, every Python project on a machine shares the same global set of installed packages — so two projects needing different versions of the same library (or Python itself) directly conflict, and installing a new project's dependencies can silently break an unrelated one. A virtual environment is an isolated, self-contained copy of the Python interpreter plus its own `site-packages` directory, so `pip install` inside it only affects that project. The standard-library way is `python -m venv .venv`, activated per shell session; the project's dependencies then get pinned in `requirements.txt` so anyone (or CI) can recreate the exact same environment.
+Without one, every Python project on a machine shares the same global set of installed packages — so two projects needing different versions of the same library (or Python itself) directly conflict, and installing a new project's dependencies can silently break an unrelated one. A virtual environment is an isolated, self-contained copy of the Python interpreter plus its own `site-packages` directory, so `pip install` inside it only affects that project. The standard-library way is `python -m venv .venv`, activated per shell session; the project's dependencies then get pinned in `requirements.txt` so anyone (or CI) can recreate a *compatible* environment — venv isolates the package set, but it still depends on the base interpreter it was built from, so it doesn't guarantee a byte-identical Python build.
 
 ```bash
 python -m venv .venv
@@ -206,7 +207,7 @@ pip install -r requirements.txt
 ### pip and requirements.txt
 **They ask:** "What is pip, and what is `requirements.txt` used for?"
 
-`pip` is Python's standard package installer — it fetches packages (and their own dependencies) from PyPI (the Python Package Index) and installs them into whatever environment is currently active. `requirements.txt` is the conventional way to capture a project's dependency snapshot: `pip freeze > requirements.txt` records every installed package and its exact version, and `pip install -r requirements.txt` reinstalls that same set elsewhere — a teammate's machine, a CI runner, a production container. Pinning exact versions (`requests==2.31.0` rather than just `requests`) gets "it worked in dev" most of the way to working in prod too, but it's a compatible snapshot, not a guaranteed identical environment — the same pinned versions can still resolve to different wheels/builds across OS, architecture, or Python version, and `pip freeze` doesn't capture a fully resolved, hash-verified dependency graph the way a lockfile does. For that stronger reproducibility guarantee, a lockfile tool (`pip-tools`, `poetry`, `uv`) with hash pinning is the better story.
+`pip` is Python's standard package installer — it fetches packages (and their own dependencies) from PyPI (the Python Package Index) and installs them into whatever environment is currently active. `requirements.txt` is the conventional way to capture a project's dependency snapshot: `pip freeze > requirements.txt` records the installed packages it reports — every version it lists, transitive dependencies included, though it omits bootstrap tools like `pip` and `setuptools` by default — and `pip install -r requirements.txt` reinstalls that same set elsewhere — a teammate's machine, a CI runner, a production container. Pinning exact versions (`requests==2.31.0` rather than just `requests`) gets "it worked in dev" most of the way to working in prod too, but it's a compatible snapshot, not a guaranteed identical environment — the same pinned versions can still resolve to different wheels/builds across OS, architecture, or Python version, and `pip freeze` doesn't capture a fully resolved, hash-verified dependency graph the way a lockfile does. For that stronger reproducibility guarantee, a lockfile tool (`pip-tools`, `poetry`, `uv`) with hash pinning is the better story.
 
 ```bash
 pip install requests            # install one package

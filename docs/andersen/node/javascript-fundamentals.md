@@ -356,9 +356,9 @@ const first = orders.find(o => o.total > 30);           // {total: 40}
 const sum = orders.reduce((acc, o) => acc + o.total, 0); // 65
 ```
 
-None of them mutate the *source array* — each returns a new array (or value), which is why they compose cleanly in a chain. That's not deep immutability, though: if the array holds objects, the callback still gets a reference to each one, so `orders.map(o => { o.total *= 2; return o; })` mutates the original objects even though `orders` itself (the array, its length, its slots) is untouched.
+None of these *methods* mutate the source array on their own — each returns a new array (or value), which is why they compose cleanly in a chain. But "doesn't mutate" is a property of the method, not of your callback: the callback receives each element **and the array itself as a third argument**, so it can freely mutate a referenced object (`o.total *= 2`), the array's contents (`a.push(...)`), or any external variable. `orders.map(o => { o.total *= 2; return o; })` leaves the `orders` array's length and slots intact but rewrites every object it points to — so this is shallow, not deep, immutability.
 
-**Say it:** "I reach for map when I'm transforming every item 1:1, filter when I'm narrowing the set, find when I want one matching item, and reduce when I'm folding the array into a single value — none of them mutate the source array itself, but if the callback reaches into a referenced object and mutates it, that change is real and visible outside the call."
+**Say it:** "I reach for map when I'm transforming every item 1:1, filter when I'm narrowing the set, find when I want one matching item, and reduce when I'm folding the array into a single value — the methods themselves don't mutate the source array, but the callback can: a referenced object, the array itself, or external state, and those changes are real and visible outside the call."
 **Red flag:** Using `forEach` with a `push` to build a new array where `map`/`filter` would say the same thing more directly — it works, but it hides the intent and is easy to get subtly wrong (forgetting to return, mutating outer state).
 
 ### What is a callback function?
