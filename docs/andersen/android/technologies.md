@@ -152,11 +152,14 @@ The database enforces the foreign key constraint: you can't insert an order poin
 Mechanically, downloading an image is just an HTTP GET whose response body is bytes instead of JSON — `URLConnection`/OkHttp fetches the bytes, and `BitmapFactory.decodeStream`/`decodeByteArray` turns them into a `Bitmap`. That's straightforward for a one-off case, but a real app needs it done *safely and repeatedly*: off the main thread, downsampled to the target `ImageView`'s actual size (not decoded at full resolution and then shrunk), cached so the same image isn't re-fetched on every scroll, and cancelled if the view showing it gets recycled before the request finishes.
 
 ```kotlin
-// manual — works, but re-solves problems a library already solved
-val bytes = URL(imageUrl).readBytes()               // must run off the main thread
-val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+// Do NOT ship this: URL(...).readBytes() has no timeout, no response-size
+// limit, no status check, and buffers the whole image into memory — an easy
+// hang or OOM. Shown only to illustrate what a library saves you from.
+//   val bytes = URL(imageUrl).readBytes()
+//   val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-// with a library — caching, downsampling, lifecycle-aware cancellation included
+// Real-world default — caching, downsampling, timeouts, and
+// lifecycle-aware cancellation are all handled for you:
 Glide.with(context).load(imageUrl).into(imageView)
 ```
 

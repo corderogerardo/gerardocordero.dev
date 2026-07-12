@@ -329,13 +329,14 @@ The principle is **secrets never live in the repo and never in the image** — t
 ### Preventing injection in a Node backend
 **They ask:** "How do you prevent SQL and NoSQL injection in a Node service specifically?"
 
-Injection happens when user input is concatenated into a query so it can change the query's *structure*; the fix is to never build queries by string-joining input. For **SQL**, use parameterized queries / prepared statements — the driver sends the query and the values separately, so input is always data, never executable SQL (an ORM or query builder does this for you, but raw driver calls must use `$1`/`?` placeholders, not template strings). For **NoSQL** like MongoDB, the attack is *operator injection* — a JSON body like `{ "password": { "$gt": "" } }` turns an equality check into "any password" — so you validate/cast input to the expected type (a string stays a string) before it reaches the query, and reject object-shaped values where you expect a scalar.
+Injection happens when user input is concatenated into a query so it can change the query's *structure*; the fix is to never build queries by string-joining input. For **SQL**, use parameterized queries / prepared statements — the driver sends the query and the values separately, so input is always data, never executable SQL (an ORM or query builder does this for you, but raw driver calls must use `$1`/`?` placeholders, not template strings). For **NoSQL** like MongoDB, the attack is *operator injection* — a JSON body like `{ "password": { "$gt": "" } }` turns an equality check into "any password" — so you validate that input is the expected type before it reaches the query, and reject object-shaped values where you expect a scalar rather than coercing them (coercing hides the malformed request you should be rejecting).
 
 ```js
 // SQL — parameterized, input can never alter structure
 await db.query('SELECT * FROM users WHERE email = $1', [email]);
-// NoSQL — cast/validate so { "$gt": "" } can't sneak in as an operator
-const email = String(req.body.email);
+// NoSQL — REJECT non-strings so { "$gt": "" } can't sneak in as an operator
+if (typeof req.body.email !== 'string') throw new BadRequestError('email must be a string');
+const email = req.body.email;
 ```
 
 **Say it:** "I never concatenate input into queries — parameterized statements for SQL so input is always data, and type-validating input for Mongo so an attacker can't inject a `$gt` operator where I expect a string."

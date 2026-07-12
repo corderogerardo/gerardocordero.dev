@@ -209,7 +209,7 @@ The practical decision rule: reach for an abstract class when subclasses genuine
 
 Every throwable descends from `Throwable`, which splits into two branches with very different meanings. `Error` represents a problem the application generally shouldn't try to recover from — `OutOfMemoryError`, `StackOverflowError` — serious enough that catching it rarely makes sense. `Exception` represents a recoverable problem, and it splits again: **checked** exceptions (`IOException`, direct `Exception` subclasses not extending `RuntimeException`) must be declared with `throws` or caught, enforced by the compiler; **unchecked** exceptions (`RuntimeException` and its subclasses — `NullPointerException`, `IllegalArgumentException`, `IndexOutOfBoundsException`) need no such declaration, and typically signal a programming bug rather than an expected, recoverable condition.
 
-```
+```text
 Throwable
 ├── Error (OutOfMemoryError, StackOverflowError — don't catch)
 └── Exception
@@ -246,7 +246,7 @@ class Counter {
     static int totalCreated = 0;     // one copy, shared by every instance
     Counter() { totalCreated++; }
 }
-Counter.totalCreated;   // accessed via the class, not an instance
+int total = Counter.totalCreated;   // accessed via the class, not an instance
 ```
 
 A static nested class (as opposed to a plain inner class) doesn't hold an implicit reference to an outer instance, which is why it's the safer default for a nested class that doesn't need outer-class state — an inner class implicitly captures the outer instance, which is a common, easy-to-miss memory leak source (an inner class outliving the outer instance it's silently holding onto).

@@ -3,7 +3,7 @@
 ### Starting a Goroutine
 **They ask:** "What does the `go` keyword actually do?"
 
-Prefixing any function call with `go` launches it as a goroutine — it starts running concurrently and the calling code continues immediately without waiting for it to finish. That's the entire syntax; there's no separate "goroutine type" to construct. The catch that trips up beginners: if `main` returns (or the calling function returns, for a goroutine launched inside it) before a goroutine finishes, the goroutine is simply cut off mid-execution — Go doesn't wait for background goroutines automatically, which is why real code coordinates completion with a `sync.WaitGroup` or a channel.
+Prefixing any function call with `go` launches it as a goroutine — it starts running concurrently and the calling code continues immediately without waiting for it to finish. That's the entire syntax; there's no separate "goroutine type" to construct. The catch that trips up beginners: a goroutine runs *independently* of the function that started it — it keeps going after its caller returns, because it's not tied to the caller's stack frame. What stops it is the **program** exiting: when `main` returns the whole process ends and any goroutines still running are cut off mid-execution. Go doesn't wait for background goroutines automatically, which is why real code coordinates completion with a `sync.WaitGroup` or a channel.
 
 ```go
 func main() {
@@ -12,7 +12,7 @@ func main() {
 }
 ```
 
-**Say it:** "go before a call launches it concurrently and returns control immediately — nothing waits for it automatically, so any real program needs an explicit coordination point like a WaitGroup or channel before it exits, or the goroutine just gets cut off."
+**Say it:** "go before a call launches it concurrently and returns control immediately — the goroutine runs independently of its caller and only stops when the program exits, so any real program needs an explicit coordination point like a WaitGroup or channel before main returns, or the goroutine gets cut off."
 **Red flag:** Launching a goroutine in main with no WaitGroup, channel, or other coordination and expecting it to always finish — it's a race against main returning, and it will lose intermittently under load or on a fast machine.
 
 ### Creating and Using a Channel
