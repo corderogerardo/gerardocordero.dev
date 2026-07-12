@@ -50,3 +50,4 @@ apps/learn/playground/
 
 # Assembled Cloudflare Pages upload for academy.gerardocordero.dev (deploy-learn)
 dist-academy/
+node_modules
