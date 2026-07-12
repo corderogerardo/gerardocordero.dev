@@ -323,8 +323,10 @@ Orchestrators (Kubernetes, systemd, Docker) send `SIGTERM` to ask a process to s
 
 ```js
 process.on('SIGTERM', async () => {
-  server.close(() => console.log('no longer accepting connections'));
-  await db.end();       // close DB pool
+  await new Promise((resolve, reject) => {
+    server.close(err => (err ? reject(err) : resolve())); // await the drain of in-flight requests
+  });
+  await db.end();       // only now close the DB pool — nothing is still using it
   await queue.close();  // stop consuming, finish in-flight jobs
   process.exit(0);
 });

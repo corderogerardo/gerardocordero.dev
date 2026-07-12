@@ -193,14 +193,19 @@ GET /v2/users   -- new shape, opt-in
 ### Webhooks
 **They ask:** "How do webhooks work, and what makes an endpoint that receives them trustworthy and safe?"
 
-A webhook inverts the usual request direction — instead of your service polling a third party for updates, the third party sends an HTTP `POST` to a URL you registered the moment an event happens, which is far more efficient than polling for infrequent events. The receiving endpoint has real responsibilities most people skip: **verify the signature** (most providers sign the payload with a shared secret via an `X-Signature` header — without checking it, anyone who finds the URL can forge events), **respond fast** (return `200` immediately and process asynchronously, since the sender will retry on timeout and a slow handler risks duplicate deliveries), and **handle retries idempotently**, since most providers retry on any non-2xx response or timeout.
+A webhook inverts the usual request direction — instead of your service polling a third party for updates, the third party sends an HTTP `POST` to a URL you registered the moment an event happens, which is far more efficient than polling for infrequent events. The receiving endpoint has real responsibilities most people skip: **verify the signature against the raw request body** (most providers sign the payload with a shared secret via an `X-Signature` header — you must hash the exact bytes received, so capture the raw body, not a re-serialized JSON object), **durably enqueue then ack** (persist the event to a queue *before* returning `200`, so a broker hiccup can't drop it — only ack once it's safely stored, and let the sender retry otherwise), and **handle retries idempotently**, since providers retry on any non-2xx response or timeout.
 
 ```js
-app.post('/webhooks/stripe', (req, res) => {
+// express.raw so the signature verifies against the exact bytes received
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   const valid = verifySignature(req.body, req.headers['stripe-signature'], secret);
   if (!valid) return res.status(400).send('invalid signature');
-  res.status(200).send('ok'); // ack fast
-  queue.publish('stripe.event', req.body); // process async
+  try {
+    await queue.publish('stripe.event', req.body); // durably enqueue FIRST
+    res.status(200).send('ok');                    // ack only after it's safely stored
+  } catch {
+    res.status(503).send('retry later');           // never ack an event you failed to persist
+  }
 });
 ```
 
