@@ -74,10 +74,10 @@ Go's GC is a concurrent, tri-color mark-and-sweep collector that runs mostly alo
 ### Main and Init Functions
 **They ask:** "What's the execution order when a package has multiple init functions and imports?"
 
-Go initializes packages in dependency order — every package a package imports is fully initialized (package-level vars, then all `init()` functions in that package) before the importing package's own initialization runs. Within a single package, multiple `init()` functions (even across different files) run in the order the compiler encounters the files, which is typically alphabetical by filename, though you should never write code that depends on that ordering across files. `main()` runs only after every imported package's initialization — and its own — has completed.
+Go guarantees package initialization in dependency order — every package a package imports is fully initialized (package-level vars, then all `init()` functions in that package) before the importing package's own initialization runs. Within a single package, multiple `init()` functions (even across different files) run in file order as a build convention — most toolchains process files alphabetically — but the language spec does not guarantee that ordering, so cross-file `init()` order is effectively unspecified and shouldn't be relied on. `main()` runs only after every imported package's initialization — and its own — has completed.
 
-**Say it:** "Initialization order follows the import graph — every dependency is fully initialized, including its init functions, before main starts, and within a package multiple init functions run in file order, which is a reason not to split state-dependent init logic across files."
-**Red flag:** Relying on init() functions across multiple files running in a specific order — it's technically deterministic (alphabetical by file) but depending on that is fragile and not something a reviewer should let through.
+**Say it:** "Initialization order follows the import graph — every dependency is fully initialized, including its init functions, before main starts. Within a package, the spec only guarantees dependency order for vars, not a specific order across multiple init() functions in different files, so I never split state-dependent init logic across files and rely on file order."
+**Red flag:** Relying on init() functions across multiple files running in a specific order. The language spec doesn't guarantee it — only the import-dependency order is guaranteed — so that's fragile and not something a reviewer should let through.
 
 ### Defer Semantics
 **They ask:** "How does defer actually work — LIFO order, and when are arguments evaluated?"

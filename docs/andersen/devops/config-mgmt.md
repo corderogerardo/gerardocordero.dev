@@ -5,7 +5,7 @@
 
 Ansible's core promise is *convergence without an agent*: it SSHes into hosts listed in an inventory, pushes small Python modules, runs them, and pulls the results back — no daemon to install or maintain on the target, which is why it's the easiest CM tool to adopt incrementally on an existing fleet.
 
-Idempotency isn't something you hand-code — it's a property each *module* guarantees. `apt: name=nginx state=present` checks whether nginx is already installed before acting; running the playbook ten times produces the same end state and reports "ok" (unchanged) on runs nine through ten instead of re-installing. That's the fundamental difference from a raw shell script, which just replays commands blindly.
+Idempotency isn't something you hand-code — it's a property most *declarative* modules guarantee. `apt: name=nginx state=present` checks whether nginx is already installed before acting; running the playbook ten times produces the same end state and reports "ok" (unchanged) on runs nine through ten instead of re-installing. That guarantee doesn't extend to `command`/`shell`, which just run whatever's given every time — making those idempotent is on you, via `creates:` (skip if a file already exists) or `changed_when:` (tell Ansible how to judge whether the run actually changed anything).
 
 ```yaml
 # inventory.ini
@@ -29,8 +29,8 @@ web2.example.com ansible_user=deploy
 
 Roles package tasks/templates/handlers/vars into a reusable, shareable unit for a given responsibility ("webserver", "postgres") instead of one flat playbook. **Handlers** only fire when a task reports a change — so a config template that didn't change won't trigger an unnecessary service reload.
 
-**Say it:** "Ansible's idempotency comes from the modules themselves checking current state before acting, not from careful scripting — that's what makes 'run this playbook again' always safe, and handlers only reload a service when something actually changed."
-**Red flag:** Reaching for the `shell`/`command` module for everything. Those *aren't* idempotent by default — they run every time regardless of state — so overusing them defeats the reason you picked Ansible over a bash script in the first place.
+**Say it:** "Most declarative Ansible modules check current state before acting, so 'run this playbook again' is safe by default — but `command`/`shell` aren't idempotent on their own, so I pair them with `creates:` or `changed_when:` to get the same guarantee, and handlers only reload a service when something actually changed."
+**Red flag:** Reaching for the `shell`/`command` module for everything without `creates`/`changed_when`. Those *aren't* idempotent by default — they run every time regardless of state — so overusing them defeats the reason you picked Ansible over a bash script in the first place.
 
 ### Configuration Management Tools Compared — Push Vs Pull
 **They ask:** "Ansible, Puppet, Chef, Salt — what actually differs, and how would you choose for a 5,000-node fleet versus a 20-server startup?"

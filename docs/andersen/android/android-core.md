@@ -47,7 +47,7 @@ Merging follows explicit rules, not "last one wins": each attribute can be marke
 ### Activity Lifecycle Methods
 **They ask:** "Walk me through the Activity lifecycle methods and their order."
 
-The lifecycle exists to answer one question at each transition: is this UI visible, focused, both, or neither — and the callbacks are where you allocate or release resources to match. Full sequence on first launch: `onCreate` → `onStart` → `onResume` (now visible and interactive). Pressing home: `onPause` → `onStop` (still exists, not visible). Returning: `onRestart` → `onStart` → `onResume`. Finishing or being killed: `onPause` → `onStop` → `onDestroy`.
+The lifecycle exists to answer one question at each transition: is this UI visible, focused, both, or neither — and the callbacks are where you allocate or release resources to match. Full sequence on first launch: `onCreate` → `onStart` → `onResume` (now visible and interactive). Pressing home: `onPause` → `onStop` (still exists, not visible). Returning: `onRestart` → `onStart` → `onResume`. Finishing normally, or a config change: `onPause` → `onStop` → `onDestroy`. That `onDestroy` isn't guaranteed, though — if the system kills the process to reclaim memory while stopped, it skips straight past every remaining callback, `onDestroy` included. That's why `onSaveInstanceState`/`ViewModel` state, not `onDestroy`, is where you protect against data loss — you can't rely on cleanup code there ever running.
 
 The two easiest to mix up: `onPause` fires the moment the Activity loses foreground focus (even if partially visible, like a dialog appearing over it) — do only fast work here, since the next screen is waiting on it to return. `onStop` fires once it's fully hidden — heavier cleanup belongs here instead.
 

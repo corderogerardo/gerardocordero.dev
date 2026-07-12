@@ -62,13 +62,14 @@ Koin trades Dagger's compile-time-generated graph for a runtime service locator 
 ```kotlin
 val appModule = module {
     single<UserRepository> { UserRepositoryImpl(get(), get()) }   // one instance, reused
-    factory { UserDetailViewModel(get()) }                          // new instance every get()
+    viewModel { UserDetailViewModel(get()) }                       // Koin's ViewModel DSL, tied to the owner's lifecycle
 }
+// retrieved with: val vm: UserDetailViewModel by viewModel()
 ```
 
-`single` creates one instance and reuses it for the container's lifetime — the Koin equivalent of a Dagger `@Singleton` scope. `factory` creates a fresh instance on every resolution — for state that must never be shared, like most ViewModels. Because resolution happens at runtime, a missing binding isn't a compile error like a missing Dagger provider — it's a runtime `NoBeanDefFoundException` thrown when `get()` is actually called, which is the core trade-off against Dagger's compile-time safety.
+`single` creates one instance and reuses it for the container's lifetime — the Koin equivalent of a Dagger `@Singleton` scope. For ViewModels specifically, Koin has a dedicated `viewModel { }` (or `viewModelOf(::...)`) DSL rather than plain `factory` — it hands the instance to the AAC `ViewModelProvider` keyed to the requesting owner (Activity/Fragment/NavBackStackEntry), so it still survives configuration changes; retrieved with `by viewModel()`, not `by inject()`. Using `factory` for a ViewModel would construct a *new* instance on every resolution, including after rotation — silently losing state Koin is supposed to preserve. Because resolution happens at runtime, a missing binding isn't a compile error like a missing Dagger provider — it's a runtime `NoBeanDefFoundException` thrown when `get()` is actually called, which is the core trade-off against Dagger's compile-time safety.
 
-**Say it:** "`single` reuses one instance, `factory` creates a new one per resolution — and because Koin resolves at runtime with no codegen, a missing binding is a runtime crash on `get()`, not a compile error, which is the real trade-off against Dagger's compile-time graph."
+**Say it:** "`single` reuses one instance, and ViewModels get their own `viewModel { }` DSL that hands the instance to the AAC ViewModelProvider so it survives rotation — using plain `factory` for a ViewModel would silently break that survival. Because Koin resolves at runtime with no codegen, a missing binding is a runtime crash on `get()`, not a compile error, which is the real trade-off against Dagger's compile-time graph."
 **Red flag:** Recommending Koin as strictly "simpler than Dagger" without mentioning the runtime-vs-compile-time safety trade-off. That's the actual engineering decision, not a matter of taste.
 
 ### Dagger2 vs Hilt, and Assisted Injection

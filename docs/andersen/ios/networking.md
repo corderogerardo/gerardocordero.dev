@@ -47,13 +47,14 @@ For auth, `URLSessionDelegate`'s `urlSession(_:didReceive:completionHandler:)` h
 
 ```swift
 final class AuthorizingSession {
-    func request(_ req: URLRequest) async throws -> (Data, URLResponse) {
+    func request(_ req: URLRequest, isRetry: Bool = false) async throws -> (Data, URLResponse) {
         var req = req
         req.setValue("Bearer \(tokenStore.accessToken)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.data(for: req)
         if (response as? HTTPURLResponse)?.statusCode == 401 {
+            guard !isRetry else { throw APIError.client(401, data) }   // already retried once — a bad token, stop looping
             try await tokenStore.refresh()
-            return try await request(req)   // retry once with the new token
+            return try await request(req, isRetry: true)   // retry exactly once with the new token
         }
         return (data, response)
     }

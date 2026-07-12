@@ -30,7 +30,12 @@ let container = NSPersistentContainer(name: "Model")
 container.loadPersistentStores { _, error in /* ... */ }
 let context = container.viewContext
 let user = User(context: context)
-try? context.save()
+do {
+    try context.save()
+} catch {
+    // handle/log the validation, disk, or merge error — never swallow it
+    print("save failed: \(error)")
+}
 ```
 
 `NSFetchedResultsController` watches a fetch request against a context and diffs changes for you — insert/delete/move/update callbacks that drive a `UITableView`/`UICollectionView` without you manually re-fetching. `@FetchRequest` is the SwiftUI equivalent: a property wrapper that re-runs the fetch and triggers a view update whenever matching data changes, no delegate boilerplate required.
@@ -44,13 +49,19 @@ try? context.save()
 `NSManagedObjectContext` is **not thread-safe** — you must confine each context to the queue it was created on and only touch its objects there. The standard pattern is two contexts: a `viewContext` (main queue, for UI) and one or more `NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)` for background imports/writes, wired as a child of the view context or as a sibling sharing the same persistent store coordinator. You never pass an `NSManagedObject` across contexts directly — you pass its `NSManagedObjectID` and re-fetch with `object(with:)` on the target context.
 
 ```swift
+container.viewContext.automaticallyMergesChangesFromParent = true   // pick up background saves without a manual notification observer
+
 container.performBackgroundTask { bgContext in
     let obj = Item(context: bgContext)
-    try? bgContext.save()   // merges up to viewContext via NSPersistentContainer's automatic merging
+    do {
+        try bgContext.save()   // writes straight to the store; automaticallyMergesChangesFromParent above keeps viewContext's reads fresh
+    } catch {
+        print("background save failed: \(error)")
+    }
 }
 ```
 
-Conflicts between two contexts editing the same row are resolved by a **merge policy** (`NSMergeByPropertyObjectTrumpMergePolicy` is the common default — the in-memory context's changes win property-by-property over the store's).
+Conflicts between two contexts editing the same row are resolved by a **merge policy** — `NSManagedObjectContext` defaults to `NSErrorMergePolicy`, which just fails the save on a conflict, so setting `NSMergeByPropertyObjectTrumpMergePolicy` is a deliberate choice (the in-memory context's changes win property-by-property over the store's), not the out-of-the-box behavior.
 
 Schema changes need a **migration**. **Lightweight migration** (Core Data infers the mapping — renamed/added/optional attributes) covers most cases and is nearly free to enable. **Heavyweight migration** — restructuring relationships, splitting entities — needs an explicit mapping model and is where performance and correctness bugs actually show up in interviews; test it against a real production-sized store, not an empty one.
 

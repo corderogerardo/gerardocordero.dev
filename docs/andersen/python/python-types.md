@@ -11,7 +11,7 @@ d = {[1, 2]: "point"}   # TypeError: list keys aren't hashable
 ```
 
 **Say it:** "The mutable/immutable split is the one that actually matters day to day — it decides what's hashable enough to be a dict key or set member, and where I need to worry about aliasing instead of copying."
-**Red flag:** Treating `tuple` as "just an immutable list" without noting it can still hold mutable elements — `({1, 2}[0],)` — so a tuple's hashability actually depends on what it contains.
+**Red flag:** Treating `tuple` as "just an immutable list" without noting it can still hold mutable elements — `([1, 2],)` is a valid tuple, but it's unhashable because the list inside it is — so a tuple's hashability actually depends on what it contains.
 
 ### None, is vs ==, and interning
 **They ask:** "What is None? What's the difference between x == 'string' and x is 'string'? Which is correct?"
@@ -33,12 +33,14 @@ a is b   # True in CPython today, but not guaranteed — use ==
 ### int, bool, and float relationships
 **They ask:** "Is float a class that inherits from int? Is bool a class that inherits from int? How does the unary ~ operator work on int and bool?"
 
-`bool` is a subclass of `int` — `True == 1` and `False == 0` are both `True`, and you can use booleans anywhere an int is expected (`sum([True, True, False])` is `2`). This is a historical design choice (Python added `bool` in 2.3, after `int` already stood in for booleans) that still shows up in interview traps like `isinstance(True, int)` being `True`. `float` is *not* a subclass of `int` — they're siblings, both implementing the numeric protocol but distinct types, so `isinstance(1.0, int)` is `False`. The unary `~` operator is bitwise NOT — it computes `-(x + 1)`, which for a `bool` first coerces to its int value (`~True` is `-2`, since `True` is `1`).
+`bool` is a subclass of `int` — `True == 1` and `False == 0` are both `True`, and you can use booleans anywhere an int is expected (`sum([True, True, False])` is `2`). This is a historical design choice (Python added `bool` in 2.3, after `int` already stood in for booleans) that still shows up in interview traps like `isinstance(True, int)` being `True`. `float` is *not* a subclass of `int` — they're siblings, both implementing the numeric protocol but distinct types, so `isinstance(1.0, int)` is `False`. The unary `~` operator is bitwise NOT on `int` — it computes `-(x + 1)`. Applying it directly to a `bool` (`~True`) is deprecated as of Python 3.12 and becomes an error in 3.16, because "bitwise-invert a truth value" is rarely what anyone means; if you want the bitwise inversion, convert first (`~int(True)`), and if you want logical negation, use `not True`.
 
 ```python
 isinstance(True, int)   # True — bool IS an int subclass
 isinstance(1.0, int)    # False — float and int are siblings
 ~5                      # -6  ( -(5+1) )
+~int(True)               # -2 — bitwise inversion, be explicit about the int() coercion
+not True                 # False — logical negation, what `~True` is usually mistaken for
 ```
 
 **Say it:** "`bool` is an `int` subclass — `True` and `1` are interchangeable in arithmetic — but `float` is a sibling type to `int`, not a subclass, which is the trap in `isinstance` checks."

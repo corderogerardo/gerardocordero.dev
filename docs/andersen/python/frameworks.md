@@ -122,11 +122,14 @@ from django.db.models import F
 from django.db import transaction
 
 with transaction.atomic():
-    Product.objects.filter(id=pid).update(stock=F("stock") - 1)
-    Order.objects.create(product_id=pid)
+    updated = Product.objects.filter(id=pid, stock__gt=0).update(stock=F("stock") - 1)
+    if updated == 1:
+        Order.objects.create(product_id=pid)
+    else:
+        raise OutOfStock(pid)
 ```
 
-The reason `F()` matters under concurrency: `product.stock -= 1; product.save()` reads stock into Python, decrements, then writes — a classic read-modify-write race if two requests do it simultaneously. `F()` avoids the round trip entirely, so the decrement happens as one atomic SQL statement.
+The reason `F()` matters under concurrency: `product.stock -= 1; product.save()` reads stock into Python, decrements, then writes — a classic read-modify-write race if two requests do it simultaneously. `F()` avoids the round trip entirely, so the decrement happens as one atomic SQL statement. `F()` alone only stops the *lost* update, though — `filter(id=pid).update(...)` with no stock guard still matches and still "succeeds" even when it would drive stock negative. The `stock__gt=0` filter makes the row match only while stock is available, and checking the returned row count is how you know whether the decrement actually happened before creating the order.
 
 **Say it:** "`F()` pushes the read-modify-write into the database as one atomic statement, avoiding the race condition you get from pulling a value into Python, decrementing, and saving it back."
 **Red flag:** `obj.field -= 1; obj.save()` on a value multiple requests can touch concurrently. That's a lost-update race — `F()` or `select_for_update()` inside `atomic()` are the fixes.

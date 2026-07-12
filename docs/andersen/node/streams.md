@@ -21,15 +21,19 @@ Backpressure is the mechanism that keeps a fast producer from overwhelming a slo
 
 ```js
 // manual backpressure handling — this is exactly what .pipe() does for you
-function writeData(readable, writable) {
-  const chunk = readable.read();
-  if (chunk !== null) {
-    const ok = writable.write(chunk);
-    if (!ok) {
-      readable.pause();
-      writable.once('drain', () => { readable.resume(); writeData(readable, writable); });
+function pipeManually(readable, writable) {
+  readable.on('readable', () => {
+    let chunk;
+    while ((chunk = readable.read()) !== null) {
+      const ok = writable.write(chunk);
+      if (!ok) {
+        readable.pause();
+        writable.once('drain', () => readable.resume()); // 'readable' fires again once resumed
+        break;
+      }
     }
-  }
+  });
+  readable.on('end', () => writable.end());
 }
 ```
 

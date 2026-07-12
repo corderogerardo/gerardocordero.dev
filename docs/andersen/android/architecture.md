@@ -107,12 +107,16 @@ That structural difference cascades: MVP needs manual lifecycle bookkeeping (att
 MVI's premise is that MVVM's mutable `LiveData`/`StateFlow` fields, updated from multiple places in a ViewModel, can drift into inconsistent partial states (loading *and* an error shown at once, because two separate fields were each updated independently). MVI forces the entire screen to be represented as **one immutable State object**, and the *only* way to change it is by reducing an **Action/Intent** against the current state — never a direct field mutation.
 
 ```kotlin
-data class ListState(val loading: Boolean = false, val items: List<Item> = emptyList(), val error: String? = null)
+sealed class ListState {
+    object Loading : ListState()
+    data class Content(val items: List<Item>) : ListState()
+    data class Error(val message: String) : ListState()
+}
 sealed class Action { object Load : Action(); data class Loaded(val items: List<Item>) : Action() }
 
 fun reduce(state: ListState, action: Action): ListState = when (action) {
-    Action.Load -> state.copy(loading = true, error = null)
-    is Action.Loaded -> state.copy(loading = false, items = action.items)
+    Action.Load -> ListState.Loading
+    is Action.Loaded -> ListState.Content(action.items)
 }
 ```
 

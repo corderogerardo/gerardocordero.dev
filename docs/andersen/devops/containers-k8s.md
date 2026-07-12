@@ -69,14 +69,14 @@ FROM golang:1.22 AS build
 ARG VERSION=dev
 WORKDIR /src
 COPY . .
-RUN go build -ldflags "-X main.version=${VERSION}" -o app .
+RUN CGO_ENABLED=0 go build -ldflags "-X main.version=${VERSION}" -o app .
 
 FROM gcr.io/distroless/static
 COPY --from=build /src/app /app
 ENTRYPOINT ["/app"]
 ```
 
-`ARG` is build-time only — gone once the image is built, useful for things like a version tag. `ENV` persists into the running container and is visible to the process. For `CMD` vs `ENTRYPOINT`: `ENTRYPOINT` is the fixed executable, `CMD` supplies default *arguments* to it that a `docker run` override replaces — that split is what lets `docker run myimage --help` work without redefining the whole entrypoint.
+`ARG` is build-time only — gone once the image is built, useful for things like a version tag. `ENV` persists into the running container and is visible to the process. For `CMD` vs `ENTRYPOINT`: `ENTRYPOINT` is the fixed executable, `CMD` supplies default *arguments* to it that a `docker run` override replaces — that split is what lets `docker run myimage --help` work without redefining the whole entrypoint. One gotcha worth naming: `gcr.io/distroless/static` ships no libc, so the copied binary must be fully static — `CGO_ENABLED=0` on the build, or swap to `distroless/base` if cgo (or anything else needing libc) is actually required.
 
 **Say it:** "Multi-stage builds keep the compiler out of the shipped image, `ARG` is build-time only while `ENV` persists into the container, and `ENTRYPOINT`+`CMD` split lets callers override just the arguments."
 **Red flag:** Shipping the full SDK/toolchain image to production because a single-stage Dockerfile was "good enough" — that's a much larger attack surface and a slower deploy for no runtime benefit.

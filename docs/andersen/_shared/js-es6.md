@@ -259,7 +259,7 @@ The reason to rewrite is readability and honest control flow — chains hide bra
 ```js
 // chain
 function load(id) {
-  return getUser(id).then(u => getOrders(u.id)).then(o => ({ u, o }));
+  return getUser(id).then(u => getOrders(u.id).then(o => ({ u, o })));
 }
 // async/await
 async function load(id) {

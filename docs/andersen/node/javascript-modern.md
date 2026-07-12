@@ -34,17 +34,21 @@ Both only do a *shallow* copy on objects/arrays — nested references are still 
 ### Template literals and tagged templates
 **They ask:** "Beyond string interpolation, what are template literals actually good for?"
 
-Interpolation (`` `Hi ${name}` ``) and multi-line strings are the everyday win — no more `+` concatenation or `\n` escapes. The deeper feature is **tagged templates**: a function placed before a template literal receives the string parts and interpolated values *separately*, before they're combined — which is exactly how libraries like `styled-components`, `graphql-tag`, and safe SQL-templating libraries work, because the tag function can escape/validate each interpolated value individually instead of trusting a pre-concatenated string.
+Interpolation (`` `Hi ${name}` ``) and multi-line strings are the everyday win — no more `+` concatenation or `\n` escapes. The deeper feature is **tagged templates**: a function placed before a template literal receives the string parts and interpolated values *separately*, before they're combined — which is exactly how libraries like `styled-components`, `graphql-tag`, and real parameterized-query builders work, because the tag function can turn the interpolated values into bound parameters instead of ever building a concatenated string.
 
 ```js
+// illustrative only — a real driver's tag (e.g. postgres.js, Prisma's $queryRaw)
+// does this for you; the point is *what* it produces, not this exact code
 function sql(strings, ...values) {
-  return strings.reduce((q, s, i) => q + s + (values[i] ? escape(values[i]) : ''), '');
+  const text = strings.reduce((q, s, i) => q + s + (i < values.length ? `$${i + 1}` : ''), '');
+  return { text, values }; // placeholders + a separate values array, never a merged string
 }
-sql`SELECT * FROM users WHERE id = ${userId}`; // each value escaped individually
+const { text, values } = sql`SELECT * FROM users WHERE id = ${userId} AND active = ${isActive}`;
+await client.query(text, values); // driver binds values as data — 0/false/'' pass through untouched
 ```
 
-**Say it:** "Template literals aren't just interpolation — tagged templates split the literal from the interpolated values, which is how libraries safely escape each value instead of trusting a fully concatenated string."
-**Red flag:** Treating a raw template literal as safe for SQL or HTML because "it's not string concatenation." Untagged, it's exactly string concatenation — injection risk included.
+**Say it:** "Template literals aren't just interpolation — tagged templates split the literal parts from the interpolated values *before* they're combined, which is what lets a real driver bind those values as parameters instead of ever building a SQL string. A tag function that escapes-and-reconcatenates isn't the same thing — it's still string building, just with an extra step, and it's easy to get subtly wrong, like dropping falsy values (`0`, `false`, `''`) with a truthy check. Actual safety comes from parameter binding, not escaping."
+**Red flag:** Treating a raw template literal as safe for SQL or HTML because "it's not string concatenation." Untagged, it's exactly string concatenation — injection risk included. Same trap one level up: a hand-rolled tag function that escapes and re-concatenates is *also* not production-safe — use the driver's real parameterized query API.
 
 ### Optional chaining and nullish coalescing
 **They ask:** "What problem do `?.` and `??` solve, and how are they different from `&&` and `||`?"

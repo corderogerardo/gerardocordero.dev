@@ -23,9 +23,9 @@ It rests on three pillars — transparency (work and progress are visible to eve
 ### Scrum Roles, Artifacts, and Ceremonies
 **They ask:** "Walk me through the roles, artifacts, and ceremonies in Scrum."
 
-Scrum has exactly three roles, and each closes a specific gap: the **Product Owner** owns the "what" and prioritizes the backlog so the team never has to guess what matters most; the **Scrum Master** owns the process and removes blockers so the team can focus on delivery; the **Development Team** owns the "how" and is self-organizing. A BA typically works closest to the Product Owner, sometimes holding parts of that role directly.
+The Scrum Team has exactly three accountabilities, and each closes a specific gap: the **Product Owner** owns the "what" and prioritizes the backlog so the team never has to guess what matters most; the **Scrum Master** owns the process and removes blockers so the team can focus on delivery; the **Developers** own the "how" and are self-organizing. A BA typically works closest to the Product Owner, sometimes holding parts of that role directly.
 
-The artifacts track the same three things at different zoom levels: the **Product Backlog** (everything that could be built, prioritized), the **Sprint Backlog** (what this sprint committed to), and the **Increment** (the working result). The ceremonies are the checkpoints where transparency and inspection actually happen — planning, daily standup, review, and retrospective.
+The artifacts track the same three things at different zoom levels: the **Product Backlog** (everything that could be built, prioritized), the **Sprint Backlog** (the Developers' plan for achieving the Sprint Goal — what they'll build and how), and the **Increment** (the working result). The ceremonies are the checkpoints where transparency and inspection actually happen — planning, daily standup, review, and retrospective.
 
 **Say it:** "Product Owner owns priority, Scrum Master owns process, the team owns delivery — and the backlog, sprint backlog, and increment are the same plan viewed at three different zoom levels."
 **Red flag:** Calling the Scrum Master "the project manager." Scrum deliberately has no PM role — the Scrum Master serves the team and removes impediments, they don't assign work or own the timeline.

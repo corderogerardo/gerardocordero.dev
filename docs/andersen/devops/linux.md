@@ -24,7 +24,7 @@ The three POSIX streams exist so a program's *data* output and *diagnostic* outp
 #!/usr/bin/env bash
 set -euo pipefail
 
-count=$(grep -c "ERROR" /var/log/app.log 2>/dev/null || true)
+count=$(awk '/ERROR/{c++} END{print c+0}' /var/log/app.log)
 if [ "$count" -gt 0 ]; then
   echo "Found $count errors" >&2
   exit 1
@@ -90,15 +90,23 @@ status=$(echo "$response" | jq -r '.status')
 
 This comes up when a host needs to look like more than a single flat NIC to the rest of the network — a hypervisor host bridging traffic to VMs, a bonded pair of NICs for redundancy/throughput, or VLAN tagging so one physical NIC serves multiple isolated broadcast domains.
 
-Interface teaming (bonding) combines NICs for failover or aggregate throughput. A bridge acts like a virtual switch — this is exactly what Docker's default network driver builds under the hood to connect containers. VLANs tag frames (802.1Q) so a single physical link carries multiple logically-separated networks.
+Interface teaming (bonding) combines NICs for failover or aggregate throughput. A bridge acts like a virtual switch — this is exactly what Docker's default network driver builds under the hood to connect containers. VLANs tag frames (802.1Q) so a single physical link carries multiple logically-separated networks. These are three independent building blocks, not steps in one pipeline — a real topology only chains them when the requirement actually calls for it (e.g., bond two NICs for redundancy, *then* bridge the bonded interface for VM traffic).
 
 ```bash
-ip link add br0 type bridge
-ip link set eth0 master br0
+# Bonding: two physical NICs presented as one resilient link
+ip link add bond0 type bond mode active-backup
+ip link set eth0 master bond0
+ip link set eth1 master bond0
+
+# VLAN: tag a physical link so it carries multiple isolated networks
 ip link add link eth0 name eth0.100 type vlan id 100
+
+# Bridge: a virtual switch — connect a NIC (or bond) to VM/container ports
+ip link add br0 type bridge
+ip link set bond0 master br0
 ```
 
-**Say it:** "Bonding is for NIC-level redundancy, bridging is a virtual switch — it's literally what Docker builds for container networking — and VLANs are how one physical link carries multiple isolated networks."
+**Say it:** "Bonding is for NIC-level redundancy, bridging is a virtual switch — it's literally what Docker builds for container networking — and VLANs are how one physical link carries multiple isolated networks. They compose based on the requirement, not in one fixed order."
 **Red flag:** Not recognizing that Docker's default bridge network *is* this same Linux bridging mechanism — it's not magic, it's `ip link add br0 type bridge` with extra automation.
 
 ### LVM Boot Process And Kernel Modules

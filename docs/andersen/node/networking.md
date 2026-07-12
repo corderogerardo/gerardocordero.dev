@@ -75,7 +75,7 @@ xhr.send();
 ### CORS: what it protects and preflight requests
 **They ask:** "What problem does CORS solve, and what triggers a preflight request?"
 
-CORS exists because browsers enforce the **same-origin policy** by default — a script on `siteA.com` can't read a response from `apiB.com` unless `apiB.com` explicitly opts in via CORS headers (`Access-Control-Allow-Origin`), because without that restriction, a malicious page could silently use a logged-in user's browser session/cookies to call another site's API on their behalf. A **preflight** (`OPTIONS` request sent automatically by the browser before the real one) fires for "non-simple" requests — a custom header, a method other than GET/POST/HEAD, or a `Content-Type` other than form-encoded/plain-text/multipart — asking the server to confirm it allows that specific request before the browser sends the real one.
+CORS exists because browsers enforce the **same-origin policy** by default — a script on `siteA.com` can't *read* a response from `apiB.com` unless `apiB.com` explicitly opts in via CORS headers (`Access-Control-Allow-Origin`). Crucially, CORS only gates whether the browser lets the script read the response — for a "simple" request it doesn't stop the request from being *sent*, cookies and all; the browser blocks the script from seeing what comes back. That's why CORS alone doesn't protect state-changing endpoints from cross-site request forgery — CSRF tokens and `SameSite` cookie settings are the actual defense against a forged request being *acted on*, since the malicious page can still fire the request even if it can't read the reply. A **preflight** (`OPTIONS` request sent automatically by the browser before the real one) fires for "non-simple" requests — a custom header, a method other than GET/POST/HEAD, or a `Content-Type` other than form-encoded/plain-text/multipart — asking the server to confirm it allows that specific request before the browser sends the real one; this is the one case where CORS *does* stop the real request from going out at all.
 
 ```
 OPTIONS /api/data
@@ -85,8 +85,8 @@ Access-Control-Request-Headers: content-type
 -- server responds with what it allows, then the browser sends the real PUT
 ```
 
-**Say it:** "CORS is the server explicitly opting in to cross-origin reads that the same-origin policy blocks by default — it's a browser protection against a malicious page riding a logged-in user's session to another site's API, and a preflight fires for anything beyond a 'simple' request so the server can confirm it allows it first."
-**Red flag:** Saying CORS is a server-side security feature that stops attackers from calling your API. It's a browser-enforced restriction protecting the *user*, not the server — a non-browser client (curl, another server) ignores CORS headers entirely and can call the API directly.
+**Say it:** "CORS is the server explicitly opting in to cross-origin *reads* that the same-origin policy blocks by default — it doesn't stop a simple cross-origin request from being sent, just from being read, so I don't rely on it to protect state-changing endpoints; that's what CSRF tokens and `SameSite` cookies are for. A preflight fires for anything beyond a 'simple' request so the server can confirm it allows it before the real request goes out at all."
+**Red flag:** Saying CORS is a server-side security feature that stops attackers from calling your API, or that it prevents CSRF. It's a browser-enforced restriction on *reading* cross-origin responses — a non-browser client (curl, another server) ignores CORS headers entirely and can call the API directly, and even a browser can still fire a simple cross-origin state-changing request; CORS just stops the page from seeing the response.
 
 ### CORS misconfigurations
 **They ask:** "What's the most common dangerous CORS misconfiguration you see in real APIs?"

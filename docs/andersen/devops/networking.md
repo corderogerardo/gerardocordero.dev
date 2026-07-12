@@ -72,7 +72,7 @@ They compose: Kubernetes CNI plugins like Calico or Cilium build an overlay netw
 ### HTTP Methods And HTTPS TLS
 **They ask:** "Explain the TLS handshake, and what a certificate chain is actually verifying."
 
-HTTPS is HTTP over TLS, and the handshake exists to solve two problems at once: agree on a shared symmetric key without ever sending it in the clear, and prove the server is who it claims to be. Asymmetric crypto (the server's public/private keypair) bootstraps a fast symmetric session key, because asymmetric crypto is too slow to encrypt a whole session.
+HTTPS is HTTP over TLS, and the handshake exists to solve two problems at once: agree on a shared symmetric key without ever sending it in the clear, and prove the server is who it claims to be. In TLS 1.3, those two jobs are split across different mechanisms: an **ephemeral** Diffie-Hellman key exchange derives the shared symmetric session key (fresh per session, which is also what gives you forward secrecy), while the server's certificate keypair authenticates *identity* — it signs the handshake transcript (`CertificateVerify`) to prove the server holds the private key matching the cert it presented. The certificate doesn't hand you the session key directly; it vouches for who you're key-exchanging with.
 
 The certificate chain is what makes the identity claim trustworthy: your browser doesn't trust `example.com`'s cert directly — it verifies a signature chain up to a root CA it already trusts, through zero or more intermediates. Break any link (expired intermediate, wrong hostname, self-signed leaf) and the whole chain of trust is invalid, not just that one certificate.
 
@@ -80,7 +80,7 @@ The certificate chain is what makes the identity claim trustworthy: your browser
 openssl s_client -connect example.com:443 -showcerts
 ```
 
-**Say it:** "TLS handshake bootstraps a symmetric session key using the server's asymmetric keypair, and the certificate chain is what lets my browser trust that keypair belongs to the domain I typed — without it, encryption alone proves nothing about identity."
+**Say it:** "TLS 1.3 derives the session key through an ephemeral key exchange, and the certificate's job is authentication — CertificateVerify proves the server holding that cert also holds the matching private key, and the chain is what lets my browser trust the cert belongs to the domain I typed. Identity and key exchange are separate mechanisms working together."
 **Red flag:** Saying HTTPS "just encrypts the connection" without mentioning that certificate validation is the identity half of the guarantee — encryption to an impersonator is still a breach.
 
 ### CORS And Cross Origin Defense
@@ -88,15 +88,17 @@ openssl s_client -connect example.com:443 -showcerts
 
 The browser's same-origin policy already blocks a script on `evil.com` from reading responses from `bank.com` — CORS is the *relaxation* mechanism, not the restriction. A server opts in to being read cross-origin by sending `Access-Control-Allow-Origin`, and for anything beyond a simple GET the browser first sends a preflight `OPTIONS` request to check the server actually allows the method/headers being used.
 
-The defense that matters operationally: never reflect `Access-Control-Allow-Origin: *` on a credentialed endpoint (one that reads cookies or auth headers) — that's an open door for any site to make authenticated requests on the user's behalf and read the response.
+The defense that matters operationally: browsers already refuse to honor `Access-Control-Allow-Origin: *` on a credentialed request (one sending cookies or auth headers) — the fetch fails client-side, so a bare wildcard isn't itself the open door. The real danger is a server that *reflects* whatever `Origin` header it receives back as the allowed origin, or an over-broad allowlist (`*.example.com` when only one subdomain should qualify) — either one defeats the same-origin protection just as completely as a wildcard would if credentials were allowed through.
+
+It's also worth saying what CORS does *not* do: it's a browser-enforced read restriction on the response, not a request blocker — a form POST or a `<img src>`-style cross-origin request still reaches the server and executes, CORS just stops the attacker's page from reading the JSON back. That's why CSRF tokens or `SameSite` cookies are still required; CORS doesn't substitute for them.
 
 ```
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Credentials: true
 ```
 
-**Say it:** "CORS relaxes the same-origin policy on purpose, so the actual defense is server-side — never pair a wildcard origin with credentialed requests, or you've handed out a blank check."
-**Red flag:** "Fixing" a CORS error in production by wildcarding the allowed origin instead of allow-listing the real caller.
+**Say it:** "CORS relaxes the same-origin policy on purpose, and browsers already block wildcard origins on credentialed requests — the actual risk is origin reflection or an over-broad allowlist. CORS also isn't a CSRF defense: it stops a malicious page from *reading* the response, not from firing the state-changing request in the first place, so I still need CSRF tokens or `SameSite` cookies."
+**Red flag:** Treating a working CORS config as proof a state-changing endpoint is CSRF-safe — CORS never blocked the request from reaching the server, only from reading the response.
 
 ### Authentication Mechanisms
 **They ask:** "Compare basic auth, API keys, OAuth2, and mTLS — when do you actually reach for each?"

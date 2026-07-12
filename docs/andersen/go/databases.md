@@ -27,10 +27,16 @@ for _, order := range orders {
     items, _ := db.Query("SELECT * FROM items WHERE order_id = ?", order.ID)
 }
 
-// fixed: one batched query
+// fixed: one batched query — database/sql binds one arg per placeholder,
+// so a slice doesn't expand into IN (?); build one placeholder per id instead
 ids := orderIDs(orders)
-rows, _ := db.Query("SELECT * FROM items WHERE order_id IN (?)", ids)
+placeholders := strings.Repeat("?,", len(ids))
+placeholders = placeholders[:len(placeholders)-1]
+args := make([]any, len(ids))
+for i, id := range ids { args[i] = id }
+rows, _ := db.Query("SELECT * FROM items WHERE order_id IN ("+placeholders+")", args...)
 // then group rows by order_id in Go
+// Postgres alternative: WHERE order_id = ANY($1) with pq.Array(ids)
 ```
 
 **Say it:** "N+1 is a query-per-loop-iteration bug that's invisible with 5 test rows and crushing with 5,000 — I fix it by batching the related fetch into one `IN (...)` query and grouping the results in application code."
@@ -347,13 +353,20 @@ es.Search("articles", `{"query": {"match": {"body": "golang concurrency"}}}`)
 Exactly-once delivery across a network is provably hard (you can't atomically "process the message and ack it" as one step without a shared transaction) so every mainstream broker defaults to at-least-once: it's always safe to redeliver a message the consumer didn't clearly finish processing. The correctness burden shifts to the consumer being **idempotent** — processing the same message twice produces the same result as processing it once.
 
 ```go
-// dedupe via a unique constraint the DB enforces for you
-_, err := db.Exec(`INSERT INTO processed_messages (message_id) VALUES (?)`, msg.ID)
+// dedupe + work in ONE transaction — commit only after the work succeeds,
+// so a crash between "mark processed" and "do the work" can't drop it
+tx, err := db.Begin()
+if err != nil { return err }
+defer tx.Rollback() // no-op after Commit
+
+_, err = tx.Exec(`INSERT INTO processed_messages (message_id) VALUES (?)`, msg.ID)
 if isDuplicateKeyErr(err) {
     return nil // already processed, skip safely
 }
-// ... do the actual work
+// ... do the actual work using tx, not db
+
+return tx.Commit()
 ```
 
-**Say it:** "At-least-once is the achievable guarantee, not exactly-once, so I make the consumer idempotent — dedupe on a unique message ID, usually enforced by a DB constraint — rather than trying to make delivery itself exactly-once."
-**Red flag:** Assuming a broker's "exactly-once" marketing means the consumer's side effects are exactly-once too. The broker can guarantee exactly-once *delivery to its own log*; a side effect like sending an email still needs consumer-side idempotency.
+**Say it:** "At-least-once is the achievable guarantee, not exactly-once, so I make the consumer idempotent — dedupe and the DB side effect commit in one transaction, so a crash mid-processing rolls back instead of silently marking work done that never happened. For side effects outside the DB (an email, an API call) I reach for an outbox or an idempotency key at that boundary instead."
+**Red flag:** Marking a message processed before the work finishes. A crash between the two silently drops the work on redelivery — the dedup record and the work must commit together, or not at all.

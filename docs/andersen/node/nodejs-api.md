@@ -33,15 +33,21 @@ The same logic applies to `res` — writing/`res.write()`ing a large response in
 ### Keep-alive and connection reuse
 **They ask:** "What is HTTP keep-alive, and why does it matter for a Node server under load?"
 
-Without keep-alive, every request opens a fresh TCP connection (and TLS handshake for HTTPS), which is expensive — keep-alive reuses one TCP connection across multiple sequential requests, avoiding that setup cost per request. Node's `http.Agent` manages a connection pool for *outgoing* requests (important when your server calls other services) with a `maxSockets` limit; on the server side, `server.keepAliveTimeout` controls how long an idle connection is held open waiting for the next request before closing.
+Without keep-alive, every request opens a fresh TCP connection (and TLS handshake for HTTPS), which is expensive — keep-alive reuses one TCP connection across multiple sequential requests, avoiding that setup cost per request. Node's `http.Agent` manages a connection pool for *outgoing* requests (important when your server calls other services) with a `maxSockets` limit; on the server side, `server.keepAliveTimeout` controls how long an idle connection is held open waiting for the next request before closing. One trap: Node's built-in `fetch` (Undici under the hood) silently **ignores** an `agent` option — that's a leftover `http.request`-ism, not part of the Fetch spec. To pool connections with `fetch`, configure an Undici `Agent` as the global dispatcher instead; `http.request`/`http.get` still take `agent` directly.
 
 ```js
+// http.request / http.get: agent works directly
 const agent = new http.Agent({ keepAlive: true, maxSockets: 50 });
-fetch(url, { agent }); // reuses pooled connections for outbound calls
+http.get(url, { agent }, (res) => { /* ... */ });
+
+// fetch: agent is ignored — pool via a global Undici dispatcher instead
+const { Agent, setGlobalDispatcher } = require('undici');
+setGlobalDispatcher(new Agent({ keepAliveTimeout: 10_000, connections: 50 }));
+fetch(url); // now uses the pooled dispatcher
 ```
 
-**Say it:** "Keep-alive reuses a TCP connection instead of paying handshake cost per request — I tune the outbound `http.Agent`'s pool size for high-fanout calls to other services, and I know the server's `keepAliveTimeout` needs to exceed any load balancer's idle timeout or you get intermittent connection-reset errors."
-**Red flag:** Not setting `keepAliveTimeout` above the load balancer's idle timeout. If the server closes idle connections first, the LB can still route a new request onto a connection the server just closed, causing sporadic `ECONNRESET`.
+**Say it:** "Keep-alive reuses a TCP connection instead of paying handshake cost per request — for outbound calls I pool via `http.Agent` when I'm on `http.request`/`http.get`, or an Undici `Agent` set as the global dispatcher when I'm on `fetch`, since `fetch(url, { agent })` is silently ignored. On the server side, `keepAliveTimeout` needs to exceed any load balancer's idle timeout or you get intermittent connection-reset errors."
+**Red flag:** Passing `{ agent }` to `fetch()` expecting it to pool connections. Node's `fetch` silently ignores that option — no error, just no pooling — so it's a bug that only shows up as unexplained connection churn under load, not a crash. Also: not setting `keepAliveTimeout` above the load balancer's idle timeout. If the server closes idle connections first, the LB can still route a new request onto a connection the server just closed, causing sporadic `ECONNRESET`.
 
 ### setTimeout, setInterval, and setImmediate ordering
 **They ask:** "How do `setTimeout`, `setInterval`, and `setImmediate` order relative to each other?"
