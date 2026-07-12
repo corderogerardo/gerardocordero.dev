@@ -53,3 +53,13 @@ An SA extends the BA role one layer deeper into the technical system: where a BA
 
 **Say it:** "An SA's job is translating validated business requirements into a technically implementable specification — and systems thinking means I evaluate every requirement against its ripple effects on the rest of the system, not just in isolation."
 **Red flag:** Describing systems thinking as "seeing the big picture" with no concrete mechanism — the interviewer wants to hear you actually trace dependencies (data, integration, architecture) before signing off on a requirement.
+
+### BABOK — What It Is and Why It Matters
+**They ask:** "What is BABOK, and how do you actually use it, versus just having heard of it?"
+
+BABOK (the Business Analysis Body of Knowledge, from IIBA) isn't a methodology you follow step by step — it's a reference framework that names and organizes the knowledge areas a BA draws on: business analysis planning, elicitation and collaboration, requirements life cycle management, strategy analysis, requirements analysis and design definition, and solution evaluation. Its real value is vocabulary and completeness: it gives you a checklist of *categories of work* so nothing gets silently skipped on a project (nobody explicitly owns strategy analysis, so it never happens), and it gives you shared terms so "elicitation technique" or "requirements traceability" mean the same thing across a whole industry, not just your last project.
+
+At a senior level, BABOK shows up less as a document you cite and more as a mental model you use to audit your own process — when a project goes sideways, mapping the failure back to a BABOK knowledge area (was this a planning gap? an elicitation gap? a solution-evaluation gap that was skipped entirely?) turns a vague postmortem into a specific, fixable one.
+
+**Say it:** "BABOK isn't a process I follow line by line — it's the framework I use to audit my own work, so when something goes wrong I can name which knowledge area actually got shortchanged instead of describing the failure vaguely."
+**Red flag:** Reciting BABOK's six knowledge areas from memory with no example of applying one. An interviewer wants evidence you use it as a working tool, not that you memorized a glossary.

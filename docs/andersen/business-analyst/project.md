@@ -143,3 +143,13 @@ A demo's real purpose is validating that what got built matches what was actuall
 
 **Say it:** "A demo's job is surfacing a misunderstanding while it's still cheap to fix — so I run it against realistic data and actively ask for reaction, not as a scripted happy-path show-and-tell."
 **Red flag:** Running a demo as a purely scripted happy-path walkthrough with no room for stakeholder reaction — it protects the presenter's ego at the cost of catching the misunderstanding early, which is the entire point of the exercise.
+
+### Articulating Business Value
+**They ask:** "How do you justify a feature or requirement in terms of business value, not just 'the client asked for it'?"
+
+"The client asked for it" is a request, not a justification — a senior BA translates a request into the actual business outcome it's meant to produce: does it increase revenue, reduce cost, reduce risk, or improve retention/satisfaction? Naming which of those a requirement serves is what lets a team make a real prioritization call when capacity is limited, instead of prioritizing by whoever asked loudest or most recently.
+
+The practical discipline is tying value to something measurable wherever possible — not inventing a number, but asking the stakeholder what metric they'd expect to move, and by roughly how much, before development starts. That's also what makes solution evaluation possible later: without a stated expected outcome, there's no way to check afterward whether the feature actually delivered the value it was justified by.
+
+**Say it:** "I don't accept 'the client wants it' as the justification — I ask which business outcome it serves and what metric should move, because that's the only way to prioritize honestly and the only way to check afterward whether it actually worked."
+**Red flag:** Justifying every requirement as valuable by default because a stakeholder requested it. Not naming the actual business outcome means the team can't prioritize rationally or evaluate whether the delivered feature was worth building.

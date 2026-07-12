@@ -17,6 +17,7 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What's the actual difference between a shell script and a CM manifest, and when does a team need to graduate from one to the other? — [answer](cicd-iac.md#configuration-management-from-scripts-to-tools)
 - Why IaC over a runbook of manual console clicks, and what does GitOps add on top of plain IaC? — [answer](cicd-iac.md#infrastructure-as-code-and-gitops)
 - What quality gates do you wire into a pipeline before code reaches production, and how do you decide what's a hard gate versus a warning? — [answer](cicd-iac.md#qa-testing-frameworks-and-quality-gates)
+- Jenkins, GitLab CI, GitHub Actions, CircleCI — what actually differs, and how would you choose for a new project? — [answer](cicd-iac.md#cicd-tool-comparison--jenkins-gitlab-ci-github-actions) {S1, S2}
 
 ## Clouds
 
@@ -76,3 +77,42 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Compare basic auth, API keys, OAuth2, and mTLS — when do you actually reach for each? — [answer](networking.md#authentication-mechanisms)
 - Explain the difference between L4 and L7 load balancing, and how does health checking actually detect a bad node? — [answer](networking.md#load-balancing-concepts)
 - Name the web vulnerabilities you actively defend against, and explain why long-lived connections like WebSockets or gRPC streams complicate that. — [answer](networking.md#web-vulnerabilities-websockets-and-grpc)
+
+## HA & Resilience
+
+### High Availability Concepts & FailOver
+
+- Walk me through HA, fault tolerance, and disaster recovery — how do they actually differ, and how do RTO/RPO fit in? — [answer](resilience.md#high-availability-fault-tolerance-and-disaster-recovery) {M1, M2, M3, S1, S2}
+- What is split-brain in an HA cluster, and how does STONITH prevent it? — [answer](resilience.md#split-brain-and-stonith) {S1, S2}
+
+## Configuration Management
+
+### Configuration Management
+
+- Walk me through how Ansible actually applies a playbook — inventory, modules, and how it stays idempotent. — [answer](config-mgmt.md#ansible-playbooks-inventory-and-idempotency) {M2, M3, S1, S2}
+- Ansible, Puppet, Chef, Salt — what actually differs, and how would you choose for a 5,000-node fleet versus a 20-server startup? — [answer](config-mgmt.md#configuration-management-tools-compared--push-vs-pull) {S1, S2}
+
+## Message brokers
+
+### Message Brokers
+
+- What's a message broker for, and what delivery guarantees does it actually give you? — [answer](message-brokers.md#message-broker-fundamentals-and-delivery-guarantees) {M1, M2, M3}
+- How do you cluster a broker for HA, and how would you load-test it before trusting it in production? — [answer](message-brokers.md#message-broker-ha-clustering-and-performance-testing) {M2, M3, S1, S2}
+
+## DBMS
+
+### Relational & Non-relational DBs
+
+- When do you actually reach for NoSQL over a relational DB, and what does CAP theorem have to do with that choice? — [answer](databases.md#relational-vs-nosql-and-the-cap-theorem) {M3, S1, S2}
+- How does a database stay available through a node failure, and what's the failure mode you have to design against? — [answer](databases.md#database-clustering-replication-and-split-brain) {M3, S1, S2}
+- A query is slow in production — walk me through how you'd diagnose it, and how do indexes actually help? — [answer](databases.md#database-indexes-permissions-and-query-tracing) {M1, M2}
+
+## Operations & IaaC
+
+### Monitoring & Audit
+
+- How do you decide what to actually monitor, and how do cloud-native monitoring solutions differ from static ones? — [answer](observability.md#monitoring-solutions-and-the-four-golden-signals) {M3, S1, S2}
+
+### Logging
+
+- Why centralize logs instead of just SSHing into a box to `tail -f`, and what's the difference between logging and an audit trail? — [answer](observability.md#centralized-logging-and-audit-trails) {M3, S1, S2}
