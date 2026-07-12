@@ -92,7 +92,7 @@ The defense that matters operationally: browsers already refuse to honor `Access
 
 It's also worth saying what CORS does *not* do: it's a browser-enforced read restriction on the response, not a request blocker — a form POST or a `<img src>`-style cross-origin request still reaches the server and executes, CORS just stops the attacker's page from reading the JSON back. That's why CSRF tokens or `SameSite` cookies are still required; CORS doesn't substitute for them.
 
-```
+```http
 Access-Control-Allow-Origin: https://app.example.com
 Access-Control-Allow-Credentials: true
 ```
