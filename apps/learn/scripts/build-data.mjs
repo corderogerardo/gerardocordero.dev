@@ -18,6 +18,8 @@ export const COURSES = [
   { dir: "lessons-python",   id: "python",  storeKey: "pawwalk-academy-python-v1",  title: "Python & FastAPI", emoji: "🐍" },
   { dir: "lessons-go",       id: "go",      storeKey: "pawwalk-academy-go-v1",      title: "Go Backend",    emoji: "🐹" },
   { dir: "lessons-node",     id: "node",    storeKey: "pawwalk-academy-node-v1",    title: "Node & NestJS", emoji: "🟢" },
+  { dir: "lessons-native",   id: "native",  storeKey: "pawwalk-academy-native-v1",  title: "Native RN & Expo Modules", emoji: "🛰️" },
+  { dir: "lessons-expoui",   id: "expoui",  storeKey: "pawwalk-academy-expoui-v1",  title: "Rebuild @expo/ui", emoji: "🎛️" },
 ];
 
 export const LOCALES = ["en", "es"];

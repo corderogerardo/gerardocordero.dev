@@ -133,43 +133,6 @@ importers:
 
   apps/learn:
     dependencies:
-      next:
-        specifier: 16.2.9
-        version: 16.2.9(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react:
-        specifier: 19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
-      zustand:
-        specifier: ^5
-        version: 5.0.14(@types/react@19.2.17)(react@19.2.4)
-    devDependencies:
-      '@types/node':
-        specifier: ^20
-        version: 20.19.43
-      '@types/react':
-        specifier: ^19
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.2.17)
-      eslint:
-        specifier: ^9
-        version: 9.39.4(jiti@2.7.0)
-      eslint-config-next:
-        specifier: 16.2.9
-        version: 16.2.9(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
-      typescript:
-        specifier: ^5
-        version: 5.9.3
-      wrangler:
-        specifier: ^4
-        version: 4.103.0
-
-  apps/learn-reactnative:
-    dependencies:
       '@radix-ui/react-scroll-area':
         specifier: ^1.2.14
         version: 1.2.14(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -207,8 +170,11 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       tailwind-merge:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^2.6.0
+        version: 2.6.1
+      zustand:
+        specifier: ^5
+        version: 5.0.14(@types/react@19.2.17)(react@19.2.4)
     devDependencies:
       '@tailwindcss/typography':
         specifier: ^0.5.20
@@ -243,6 +209,9 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+      wrangler:
+        specifier: ^4
+        version: 4.103.0
 
   apps/nest-prep:
     dependencies:
@@ -10518,6 +10487,9 @@ packages:
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
 
+  tailwind-merge@2.6.1:
+    resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
+
   tailwind-merge@3.6.0:
     resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
 
@@ -14213,7 +14185,9 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.74.89': {}
 
@@ -24208,6 +24182,8 @@ snapshots:
       react: 17.0.2
 
   symbol-tree@3.2.4: {}
+
+  tailwind-merge@2.6.1: {}
 
   tailwind-merge@3.6.0: {}
 

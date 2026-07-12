@@ -38,6 +38,8 @@ function LearnShellContent({ course, children }: { course: Course; children: Rea
 
   return (
     <>
+      <button id="menu-toggle" ref={menuToggleRef}>☰</button>
+      <div className="layout">
       <nav id="sidebar">
         <header>
           <a href={`/${currentLocale}/learn/${course.id}`}>
@@ -63,8 +65,8 @@ function LearnShellContent({ course, children }: { course: Course; children: Rea
         </div>
       </nav>
 
-      <button id="menu-toggle" ref={menuToggleRef}>☰</button>
       <main id="content">{children}</main>
+      </div>
     </>
   );
 }

@@ -1,0 +1,681 @@
+{
+  "id": "native",
+  "title": "Native RN & Expo Modules",
+  "emoji": "🛰️",
+  "storeKey": "pawwalk-academy-native-v1",
+  "modules": [
+    {
+      "id": "native-welcome",
+      "title": "Why go native",
+      "emoji": "🛰️",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "welcome",
+          "title": "The other side of React Native",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The wall React Native eventually hits",
+                "In the iOS and Android courses you built PawWalk's screens. Almost everything a walker sees — the walker list, the booking form, the live map — React Native can draw with JavaScript. But some things live **below** JavaScript: the LiDAR sensor on an iPhone, ARKit and ARCore, Bluetooth, the secure enclave. React Native has no JS API for those. When your product needs one, you don't wait for a library — **you write the native module yourself.**",
+                "That single skill — reaching through React Native to a platform capability and handing it back to JS as a clean component — is what separates a mid-level RN developer from a senior one. It's also the thing `expo-ui`, `react-native-maps`, and every camera library are *made of*.",
+                "> In an interview, say: **\"React Native is a rendering layer over native UI; when I need a capability JS can't reach — a sensor, an OS SDK — I write an Expo native module that exposes it as a typed component or function. Same machinery the ecosystem's own libraries use.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## What you'll build in this course",
+                "PawWalk wants an off-leash feature: a walker points their phone at the dog and sees **how far away it is, in meters, live**. That's a depth reading from the device's AR sensor.",
+                "You'll build `DepthScannerView` — one React component, backed by **two** native implementations (ARKit on iOS, ARCore on Android), streaming a distance number up to JavaScript. The React screen never changes between platforms; only the native adapter underneath does.",
+                "- **Modules 1–2** — the mental model, then scaffold the module and design its TypeScript contract.\n- **Module 3** — the iOS side: an ARKit view that reads LiDAR depth.\n- **Module 4** — the Android side: an ARCore view that reads the depth image.\n- **Module 5** — wire the RN screen, verify on a real device, and rehearse how you'd defend every layer in an interview."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "app/depth.tsx — where you're headed",
+              "source": "import { useState } from 'react';\nimport { View, Text } from 'react-native';\nimport { DepthScannerView } from '../modules/expo-depth-scanner/src/DepthScannerView';\n\nexport default function DepthScreen() {\n  const [meters, setMeters] = useState<number | null>(null);\n  return (\n    <View style={{ flex: 1 }}>\n      <DepthScannerView\n        style={{ flex: 1 }}\n        active\n        onDepth={(e) => setMeters(e.nativeEvent.meters)}\n      />\n      <Text>{meters == null ? '—' : meters.toFixed(2) + ' m'}</Text>\n    </View>\n  );\n}",
+              "caption": "One component, one event, one number. The whole course is about making this <DepthScannerView> real — twice, natively, behind an identical JS surface."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The realization that makes this tractable",
+                "`expo-ui` — the package that gives you native SwiftUI `Button`, `Slider`, `Picker` in React — looks like magic. It isn't. **It is an ordinary Expo Module.** Every one of its components is registered with the exact same six-line DSL you're about to learn:",
+                "```\nView(MyView.self) {\n  Prop(\"value\") { view, value in ... }\n  Events(\"onChange\")\n}\n```",
+                "So \"investigate expo-ui and replicate it for LiDAR\" collapses to one sentence: **learn the Expo Modules native-view pattern once, then point it at ARKit/ARCore instead of at a button.** You are not building a framework. You are filling in one native view.",
+                "> In an interview, say: **\"expo-ui isn't a special framework — it's a collection of Expo Modules. Each native control is a view registered with `View(...) { Prop, Events }`. I built a domain-specific version of that pattern for a depth sensor.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "Why would you write a native module instead of finding an npm package?",
+              "choices": [
+                "Because the capability (a sensor, an OS SDK like ARKit) has no JavaScript API, so it must be reached in native code and exposed to JS",
+                "Because native code always runs faster than JavaScript for every task",
+                "Because React Native cannot render any native views without a custom module",
+                "Because npm packages are not allowed in Expo projects"
+              ],
+              "answer": 0,
+              "explain": "You reach for a native module when the thing you need lives below JS — LiDAR, ARKit/ARCore, the secure enclave. React Native already renders native views for its built-in components; a module is how you expose a NEW native capability. Often a package exists and you'd use it — but when one doesn't (or you need to understand how one works), writing the module is the senior move.",
+              "nudge": "Think about what JavaScript literally cannot call on its own.",
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The one hard constraint, up front",
+                "Depth sensing needs the **camera and the depth hardware** — so it returns *nothing* on a Simulator or Emulator. Every run in this course is on a **physical device**: a LiDAR iPhone (12 Pro or newer Pro / iPad Pro) and an ARCore-capable Android phone.",
+                "A physical device also means **no Expo Go** — a local native module forces a development build (`npx expo run:ios` / `run:android`). That's expected and correct here, not a workaround.",
+                "> Red flag: saying \"I'll just test it in the simulator first.\" An interviewer hears that you don't know depth APIs need real hardware. The senior answer: **\"Depth and camera APIs are no-ops on simulators, so I develop against a real device with a dev build from day one.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "Why does this whole course run on a physical device with a development build instead of Expo Go on a simulator?",
+              "choices": [
+                "Depth/camera hardware doesn't exist on simulators, and a local native module can't run in Expo Go — both force a dev build on a real device",
+                "Expo Go is faster but only works on Android",
+                "Development builds are required for any TypeScript project",
+                "Simulators can run native modules but not JavaScript"
+              ],
+              "answer": 0,
+              "explain": "Two independent reasons converge: the depth sensor simply isn't present on a simulator, and Expo Go can't load a custom local native module. Both point to the same setup — a development build on real hardware. Knowing this up front is a small but real seniority tell.",
+              "nudge": "There are two reasons — one about the sensor, one about how local native modules load.",
+              "lang": "ts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-mental-model",
+      "title": "The three-layer mental model",
+      "emoji": "🧱",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "layers",
+          "title": "Sensor → native view → bridge → JS",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## One vertical slice, three layers",
+                "Before any code, hold the whole shape in your head. Data flows **up** from a sensor to your screen; configuration flows **down** from your screen to the sensor. You are building one vertical slice through three layers:",
+                "1. **React Native (TypeScript/JSX)** — `<DepthScannerView onDepth={…} />` on a screen, plus a thin TS binding that names the native view.\n2. **The Expo Module definition** — the `View(...) { Prop, Events }` DSL. This is the bridge you author.\n3. **The native view + sensor** — a real UIKit/Android view hosting ARKit or ARCore, sampling depth.",
+                "> In an interview, say: **\"A native module is one vertical slice: props flow down from JS to a native setter, events flow up from the sensor to a JS callback. Everything else is plumbing between those two directions.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "The layers, drawn",
+              "source": "React Native (TS/JSX)\n  <DepthScannerView onDepth={e => setMeters(e.nativeEvent.meters)} />\n  requireNativeView('DepthScanner')            // thin TS binding\n        ▲  props down, events up  (over JSI)\nExpo Module definition()  — the DSL you write\n  View(DepthScannerView.self) {\n    Prop('active') { view, active in ... }      // props down\n    Events('onDepth')                           // events up\n  }\n        ▲\nNative view + sensor\n  iOS:  ExpoView -> ARSCNView -> ARKit sceneDepth.depthMap\n  Android: ExpoView -> ARScene(Compose) -> ARCore DEPTH16",
+              "caption": "Memorize this. When something breaks, you'll know which of the three layers to inspect — and that diagnostic instinct is what an interviewer is listening for."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Props down, events up — and why it's fast",
+                "Two directions, both crossing the same boundary:",
+                "- **Props flow down.** JS sets `active={true}` → the module maps it to a native setter (`view.setActive(true)`). Props are how JS *configures* the native view.\n- **Events flow up.** The sensor produces a depth reading → the native view fires an event dispatcher → your `onDepth` JS callback runs. Events are how native *reports back*.",
+                "Modern Expo Modules use **JSI** (the JavaScript Interface) as their fast path instead of the legacy bridge. The old bridge serialized every call to JSON and batched it asynchronously — fine for a button tap, a bottleneck for a sensor emitting 30–60 readings a second. JSI lets JS call native directly (and, via shared objects / typed arrays, pass buffers without serializing), so high-frequency streaming becomes viable — how close you get to a steady 60 Hz still depends on the module's implementation and the device. (A module can fall back to the older proxy bridge when a JSI path isn't available.)",
+                "> Red flag: describing all RN native comms as \"the bridge\" that serializes JSON. That's the *old* architecture. The senior answer: **\"Expo Modules use JSI, so prop-setting and event dispatch are direct calls rather than async JSON serialization — which removes the tax that throttled high-frequency work on the old bridge.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "In this architecture, what is a 'prop' and what is an 'event'?",
+              "choices": [
+                "A prop flows down (JS configures the native view via a setter); an event flows up (native reports data to a JS callback)",
+                "A prop flows up from native; an event flows down from JS",
+                "Both props and events flow only from JS to native",
+                "Props and events are the same thing with different names"
+              ],
+              "answer": 0,
+              "explain": "Props are JS → native configuration, mapped to a native setter. Events are native → JS reporting, delivered to a JS callback. Getting this direction right is the backbone of every native view you'll ever write.",
+              "nudge": "Which direction is 'set active = true' and which is 'here's a new depth reading'?",
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Two ways to author the native view (know both)",
+                "When an interviewer asks how you'd build a native view, naming both authoring styles signals depth:",
+                "1. **`ExpoView` wrapping a platform view** — your registered view subclasses `ExpoView` (a UIKit `UIView` / Android `View`) and hosts the real native view inside it. Rock-solid, well-documented. ARKit's `ARSCNView` and ARCore's renderer are UIKit/Android-View objects anyway, so wrapping is the *natural* fit for an AR camera surface. **This is what we'll use.**\n2. **`ExpoSwiftUI.View` / Compose-native registration** — newer: the registered view *is* a SwiftUI or Jetpack Compose view directly. This is the registration API `@expo/ui` builds its primitives on; its `Host`/children *composition* model is a separate layer that sits on top (you'll rebuild both in the @expo/ui course).",
+                "> In an interview, say: **\"For an AR camera surface I wrapped the platform view in an `ExpoView` — it's the sturdiest path and ARKit/ARCore are UIKit/Android views already. I'd reach for the newer `ExpoSwiftUI.View` registration when the view is genuinely a SwiftUI/Compose tree — that's the primitive `@expo/ui` registers its controls with, under its `Host` composition layer.\"** Naming the trade-off, not just one option, is the seniority signal."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The prerequisites checklist",
+                "This is a `type: \"xcode\"` checklist — a real-world step done outside the browser. Confirm your hardware before Module 3, because none of it runs on a simulator."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "xcode",
+              "label": "Over to your devices",
+              "title": "Confirm you can actually run this",
+              "intro": [
+                "Depth sensing needs real hardware on both platforms. Tick these off before the iOS module:"
+              ],
+              "items": [
+                "A LiDAR iPhone/iPad on hand (iPhone 12 Pro or newer Pro, or iPad Pro 2020+).",
+                "An ARCore-capable Android phone (most modern phones — no dedicated ToF sensor required; ARCore synthesizes depth from motion).",
+                "Xcode installed with a signing team set (a free personal team is fine for on-device dev).",
+                "USB debugging on the Android phone; `adb devices` lists it.",
+                "Accept that runs use a development build (`npx expo run:ios` / `run:android`), not Expo Go — a local native module requires it."
+              ],
+              "lang": "ts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-contract",
+      "title": "Scaffold the module & design the contract",
+      "emoji": "📐",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "scaffold",
+          "title": "Generate a local module",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## Scaffold once, fill in the guts",
+                "Expo ships a generator that creates a native module with a view and an event example already wired — you replace the guts, not the plumbing. From a fresh Expo app (created with `create-expo-app`, plus `expo install expo-dev-client`), run:",
+                "```\nnpx create-expo-module@latest expo-depth-scanner \\\n  --local \\\n  --platform apple android \\\n  --features View ViewEvent\n```",
+                "`--local` puts the module *inside your app* at `modules/expo-depth-scanner/` — no separate package to publish yet. You get `ios/` (Swift), `android/` (Kotlin), `src/` (TypeScript), and `expo-module.config.json` (autolinking)."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "modules/expo-depth-scanner/ — what the generator makes",
+              "source": "modules/expo-depth-scanner/\n  expo-module.config.json     // autolinking: which native classes to register\n  ios/\n    ExpoDepthScannerModule.swift   // the definition() DSL\n    ExpoDepthScannerView.swift     // the native view\n  android/\n    .../ExpoDepthScannerModule.kt\n    .../ExpoDepthScannerView.kt\n  src/\n    ExpoDepthScanner.types.ts      // the TS contract (you design this first)\n    DepthScannerView.tsx           // the requireNativeView binding",
+              "caption": "The single most common 'why isn't my module found' bug lives in expo-module.config.json — iOS lists the class name only, Android lists the FULLY-QUALIFIED name (expo.modules.depthscanner.…). Read it before you touch anything else."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Design the JS contract *first*",
+                "This is the senior instinct: before writing a line of Swift or Kotlin, design the TypeScript API. It's the **cross-platform contract** — the one thing both native implementations must satisfy. If the contract is right, iOS and Android become two independent adapters that can't drift.",
+                "Our event carries two fields: the distance in meters, and a **confidence** value. Shipping `confidence` up to JS is a deliberate choice — it lets the *app* decide whether to trust a reading, keeping the native layer a dumb, reusable sensor.",
+                "> In an interview, say: **\"I design the TypeScript contract before the native code — it's the cross-platform seam. Policy lives in JS (I ship a confidence value up and let the app decide what to trust); the native layer stays a dumb sensor. That separation is what makes the module reusable.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "code",
+              "lang": "ts",
+              "title": "src/ExpoDepthScanner.types.ts — the shape both platforms honor",
+              "source": "import type { ViewProps } from 'react-native';\n\nexport type DepthEvent = { meters: number; confidence: number };",
+              "caption": "DepthEvent is the payload. Next you'll type the view's props — the down-channel (active) and the up-channel (onDepth)."
+            },
+            {
+              "type": "exercise",
+              "lang": "ts",
+              "title": "Type the view's props",
+              "prompt": [
+                "Below `DepthEvent`, declare the view's prop type. It needs an optional `active` boolean (starts/stops the session), an optional `onDepth` callback receiving `{ nativeEvent: DepthEvent }` and returning `void`, and it must extend React Native's `ViewProps` (so `style` etc. work)."
+              ],
+              "starter": "export type DepthScannerViewProps = {\n  // your code here\n} & ViewProps;",
+              "solution": "export type DepthScannerViewProps = {\n  active?: boolean;\n  onDepth?: (event: { nativeEvent: DepthEvent }) => void;\n} & ViewProps;",
+              "checks": [
+                {
+                  "re": {
+                    "source": "type DepthScannerViewProps=\\{",
+                    "flags": ""
+                  },
+                  "hint": "Declare `export type DepthScannerViewProps = { … } & ViewProps` — an object type intersected with ViewProps."
+                },
+                {
+                  "re": {
+                    "source": "active\\?:boolean",
+                    "flags": ""
+                  },
+                  "hint": "Add `active?: boolean` — the optional `?` matters; the view works before JS sets it."
+                },
+                {
+                  "re": {
+                    "source": "onDepth\\?:\\(event:\\{nativeEvent:DepthEvent\\}\\)=>void",
+                    "flags": ""
+                  },
+                  "hint": "The callback is `onDepth?: (event: { nativeEvent: DepthEvent }) => void` — native events are delivered under `nativeEvent`."
+                },
+                {
+                  "re": {
+                    "source": "\\}&ViewProps",
+                    "flags": ""
+                  },
+                  "hint": "Intersect with `& ViewProps` so `style`, `testID`, and the rest come along."
+                }
+              ],
+              "mustNot": [
+                {
+                  "re": {
+                    "source": "onDepth:\\(",
+                    "flags": ""
+                  },
+                  "hint": "Make `onDepth` optional with `?` — `onDepth?: (…)` — a scanner shouldn't require a listener to mount."
+                }
+              ],
+              "success": "That's the whole cross-platform contract. iOS and Android now have one target to hit — and they can't disagree about the shape."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The binding: name the native view",
+                "The TS side of the bridge is tiny. `requireNativeView('DepthScanner')` looks up the native view your module registered under the name `'DepthScanner'` and returns a React component. You wrap it so the rest of your app imports a normal-looking component.",
+                "The string `'DepthScanner'` is a **contract in two places**: here in `requireNativeView('DepthScanner')` and in the native `Name(\"DepthScanner\")` — a mismatch is the classic \"Cannot find native view\" crash, so check those two names first. Autolinking is a *separate* concern: `expo-module.config.json` must list the **module class** so Expo finds the module at all; get that wrong and the whole module is missing, not just the view."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "exercise",
+              "lang": "ts",
+              "title": "Write the requireNativeView binding",
+              "prompt": [
+                "In `DepthScannerView.tsx`, get the native component with `requireNativeView('DepthScanner')` into a const `NativeView`, then export a `DepthScannerView` function component that takes `props: DepthScannerViewProps` and returns `<NativeView {...props} />`."
+              ],
+              "starter": "import { requireNativeView } from 'expo';\nimport type { DepthScannerViewProps } from './ExpoDepthScanner.types';\n\n// your code here",
+              "solution": "import { requireNativeView } from 'expo';\nimport type { DepthScannerViewProps } from './ExpoDepthScanner.types';\n\nconst NativeView = requireNativeView('DepthScanner');\n\nexport function DepthScannerView(props: DepthScannerViewProps) {\n  return <NativeView {...props} />;\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "const NativeView=requireNativeView\\('DepthScanner'\\)",
+                    "flags": ""
+                  },
+                  "hint": "Grab the native view: `const NativeView = requireNativeView('DepthScanner')` — the string must match the native `Name(...)`."
+                },
+                {
+                  "re": {
+                    "source": "export function DepthScannerView\\(props:DepthScannerViewProps\\)",
+                    "flags": ""
+                  },
+                  "hint": "Export `function DepthScannerView(props: DepthScannerViewProps)`."
+                },
+                {
+                  "re": {
+                    "source": "return<NativeView\\{\\.\\.\\.props\\}\\/>",
+                    "flags": ""
+                  },
+                  "hint": "Return the native view with all props forwarded: `<NativeView {...props} />`."
+                }
+              ],
+              "success": "The JS half of the bridge is done — a typed component whose name points straight at the native view. Now let's give it something native to point at."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-ios-lidar",
+      "title": "iOS: reading LiDAR depth",
+      "emoji": "📱",
+      "lang": "swift",
+      "lessons": [
+        {
+          "id": "arkit",
+          "title": "An ARKit view that streams depth",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The native view is where the real work is",
+                "On iOS, the depth comes from ARKit. You run an AR session with **scene depth** turned on, and each frame carries a `depthMap` — a buffer of distances. Your `ExpoView` subclass hosts an `ARSCNView`, acts as the session's delegate, and on every frame reads the depth at the **center pixel** and fires it up to JS.",
+                "Key fact you'll quote later: ARKit's `depthMap` is a `CVPixelBuffer` of `Float32` values already **in meters**. No unit conversion on iOS. (Android will be different — hold that thought.)"
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "code",
+              "lang": "swift",
+              "title": "ios/ExpoDepthScannerView.swift — the sensor half",
+              "source": "import ExpoModulesCore\nimport ARKit\nimport SceneKit\n\nclass DepthScannerView: ExpoView, ARSessionDelegate {\n  private let sceneView = ARSCNView()\n  private var isActive = false\n\n  // Events declared in definition() become callable dispatchers here.\n  let onDepth = EventDispatcher()\n  let onUnsupported = EventDispatcher()\n\n  required init(appContext: AppContext) {\n    super.init(appContext: appContext)\n    addSubview(sceneView)\n    sceneView.session.delegate = self\n  }\n\n  override func layoutSubviews() {\n    super.layoutSubviews()\n    sceneView.frame = bounds\n  }\n\n  func setActive(_ active: Bool) {\n    guard active != isActive else { return }\n    isActive = active\n    active ? startSession() : sceneView.session.pause()\n  }\n\n  private func startSession() {\n    guard ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) else {\n      onUnsupported([\"reason\": \"LiDAR sceneDepth unavailable on this device\"])\n      return\n    }\n    let config = ARWorldTrackingConfiguration()\n    config.frameSemantics = .sceneDepth        // the LiDAR switch\n    sceneView.session.run(config)\n  }\n}",
+              "caption": "EventDispatcher is the up-channel: calling onDepth([...]) delivers to the JS onDepth callback. supportsFrameSemantics guards devices without LiDAR — and reports it up instead of silently doing nothing."
+            },
+            {
+              "type": "code",
+              "lang": "swift",
+              "title": "ios/ExpoDepthScannerView.swift — sampling the center pixel",
+              "source": "extension DepthScannerView {\n  // ARSessionDelegate: called ~30-60x/sec with a fresh frame.\n  func session(_ session: ARSession, didUpdate frame: ARFrame) {\n    guard let depth = frame.sceneDepth else { return }\n    let depthMap = depth.depthMap          // CVPixelBuffer, Float32, METERS\n\n    CVPixelBufferLockBaseAddress(depthMap, .readOnly)\n    defer { CVPixelBufferUnlockBaseAddress(depthMap, .readOnly) }\n\n    let w = CVPixelBufferGetWidth(depthMap)\n    let h = CVPixelBufferGetHeight(depthMap)\n    guard let base = CVPixelBufferGetBaseAddress(depthMap) else { return }\n    let rowBytes = CVPixelBufferGetBytesPerRow(depthMap)\n    let ptr = base.advanced(by: (h / 2) * rowBytes).assumingMemoryBound(to: Float32.self)\n    let meters = ptr[w / 2]\n\n    onDepth([\"meters\": Double(meters), \"confidence\": 2.0])\n  }\n}",
+              "caption": "Lock the buffer, jump to the middle row, read the middle column. The confidence map (0…2 per pixel) is sampled the same way in the full version; here we send a constant so the JS contract stays honest."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Now register it with the DSL",
+                "The view exists; the module has to *register* it under the name JS looks up, declare its events, and map the `active` prop to `setActive`. This is the same `View(...) { Prop, Events }` DSL that `expo-ui` uses for every one of its controls."
+              ],
+              "lang": "swift"
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Register the view in definition()",
+              "prompt": [
+                "Inside `definition()`, after `Name(\"DepthScanner\")`, register the view. Use `View(DepthScannerView.self) { … }` and inside it: declare `Events(\"onDepth\", \"onUnsupported\")`, then a `Prop(\"active\")` whose closure takes `(view: DepthScannerView, active: Bool)` and calls `view.setActive(active)`."
+              ],
+              "starter": "public func definition() -> ModuleDefinition {\n  Name(\"DepthScanner\")\n\n  // register the view here\n}",
+              "solution": "public func definition() -> ModuleDefinition {\n  Name(\"DepthScanner\")\n\n  View(DepthScannerView.self) {\n    Events(\"onDepth\", \"onUnsupported\")\n\n    Prop(\"active\") { (view: DepthScannerView, active: Bool) in\n      view.setActive(active)\n    }\n  }\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "View\\(DepthScannerView\\.self\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Register with `View(DepthScannerView.self) { … }` — `.self` passes the type itself."
+                },
+                {
+                  "re": {
+                    "source": "Events\\(\"onDepth\",\"onUnsupported\"\\)",
+                    "flags": ""
+                  },
+                  "hint": "Declare both events: `Events(\"onDepth\", \"onUnsupported\")` — the names must match the EventDispatchers and the TS callback."
+                },
+                {
+                  "re": {
+                    "source": "Prop\\(\"active\"\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Map the down-channel: `Prop(\"active\") { … }`."
+                },
+                {
+                  "re": {
+                    "source": "view\\.setActive\\(active\\)",
+                    "flags": ""
+                  },
+                  "hint": "Inside the Prop closure, call `view.setActive(active)` — prop value → native setter."
+                }
+              ],
+              "success": "That six-line block is the entire bridge on the iOS side — and it's structurally identical to how expo-ui registers a Button. You've now built a native view the expo-ui way."
+            },
+            {
+              "type": "quiz",
+              "q": "ARKit's `frame.sceneDepth?.depthMap` gives distances in what unit, and what turns it on?",
+              "choices": [
+                "Meters (Float32); enabled by config.frameSemantics = .sceneDepth",
+                "Millimeters (Int16); enabled by config.depthMode = .automatic",
+                "Pixels; enabled automatically with any AR session",
+                "Centimeters; enabled by requesting camera permission"
+              ],
+              "answer": 0,
+              "explain": "On iOS the depthMap is Float32 meters, and one line — config.frameSemantics = .sceneDepth — turns LiDAR depth on. The millimeters/.automatic answer is the ANDROID story; keeping the two straight is exactly the cross-platform detail an interviewer probes.",
+              "nudge": "One platform gives meters, the other millimeters. Which is iOS?",
+              "lang": "swift"
+            },
+            {
+              "type": "exercise",
+              "lang": "swift",
+              "title": "Turn LiDAR on",
+              "prompt": [
+                "Complete `startSession()`: between creating the config and running it, set the frame semantics to scene depth. That single line is what enables LiDAR."
+              ],
+              "starter": "let config = ARWorldTrackingConfiguration()\n// enable LiDAR scene depth here\nsceneView.session.run(config)",
+              "solution": "let config = ARWorldTrackingConfiguration()\nconfig.frameSemantics = .sceneDepth\nsceneView.session.run(config)",
+              "checks": [
+                {
+                  "re": {
+                    "source": "config\\.frameSemantics=\\.sceneDepth",
+                    "flags": ""
+                  },
+                  "hint": "Set `config.frameSemantics = .sceneDepth` — everything else about \"turning on LiDAR\" is just plumbing around this one assignment."
+                }
+              ],
+              "success": "That's the whole 'enable LiDAR' step. Add NSCameraUsageDescription to app.json's ios.infoPlist, run `npx expo run:ios --device`, and point it at a wall — the readings should track a tape measure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-android-arcore",
+      "title": "Android: reading ARCore depth",
+      "emoji": "🤖",
+      "lang": "kotlin",
+      "lessons": [
+        {
+          "id": "arcore",
+          "title": "The same contract, a second backend",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## One JS contract, two native backends",
+                "Here's the payoff of designing the contract first: the Android side is a *different implementation of the same interface*. The React screen won't change at all. Only the native adapter does.",
+                "On Android the depth comes from **ARCore**. Raw camera rendering wants OpenGL — too much for a focused build — so we host a Compose `ARScene` (from the SceneView library) inside an `ExpoView`, and read depth off each frame. ARCore gives a `DEPTH16` image in **millimeters**, where the low 13 bits are the distance.",
+                "> In an interview, say: **\"Because I designed the TypeScript contract up front, adding Android was writing a second adapter to the same `{ meters, confidence }` event — the JS never changed. Cross-platform design lives in the contract, not the implementations.\"**"
+              ],
+              "lang": "kotlin"
+            },
+            {
+              "type": "code",
+              "lang": "kotlin",
+              "title": "android/.../ExpoDepthScannerView.kt — Compose AR surface + depth read",
+              "source": "class DepthScannerView(context: Context, appContext: AppContext) :\n  ExpoView(context, appContext) {\n\n  private val onDepth by EventDispatcher()\n  private val onUnsupported by EventDispatcher()\n  var active: Boolean = false\n\n  private val composeView = ComposeView(context).also { addView(it) }\n\n  init {\n    composeView.setContent {\n      ARScene(\n        sessionConfiguration = { session, config ->\n          if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {\n            config.depthMode = Config.DepthMode.AUTOMATIC   // the depth switch\n          } else {\n            onUnsupported(mapOf(\"reason\" to \"ARCore depth unavailable\"))\n          }\n        },\n        onSessionUpdated = { _, frame ->\n          if (!active) return@ARScene\n          try {\n            frame.acquireDepthImage16Bits().use { img ->     // DEPTH16, MILLIMETERS\n              val buf = img.planes[0].buffer\n              val rowStride = img.planes[0].rowStride\n              val cx = img.width / 2; val cy = img.height / 2\n              val idx = cy * rowStride + cx * 2\n              val raw = (buf.get(idx).toInt() and 0xFF) or\n                        ((buf.get(idx + 1).toInt() and 0xFF) shl 8)\n              val millimeters = raw and 0x1FFF               // low 13 bits = depth\n              onDepth(mapOf(\"meters\" to millimeters / 1000.0, \"confidence\" to 2.0))\n            }\n          } catch (_: NotYetAvailableException) { /* depth not ready this frame */ }\n        }\n      )\n    }\n  }\n}",
+              "caption": "Same up-channel (EventDispatcher → onDepth), same event shape. The differences are all inside: a 16-bit buffer, a bit-mask, and a millimetres-to-metres divide."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## The cross-platform diff — memorize this",
+                "This little table is the single most quotable thing in the course. Same idea on both platforms (a per-pixel depth raster), different plumbing:",
+                "- **Enable it** — iOS: `frameSemantics = .sceneDepth`  ·  Android: `config.depthMode = AUTOMATIC`.\n- **Buffer** — iOS: `CVPixelBuffer` of `Float32`  ·  Android: `Image` of `DEPTH16`.\n- **Units** — iOS: **meters**  ·  Android: **millimeters** (divide by 1000).\n- **Bit layout** — iOS: a full float  ·  Android: low 13 bits are depth, top 3 are confidence.\n- **The JS event** — **identical** on both: `{ meters, confidence }`.",
+                "> In an interview, say: **\"ARKit and ARCore differ only in buffer format and units — meters vs millimeters. The event I ship to JS is byte-for-byte the same on both platforms. The last row is the whole point: the contract is identical; only the adapter differs.\"**"
+              ],
+              "lang": "kotlin"
+            },
+            {
+              "type": "quiz",
+              "q": "You wire up Android and the readout says '1500 m' pointing at a wall. What's the bug?",
+              "choices": [
+                "The raw millimeter value wasn't converted to meters (÷1000) — 1.5 m read as 1500",
+                "The LiDAR sensor is broken and needs recalibration",
+                "ARCore isn't supported on the device",
+                "The camera permission wasn't granted"
+              ],
+              "answer": 0,
+              "explain": "1500 is 1.5 m expressed in millimeters — a missing ÷1000. This is exactly why iOS-vs-Android units are worth memorizing: a wildly-too-large number on Android is almost always the unconverted-millimeters bug, and being able to diagnose it instantly is a great signal.",
+              "nudge": "1.5 meters is how many millimeters?",
+              "lang": "kotlin"
+            },
+            {
+              "type": "exercise",
+              "lang": "kotlin",
+              "title": "Register the view (Android side)",
+              "prompt": [
+                "Inside `definition()`, after `Name(\"DepthScanner\")`, register the view with `View(DepthScannerView::class) { … }`: declare `Events(\"onDepth\", \"onUnsupported\")`, then a `Prop(\"active\")` whose lambda is `view: DepthScannerView, active: Boolean -> view.active = active`."
+              ],
+              "starter": "override fun definition() = ModuleDefinition {\n  Name(\"DepthScanner\")\n\n  // register the view here\n}",
+              "solution": "override fun definition() = ModuleDefinition {\n  Name(\"DepthScanner\")\n\n  View(DepthScannerView::class) {\n    Events(\"onDepth\", \"onUnsupported\")\n\n    Prop(\"active\") { view: DepthScannerView, active: Boolean ->\n      view.active = active\n    }\n  }\n}",
+              "checks": [
+                {
+                  "re": {
+                    "source": "View\\(DepthScannerView::class\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Register with `View(DepthScannerView::class) { … }` — Kotlin passes the class with `::class`, where Swift used `.self`."
+                },
+                {
+                  "re": {
+                    "source": "Events\\(\"onDepth\",\"onUnsupported\"\\)",
+                    "flags": ""
+                  },
+                  "hint": "Declare `Events(\"onDepth\", \"onUnsupported\")` — same names as iOS and the TS contract."
+                },
+                {
+                  "re": {
+                    "source": "Prop\\(\"active\"\\)\\{",
+                    "flags": ""
+                  },
+                  "hint": "Add `Prop(\"active\") { … }`."
+                },
+                {
+                  "re": {
+                    "source": "view\\.active=active",
+                    "flags": ""
+                  },
+                  "hint": "The lambda body sets `view.active = active` — here the prop maps to a property, not a setter method."
+                }
+              ],
+              "success": "Line it up against the Swift version from Module 3: the DSL is identical, only `.self` vs `::class` and setter-vs-property differ. That symmetry is the whole thesis of the course."
+            },
+            {
+              "type": "exercise",
+              "lang": "kotlin",
+              "title": "Emit the depth event (with the unit fix)",
+              "prompt": [
+                "The raw 13-bit millimeter distance is in `millimeters`. Fire the event: call `onDepth(mapOf(...))` with `\"meters\"` mapped to the value **converted to meters** (`millimeters / 1000.0`) and `\"confidence\"` mapped to `2.0`."
+              ],
+              "starter": "val millimeters = raw and 0x1FFF   // low 13 bits = depth in mm\nonDepth(mapOf(\n  // your code here\n))",
+              "solution": "val millimeters = raw and 0x1FFF\nonDepth(mapOf(\"meters\" to millimeters / 1000.0, \"confidence\" to 2.0))",
+              "checks": [
+                {
+                  "re": {
+                    "source": "\"meters\"to millimeters\\/1000\\.0",
+                    "flags": ""
+                  },
+                  "hint": "Convert: `\"meters\" to millimeters / 1000.0`. The `.0` makes it a Double divide — integer division would floor you to whole meters."
+                },
+                {
+                  "re": {
+                    "source": "\"confidence\"to 2\\.0",
+                    "flags": ""
+                  },
+                  "hint": "Also send `\"confidence\" to 2.0` so the event shape matches iOS and the TS contract."
+                }
+              ],
+              "mustNot": [
+                {
+                  "re": {
+                    "source": "\"meters\"to millimeters,",
+                    "flags": ""
+                  },
+                  "hint": "Don't send raw millimeters — that's the '1500 m' bug. Divide by 1000.0."
+                }
+              ],
+              "success": "Both platforms now emit the identical { meters, confidence } event. Run `npx expo run:android --device`, point at a wall, and the number should match the iPhone's — from a completely different sensor stack."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-ship-defend",
+      "title": "Wire it up, verify, and defend it",
+      "emoji": "🚀",
+      "lang": "ts",
+      "lessons": [
+        {
+          "id": "ship",
+          "title": "The screen, the proof, and the pitch",
+          "steps": [
+            {
+              "type": "text",
+              "md": [
+                "## The React screen never learned about platforms",
+                "Both native backends emit the same `{ meters, confidence }` event, so the screen is one file that runs unchanged on iOS and Android. It renders the camera full-bleed, overlays a center crosshair, and shows the live distance. The only JS-side logic worth adding is **throttling** — the native side fires 30–60×/sec, more than a calm UI needs."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "exercise",
+              "lang": "ts",
+              "title": "Wire the event into state",
+              "prompt": [
+                "Finish the `<DepthScannerView>` in the screen: add an `onDepth` prop that takes the event `e` and calls `setMeters(e.nativeEvent.meters)`. Remember native events arrive under `nativeEvent`."
+              ],
+              "starter": "<DepthScannerView\n  style={{ flex: 1 }}\n  active\n  // your code here\n/>",
+              "solution": "<DepthScannerView\n  style={{ flex: 1 }}\n  active\n  onDepth={(e) => setMeters(e.nativeEvent.meters)}\n/>",
+              "checks": [
+                {
+                  "re": {
+                    "source": "onDepth=\\{\\(e\\)=>",
+                    "flags": ""
+                  },
+                  "hint": "Add the callback prop: `onDepth={(e) => …}`."
+                },
+                {
+                  "re": {
+                    "source": "setMeters\\(e\\.nativeEvent\\.meters\\)",
+                    "flags": ""
+                  },
+                  "hint": "Read the meters off `e.nativeEvent.meters` — the native payload is always nested under `nativeEvent` — and pass it to `setMeters`."
+                }
+              ],
+              "success": "That's the last wire. props down (active), events up (onDepth) — the round trip is complete, from LiDAR photons to a number in React state."
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Verify it works — a numbered framework, not a vibe",
+                "\"Does it work\" for a native module means proving each layer in order. When an interviewer asks how you'd validate a native feature, give the sequence:",
+                "1. **Native compiles** — `npx expo run:ios` / `run:android` finishes with no red screen.\n2. **Bridge wired** — a log in `setActive` fires when you toggle `active`. If not: the `Name(\"DepthScanner\")` string, the `requireNativeView` string, and `expo-module.config.json` disagree.\n3. **Events flow** — `onDepth` logs in Metro. If silent: an event-name mismatch across the three files, or you're on a simulator (no depth).\n4. **Physically accurate** — the meters match a tape measure within ~10–20% at 0.3–3 m.\n5. **Cross-platform parity** — the *unchanged* screen works on both devices. This is the headline proof.",
+                "> In an interview, say: **\"I verify a native module layer by layer — compile, then the prop path, then the event path, then physical accuracy, then cross-platform parity on the same JS. Each step isolates a different failure, so a break points straight at its cause.\"**"
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Troubleshooting — the four you'll actually hit",
+                "1. **\"Cannot find native view DepthScanner\"** → autolinking. Re-run `npx expo prebuild --clean`, rebuild, and check the three name strings line up.\n2. **Black screen, no depth** → missing camera permission string, or you're on a simulator/emulator.\n3. **Android reads huge numbers (1500 m)** → forgot `÷1000`, or didn't mask the low 13 bits.\n4. **Metro stutters** → you're rendering 30–60 events/sec; throttle `onDepth` in JS to ~5/sec.",
+                "> Red flag: reaching for native-code changes when the readout is silent. The senior move is to check the *name-string contract* and *permissions* first — the two cheapest, most common causes — before touching Swift or Kotlin."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Your five interview lines",
+                "You've earned these — say them in your own words:",
+                "1. **\"expo-ui is just Expo Modules.\"** Native UI packages register views with `View(...) { Prop, Events }`; I built a domain-specific version of that for a depth sensor instead of a control.\n2. **\"One JS contract, two native backends.\"** ARKit and ARCore differ only in buffer format and units (meters vs millimeters); the event to JS is identical.\n3. **\"Props down, events up, over JSI.\"** Direct calls, not the legacy bridge's async JSON — which is why 60 Hz sensor streaming is viable.\n4. **\"Policy in JS, sensing in native.\"** I ship a confidence value up and let the app decide what to trust; the native layer stays a dumb, reusable sensor.\n5. **\"I know both authoring styles.\"** `ExpoView`-wrapping (what I used for an AR camera surface) vs the newer `ExpoSwiftUI.View`/Compose-native registration that expo-ui itself uses."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "text",
+              "md": [
+                "## Stretch goals, if you're ahead",
+                "Each of these is a natural follow-up an interviewer might push toward — good to have opinions on even if you don't build them:",
+                "- **Colorized depth heatmap** overlay (iOS: a Metal shader over the depthMap; Android: a GL SurfaceView). Big visual payoff, real GPU work.\n- **`AsyncFunction(\"captureSnapshot\")`** on the module — a ref-callable that returns a saved depth frame. Shows you know functions, not just views.\n- **Full mesh / point cloud** via ARKit `sceneReconstruction = .mesh` or ARCore raw depth — the impressive, scope-busting version. Naming it as *out of scope for a two-day build* is itself a seniority signal."
+              ],
+              "lang": "ts"
+            },
+            {
+              "type": "quiz",
+              "q": "What is the single sentence that captures why this architecture is 'senior'?",
+              "choices": [
+                "The cross-platform design lives in the TypeScript contract; iOS and ARCore are interchangeable adapters behind an identical JS surface",
+                "It uses the newest APIs available on each platform",
+                "It avoids writing any native code by using a library",
+                "It renders faster than a pure-JavaScript implementation"
+              ],
+              "answer": 0,
+              "explain": "The whole thesis: design the contract first, and the platforms become swappable implementations that cannot drift. That's the same principle behind expo-ui — and being able to state it in one sentence is what turns 'I made LiDAR work' into 'I understand native module architecture.'",
+              "nudge": "Where does the cross-platform design actually live — in the Swift, the Kotlin, or the TypeScript?",
+              "lang": "ts"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

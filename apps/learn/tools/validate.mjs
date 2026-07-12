@@ -13,7 +13,7 @@ import vm from "node:vm";
 const isRegExp = (v) => types.isRegExp(v); // instanceof fails across the vm realm
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go", "lessons-node"];
+const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go", "lessons-node", "lessons-native", "lessons-expoui"];
 
 const errors = [];
 const err = (file, msg) => errors.push(`${file}: ${msg}`);

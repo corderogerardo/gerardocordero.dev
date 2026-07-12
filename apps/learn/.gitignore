@@ -3,6 +3,9 @@
 out/
 *.log
 
+# wrangler pages dev local state
+.wrangler/
+
 # IDE
 .idea/
 .vscode/

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
@@ -88,9 +88,14 @@ export default function LessonPageClient() {
   const handleStepProgress = useCallback(() => {
   }, []);
 
-  if (found && !reveal[`${found.m.id}/${found.l.id}`]) {
-    setReveal(`${found.m.id}/${found.l.id}`, 1);
-  }
+  // Initialize the reveal count as a side effect, not during render — mutating
+  // the store while rendering triggers React's "cannot update a component while
+  // rendering a different component" (OverallProgress subscribes to the store).
+  useEffect(() => {
+    if (found && !reveal[`${found.m.id}/${found.l.id}`]) {
+      setReveal(`${found.m.id}/${found.l.id}`, 1);
+    }
+  }, [found, reveal, setReveal]);
 
   if (!found) {
     return <p>{t("lesson.notfound")}</p>;

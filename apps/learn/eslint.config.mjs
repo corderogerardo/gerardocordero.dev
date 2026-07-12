@@ -11,6 +11,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // CommonJS build configs (Tailwind/PostCSS for the /reactnative section) —
+    // `require()` is the only form they accept:
+    "tailwind.config.js",
+    "postcss.config.js",
     // Legacy no-build course engine — not part of the Next app:
     "app.js",
     "*.test.mjs",

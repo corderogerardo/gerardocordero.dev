@@ -507,17 +507,14 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
 
   # Same pattern for apps/learn -> Pages project academy
-  # (academy.gerardocordero.dev). apps/learn itself is the pure static, no-build
-  # course engine (index.html + lessons*/*.js + app.js) and ships as-is. Bolted
-  # onto it at /reactnative/ is apps/learn-reactnative, a Next.js static export
-  # (basePath=/reactnative) that has to be built first.
+  # (academy.gerardocordero.dev). apps/learn is now a single Next.js static-export
+  # app: the interactive courses (rendered from lessons*/*.js via build-data.mjs)
+  # AND the senior-RN practice at /reactnative/ (flashcards + coding challenges,
+  # folded in from the former apps/learn-reactnative workspace). The self-contained
+  # `out/` export is what deploys (no node_modules, well under the Pages 20k limit).
   #
-  # The upload is assembled into a fresh `dist-academy/` rather than deployed
-  # from the checkout: `pnpm install` creates apps/learn/node_modules, and
-  # uploading that would blow past the Pages 20k-file limit.
-  #
-  # Trigger paths: the static engine, the RN app, and the markdown the RN app's
-  # flashcards are generated from at build time.
+  # Trigger paths: the app, and the markdown the /reactnative flashcards are
+  # generated from at build time.
   deploy-learn:
     needs: verify
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -526,10 +523,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Detect changes under apps/learn, apps/learn-reactnative or docs/react-native-senior
+      - name: Detect changes under apps/learn or docs/react-native-senior
         id: detect
         run: |
-          PATHS='^(apps/learn/|apps/learn-reactnative/|docs/react-native-senior/)'
+          PATHS='^(apps/learn/|docs/react-native-senior/)'
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
@@ -538,7 +535,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes under apps/learn, apps/learn-reactnative or docs/react-native-senior — skipping deploy."
+            echo "No changes under apps/learn or docs/react-native-senior — skipping deploy."
           fi
       - uses: pnpm/action-setup@v4
         if: steps.detect.outputs.changed == 'true'
@@ -550,28 +547,12 @@ jobs:
       - name: Install
         if: steps.detect.outputs.changed == 'true'
         run: pnpm install --frozen-lockfile
-      - name: Build the React Native practice app
+      - name: Build the academy (Next.js static export)
         if: steps.detect.outputs.changed == 'true'
-        working-directory: apps/learn-reactnative
-        run: pnpm build
-      - name: Assemble the Pages upload
-        if: steps.detect.outputs.changed == 'true'
-        run: |
-          set -euo pipefail
-          rm -rf dist-academy
-          rsync -a \
-            --exclude='node_modules/' \
-            --exclude='.next/' \
-            --exclude='out/' \
-            --exclude='.turbo/' \
-            apps/learn/ dist-academy/
-          cp -R apps/learn-reactnative/out dist-academy/reactnative
-          # Fail loudly rather than shipping an academy without the practice app.
-          test -f dist-academy/index.html
-          test -f dist-academy/reactnative/index.html
-          test -f dist-academy/reactnative/challenges/index.html
-      # Runs from apps/learn because that workspace declares wrangler; the upload
-      # dir sits at the repo root so rsync isn't copying a directory into itself.
+        run: pnpm --filter @gerardocordero/learn build
+      # The self-contained `out/` export (no node_modules) is the upload — well
+      # under the Pages 20k-file limit. wrangler runs from apps/learn (it declares
+      # wrangler) and deploys that workspace's out/.
       - name: Deploy to Cloudflare Pages
         if: steps.detect.outputs.changed == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -580,4 +561,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/learn
           packageManager: pnpm
-          command: pages deploy ../../dist-academy --project-name=academy --branch=main
+          command: pages deploy out --project-name=academy --branch=main
