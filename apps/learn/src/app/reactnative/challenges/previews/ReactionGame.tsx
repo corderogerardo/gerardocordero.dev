@@ -35,8 +35,8 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
   const [state, setState] = useState<GameState>(() => startGame ? startGame() : defaultStartGame())
   const [gameOver, setGameOver] = useState(false)
   const [lastReaction, setLastReaction] = useState<number | null>(null)
-  // One deadline per game, set on mount / restart — NOT reset on every tap, so
-  // the 10s limit is real rather than renewed each time the phase goes active.
+  // One deadline per game, started on the FIRST active transition (not during the
+  // initial random wait, which would eat into the 10s) and NOT renewed on taps.
   const deadlineRef = useRef(0)
 
   useEffect(() => {
@@ -49,10 +49,12 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
 
   useEffect(() => {
     if (gameOver) return
+    // Hold off until the target first appears, so the countdown reflects play time.
+    if (deadlineRef.current === 0 && state.phase !== 'active') return
     if (deadlineRef.current === 0) deadlineRef.current = Date.now() + GAME_DURATION
     const timer = setTimeout(() => setGameOver(true), Math.max(0, deadlineRef.current - Date.now()))
     return () => clearTimeout(timer)
-  }, [gameOver])
+  }, [state.phase, gameOver])
 
   const handleClick = () => {
     if (gameOver) return
@@ -63,7 +65,7 @@ export default function ReactionGamePreview({ startGame, handleTap }: ReactionGa
   }
 
   const restart = () => {
-    deadlineRef.current = Date.now() + GAME_DURATION
+    deadlineRef.current = 0   // re-start the clock on the next active transition
     setState(startGame ? startGame() : defaultStartGame())
     setGameOver(false)
     setLastReaction(null)
