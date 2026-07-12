@@ -206,7 +206,7 @@ pip install -r requirements.txt
 ### pip and requirements.txt
 **They ask:** "What is pip, and what is `requirements.txt` used for?"
 
-`pip` is Python's standard package installer — it fetches packages (and their own dependencies) from PyPI (the Python Package Index) and installs them into whatever environment is currently active. `requirements.txt` is the conventional way to make a project's dependency set reproducible: `pip freeze > requirements.txt` snapshots every installed package and its exact version, and `pip install -r requirements.txt` recreates that exact set elsewhere — a teammate's machine, a CI runner, a production container. Pinning exact versions (`requests==2.31.0` rather than just `requests`) is what makes "it worked in dev" reliably also work in prod.
+`pip` is Python's standard package installer — it fetches packages (and their own dependencies) from PyPI (the Python Package Index) and installs them into whatever environment is currently active. `requirements.txt` is the conventional way to capture a project's dependency snapshot: `pip freeze > requirements.txt` records every installed package and its exact version, and `pip install -r requirements.txt` reinstalls that same set elsewhere — a teammate's machine, a CI runner, a production container. Pinning exact versions (`requests==2.31.0` rather than just `requests`) gets "it worked in dev" most of the way to working in prod too, but it's a compatible snapshot, not a guaranteed identical environment — the same pinned versions can still resolve to different wheels/builds across OS, architecture, or Python version, and `pip freeze` doesn't capture a fully resolved, hash-verified dependency graph the way a lockfile does. For that stronger reproducibility guarantee, a lockfile tool (`pip-tools`, `poetry`, `uv`) with hash pinning is the better story.
 
 ```bash
 pip install requests            # install one package
@@ -214,13 +214,13 @@ pip freeze > requirements.txt    # snapshot everything currently installed
 pip install -r requirements.txt  # recreate that exact environment elsewhere
 ```
 
-**Say it:** "pip installs from PyPI into whatever environment is active, and `requirements.txt` is how I make that dependency set reproducible across machines — I pin exact versions so CI and production install precisely what I tested against, not just 'whatever's newest today.'"
+**Say it:** "pip installs from PyPI into whatever environment is active, and `requirements.txt` is how I get a compatible dependency snapshot across machines — I pin exact versions so CI and production install close to what I tested against, not just 'whatever's newest today,' but if I need a guaranteed identical, hash-verified environment I reach for a lockfile tool instead of just `pip freeze`."
 **Red flag:** Committing a `requirements.txt` with unpinned versions (`requests` instead of `requests==2.31.0`) on an application (not a library) — a new install six months later can silently pull a breaking major version.
 
 ### What PEP 8 is
 **They ask:** "What is PEP 8?"
 
-PEP 8 is Python's official style guide — a PEP (Python Enhancement Proposal) that documents the naming, formatting, and layout conventions the language's own standard library follows, so that Python code across different teams and projects reads consistently. It covers things like 4-space indentation (never tabs), `snake_case` for functions and variables, `PascalCase` for classes, a soft line-length limit (79 or 88 chars depending on the tool), and two blank lines between top-level definitions. It's a convention, not enforced by the interpreter — nothing stops non-compliant code from running — which is exactly why linters and formatters exist to enforce it automatically instead of relying on manual review.
+PEP 8 is Python's official style guide — a PEP (Python Enhancement Proposal) that documents the naming, formatting, and layout conventions the language's own standard library follows, so that Python code across different teams and projects reads consistently. It covers things like 4-space indentation (never tabs), `snake_case` for functions and variables, `PascalCase` for classes, a line-length limit (PEP 8 itself recommends 79 characters for code and 72 for comments/docstrings — 88 is Black's default, not a PEP 8 number), and two blank lines between top-level definitions. It's a convention, not enforced by the interpreter — nothing stops non-compliant code from running — which is exactly why linters and formatters exist to enforce it automatically instead of relying on manual review.
 
 ```python
 # PEP 8
@@ -300,16 +300,22 @@ Technical debt is the implied future cost of a shortcut taken now to ship faster
 ### The logging module and log levels
 **They ask:** "Why is the `logging` module needed in Python? What levels of logging does it offer?"
 
-`print()` isn't a debugging strategy for anything beyond a throwaway script — it can't be turned off without deleting the call, has no severity, and doesn't record where or when it happened. The standard-library `logging` module solves all three: it has severity **levels** so you can filter what's shown without touching call sites, it can route output to multiple destinations (console, file, a log aggregator) at once, and it timestamps and tags each entry with its source. The levels, low to high severity: `DEBUG` (detailed diagnostic info), `INFO` (confirmation things are working as expected), `WARNING` (something unexpected, but not breaking), `ERROR` (a real failure), `CRITICAL` (the program may not be able to continue). Setting a logger's level to `WARNING` silences `DEBUG`/`INFO` calls without deleting them — they're still in the code, just filtered.
+`print()` isn't a debugging strategy for anything beyond a throwaway script — it can't be turned off without deleting the call, has no severity, and doesn't record where or when it happened. The standard-library `logging` module solves all three: it has severity **levels** so you can filter what's shown without touching call sites, it can route output to multiple destinations (console, file, a log aggregator) at once, and — given an explicit `format`/`datefmt` — it can timestamp and tag each entry with its source (the default `basicConfig()` format has no timestamp; you opt into one explicitly). The levels, low to high severity: `DEBUG` (detailed diagnostic info), `INFO` (confirmation things are working as expected), `WARNING` (something unexpected, but not breaking), `ERROR` (a real failure), `CRITICAL` (the program may not be able to continue). Setting a logger's level to `WARNING` silences `DEBUG`/`INFO` calls without deleting them — they're still in the code, just filtered.
 
 ```python
 import logging
-logging.basicConfig(level=logging.INFO)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
-logger.debug("cache miss for key=%s", key)   # filtered out at INFO level
-logger.info("user %s logged in", user_id)      # shown
-logger.error("payment failed: %s", err)         # shown
+key, user_id, err = "session:42", 7, "card declined"
+
+logger.debug("cache miss for key=%s", key)      # filtered out at INFO level
+logger.info("user %s logged in", user_id)         # shown, with timestamp
+logger.error("payment failed: %s", err)            # shown, with timestamp
 ```
 
 **Say it:** "Logging gives me severity levels I can filter without touching call sites, unlike `print`, plus a timestamp and source on every entry — I default to `INFO` in production and reserve `DEBUG` for local troubleshooting, so turning up verbosity is a config change, not a code change."

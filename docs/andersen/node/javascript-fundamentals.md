@@ -356,15 +356,15 @@ const first = orders.find(o => o.total > 30);           // {total: 40}
 const sum = orders.reduce((acc, o) => acc + o.total, 0); // 65
 ```
 
-None of them mutate the original array — each returns a new array (or value), which is why they compose cleanly in a chain.
+None of them mutate the *source array* — each returns a new array (or value), which is why they compose cleanly in a chain. That's not deep immutability, though: if the array holds objects, the callback still gets a reference to each one, so `orders.map(o => { o.total *= 2; return o; })` mutates the original objects even though `orders` itself (the array, its length, its slots) is untouched.
 
-**Say it:** "I reach for map when I'm transforming every item 1:1, filter when I'm narrowing the set, find when I want one matching item, and reduce when I'm folding the array into a single value — and none of them mutate the original array."
+**Say it:** "I reach for map when I'm transforming every item 1:1, filter when I'm narrowing the set, find when I want one matching item, and reduce when I'm folding the array into a single value — none of them mutate the source array itself, but if the callback reaches into a referenced object and mutates it, that change is real and visible outside the call."
 **Red flag:** Using `forEach` with a `push` to build a new array where `map`/`filter` would say the same thing more directly — it works, but it hides the intent and is easy to get subtly wrong (forgetting to return, mutating outer state).
 
 ### What is a callback function?
 **They ask:** "What is a callback function, and why does JavaScript use them so much?"
 
-A callback exists because JavaScript needs a way to say "run this code later, once some other work finishes" — functions are values in JS, so you just pass one in to be called when the time comes. Mechanically, a callback is nothing special: it's a plain function passed as an argument to another function, which invokes ("calls back") that function at the appropriate point — synchronously (like `array.map(fn)`) or asynchronously (like `fs.readFile(path, fn)` once the file is read, or `setTimeout(fn, 1000)` once the timer fires).
+A callback is a plain function passed as an argument to another function, which invokes ("calls back") that function at the appropriate point — the definition says nothing about *when* that happens. Functions are values in JS, so passing one in to be called elsewhere is a natural, general mechanism, and the call can be immediate — synchronous, like `array.map(fn)` invoking `fn` on the spot for each element — or deferred — asynchronous, like `fs.readFile(path, fn)` once the file is read, or `setTimeout(fn, 1000)` once the timer fires.
 
 ```js
 function greet(name, callback) {
@@ -397,7 +397,12 @@ var sayBye = function() { console.log('bye'); };
 ### JavaScript's primitive data types
 **They ask:** "What are the primitive data types in JavaScript?"
 
-Knowing the primitives cold matters because everything that isn't one of these seven is an object, and objects behave completely differently (see: primitive vs reference types). JavaScript has: `string`, `number`, `boolean`, `undefined`, `null`, `symbol` (ES6+, unique identifiers), and `bigint` (ES2020+, arbitrary-precision integers). All primitives are immutable and compared **by value** — two strings with the same characters are `===` equal, unlike two objects with the same shape.
+Knowing the primitives cold matters because everything that isn't one of these seven is an object, and objects behave completely differently (see: primitive vs reference types). JavaScript has: `string`, `number`, `boolean`, `undefined`, `null`, `symbol` (ES6+, unique identifiers), and `bigint` (ES2020+, arbitrary-precision integers). All primitives are immutable and compared **by value** — two strings with the same characters are `===` equal, unlike two objects with the same shape — with two deliberate exceptions: every `Symbol()` call produces a value unique from every other, even with the same description (`Symbol('x') === Symbol('x')` is `false`), and `NaN` is the one value in the language that's never equal to itself (`NaN === NaN` is `false`, which is exactly why `Number.isNaN()` exists as a real check).
+
+```js
+Symbol('x') === Symbol('x'); // false — each Symbol is its own unique value
+NaN === NaN;                  // false — the one primitive that isn't self-equal
+```
 
 ```js
 typeof 'hi';       // "string"
@@ -409,7 +414,7 @@ typeof Symbol();    // "symbol"
 typeof 10n;          // "bigint"
 ```
 
-**Say it:** "JS has seven primitives — string, number, boolean, undefined, null, symbol, and bigint — they're all immutable and compared by value, and everything else in the language is an object compared by reference."
+**Say it:** "JS has seven primitives — string, number, boolean, undefined, null, symbol, and bigint — they're all immutable and compared by value, with two exceptions worth knowing: every Symbol is unique even with the same description, and NaN isn't equal to itself. Everything else in the language is an object compared by reference."
 **Red flag:** Trusting `typeof null === 'object'` as meaningful. It's a long-standing language bug, not a design choice — check for `null` explicitly with `=== null`, don't rely on `typeof`.
 
 ### Object literals: creating and accessing properties

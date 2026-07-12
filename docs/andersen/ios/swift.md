@@ -191,9 +191,9 @@ attempt += 1
 **Red flag:** Declaring everything `var` out of habit. It's not just style — a `let` you can't accidentally reassign is a guarantee the compiler enforces for you, for free.
 
 ### Access Control in Swift
-**They ask:** "Walk me through Swift's access levels — private, fileprivate, internal, public, open."
+**They ask:** "Walk me through Swift's access levels — private, fileprivate, internal, package, public, open."
 
-Access control exists to draw a hard line around a type's implementation details so the rest of the codebase — or consumers of your framework — can only touch what you deliberately expose, which is what makes refactoring internals safe. From most to least restrictive: `private` (visible only inside the enclosing declaration, or an extension in the same file since Swift 4), `fileprivate` (visible anywhere in the same file), `internal` (the default — visible anywhere in the same module), `public` (visible outside the module, but not subclassable/overridable from outside), and `open` (public, plus subclassable and overridable from outside the module).
+Access control exists to draw a hard line around a type's implementation details so the rest of the codebase — or consumers of your framework — can only touch what you deliberately expose, which is what makes refactoring internals safe. From most to least restrictive: `private` (visible only inside the enclosing declaration and any extensions of that type in the same file), `fileprivate` (visible anywhere in the same file), `internal` (the default — visible anywhere in the same module), `package` (visible anywhere in the same package/build unit, spanning multiple modules — for multi-module apps that want to share code without making it fully `public`), `public` (visible outside the module, but not subclassable/overridable from outside), and `open` (public, plus subclassable and overridable from outside the module).
 
 ```swift
 public class Account {
@@ -202,7 +202,7 @@ public class Account {
 }
 ```
 
-**Say it:** "`internal` is the default and covers most app code; I reach for `private` to lock down implementation details, and `public`/`open` only at a module boundary — `open` specifically when I want external code to subclass."
+**Say it:** "`internal` is the default and covers most app code; I reach for `private` to lock down implementation details, `package` when I need to share across modules in the same build without going fully public, and `public`/`open` only at a module boundary — `open` specifically when I want external code to subclass."
 **Red flag:** Marking everything `public` in a framework "to be safe." That locks you into every property and method as permanent API surface — you can't tighten it later without a breaking change.
 
 ### Extensions
@@ -232,8 +232,9 @@ These are Swift's three lightweight ways to group data, and each earns its place
 
 ```swift
 struct User { let id: Int; let name: String }        // reusable, named shape
-func minMax(_ nums: [Int]) -> (min: Int, max: Int) {   // tuple: quick, local, throwaway
-    (nums.min()!, nums.max()!)
+func minMax(_ nums: [Int]) -> (min: Int, max: Int)? {  // tuple: quick, local, throwaway
+    guard let lo = nums.min(), let hi = nums.max() else { return nil }   // empty array — no crash
+    return (lo, hi)
 }
 enum Direction { case north, south, east, west }        // closed set of cases
 ```
@@ -365,15 +366,15 @@ let city = user?.address?.city ?? "Unknown"   // safe all the way down
 ### Swift Collection Types — Array, Dictionary, Set
 **They ask:** "What are Swift's basic collection types, and when do you use each?"
 
-Three, each with a distinct role. An **Array** is an ordered list you access by index — use it when order matters or you have duplicates. A **Dictionary** maps unique keys to values for fast lookup by key — use it when you look things up by an id rather than a position. A **Set** is an unordered collection of unique values with fast membership tests — use it to dedupe or to ask "does this contain X?" quickly. All three are value types (structs), so assigning or passing one copies it.
+Three, each with a distinct role. An **Array** is an ordered list you access by index — use it when order matters or you have duplicates. A **Dictionary** maps unique keys to values for fast lookup by key — use it when you look things up by an id rather than a position. A **Set** is an unordered collection of unique values with fast membership tests — use it to dedupe or to ask "does this contain X?" quickly. All three are value types (structs) with value semantics — mutating one variable never affects another — but that's implemented with **copy-on-write**: assigning or passing one shares the same backing storage until either copy is mutated, at which point Swift copies it first. So the *semantics* are "copy on assignment," but the actual memory copy is deferred until a write.
 
-**Say it:** "Array for ordered, index-accessed lists; Dictionary for key-to-value lookup by id; Set for uniqueness and fast contains checks — and all three are value types, so they copy on assignment."
+**Say it:** "Array for ordered, index-accessed lists; Dictionary for key-to-value lookup by id; Set for uniqueness and fast contains checks — and all three are value types with copy-on-write, so they behave as if copied on assignment but only actually copy the backing storage when one side mutates."
 **Red flag:** Using an array and a linear `contains` scan for membership checks on large data when a `Set` gives that in constant time. Picking the structure by its access pattern is a basic seniority signal.
 
 ### map, filter, and reduce
 **They ask:** "What do `map`, `filter`, and `reduce` do on a Swift array?"
 
-They're the three functional transforms that replace hand-written loops with intent-revealing code. **`map`** transforms every element into a new one (`names.map { $0.uppercased() }`) — same count, new values. **`filter`** keeps only elements matching a condition (`nums.filter { $0 > 0 }`) — fewer elements, same type. **`reduce`** collapses the whole collection into a single value (`nums.reduce(0, +)` sums them). Reaching for these over a `for` loop says *what* you're doing, not just *how*, and each returns a new array rather than mutating in place.
+They're the three functional transforms that replace hand-written loops with intent-revealing code. **`map`** transforms every element into a new one (`names.map { $0.uppercased() }`) — same count, new values, returns a new array. **`filter`** keeps only elements matching a condition (`nums.filter { $0 > 0 }`) — fewer elements, same type, also returns a new array. **`reduce`** collapses the whole collection into a single value of whatever type you start with (`nums.reduce(0, +)` returns an `Int`, not an array). Reaching for these over a `for` loop says *what* you're doing, not just *how*, and none of them mutate the original collection.
 
 ```swift
 let total = cart.map(\.price).reduce(0, +)   // transform, then collapse

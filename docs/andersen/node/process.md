@@ -111,7 +111,7 @@ Debt tracked only as tribal knowledge ("yeah, that module's a mess, everyone kno
 ### Basic Git workflow: clone, add, commit, push, pull
 **They ask:** "Walk me through the basic Git commands you use day to day."
 
-Before branching strategy or rebase-vs-merge debates matter, you need the everyday loop that gets your code from your machine into a shared repo and back. `git clone <url>` copies a remote repo down locally. `git add <file>` stages changes (moves them into the "about to be committed" set); `git commit -m "message"` snapshots the staged changes into local history. `git push` sends your local commits to the remote; `git pull` fetches the remote's new commits and merges them into your current branch — it's actually `git fetch` + `git merge` in one step.
+Before branching strategy or rebase-vs-merge debates matter, you need the everyday loop that gets your code from your machine into a shared repo and back. `git clone <url>` copies a remote repo down locally. `git add <file>` stages changes (moves them into the "about to be committed" set); `git commit -m "message"` snapshots the staged changes into local history. `git push` sends your local commits to the remote; `git pull` fetches the remote's new commits and reconciles them into your current branch — by default that's `git fetch` + `git merge` in one step, but the reconciliation strategy is configurable: `git pull --rebase` replays your local commits on top instead of merging, and `pull.ff=only` (or `git pull --ff-only`) rejects the pull outright unless it's a clean fast-forward. Which one actually runs depends on your config and flags, not a single fixed behavior.
 
 ```bash
 git clone https://github.com/org/repo.git
@@ -121,6 +121,6 @@ git pull        # bring in remote changes first
 git push        # send your commits up
 ```
 
-**Say it:** "Clone gets the repo, add stages what I want in the next snapshot, commit takes that snapshot locally, and push/pull sync it with the remote — I pull before I push so I merge in anyone else's changes before I try to send mine."
+**Say it:** "Clone gets the repo, add stages what I want in the next snapshot, commit takes that snapshot locally, and push/pull sync it with the remote — pull is fetch plus reconcile, merge by default but rebase or fast-forward-only if that's how the repo's configured — and I pull before I push so anyone else's changes are folded in before I try to send mine."
 **Red flag:** Running `git push` without pulling first when others are working on the same branch. If the remote has commits you don't have locally, the push is rejected — pull (or fetch + rebase) first so your history includes theirs.
 **Red flag:** Treating technical debt as something to schedule in a separate, dedicated cleanup sprint disconnected from any feature work. That sprint is almost always the first thing cut when a deadline gets tight, and the debt just keeps compounding.

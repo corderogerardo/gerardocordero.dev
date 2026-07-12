@@ -510,13 +510,13 @@ Java has one `List` interface with optional support for mutation (`UnsupportedOp
 val readOnly: List<Int> = mutableListOf(1, 2, 3)   // view is read-only...
 val mutable = readOnly as? MutableList<Int>         // ...but the underlying object might still be mutable
 
-val safe: List<Int> = listOf(1, 2, 3)               // genuinely immutable — nothing can add to it
+val readOnlyLiteral: List<Int> = listOf(1, 2, 3)    // read-only — but not guaranteed immutable underneath
 ```
 
-The sharp edge: `List` in Kotlin means "this reference can't mutate," not "this object can never change" — a `List` and a `MutableList` reference can point at the *same* underlying mutable list, so something else holding the mutable reference can still change what your read-only view sees.
+The sharp edge: `List` in Kotlin means "this reference can't mutate," not "this object can never change" — a `List` and a `MutableList` reference can point at the *same* underlying mutable list, so something else holding the mutable reference can still change what your read-only view sees. Even `listOf(...)` isn't an exception to that: it hands back a *read-only* `List`, not a type-system guarantee that the backing collection is genuinely immutable — the interface just has no mutating methods, so nothing *through that reference* can add to it. If you need strict, structural immutability (no aliasing hazard at all), reach for a persistent/immutable-collection library (e.g. `kotlinx.collections.immutable`'s `PersistentList`) instead of assuming `List` provides it.
 
-**Say it:** "Kotlin encodes mutability in the type — `List` vs `MutableList` — so it's a compile-time signal in the function signature instead of a runtime `UnsupportedOperationException`. The catch: a `List` reference is a read-only *view*, not a guarantee the underlying object is frozen."
-**Red flag:** Treating a function parameter typed `List<T>` as proof the data can never change elsewhere. It only promises *this reference* won't mutate it — a `MutableList` alias elsewhere can still edit the same backing collection.
+**Say it:** "Kotlin encodes mutability in the type — `List` vs `MutableList` — so it's a compile-time signal in the function signature instead of a runtime `UnsupportedOperationException`. The catch: a `List` reference, including one from `listOf(...)`, is a read-only *view*, not a guarantee the underlying object is frozen — for that you'd reach for a persistent-collections library."
+**Red flag:** Treating a function parameter typed `List<T>` — or the result of `listOf(...)` — as proof the data can never change elsewhere. It only promises *this reference* won't mutate it — a `MutableList` alias elsewhere can still edit the same backing collection.
 
 ### What Is a suspend Function
 **They ask:** "What does the `suspend` keyword actually do?"

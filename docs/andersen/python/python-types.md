@@ -365,7 +365,7 @@ add("a", "b")     # "ab" — no type error, Python doesn't care until it runs
 ### Truthiness — what counts as falsy
 **They ask:** "What does 'truthiness' mean in Python, and what values are falsy?"
 
-Truthiness matters because Python lets you write `if some_list:` instead of `if len(some_list) > 0:`, and getting the falsy set wrong is a real source of bugs — especially `if x:` silently treating `0` or `""` the same as "missing." Every object has a truth value, used implicitly in `if`/`while`/`and`/`or`. Falsy: `None`, `False`, `0`, `0.0`, empty sequences and collections (`""`, `[]`, `()`, `{}`, `set()`), and any object whose `__bool__` (or, failing that, `__len__`) returns `False`/`0`. Everything else is truthy, including nonempty strings like `"0"` and `"False"`.
+Truthiness matters because Python lets you write `if some_list:` instead of `if len(some_list) > 0:`, and getting the falsy set wrong is a real source of bugs — especially `if x:` silently treating `0` or `""` the same as "missing." Every object has a truth value, used implicitly in `if`/`while`/`and`/`or`. Falsy: `None`, `False`, `0`, `0.0`, empty sequences and collections (`""`, `[]`, `()`, `{}`, `set()`), and any object whose `__bool__` returns `False` — or, if it defines no `__bool__`, whose `__len__` returns `0`. These two contracts aren't interchangeable: `__bool__` must return an actual `bool`, so a custom `__bool__` that returns `0` instead of `False` raises `TypeError`; `__len__` returning `0` is the one that's valid and makes the object falsy by proxy. Everything else is truthy, including nonempty strings like `"0"` and `"False"`.
 
 ```python
 if []: print("truthy")      # skipped — empty list is falsy
@@ -396,7 +396,7 @@ s[100:200]  # "" — out of range, no error, just empty
 ### f-strings
 **They ask:** "What are f-strings and why use them over `.format()` or `%`-formatting?"
 
-f-strings exist to make string interpolation read like the output it produces, instead of a template with separate arguments to keep in sync. Prefixing a string literal with `f` lets you embed any expression directly inside `{}`, evaluated at the point the string is built — including function calls, attribute access, and format specs (`{price:.2f}`). They're also the fastest of Python's string-formatting options because the interpolation is compiled in, not resolved by parsing a format string at runtime.
+f-strings exist to make string interpolation read like the output it produces, instead of a template with separate arguments to keep in sync. Prefixing a string literal with `f` lets you embed any expression directly inside `{}`, evaluated at the point the string is built — including function calls, attribute access, and format specs (`{price:.2f}`). They're also often faster than `.format()` or `%`-formatting, since the interpolation is compiled in rather than resolved by parsing a separate format string at runtime.
 
 ```python
 name, price = "widget", 9.5
@@ -404,7 +404,7 @@ f"{name}: ${price:.2f}"     # "widget: $9.50"
 f"{2 + 2}"                   # "4" — any expression works
 ```
 
-**Say it:** "f-strings put the expression right where it's used instead of a separate positional or keyword argument list, which is both more readable and faster than `.format()` since the interpolation is resolved at compile time, not parsed at runtime."
+**Say it:** "f-strings put the expression right where it's used instead of a separate positional or keyword argument list, which is both more readable and often faster than `.format()` since the interpolation is compiled in rather than parsed at runtime."
 **Red flag:** Still reaching for `%`-formatting or string concatenation with `+` in new code — f-strings have been the idiomatic choice since Python 3.6 and handle format specs and nested expressions more cleanly.
 
 ### The walrus operator
@@ -441,7 +441,7 @@ isinstance(True, int)    # True — respects the subclass relationship
 ### Rounding floats
 **They ask:** "How do you round a float to a certain number of decimal places, and why can the result look surprising?"
 
-`round(number, ndigits)` is the built-in for rounding, but the "surprising" part interviewers are fishing for is that floats are binary approximations of decimal numbers, so `round(2.675, 2)` gives `2.67`, not `2.68` — `2.675` isn't exactly representable in binary floating point, it's stored as something microscopically less than `2.675`. Python's `round()` also uses "round half to even" (banker's rounding) for tie-breaking, so `round(0.5)` is `0` and `round(1.5)` is `2` — not the "always round .5 up" behavior some languages default to. For money or anywhere exactness matters, `Decimal` avoids this entirely.
+`round(number, ndigits)` is the built-in for rounding, but the "surprising" part interviewers are fishing for is that floats are binary approximations of decimal numbers, so `round(2.675, 2)` gives `2.67`, not `2.68` — `2.675` isn't exactly representable in binary floating point, it's stored as something microscopically less than `2.675`. Python's `round()` also uses "round half to even" (banker's rounding) for tie-breaking, so `round(0.5)` is `0` and `round(1.5)` is `2` — not the "always round .5 up" behavior some languages default to. For money or anywhere exactness matters, `Decimal` avoids the binary-representation error, but only when it's constructed from a decimal string or an integer — `Decimal("2.675")`, not `Decimal(2.675)`, which first builds the imprecise float and inherits its rounding error before `Decimal` ever sees it. Even built correctly, `Decimal` doesn't skip rounding altogether — it rounds according to whatever rounding context (`ROUND_HALF_EVEN` by default, configurable) it's set to.
 
 ```python
 round(3.14159, 2)   # 3.14

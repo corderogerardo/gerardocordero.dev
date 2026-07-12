@@ -241,7 +241,7 @@ The fix is usually to restructure so the cycle doesn't exist (extract the shared
 ### The package.json exports field
 **They ask:** "What does the `exports` field in package.json do, and why is it stricter than `main`?"
 
-`exports` defines your package's **public API surface and its resolution rules** — it replaced the old `main` (which just named one entry file) with an explicit map of what consumers are allowed to import and what each specifier resolves to. Two big powers: **encapsulation** — anything not listed is un-importable, so `require('your-pkg/src/internal/util')` hard-fails instead of coupling consumers to your internals; and **conditional exports** — the same specifier resolves to different files based on condition, most commonly `import` vs `require` (ship both ESM and CJS) and `types` for TypeScript. That's how a modern dual-package works.
+`exports` defines your package's **public API surface and its resolution rules** — it's a stricter *alternative* to `main`, not a replacement: if a package has no `exports` field at all, `main` still works exactly as before, and plenty of packages never add one. Once `exports` is present, though, it takes precedence over `main` for anything it covers, and gains two big powers `main` never had: **encapsulation** — anything not listed is un-importable, so `require('your-pkg/src/internal/util')` hard-fails instead of coupling consumers to your internals; and **conditional exports** — the same specifier resolves to different files based on condition, most commonly `import` vs `require` (ship both ESM and CJS) and `types` for TypeScript. That's how a modern dual-package works.
 
 ```json
 {
@@ -252,7 +252,7 @@ The fix is usually to restructure so the cycle doesn't exist (extract the shared
 }
 ```
 
-**Say it:** "exports is the package's real public API — it locks down deep imports so consumers can't reach into my internals, and its conditional map is how one package serves ESM, CJS, and types from the same specifier."
+**Say it:** "exports is a stricter alternative to main, not a replacement — main still works if exports is absent, but once exports is there it takes precedence and locks down deep imports so consumers can't reach into my internals, and its conditional map is how one package serves ESM, CJS, and types from the same specifier."
 **Red flag:** Being surprised that a deep import into a dependency's internal file suddenly breaks after an upgrade. If the package added an `exports` map, unlisted paths are intentionally sealed off — you were relying on an internal that was never public.
 
 ### Defending against supply-chain attacks

@@ -232,7 +232,7 @@ struct Greeting: View {
 ### @State and @Binding Basics
 **They ask:** "What do `@State` and `@Binding` do, and how do they relate?"
 
-They're how a SwiftUI view owns and shares mutable state. **`@State`** is a view's own private, source-of-truth value — when it changes, SwiftUI re-renders that view (`@State private var count = 0`). **`@Binding`** is a *reference* to state owned somewhere else, so a child view can read and write the parent's value without owning it — you pass it with the `$` prefix (`Toggle(isOn: $isOn)`). So `@State` owns; `@Binding` borrows a two-way connection to that owned value.
+They're how a SwiftUI view owns and shares mutable state. **`@State`** is a view's own private, source-of-truth value — when it changes, SwiftUI re-renders that view (`@State private var count = 0`). **`@Binding`** is a **two-way connection** to state owned somewhere else — not a reference in the reference-type sense, just a conduit that lets a child view read *and write* the parent's value without owning it — you pass it with the `$` prefix (`Toggle(isOn: $isOn)`). So `@State` owns; `@Binding` is the conduit back to that owned value.
 
 ```swift
 struct Parent: View {
@@ -241,7 +241,7 @@ struct Parent: View {
 }
 ```
 
-**Say it:** "`@State` is a view's private source-of-truth that triggers a re-render when it changes; `@Binding` is a two-way reference to state owned elsewhere, passed with `$`, so a child can mutate the parent's value without owning it."
+**Say it:** "`@State` is a view's private source-of-truth that triggers a re-render when it changes; `@Binding` is a two-way conduit to state owned elsewhere, passed with `$`, so a child can mutate the parent's value without owning it."
 **Red flag:** Marking a value `@State` in a child view when the parent should own it — you get two separate copies that drift out of sync. The fix is `@Binding` (or lifting the state up), and knowing which owns the data is the whole point.
 
 ### UIKit vs SwiftUI — When to Use Each

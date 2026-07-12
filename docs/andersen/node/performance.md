@@ -54,14 +54,14 @@ A p99-only spike means most requests are fine and a tail is getting stuck — so
 ### Tuning the V8 heap and GC flags
 **They ask:** "When would you touch V8's heap and GC flags, and which ones?"
 
-Rarely, and only after profiling — but a senior knows the knobs. `--max-old-space-size=<MB>` raises the old-space cap (the default is ~2 GB on 64-bit); you raise it for a genuinely large working set, *not* to paper over a leak. `--max-semi-space-size` grows the young generation so short-lived objects get collected by cheap minor GC instead of getting promoted to expensive major GC — worth tuning for allocation-heavy request handlers. `--trace-gc` prints every collection so you can see whether major GC is your latency source before you touch anything.
+Rarely, and only after profiling — but a senior knows the knobs. `--max-old-space-size=<MB>` raises the old-space cap (V8's default is heuristic-based — it scales with the Node/V8 version and available system memory, not a fixed number); you raise it for a genuinely large working set, *not* to paper over a leak. `--max-semi-space-size` grows the young generation so short-lived objects get collected by cheap minor GC instead of getting promoted to expensive major GC — worth tuning for allocation-heavy request handlers. `--trace-gc` prints every collection so you can see whether major GC is your latency source before you touch anything.
 
 ```bash
 node --max-old-space-size=4096 --trace-gc server.js
 # [.. Scavenge ..] = minor GC (cheap); [.. Mark-sweep ..] = major GC (stop-the-world)
 ```
 
-**Say it:** "I only touch V8 flags after a heap profile — raise max-old-space-size for a real large working set, grow the semi-space to keep short-lived objects out of major GC, and always trace-gc first to confirm GC is actually the problem."
+**Say it:** "I only touch V8 flags after a heap profile — raise max-old-space-size for a genuinely large working set, grow the semi-space to keep short-lived objects out of major GC, and always trace-gc first to confirm GC is actually the problem."
 **Red flag:** Setting `--max-old-space-size` high as a default deploy flag. If memory grows to fill it, you've just made every eventual OOM bigger and the heap snapshots slower to capture.
 
 ### Diagnosing GC pauses that hurt latency

@@ -398,16 +398,21 @@ const signal = AbortSignal.any([AbortSignal.timeout(2000), req.signal]);
 ### Stream-processing a file too big for memory
 **They ask:** "You need to process a multi-gigabyte CSV or JSON file. How do you do it without loading it into memory?"
 
-You never `readFile` it — you create a read stream and pipe it through an incremental parser so only a small window is in memory at once, and backpressure keeps the reader from outrunning your processing. For CSV, a streaming parser (`csv-parse`) emits row by row; for large JSON, a streaming parser like `stream-json` emits values/array-items as they're parsed instead of building the whole tree. You pipe read → parse → your transform (validate, map, write to DB in batches) → destination, and `pipeline()` ties error handling and cleanup together across all of it.
+You never `readFile` it — you create a read stream and pipe it through an incremental parser so only a small window is in memory at once, and backpressure keeps the reader from outrunning your processing. For CSV, a streaming parser (`csv-parse`) emits row by row; for large JSON, a streaming parser like `stream-json` emits values/array-items as they're parsed instead of building the whole tree. You pipe read → parse → your transform (validate, map, write to DB in batches) → destination, and `pipeline()` ties error handling and cleanup together across all of it. One detail that's easy to get wrong in the transform: `cb()` signals "ready for the next chunk," so it has to fire only once the batch insert actually finishes — calling it right after kicking off an async insert breaks backpressure, because the pipeline pulls the next chunk before the write is done.
 
 ```js
 const { pipeline } = require('node:stream/promises');
 await pipeline(
   fs.createReadStream('huge.csv'),
   parse({ columns: true }),          // csv-parse: emits one row at a time
-  new Transform({ objectMode: true, transform(row, _e, cb) { /* batch-insert */ cb(); } }),
+  new Transform({
+    objectMode: true,
+    transform(row, _e, cb) {
+      batchInsert(row).then(() => cb(), cb); // cb only after the insert settles; errors propagate too
+    },
+  }),
 );
 ```
 
-**Say it:** "For a file bigger than memory I stream it through an incremental parser — csv-parse or stream-json — so I'm only ever holding a few rows, and backpressure through pipeline() stops the reader from overwhelming the database writes."
+**Say it:** "For a file bigger than memory I stream it through an incremental parser — csv-parse or stream-json — so I'm only ever holding a few rows, and backpressure through pipeline() stops the reader from overwhelming the database writes. The transform's callback only fires once the batch insert actually resolves, or backpressure is a lie and the reader keeps outrunning the writes."
 **Red flag:** `JSON.parse(fs.readFileSync(...))` on a large file. It reads the whole thing into memory and blocks the event loop for the entire parse — it works on your laptop's sample and OOMs or stalls the server on the real file.

@@ -133,6 +133,8 @@ data class User(val id: String, val name: String, val tags: List<String>)
 A database is organized, persistent storage for structured data with guarantees a plain file doesn't give you — consistent querying, constraints that prevent invalid data, and (in a relational database) tables related to each other rather than one flat blob. A **primary key** uniquely identifies a row within its own table — no two rows can share one, and it can't be null — that's what every other table references when it needs to point at "this specific row." A **foreign key** is a column in one table that references another table's primary key, which is how relationships between tables (a user has many orders) are expressed and enforced.
 
 ```sql
+PRAGMA foreign_keys = ON;   -- SQLite: off by default per connection — must be set every time you open one
+
 CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT);
 CREATE TABLE orders (
     id TEXT PRIMARY KEY,
@@ -141,10 +143,10 @@ CREATE TABLE orders (
 );
 ```
 
-The database enforces the foreign key constraint: you can't insert an order pointing at a `user_id` that doesn't exist in `users`, which is exactly the kind of data-integrity guarantee a plain file or in-memory structure gives you nothing for free.
+On a database engine that enforces it (Postgres, MySQL with InnoDB), the `FOREIGN KEY` constraint alone is enough: you can't insert an order pointing at a `user_id` that doesn't exist in `users`. **On Android's SQLite/Room, that's not automatic** — SQLite ships foreign-key enforcement *off* by default on every new connection, so a declared `FOREIGN KEY` clause is honored only if you turn enforcement on for that connection. In raw SQLite that's `PRAGMA foreign_keys = ON;` per connection; in Room it's `RoomDatabase.Builder.setForeignKeyConstraintsEnabled(true)` (Room's default is also enforcement-on when you use `@ForeignKey` in an `@Entity`, but a hand-rolled `SupportSQLiteOpenHelper` or a raw connection needs the pragma explicitly). Forget that step and the constraint is silently decorative — inserts with orphaned `user_id`s succeed with no error.
 
-**Say it:** "A primary key uniquely identifies a row within its own table; a foreign key is another table's column pointing back at that primary key — that's the mechanism relational databases use to express and enforce relationships between tables instead of trusting application code to keep them consistent."
-**Red flag:** Modeling a relationship (like `orders` belonging to `users`) without a foreign key constraint, relying only on application code to keep the reference valid. The database can catch an orphaned reference for free — skipping the constraint throws that safety net away.
+**Say it:** "A primary key uniquely identifies a row within its own table; a foreign key is another table's column pointing back at that primary key. On most relational databases the engine enforces that constraint automatically — but SQLite, which is what Room runs on, ships foreign keys *off* per connection, so on Android you either use Room's `setForeignKeyConstraintsEnabled(true)` or run `PRAGMA foreign_keys = ON` yourself, or the constraint is just documentation."
+**Red flag:** Assuming a declared `FOREIGN KEY` is being enforced on Android without checking that foreign-key enforcement is actually turned on for that connection. SQLite defaults it off — an unenforced constraint lets orphaned references in silently, which defeats the entire point of declaring it.
 
 ### Downloading an Image Over the Network
 **They ask:** "How do you download an image from the network, and why not just do it by hand?"

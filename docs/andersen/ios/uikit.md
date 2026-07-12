@@ -125,14 +125,14 @@ A custom transition replaces UIKit's default push/present animation with your ow
 ### The Delegate Pattern
 **They ask:** "What is the delegate pattern, and why is a delegate usually `weak`?"
 
-Delegation is how one object hands off decisions or events to another without hard-coding who that other object is — it's the backbone of UIKit (a `UITableView` doesn't know what to display, so it asks its delegate/dataSource). You define a protocol, the "delegating" object holds a reference typed as that protocol, and another object conforms and does the work. The reference is declared `weak` because the delegate is almost always the owner (a view controller owns the table view, and the table view points back at it) — a strong reference both ways is a retain cycle that leaks both objects.
+Delegation is how one object hands off decisions or events to another without hard-coding who that other object is — it's the backbone of UIKit (a `UITableView` doesn't know what to display, so it asks its delegate/dataSource). You define a protocol, the "delegating" object holds a reference typed as that protocol, and another object conforms and does the work. The reference is declared `weak` because it's a **non-owning** reference — its whole purpose is to keep the delegating object from retaining its delegate. A common pattern is the delegate *owning* the delegating object (a view controller owns a table view, and the table view points back at the controller as its delegate), but ownership direction isn't what makes `weak` correct — avoiding a retain cycle is. Two objects holding each other strongly, either way, is a leak.
 
 ```swift
 protocol PickerDelegate: AnyObject { func didPick(_ value: String) }
 class Picker { weak var delegate: PickerDelegate? }   // weak breaks the cycle
 ```
 
-**Say it:** "Delegation lets an object delegate behavior to another through a protocol, so it stays reusable and doesn't know its owner's type — and I make the delegate `weak` because the delegate usually owns the object, and two strong references would be a retain cycle."
+**Say it:** "Delegation lets an object delegate behavior to another through a protocol, so it stays reusable and doesn't know its owner's type — and I make the delegate `weak` because it's meant to be a non-owning reference; if the delegating object held it strongly too, that's a retain cycle."
 **Red flag:** Declaring a delegate `strong` (or forgetting `weak`). It silently leaks both objects; the giveaway in an interview is not knowing *why* delegates are weak.
 
 ### UIViewController vs UIView

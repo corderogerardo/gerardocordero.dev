@@ -486,7 +486,7 @@ val bundle = Bundle().apply {
     putString("name", "Ann")
     putInt("age", 25)
 }
-val name = bundle.getString("name")   // typed getters, with a default if the key is absent
+val name = bundle.getString("name")   // String getter returns null, not a default, if the key is absent
 
 // Fragment arguments — the standard way to pass data into a Fragment
 val fragment = DetailFragment().apply {
@@ -494,9 +494,9 @@ val fragment = DetailFragment().apply {
 }
 ```
 
-Typed getters (`getString`, `getInt`, …) return a sensible default (empty string, 0) if the key is missing, rather than throwing — which makes a silent typo in a key name a real bug class worth being deliberate about (constants for keys, not repeated string literals).
+The typed getters don't all behave the same on a missing key. `getString`/`getParcelable`/other object getters return `null` rather than throwing. The numeric and boolean getters (`getInt`, `getBoolean`, …) return a primitive default (`0`, `false`) because a primitive can't hold `null` — but that same "silent, no-crash" behavior on a typo'd key name is why keys are worth being deliberate about (constants for keys, not repeated string literals).
 
-**Say it:** "A `Bundle` only accepts primitives, `String`, and `Parcelable`/`Serializable` because the whole thing has to survive being parceled across a process boundary — that constraint is also why it's the standard container for Intent extras, saved state, and Fragment arguments."
+**Say it:** "A `Bundle` only accepts primitives, `String`, and `Parcelable`/`Serializable` because the whole thing has to survive being parceled across a process boundary — that constraint is also why it's the standard container for Intent extras, saved state, and Fragment arguments. Just don't assume every getter defaults the same way: `getString` returns null on a missing key, `getInt` returns 0."
 **Red flag:** Repeating a raw string literal as a `Bundle` key at both the put and get call sites. A typo compiles fine and just silently returns the default value — use a shared constant for the key instead.
 
 ### SharedPreferences — Simple Key-Value Persistence
@@ -586,10 +586,10 @@ editText.addTextChangedListener(object : TextWatcher {
 })
 ```
 
-`beforeTextChanged` fires with the old text just before the change; `onTextChanged` fires with the new text mid-change (the one most code actually cares about); `afterTextChanged` fires once the change is fully applied and is the only one where it's safe to *modify* the text without triggering infinite recursion. In Compose, the equivalent is simply observing `TextFieldValue`/`String` state directly — `TextWatcher` is a View-system-specific pattern.
+`beforeTextChanged` fires with the old text just before the change; `onTextChanged` fires with the new text mid-change (the one most code actually cares about); `afterTextChanged` fires once the change is fully applied and is the right place to *modify* the text — but it is not recursion-safe on its own. Calling `setText()` (or otherwise mutating the `Editable`) from inside `afterTextChanged` re-enters the same watcher, because that mutation fires a new text-change event. You need one of: a re-entrancy guard (a boolean flag you check/set before mutating), an equality check (skip the mutation if the new value already matches what you're about to set), or temporarily removing the watcher via `removeTextChangedListener` before the mutation and re-adding it after. In Compose, the equivalent is simply observing `TextFieldValue`/`String` state directly — `TextWatcher` is a View-system-specific pattern.
 
-**Say it:** "`TextWatcher` gives me three hooks around a text change — before, during, and after — `onTextChanged` is the one most live-validation and search-as-you-type logic hooks into, and `afterTextChanged` is the only safe place to mutate the text itself."
-**Red flag:** Calling `editText.setText(...)` inside `onTextChanged` to "auto-correct" input. That re-triggers the watcher and can recurse — text mutation belongs in `afterTextChanged`, guarded against re-entrancy.
+**Say it:** "`TextWatcher` gives me three hooks around a text change — before, during, and after — `onTextChanged` is the one most live-validation and search-as-you-type logic hooks into, and `afterTextChanged` is the right place to mutate the text itself, but only behind a re-entrancy guard, an equality check, or by detaching the watcher first — otherwise the mutation re-triggers the watcher."
+**Red flag:** Calling `editText.setText(...)` inside `onTextChanged` to "auto-correct" input. That re-triggers the watcher and can recurse — text mutation belongs in `afterTextChanged`, and even there it needs a re-entrancy guard, an equality check, or the watcher temporarily removed.
 
 ### RecyclerView Components and LayoutManager Types
 **They ask:** "What are RecyclerView's basic components, and what types of `LayoutManager` are there?"
@@ -616,7 +616,7 @@ Android's View system is deliberately **not thread-safe** — there's no interna
 ```kotlin
 Thread {
     val data = fetchFromNetwork()      // fine — background work
-    textView.text = data               // throws CalledFromWrongThreadException
+    textView.text = data               // commonly throws CalledFromWrongThreadException — not guaranteed
 }.start()
 
 Thread {
@@ -625,7 +625,7 @@ Thread {
 }.start()
 ```
 
-Touching a View off the main thread throws `CalledFromWrongThreadException` at runtime specifically to surface the bug immediately and loudly, rather than letting it corrupt View state silently and unpredictably depending on scheduling luck — the same class of bug a real data race would cause, just made deterministic and loud instead of intermittent.
+Touching a View off the main thread is undefined behavior by contract, and in practice a `ViewRootImpl` thread check often throws `CalledFromWrongThreadException` at runtime to surface the bug immediately and loudly. But Android's own docs are careful not to promise that exception every time — depending on whether the View is attached yet, which operation you call, and scheduling, an off-main-thread access can also fail silently, corrupt state without an immediate crash, or misbehave in some other undefined way. The exception is the common, best-case outcome, not a guarantee — which is exactly why you shouldn't treat "no crash" as "safe."
 
-**Say it:** "Views aren't thread-safe by design — only the thread that created them can touch them — and `CalledFromWrongThreadException` exists to fail loudly and immediately instead of letting an unsynchronized View mutation corrupt state unpredictably."
-**Red flag:** "Fixing" the crash by wrapping the background thread's UI update in a try/catch instead of dispatching back to the main thread. That suppresses the crash without fixing the actual thread-safety violation underneath it.
+**Say it:** "Views aren't thread-safe by design — only the thread that created them can touch them. Off-main-thread access usually throws `CalledFromWrongThreadException` because of the `ViewRootImpl` thread check, but Android doesn't guarantee that — it can also fail silently or corrupt state without throwing, so the fix is always dispatching to the main thread, not relying on the exception to catch every mistake."
+**Red flag:** "Fixing" the crash by wrapping the background thread's UI update in a try/catch instead of dispatching back to the main thread. That suppresses the crash without fixing the actual thread-safety violation underneath it — and since the exception isn't guaranteed to fire on every off-thread access anyway, the try/catch wouldn't even reliably catch the bug.

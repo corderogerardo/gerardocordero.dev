@@ -356,7 +356,7 @@ for await (const item of paginate('/api/items')) process(item);
 ### ES6 class syntax basics
 **They ask:** "What does the ES6 class syntax actually give you?"
 
-`class` exists to give prototype-based inheritance a syntax that reads like the class-based OOP most languages use — it's mostly sugar over the same prototype chain JS always had, not a new inheritance model. A `constructor` runs on `new ClassName(...)` to set up instance state; regular methods live on the prototype (shared across instances, not copied per instance); `extends` sets up prototype-chain inheritance, and `super(...)` in a subclass constructor must run before `this` is usable.
+`class` exists to give prototype-based inheritance a syntax that reads like the class-based OOP most languages use — it's mostly sugar over the same prototype chain JS always had, not a new inheritance model. A `constructor` runs on `new ClassName(...)` to set up instance state; regular methods live on the prototype (shared across instances, not copied per instance); `extends` sets up prototype-chain inheritance, and `super(...)` in a subclass constructor must run *before `this` is touched* — not literally as the first statement. Any code that doesn't reference `this` (a `console.log`, computing a value to pass into `super(...)`, an early `if` that doesn't touch `this`) is fine before the `super()` call; what throws is reading or writing `this` before `super()` has run, because `this` doesn't exist yet.
 
 ```js
 class Animal {
@@ -370,4 +370,4 @@ new Dog('Rex').speak(); // "Rex barks."
 ```
 
 **Say it:** "class is syntax over JS's existing prototype chain — the constructor sets up instance state, methods live on the shared prototype, and extends/super wire up inheritance — it's not a separate object model bolted onto JS."
-**Red flag:** Forgetting to call `super(...)` as the first line of a subclass constructor before touching `this`. JS throws a ReferenceError there — `this` isn't initialized in a subclass until `super()` runs.
+**Red flag:** Touching `this` in a subclass constructor before calling `super(...)`. JS throws a ReferenceError there — `this` isn't initialized in a subclass until `super()` runs, regardless of which line that call sits on.

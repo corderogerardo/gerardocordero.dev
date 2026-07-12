@@ -264,7 +264,11 @@ For code that still uses callbacks or Combine internally, `XCTestExpectation` re
 UIKit and SwiftUI are **not thread-safe**, and the system assumes all view work happens on the main thread — touching a view from a background thread causes glitches, corrupted rendering, or crashes that are miserable to reproduce. So the rule is: do slow work (a network call, parsing) off the main thread, then hop *back* to the main thread to update the UI. With GCD that's `DispatchQueue.main.async { }`; with modern concurrency it's `await MainActor.run { }` or marking the method `@MainActor`.
 
 ```swift
-URLSession.shared.dataTask(with: url) { data, _, _ in
+URLSession.shared.dataTask(with: url) { data, _, error in
+    guard let data, error == nil else {
+        DispatchQueue.main.async { self.showError(error) }   // failure path — still hops to main
+        return
+    }
     let items = parse(data)                 // background thread — fine
     DispatchQueue.main.async { self.show(items) }   // UI update — back on main
 }.resume()

@@ -499,15 +499,15 @@ fmt.Printf("%T\n", u)   // main.User
 ### nil for Slices, Maps, and Pointers
 **They ask:** "Is a nil slice the same as an empty slice? What about a nil map?"
 
-`nil` means "no underlying value," but its safety depends entirely on the type. A nil slice is safe to read, range over, and even append to (`append` allocates a new backing array on first use) — `len(nilSlice) == 0` works fine. A nil map is safe to read from (a missing key just returns the zero value) but panics on write — `m[k] = v` on a nil map crashes. A nil pointer is safe to compare against `nil` but panics the instant you dereference it. The pattern to internalize: nil is safe for read-only operations across all three, and only maps specifically forbid writes.
+`nil` means "no underlying value," but its safety depends entirely on the type. A nil slice is safe to range over and index-read `len`/`cap` on, and even append to (`append` allocates a new backing array on first use) — `len(nilSlice) == 0` works fine. A nil map is safe to read from (a missing key just returns the zero value) but panics on write — `m[k] = v` on a nil map crashes. A nil pointer is the narrowest case: the *only* safe operation is comparing it to `nil` — there's no value behind it to read, so dereferencing it (`*p`) panics immediately, it isn't a "read." The pattern to internalize: slices and maps tolerate reads on nil, pointers don't have a read to tolerate — `== nil` is the one safe thing you can do with one.
 
 ```go
 var s []int           // nil, but len(s)==0 and append(s, 1) works
 var m map[string]int  // nil, m["x"] reads fine (returns 0), m["x"]=1 PANICS
-var p *int            // nil, *p PANICS
+var p *int            // nil, p == nil is safe, *p PANICS
 ```
 
-**Say it:** "A nil slice and pointer are read-safe, and a nil slice is even append-safe — the one that bites people is a nil map, which reads fine but panics on the first write, so I always `make(map[K]V)` before assigning into one that might be nil."
+**Say it:** "A nil slice tolerates reads and even appends, a nil map tolerates reads but panics on write, and a nil pointer only tolerates a `== nil` comparison — dereferencing it isn't a read, it panics — so I always `make(map[K]V)` before assigning into a map that might be nil, and I never dereference a pointer without checking it first."
 **Red flag:** Returning a nil map from a constructor and letting a caller write to it — that's a panic waiting for whichever caller doesn't happen to check, when `make(map[K]V)` up front would have prevented it entirely.
 
 ### Basic switch Statement
@@ -537,7 +537,7 @@ case score > 80:
 ### Explicit Type Conversion
 **They ask:** "Why won't Go let me assign an `int` to a `float64` variable directly?"
 
-Go has no implicit type coercion between distinct types, even numeric ones that other languages widen automatically — the compiler forces an explicit conversion `T(v)` at every boundary where types differ. This is a deliberate safety trade-off: it costs a few extra keystrokes but eliminates a whole class of silent precision-loss or overflow bugs that happen when a language auto-widens or auto-narrows numbers behind your back.
+Go has no implicit type coercion between distinct types, even numeric ones that other languages widen automatically — the compiler forces an explicit conversion `T(v)` at every boundary where types differ. This is a deliberate safety trade-off: it costs a few extra keystrokes but makes every precision-changing conversion visible in the code instead of happening silently — the conversion itself can still truncate or overflow (see `int(f)` below), Go just refuses to let that happen invisibly.
 
 ```go
 var i int = 5
