@@ -116,15 +116,20 @@ def flaky_call(): ...
 Any object with `__call__` can be a decorator, so a class works if its `__call__` takes the function and returns a callable — that's a natural fit when the decorator needs to hold configurable state across calls (a counter, a cache instance) instead of relying on a closure. Class-based decorators are also easier to subclass and test in isolation than nested closures.
 
 ```python
+import functools
+
 class CountCalls:
     def __init__(self, fn):
         self.fn = fn
         self.count = 0
+        functools.update_wrapper(self, fn)   # keep __name__, __doc__, __wrapped__
 
     def __call__(self, *args, **kwargs):
         self.count += 1
         return self.fn(*args, **kwargs)
 ```
+
+Note the `functools.update_wrapper(self, fn)`: a class-based decorator *replaces* the function with an instance, so without it the wrapped callable loses `__name__`/`__doc__` and tools like `help()` and `inspect` see `CountCalls`, not the original — the same reason you reach for `functools.wraps` in the closure form.
 
 Decorating a method inside a class body works the same as a function — `@staticmethod`/`@classmethod`/`@property` are the built-in examples — but a custom decorator on a method receives `self` as its first positional argument through `*args`, same as any other call.
 

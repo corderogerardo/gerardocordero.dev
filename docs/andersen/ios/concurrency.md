@@ -67,24 +67,30 @@ DispatchQueue.global().async { counter += 1 }
 
 ```swift
 let group = DispatchGroup()
+let syncQueue = DispatchQueue(label: "images.sync")   // serial: one writer at a time
 var images: [UIImage] = []
 
 for url in urls {
     group.enter()
-    download(url) { image in
-        images.append(image)
-        group.leave()
+    download(url) { image in           // callbacks may fire concurrently
+        syncQueue.async {
+            images.append(image)        // serialized — no data race on the array
+            group.leave()               // leave AFTER the append lands
+        }
     }
 }
-group.notify(queue: .main) {
-    self.render(images)     // runs once every enter() has a matching leave()
+group.notify(queue: syncQueue) {        // read the array on the same serial queue
+    let snapshot = images
+    DispatchQueue.main.async { self.render(snapshot) }
 }
 ```
 
+The append is the subtle part: `download` completions can run in parallel, so mutating the shared `images` array directly is a data race. Funnel every write through one **serial queue**, call `leave()` *inside* that queue so the count only balances once the append is committed, and read the array back on the same queue before hopping to main to render.
+
 `DispatchWorkItem` wraps a closure as a cancellable, observable object instead of a bare closure — you can check `isCancelled` inside the work, cancel it before it runs, or chain a `notify` onto its completion, which a plain closure passed to `.async` can't do.
 
-**Say it:** "`DispatchGroup` balances `enter`/`leave` calls across independent async work and fires `notify` once they're all done — it's the manual version of what `async let` now gives you for free."
-**Red flag:** Forgetting a `leave()` on an error path — the group's count never balances, so `notify` silently never fires.
+**Say it:** "`DispatchGroup` balances `enter`/`leave` across independent async work and fires `notify` once they're all done — but shared mutable results still need their own serialization, so I funnel the appends through a serial queue and `leave()` from inside it."
+**Red flag:** Appending to a shared array straight from concurrent completion handlers — that's an unsynchronized write, i.e. a data race. Also forgetting a `leave()` on an error path, which leaves the count unbalanced so `notify` never fires.
 
 ### OperationQueue vs GCD
 **They ask:** "When do you reach for `OperationQueue` over raw GCD?"
