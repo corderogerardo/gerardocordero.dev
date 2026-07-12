@@ -329,7 +329,7 @@ Structs are comparable with `==` only if every field is itself comparable — sl
 ### Method Sets: Pointer vs Value Receivers
 **They ask:** "How do you decide between a pointer receiver and a value receiver, and how does that affect interface satisfaction?"
 
-Use a pointer receiver when the method mutates the receiver, when the struct is large enough that copying is wasteful, or for consistency once any method on the type needs a pointer receiver. The subtlety that trips people up: a value of type `T` has both `T` and `*T` methods in its method set when addressable, but an *interface* holding a plain `T` only sees methods with value receivers — a type with only pointer-receiver methods needs a `*T` to satisfy that interface, not a `T`.
+Use a pointer receiver when the method mutates the receiver, when the struct is large enough that copying is wasteful, or for consistency once any method on the type needs a pointer receiver. The subtlety that trips people up: the *method set* of `T` includes only value-receiver methods; the method set of `*T` includes both value- and pointer-receiver methods. An addressable `T` value (a local variable, a struct field) can still *call* a pointer-receiver method directly — the compiler inserts an implicit `&` for you — but that's a call-syntax convenience, not a change to `T`'s method set: `T` still does NOT satisfy an interface that requires a pointer-receiver method, only `*T` does.
 
 ```go
 type Counter struct{ n int }

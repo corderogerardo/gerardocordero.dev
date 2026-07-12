@@ -241,7 +241,17 @@ func stage(ctx context.Context, in <-chan int) <-chan int {
     out := make(chan int)
     go func() {
         defer close(out)
-        for v := range in {
+        for {
+            var v int
+            select {
+            case val, ok := <-in:
+                if !ok {
+                    return // upstream closed, we're done
+                }
+                v = val
+            case <-ctx.Done():
+                return
+            }
             select {
             case out <- transform(v):
             case <-ctx.Done():
@@ -253,8 +263,8 @@ func stage(ctx context.Context, in <-chan int) <-chan int {
 }
 ```
 
-**Say it:** "Every pipeline stage selects on a shared context alongside its channel send, so a downstream cancellation unblocks every upstream stage instead of leaking one goroutine per stage."
-**Red flag:** A pipeline stage that does a bare `out <- v` with no select on a cancellation signal — if the consumer stops reading, that goroutine blocks forever.
+**Say it:** "Every pipeline stage selects on a shared context on both the receive and the send side, so a downstream cancellation unblocks every upstream stage instead of leaking one goroutine per stage — a plain `for v := range in` blocks on the receive and can't react to cancellation if upstream stays open but idle."
+**Red flag:** A pipeline stage that does a bare `out <- v` with no select on a cancellation signal — if the consumer stops reading, that goroutine blocks forever. Same bug on the receive side: `for v := range in` with no select on `ctx.Done()` can't exit if `in` never closes.
 
 ### Fan-out/Fan-in
 **They ask:** "Explain fan-out/fan-in and how you'd merge multiple channels into one."

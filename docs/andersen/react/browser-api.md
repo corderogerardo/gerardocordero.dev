@@ -358,7 +358,7 @@ self.addEventListener('activate', (e) => e.waitUntil(
 
 Web Components matter because they're the platform's native answer to reusable, framework-agnostic UI — a custom element you can drop into React, Vue, or plain HTML alike. The set is: **Custom Elements** (`customElements.define('my-card', class extends HTMLElement {...})`), **Shadow DOM** for encapsulation, and **`<template>`** for inert reusable markup.
 
-Shadow DOM is the key isolation primitive: `element.attachShadow({ mode: 'open' })` creates a scoped subtree whose styles and DOM don't leak out and aren't affected by the page's global CSS. That scoping is exactly what CSS lacks by default — a component's `p { color: red }` stays inside the component instead of restyling the whole page.
+Shadow DOM is the key isolation primitive: `element.attachShadow({ mode: 'open' })` creates a scoped subtree whose styles and DOM don't leak out, and ordinary page selectors (`p { color: red }`) can't reach in — that scoping is exactly what CSS lacks by default. It's not a total wall, though: **inherited CSS properties** (like `color` or `font-family`) and **CSS custom properties** (`--vars`) still cross the shadow boundary from the page, which is the sanctioned way to theme a component from outside.
 
 ```js
 class MyCard extends HTMLElement {
@@ -367,7 +367,7 @@ class MyCard extends HTMLElement {
 customElements.define('my-card', MyCard);
 ```
 
-**Say it:** "Web Components are native reusable elements; Shadow DOM gives them true style and DOM encapsulation, so their internal CSS can't leak out and the page's global styles can't leak in."
+**Say it:** "Web Components are native reusable elements; Shadow DOM gives them style and DOM encapsulation — internal CSS can't leak out and page selectors can't reach in, though inherited properties and CSS custom properties still cross the boundary for theming."
 **Red flag:** Claiming Shadow DOM is just for styling. It also scopes the DOM tree and event retargeting — it's genuine encapsulation, not a CSS trick.
 
 ### Writeable geometry properties
@@ -453,7 +453,7 @@ req.onsuccess = (e) => {
 
 These matter because each solves a distinct problem the others can't, and confusing them leads to the wrong tool. **`<template>`** holds inert, un-rendered markup — its content isn't parsed as active DOM (no image loads, no scripts run) until you clone it with `template.content.cloneNode(true)`. It's the efficient way to stamp out repeated structure client-side.
 
-**`<iframe>`** embeds a separate, isolated browsing context — its own document, its own origin — used for sandboxing third-party content (ads, embeds, payment widgets); `sandbox` and `allow` attributes tighten its permissions. **`<canvas>`** is a scriptable bitmap surface you draw on imperatively via `getContext('2d')` or WebGL — for charts, games, image manipulation. Canvas is pixels (no DOM per shape), which is why it scales to thousands of draws where SVG's per-node DOM would choke.
+**`<iframe>`** embeds a separate, isolated browsing context — its own document, with its own event loop and DOM — used for sandboxing third-party content (ads, embeds, payment widgets). That document's origin isn't automatically different from the parent's: it depends on the URL you load (same-origin iframes can freely script the parent; cross-origin ones are locked out by the same-origin policy). `sandbox` and `allow` attributes tighten its permissions regardless of origin. **`<canvas>`** is a scriptable bitmap surface you draw on imperatively via `getContext('2d')` or WebGL — for charts, games, image manipulation. Canvas is pixels (no DOM per shape), which is why it scales to thousands of draws where SVG's per-node DOM would choke.
 
 **Say it:** "template is inert clonable markup, iframe is an isolated browsing context for sandboxing third-party content, and canvas is a scriptable pixel surface — I pick canvas over SVG when I'm drawing thousands of shapes."
 **Red flag:** Reaching for innerHTML string-building to repeat rows when `<template>` + cloneNode is cleaner and doesn't re-parse HTML each time. And embedding untrusted content without the iframe `sandbox` attribute.

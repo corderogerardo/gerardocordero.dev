@@ -3,7 +3,7 @@
 ### Null Safety and the Elvis Operator
 **They ask:** "How does null safety work in Kotlin, and what's the Elvis operator for?"
 
-Kotlin pushes the null check into the type system so `NullPointerException` becomes a compile-time problem instead of a runtime crash. `String` can never hold null; `String?` can, and the compiler forces you to handle the null case before you use it — that's the actual value, not the syntax sugar.
+Kotlin pushes the null check into the type system, which eliminates the most common source of accidental NPEs — dereferencing a value you forgot could be null. `String` can never hold null; `String?` can, and the compiler forces you to handle the null case before you use it — that's the actual value, not the syntax sugar. It's risk reduction, not a guarantee: `!!`, `lateinit` accessed before assignment, platform types coming back from Java interop (unannotated Java APIs report as `String!`, bypassing the compiler entirely), and an explicit `throw` can all still NPE at runtime.
 
 ```kotlin
 val name: String? = user.name
@@ -14,7 +14,7 @@ val forced = name!!.length        // non-null assertion: throws NPE if null — 
 
 `?:` (Elvis) gives a default when the left side is null; `?.` short-circuits to null instead of throwing; `!!` opts back into Java-style crashing and should be rare — every `!!` is a claim you're making to the compiler that you can be wrong about.
 
-**Say it:** "Kotlin makes nullability part of the type — `String?` versus `String` — so the compiler forces the null check at compile time instead of me finding out at runtime."
+**Say it:** "Kotlin makes nullability part of the type — `String?` versus `String` — so most accidental null dereferences get caught at compile time instead of at runtime. It's risk reduction, not immunity — `!!`, `lateinit`, and Java interop can still NPE."
 **Red flag:** Sprinkling `!!` to make the compiler stop complaining. That's just deferring the same NPE to runtime — use `?:`, `?.`, or a proper `if (x != null)` smart-cast instead.
 
 ### Kotlin Class Inheritance vs Java

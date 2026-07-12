@@ -3,20 +3,21 @@
 ### Frame vs Bounds and the View Hierarchy
 **They ask:** "What's the actual difference between `frame` and `bounds`, and how does the subview/superview hierarchy work?"
 
-`frame` describes a view's position and size in its **superview's** coordinate system — where the view sits relative to its parent. `bounds` describes the view's position and size in its **own** coordinate system — for a non-transformed view, `bounds.origin` is `(0, 0)` and `bounds.size` equals `frame.size`, but they diverge the moment you apply a rotation or scale `transform`: `frame` becomes the transformed bounding box, while `bounds` stays the view's own untransformed coordinate space. `bounds.origin` also matters directly for scroll views — `contentOffset` *is* `bounds.origin`.
+`frame` describes a view's position and size in its **superview's** coordinate system — where the view sits relative to its parent. `bounds` describes the view's position and size in its **own** coordinate system — for a non-transformed view, `bounds.origin` is `(0, 0)` and `bounds.size` equals `frame.size`, but `frame` is only well-defined for an identity `transform`: the moment you apply a rotation or scale, `frame` is documented as **undefined** and UIKit just hands back the axis-aligned bounding box of the transformed view, which is rarely what you want — `bounds` stays the view's own untransformed coordinate space regardless. `bounds.origin` also matters directly for scroll views — `contentOffset` *is* `bounds.origin`.
 
 ```swift
 view.frame = CGRect(x: 20, y: 40, width: 100, height: 50)   // where it sits in its superview
 view.bounds.size                                              // (100, 50) — its own drawing space
 view.transform = CGAffineTransform(rotationAngle: .pi / 4)
-view.frame                                                      // now the rotated bounding box — bigger
-view.bounds                                                     // unchanged — still (100, 50)
+view.frame                                                      // undefined once transform isn't identity — don't read this
+view.bounds                                                     // unchanged — still (100, 50), the value to trust
+view.center                                                     // still meaningful — reposition rotated views via center, not frame
 ```
 
 Every `UIView` owns an array of `subviews` and a single, optional `superview` — that parent-child tree *is* the view hierarchy, and it drives both rendering order (later subviews draw on top) and hit-testing (touches are routed down the tree via `hitTest(_:with:)`). `addSubview(_:)` both adds to that array and inserts the view's layer into the superview's `CALayer` tree.
 
-**Say it:** "`frame` is position and size in the *parent's* coordinate space; `bounds` is the view's *own* coordinate space — they're identical until a `transform` is applied, and that's exactly the case where interviewers expect you to know the difference."
-**Red flag:** Saying frame and bounds are "basically the same thing." They coincide by default, but conflating them breaks the moment transforms or custom drawing coordinates enter the picture.
+**Say it:** "`frame` is position and size in the *parent's* coordinate space; `bounds` is the view's *own* coordinate space — `frame` is flat-out undefined once a `transform` is non-identity, so after a rotation I reposition with `center` and read `bounds`/`transform` instead, never `frame`."
+**Red flag:** Reading `view.frame` after applying a rotation or scale `transform`. It's not just "different," it's undefined — the fix is `center` plus `bounds`/`transform`, or coordinate conversion via `convert(_:to:)`.
 
 ### ViewController Lifecycle
 **They ask:** "Walk me through the `UIViewController` lifecycle — what happens, in order, and where do you put what?"
@@ -42,7 +43,7 @@ The recurring interview trap is `viewDidLoad` vs `viewWillAppear`: put anything 
 ### AutoLayout and Intrinsic Content Size
 **They ask:** "How does AutoLayout resolve conflicting constraints, and what are intrinsic content size, hugging, and compression resistance for?"
 
-AutoLayout is a **constraint solver** (Cassowary algorithm under the hood): you declare relationships (`leading = superview.leading + 16`), not absolute frames, and the system solves for concrete positions and sizes every layout pass. Every constraint carries a `priority` (1–1000, `.required` = 1000); when constraints conflict, the solver satisfies the higher-priority ones and — critically — silently breaks the lowest-priority conflicting constraint rather than crashing, unless *two required* constraints conflict, which does crash with an "Unable to satisfy constraints" log.
+AutoLayout is a **constraint solver** (a constraint-solving algorithm in the spirit of Cassowary runs under the hood — the exact implementation is a private detail, not something to lean on in an answer): you declare relationships (`leading = superview.leading + 16`), not absolute frames, and the system solves for concrete positions and sizes every layout pass. Every constraint carries a `priority` (1–1000, `.required` = 1000); when constraints conflict — including two *required* ones — the solver logs an "Unable to simultaneously satisfy constraints" warning and breaks the lowest-priority (or, among equal-priority required constraints, an arbitrarily-chosen) one at runtime. It does **not** crash the app; layout just ends up wrong, which is exactly why that console warning is easy to miss in a busy log and ship with a broken screen.
 
 **Intrinsic content size** is a view's natural, content-driven size — a `UILabel` knows how big it needs to be for its text and font; a plain `UIView` has none. That intrinsic size participates in the constraint system through two more priorities: **content hugging** (how strongly the view resists growing *past* its intrinsic size — "don't stretch me if you don't have to") and **compression resistance** (how strongly it resists shrinking *below* its intrinsic size — "don't clip me").
 
@@ -53,8 +54,8 @@ label.setContentCompressionResistancePriority(.required, for: .horizontal)  // n
 
 The classic use: two labels side by side where one should truncate/wrap and the other should keep its natural size — you raise compression resistance on the one that must never clip, and lower hugging on the one that's allowed to expand into extra space.
 
-**Say it:** "Every constraint has a priority, and when two *required* ones conflict the app crashes — everything else, the solver just breaks the lowest-priority loser silently, which is exactly why hugging and compression resistance are how you resolve ambiguity between two labels competing for space."
-**Red flag:** Setting every constraint to `.required` and being surprised by a runtime crash the first time two of them genuinely can't both hold — required constraints are a hard contract, not a suggestion.
+**Say it:** "Every constraint has a priority, and a conflict — even between two *required* ones — doesn't crash the app: the solver logs 'unable to simultaneously satisfy' and breaks the lowest-priority loser at runtime, so layout goes wrong silently unless you're watching the console. That's exactly why hugging and compression resistance are how you resolve ambiguity between two labels competing for space instead of leaving it to chance."
+**Red flag:** Setting every constraint to `.required` and assuming a conflict will crash and get caught in QA. It won't — it's a silent console warning and a broken layout, which is worse, not better, than a crash you'd actually notice.
 
 ### Cell Reuse and Scroll Performance
 **They ask:** "Explain the cell reuse mechanism in `UITableView`/`UICollectionView`, and how do you debug stuttering or visual artifacts?"

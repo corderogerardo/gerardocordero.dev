@@ -70,3 +70,93 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What does `inline` do, why does `reified` only work in inline functions, and what are `noinline`/`crossinline` for? — [answer](kotlin.md#inline-functions-reified-types-noinline-and-crossinline)
 - What are delegates in Kotlin, and what does the `lazy` delegate actually do? — [answer](kotlin.md#delegated-properties)
 - What is a `Sequence`, and what's the advantage over a regular collection operation chain? — [answer](kotlin.md#sequence-vs-collection)
+
+## Architecture
+
+### MVVM, MVP, MVI, Clean
+
+- What is architecture, and why is it needed? Give an example. — [answer](architecture.md#why-architecture-patterns-exist) {J2, J3, M1}
+- How does MVVM work? What are its strengths and weaknesses? — [answer](architecture.md#mvvm--how-it-works-strengths-and-weaknesses) {M1, M2}
+- What is LiveData for, and what are Architecture Components' basic building blocks? — [answer](architecture.md#livedata-and-aac-components) {M1, M2}
+- How does MVP work? What are its strengths and weaknesses? — [answer](architecture.md#mvp--how-it-works-strengths-and-weaknesses) {M1, M2}
+- Why did Uncle Bob come up with Clean Architecture, and what are its layers? — [answer](architecture.md#clean-architecture--origins-and-layers) {M1, M2, M3}
+- What's the difference between MVVM and MVP? — [answer](architecture.md#mvvm-vs-mvp) {M2, M3}
+- How does MVI work — what are State, Actions/Intents, SideEffect, and Store? — [answer](architecture.md#mvi--state-actions-sideeffect-store) {M3, S1, S2}
+- What is the Repository pattern? How do you organize data caching with it? — [answer](architecture.md#repository-pattern-and-data-caching) {S1, S2}
+- How do you keep weak cohesion between Clean Architecture layers, and what's the difference between DTO and Entity, and between Interactor and UseCase? — [answer](architecture.md#clean-architecture--modularity-dto-vs-entity-interactor-vs-usecase) {S1, S2}
+
+## Technologies
+
+### Dependency Injection
+
+- What is Dependency Injection? How do you implement it, and why is it needed? — [answer](technologies.md#dependency-injection--why-and-how) {J2, J3, M1}
+- What is the purpose of the `@Provides` annotation? What is a module and a component, and what can't be injected without a module? — [answer](technologies.md#dagger2--modules-components-and-provides) {M2, M3}
+- What is Scope? What is the default if none is defined? What is Qualifier for? What's the difference between Subcomponent and Component dependencies? — [answer](technologies.md#dagger2--scopes-and-qualifiers) {M2, M3}
+- What is a Koin module? What's the difference between `single` and `factory`? What happens if Koin can't find a dependency? — [answer](technologies.md#koin--modules-single-vs-factory) {M2, M3}
+- What's the difference between Dagger2 and Hilt? What are `@AssistedInject`/`@AssistedFactory` for? — [answer](technologies.md#dagger2-vs-hilt-and-assisted-injection) {S1, S2}
+
+### Networking
+
+- How do you create and send GET and POST requests via Retrofit? — [answer](technologies.md#retrofit-basics--building-getpost-requests) {J1, J2, J3}
+- What is an interceptor? What's the difference between Application interceptors and Network interceptors? — [answer](technologies.md#okhttp-interceptors--application-vs-network) {M3, S1, S2}
+- How do you add a header in Retrofit, and how do you add a file to a POST body? — [answer](technologies.md#retrofit--custom-headers-and-multipart-uploads) {M3, S1, S2}
+- What is SSL pinning and how do you add a certificate? What is protobuf and its advantage? SOAP vs REST? — [answer](technologies.md#network-security-and-data-formats--ssl-pinning-protobuf-rest-vs-soap) {M3, S1, S2}
+
+### Database
+
+- What is Room, and how do you work with it? What do `@Dao` and `@Entity` do, and is database migration possible? — [answer](technologies.md#room--entities-daos-and-migrations) {M2, M3, S1}
+- Can you monitor data changes in Room? How do you select from multiple tables? Are operations allowed on the main thread? — [answer](technologies.md#room--observing-data-multi-table-queries-threading) {S2}
+- What are normal forms? How do you implement a many-to-many relationship? What types of JOIN exist? — [answer](technologies.md#sql-design--normalization-joins-many-to-many) {M2, M3, S1, S2}
+
+### Images Loading
+
+- Which image-loading library have you used, and what's the difference between UniversalImageLoader, Picasso, Glide, and Fresco? — [answer](technologies.md#image-loading-libraries--picasso-glide-fresco) {M1, M2, M3, S1}
+- What's the difference between RGB_565 and ARGB_8888? Does Android support WebP, and what's its advantage? How do you resize a Bitmap? — [answer](technologies.md#bitmap-memory--config-webp-and-resizing) {S2}
+
+## Concurrency Deep Dive
+
+### Flow
+
+- What's the difference between cold and hot observables/flows? — [answer](concurrency.md#cold-vs-hot-streams--flow-and-rxjava) {M2, M3, S1}
+- What are the alternatives to LiveData, and how do StateFlow and SharedFlow differ from it? — [answer](concurrency.md#stateflow-and-sharedflow-vs-livedata) {S1, S2}
+- What's the relationship between Flow's `flatMapLatest`/`flatMapConcat`/`flatMapMerge` and RxJava's `flatMap`, `concatMap`, `switchMap`? — [answer](concurrency.md#flow-operators-vs-rxjavas-flatmap-family) {M2, M3, S1}
+
+### RxJava
+
+- What's the difference between `subscribeOn` and `observeOn`? What happens if you call either multiple times in a chain? — [answer](concurrency.md#rxjava-schedulers--subscribeon-vs-observeon) {J3, M1, M2, M3, S1}
+- What types of Subject exist? What is a Relay, and how does it differ from a Subject? — [answer](concurrency.md#rxjava-subjects-and-relays) {S2}
+- Where does backpressure come from? What is Flowable, and what strategies exist for handling it? — [answer](concurrency.md#rxjava-backpressure-and-flowable) {S2}
+- What's the relationship between Observer, Subscriber, Disposable, and Subscription — do you always need to unsubscribe, and what goes wrong if you don't? — [answer](concurrency.md#rxjava-disposables-and-memory) {M2, M3, S1}
+- When would you choose coroutines over RxJava, or vice versa, on a real project? — [answer](concurrency.md#coroutines-vs-rxjava--choosing-a-concurrency-model) {S1, S2}
+
+## JVM
+
+### Memory
+
+- Why is Stack needed at all — why not put everything in the Heap? — [answer](jvm.md#jvm-memory-layout--stack-vs-heap) {M2, M3, S1}
+- What is GC and its basic algorithm? What are root objects, and how does GC decide to promote an object from Young to Old generation? — [answer](jvm.md#garbage-collection--algorithm-references-and-generations) {J3, M1, S2}
+
+### Collections
+
+- How does HashMap work internally — buckets, collisions, and what happens on `put()`? What is `loadFactor` and what does it affect? Can key or value be null? — [answer](jvm.md#hashmap-internals--buckets-collisions-and-loadfactor) {J1, J2, J3, M1, M2, M3, S1, S2}
+- What's the difference between Array and ArrayList? What is ArrayList built on, and what happens when you add an element in the middle? How is LinkedList different? — [answer](jvm.md#arraylist-vs-linkedlist-vs-array) {J1, J2, J3, S1, S2}
+- What are `NavigableSet`/`NavigableMap` for? What algorithm keeps a tree normalized? What is `WeakHashMap`? — [answer](jvm.md#tree-based-collections-and-weakhashmap) {S1, S2}
+
+### Concurrency
+
+- How does `synchronized` work, what's the difference from `Lock`, and what causes a deadlock vs a race condition? — [answer](jvm.md#thread-synchronization--synchronized-locks-and-deadlocks) {M1, M2, M3, S1}
+- How does `Atomic` work, and is it better or worse than `volatile`? Why do we need Executors? What's the difference between `CopyOnWriteArrayList`/`ConcurrentHashMap` and `Collections.synchronizedList`/`synchronizedMap`? — [answer](jvm.md#javautilconcurrent--atomics-executors-and-concurrent-collections) {S2}
+
+## Testing
+
+### Unit Testing
+
+- Why do you need unit tests? What is Mockito, and what is a mock object? — [answer](testing.md#unit-testing-basics--why-mockito-and-mock-objects) {M1, M2}
+- How do you create a mock of a class or interface? What does the method of a mocked class return by default, and how do you specify a return value? What are `verify` and `ArgumentCaptor` for? — [answer](testing.md#mockito--stubbing-verify-and-argumentcaptor) {M3, S1, S2}
+- How do you mock a final, static, or abstract class? — [answer](testing.md#mocking-final-static-and-abstract-classes) {S2}
+- What are the differences between Mock, Stub, and Spy? — [answer](testing.md#mock-vs-stub-vs-spy) {S2}
+
+### UI Testing
+
+- What's the difference between Unit tests and UI tests? How do you use Robolectric and Espresso, in principle? — [answer](testing.md#unit-tests-vs-ui-tests--espresso-and-robolectric) {M2, M3, S1}
+- What are Espresso Matchers? What is UIAutomator for, and how is it different from Espresso? — [answer](testing.md#espresso-matchers-and-uiautomator) {S2}

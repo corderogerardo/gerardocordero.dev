@@ -113,7 +113,7 @@ The rule of thumb: GCD for simple, fire-and-forget or grouped async work; `Opera
 ### Thread Safety APIs
 **They ask:** "What are your options for protecting shared mutable state, from `NSLock` to `os_unfair_lock`?"
 
-Every one of these solves "only one thread touches this at a time," but they trade off overhead and semantics. `NSLock`/`NSRecursiveLock` are the simplest Foundation locks — recursive lets the *same* thread re-acquire without deadlocking itself, useful for recursive functions that touch protected state. A **semaphore** (`DispatchSemaphore`) generalizes a lock to allow *N* concurrent accessors, not just one — useful for throttling concurrent network requests to a fixed pool size. A **barrier** (`DispatchQueue.concurrentPerform` combined with `.async(flags: .barrier)`) lets a concurrent queue run reads in parallel but forces a write to run alone with no concurrent readers — the reader-writer pattern. `os_unfair_lock`/`OSAllocatedUnfairLock` are the lowest-overhead, kernel-level locks, replacing the now-deprecated `OSSpinLock` (which caused priority inversion under contention). Swift's `actor` is the modern, compiler-enforced alternative to all of these for isolating state.
+Every one of these solves "only one thread touches this at a time," but they trade off overhead and semantics. `NSLock`/`NSRecursiveLock` are the simplest Foundation locks — recursive lets the *same* thread re-acquire without deadlocking itself, useful for recursive functions that touch protected state. A **semaphore** (`DispatchSemaphore`) generalizes a lock to allow *N* concurrent accessors, not just one — useful for throttling concurrent network requests to a fixed pool size. A **barrier** — a private **concurrent** `DispatchQueue` where reads run as plain `.async` work but every write goes through `queue.async(flags: .barrier)` — lets that queue run reads in parallel but forces a write to run alone with no concurrent readers — the reader-writer pattern. (`DispatchQueue.concurrentPerform` is a different tool: a synchronous parallel-for loop, not a barrier.) `os_unfair_lock`/`OSAllocatedUnfairLock` are the lowest-overhead, kernel-level locks, replacing the now-deprecated `OSSpinLock` (which caused priority inversion under contention). Swift's `actor` is the modern, compiler-enforced alternative to all of these for isolating state.
 
 ```swift
 private let lock = NSLock()
@@ -205,12 +205,15 @@ for try await line in url.lines {           // Foundation ships AsyncSequence co
 }
 
 let stream = AsyncStream<Int> { continuation in
-    var count = 0
-    let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-        continuation.yield(count)
-        count += 1
+    let producer = Task {
+        var count = 0
+        while !Task.isCancelled {
+            continuation.yield(count)
+            count += 1
+            try? await Task.sleep(for: .seconds(1))
+        }
     }
-    continuation.onTermination = { _ in timer.invalidate() }
+    continuation.onTermination = { _ in producer.cancel() }
 }
 ```
 

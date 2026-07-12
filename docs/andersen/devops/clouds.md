@@ -13,7 +13,7 @@ VPC is the network layer that ties them together: your own isolated slice of the
 ### IAM Roles And Policies
 **They ask:** "Explain IAM roles versus users, and why does 'least privilege' matter more for a service than for a person?"
 
-IAM users are for long-lived human or application identities with permanent credentials; IAM *roles* are meant to be assumed temporarily — an EC2 instance, a Lambda function, or a federated user assumes a role and gets short-lived credentials, no long-lived secret to leak. That's the senior distinction: attaching a role to an EC2 instance means the application never has an access key sitting in an env var or config file at all.
+The default for both humans and workloads is temporary credentials: a person federates in (SSO/Identity Center) and assumes a role for the duration of a session; an EC2 instance, Lambda function, or any other workload assumes a role via its instance/execution profile and gets short-lived credentials that auto-rotate — no long-lived secret to leak either way. IAM *users* with permanent access keys are the exception, not the normal identity path — reach for one only when nothing else can authenticate (a legacy on-prem script, a third-party tool with no role-assumption support), and treat that as a gap to close, not a starting point. That's the senior distinction: attaching a role to an EC2 instance means the application never has an access key sitting in an env var or config file at all.
 
 Least privilege matters more for services because a compromised service with an overly broad role is a much larger blast radius than a compromised human account — an attacker who pops a web server with an `AdministratorAccess` role owns the whole account, not just that server.
 

@@ -13,11 +13,11 @@ The four pillars each buy you something. Encapsulation hides internal state behi
 ### Algorithms and data structures basics
 **They ask:** "What is an algorithm, and which basic data structures do you reach for day to day?"
 
-This matters because choosing the right structure is usually a bigger win than tuning code — the structure decides which operations are cheap. An algorithm is a finite, unambiguous sequence of steps that transforms input into output and terminates; "finite and deterministic" is the part juniors skip.
+This matters because choosing the right structure is usually a bigger win than tuning code — the structure decides which operations are cheap. An algorithm is a finite, well-defined sequence of steps that transforms input into the required output and terminates; "finite and terminates" is the part juniors skip. Determinism is a property some algorithms have, not a requirement — a randomized algorithm (quicksort with a random pivot, reservoir sampling) is still a valid algorithm as long as it's finite and terminates.
 
 The core structures split by access pattern. Arrays give O(1) index access but O(n) insert/delete in the middle. Linked lists flip that — O(1) insert once you hold the node, O(n) to find it. Hash maps (JS `Map`/objects) give amortized O(1) lookup by key, which is why they're the default for dedup and counting. Stacks (LIFO) model undo and call frames; queues (FIFO) model task processing. Trees and graphs model hierarchy and relationships. The senior move is naming the operation you care about — "I need fast membership tests, so a Set, not an array."
 
-**Say it:** "An algorithm is a finite deterministic procedure; I pick the data structure by the operation I need to be cheap — Set for membership, Map for keyed lookup, array for ordered index access."
+**Say it:** "An algorithm is a finite procedure that's guaranteed to terminate with the required output — determinism is optional, not a requirement; I pick the data structure by the operation I need to be cheap — Set for membership, Map for keyed lookup, array for ordered index access."
 **Red flag:** Listing structures with no cost tradeoffs. The interviewer wants "array vs Map because lookup is O(n) vs O(1)," not a vocabulary dump.
 
 ### Debugging process
@@ -193,7 +193,7 @@ CI/CD is that build triggered automatically: on every push, CI installs deps, ru
 
 Logging matters because in production you can't attach a debugger — logs are often your only window into what actually happened, so *what* and *how* you log is a design decision, not an afterthought. The browser console is the first tool: beyond `console.log`, I use `console.table` for arrays of objects, `console.group` to nest related output, `console.time`/`timeEnd` for quick timing, `console.error`/`warn` for severity, and conditional breakpoints in Sources over sprinkled logs.
 
-For real logging I use **levels** — error, warn, info, debug — so I can dial verbosity by environment: debug locally, warn-and-above in production. Logs should be **structured** (JSON with context: user id, request id, timestamp) not raw strings, because structured logs are searchable and aggregatable. And they must never leak secrets or PII — a logged token is a breach.
+For real logging I use **levels** — error, warn, info, debug — so I can dial verbosity by environment: debug locally, warn-and-above in production. Logs should be **structured** (JSON with context: request/correlation id, timestamp, route) not raw strings, because structured logs are searchable and aggregatable. If a user identifier is needed for support lookups, log a pseudonymous or hashed id, not the raw user id — it's personal data. And logs must never leak secrets or PII — a logged token is a breach.
 
 The senior framing: a log line needs enough context to answer "what was happening?" without a repro — a correlation id tying frontend, backend, and error-tracker together is worth more than ten `console.log('here')`.
 
@@ -205,11 +205,11 @@ The senior framing: a log line needs enough context to answer "what was happenin
 
 Security basics matter because most breaches exploit fundamentals, not exotic flaws — get these four right and you've closed the common doors. **HTTP vs HTTPS**: same protocol, but HTTPS wraps it in TLS so data is encrypted in transit and the server's identity is verified — without it, anyone on the network reads or tampers with traffic. Everything is HTTPS-only today.
 
-**Passwords**: never store plaintext or plain hashes. Use a slow, salted, adaptive hash — bcrypt, scrypt, or Argon2 — where the per-user salt defeats rainbow tables and the cost factor makes brute force expensive. **Hash vs HMAC**: a hash (SHA-256) proves integrity; an HMAC adds a secret key, so it proves integrity **and authenticity** — only someone with the key could have produced it (used for signing tokens/webhooks).
+**Passwords**: never store plaintext or plain hashes. Use a slow, salted, adaptive hash — bcrypt, scrypt, or Argon2 — where the per-user salt defeats rainbow tables and the cost factor makes brute force expensive. **Hash vs HMAC**: a plain hash (SHA-256) only proves accidental integrity — it detects an unintentional change, but an attacker who can modify the data can just recompute a matching hash, so it proves nothing against a motivated adversary. An HMAC adds a secret key, so only someone holding that key could have produced a valid tag — that's what actually gives you integrity **and authenticity** (used for signing tokens/webhooks); a digital signature is the asymmetric-key version of the same idea.
 
 **Attacks**: XSS = injected script running in your page → escape output and use a CSP. CSRF = a forged request riding the user's cookies → anti-CSRF tokens / SameSite cookies. Semantic URL attacks = trusting an id in the URL (`/account?id=42`) → always authorize server-side; never trust client input.
 
-**Say it:** "HTTPS encrypts and authenticates transit; passwords go through salted Argon2/bcrypt not plain hashes; HMAC is a keyed hash proving authenticity; and XSS/CSRF/URL-tampering all come down to escape output, verify origin, and authorize server-side."
+**Say it:** "HTTPS encrypts and authenticates transit; passwords go through salted Argon2/bcrypt not plain hashes; a plain hash only catches accidental change while HMAC is a keyed hash that proves authenticity against an attacker; and XSS/CSRF/URL-tampering all come down to escape output, verify origin, and authorize server-side."
 **Red flag:** "I hash passwords with SHA-256." Fast hashes are brute-forceable — say bcrypt/scrypt/Argon2 with a per-user salt.
 
 ### Code smells and technical debt

@@ -72,3 +72,66 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is the responder chain, and how does `UIView` relate to `CALayer`? — [answer](uikit.md#responder-chain-and-uiview-vs-calayer)
 - How do you combine multiple `UIGestureRecognizer`s, and how does parent/child view controller containment work? — [answer](uikit.md#gesture-recognizers-and-container-view-controllers)
 - How does Safe Area Layout work, and how would you build a custom view controller transition? — [answer](uikit.md#safe-area-and-custom-transitions)
+
+## Reactive Programming
+
+### Combine
+
+- What are the main principles of reactive programming, and what do Publisher, Subscriber, and Operator actually mean in Combine? — [answer](combine.md#reactive-programming-principles-publisher-subscriber-operator) {M1, M2}
+- How do you create a publisher from a constant value, an array, or a callback-based API — and why does `Deferred` exist when `Future` already does the job? — [answer](combine.md#publisher-constructors--just-empty-sequence-future-deferred) {M1, M2, S2}
+- What's the difference between a Subject and a plain Publisher, and when do you reach for `CurrentValueSubject` versus `PassthroughSubject`? — [answer](combine.md#subject-vs-publisher--currentvaluesubject-and-passthroughsubject) {M1, M2, M3, S1}
+- Why do Combine APIs return `AnyPublisher`, and what does `AnyCancellable` actually manage? — [answer](combine.md#anypublisher-type-erasure-and-anycancellable-lifetime) {M3, S1}
+- Walk through Combine's core transform operators and the difference between `debounce` and `throttle`. — [answer](combine.md#operators--map-flatmap-compactmap-filter-debounce-throttle) {M1, M2, M3, S1}
+- What's the difference between `receive(on:)` and `subscribe(on:)`, and how do `combineLatest`, `merge`, and `zip` differ? — [answer](combine.md#schedulers-and-combining-streams--receiveon-subscribeon-combinelatest-merge-zip) {M1, M2, M3, S1, S2}
+
+## Data Persistence
+
+### Data Persistence
+
+- Keychain, UserDefaults, and .plist — how do you decide which one to use, and how do you share data across an app and its extensions? — [answer](persistence.md#keychain-userdefaults-plist-and-app-groups) {J3, M1}
+- Walk through the Core Data stack — what does each piece do, and how do `NSFetchedResultsController` and `@FetchRequest` fit in? — [answer](persistence.md#core-data-stack--context-coordinator-store-types-fetching) {J3, M1}
+- How do you use Core Data safely across threads, and what happens when your model changes between app versions? — [answer](persistence.md#core-data-multithreading-and-migrations) {M2, M3, S1, S2}
+- How does Realm's threading model differ from Core Data's, and when would you actually choose one over the other? — [answer](persistence.md#realm-vs-core-data) {M2, M3}
+- Beyond Core Data and UserDefaults, what are your other options for persisting data on-device? — [answer](persistence.md#nsfilemanager-archiving-sqlite-nscache-and-uidocument) {M2, M3, S1, S2}
+
+## Network
+
+### Networking
+
+- Walk through URLSession — the session/task model, and the different task subtypes. — [answer](networking.md#urlsession-fundamentals-and-task-subtypes) {J1, J2, J3, M1, M2, M3}
+- Codable versus JSONSerialization — why did Codable win, and what do you do when the JSON shape doesn't match your Swift model? — [answer](networking.md#codable-and-jsonserialization) {J1, J2, J3, M1}
+- How does URLSession cache responses, and how do you handle custom headers and OAuth2 auth for every request? — [answer](networking.md#caching-and-authentication--urlcache-urlprotocol-oauth2) {M2, M3}
+- How would you design a custom APIClient, and how do you handle non-REST protocols or long-lived connections? — [answer](networking.md#custom-apiclient--response-codes-soap-and-long-polling) {S1, S2}
+
+## Testing processes
+
+### Testing
+
+- Why do we need automated tests, and what are the main types you'd have in an iOS project? — [answer](testing.md#why-test-and-the-types-of-tests) {M1, M2}
+- Walk through the five kinds of test doubles and give an iOS example of each. — [answer](testing.md#test-doubles--dummy-fake-stub-spy-mock) {M3, S1, S2}
+- What does XCTest give you out of the box, how do you read code coverage, and why would a team reach for Quick/Nimble instead? — [answer](testing.md#xctest-code-coverage-and-quicknimble) {M3, S1, S2}
+- How do UI tests and snapshot tests differ from unit tests, and where does mocking fit into all of it? — [answer](testing.md#ui-testing-snapshot-testing-and-mock-testing-patterns) {M1, M2, M3, S1, S2}
+
+## Application Lifecycle
+
+### App Lifecycle
+
+- Walk through the app's states and which delegate methods fire at each transition. — [answer](app-lifecycle.md#appdelegatescenedelegate-methods-and-application-states) {M3, S1}
+
+## User Notifications
+
+### Notifications
+
+- How does Apple Push Notification service actually work end to end, and what do service/content extensions let you do with a payload before it's shown? — [answer](app-lifecycle.md#apns-local-vs-remote-notifications-and-notification-extensions) {M1, M2, M3, S1}
+
+## Security
+
+### Security
+
+- What is App Transport Security, when would you add an exception, and how do you responsibly store and access private user data? — [answer](app-lifecycle.md#security--app-transport-security-private-data-storage-and-biometrics) {M3, S1, S2}
+
+## Deep Linking
+
+### Deep Linking
+
+- Custom URL schemes versus Universal Links — what are the actual trade-offs, and why would you still add something like Branch.io on top? — [answer](app-lifecycle.md#deep-linking--url-schemes-universal-links-and-third-party-services) {M2, M3, S1, S2}

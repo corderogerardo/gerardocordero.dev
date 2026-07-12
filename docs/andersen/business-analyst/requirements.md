@@ -176,3 +176,13 @@ At senior level you're not just verifying your own requirements — you're desig
 
 **Say it:** "I don't just review my own requirements — on a project I own the review process itself: who checks what, at which stage, and how we resolve disagreement before it reaches development."
 **Red flag:** Describing requirements review only as something done to your own work — at senior level, interviewers are checking whether you can design and run the process for the team, not just execute your part of it.
+
+### Gap Analysis — Current State vs Future State
+**They ask:** "What is gap analysis, and how do you actually run one?"
+
+Gap analysis compares the **current state (AS-IS)** of a process or system against the **desired future state (TO-BE)** and names the specific difference between them — that difference *is* the scope of what needs to be built or changed. Without it, requirements risk describing the future state in a vacuum, disconnected from what already exists, which is how projects end up rebuilding functionality that already worked fine or missing a dependency the current process quietly relied on.
+
+Running one well means documenting both states with the same rigor — the AS-IS isn't a formality to rush through, it's what makes the gap real and measurable instead of a vague sense that "things should be better." A senior BA also separates gaps by type: process gaps (how work gets done), technology gaps (what systems support it), and people/skills gaps (what capability the organization needs to operate the future state) — because each implies a different kind of requirement, not just a feature.
+
+**Say it:** "The AS-IS documentation isn't a formality — it's what turns 'things should be better' into a specific, measurable gap, and I split gaps into process, technology, and people/skills because each one produces a different kind of requirement, not just a feature request."
+**Red flag:** Jumping straight to describing the future state without documenting the current one. Without a real AS-IS baseline, the "gap" is just an opinion about what's missing, not an analyzed difference.
