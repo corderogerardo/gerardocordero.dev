@@ -13,6 +13,7 @@ import { Shuffle, ArrowLeft, ArrowRight, CheckCircle2, RotateCcw } from 'lucide-
 interface FlashcardDeckProps {
   initialCards: Flashcard[]
   initialCategories: string[]
+  initialLevels: string[]
 }
 
 type CardResult = 'correct' | 'wrong'
@@ -27,8 +28,9 @@ function shuffle<T>(items: T[]): T[] {
   return out
 }
 
-export default function FlashcardDeck({ initialCards, initialCategories }: FlashcardDeckProps) {
+export default function FlashcardDeck({ initialCards, initialCategories, initialLevels }: FlashcardDeckProps) {
   const [filterCategory, setFilterCategory] = useState<string>('all')
+  const [filterLevel, setFilterLevel] = useState<string>('all')
   // A shuffle is an event, not a derivation: keeping the order in state stops React
   // from silently reshuffling the deck whenever it decides to drop a useMemo cache.
   const [shuffledDeck, setShuffledDeck] = useState<Flashcard[] | null>(null)
@@ -47,23 +49,36 @@ export default function FlashcardDeck({ initialCards, initialCategories }: Flash
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentIndex, showAnswer])
 
+  const matches = useCallback(
+    (c: Flashcard, cat: string, lvl: string) =>
+      (cat === 'all' || c.category === cat) && (lvl === 'all' || c.levels.includes(lvl)),
+    []
+  )
+
   const filteredCards = useMemo(
-    () => filterCategory === 'all'
-      ? initialCards
-      : initialCards.filter(c => c.category === filterCategory),
-    [initialCards, filterCategory]
+    () => initialCards.filter(c => matches(c, filterCategory, filterLevel)),
+    [initialCards, filterCategory, filterLevel, matches]
   )
 
   const isShuffled = shuffledDeck !== null
   const workingDeck = shuffledDeck ?? filteredCards
 
-  const selectCategory = useCallback((value: string) => {
-    const next = value === 'all' ? initialCards : initialCards.filter(c => c.category === value)
-    setFilterCategory(value)
-    setShuffledDeck(d => (d === null ? null : shuffle(next)))
+  // Re-derive the shuffled order from the new filter (only when a shuffle is active).
+  const applyFilter = useCallback((cat: string, lvl: string) => {
+    setShuffledDeck(d => (d === null ? null : shuffle(initialCards.filter(c => matches(c, cat, lvl)))))
     setCurrentIndex(0)
     setShowAnswer(false)
-  }, [initialCards])
+  }, [initialCards, matches])
+
+  const selectCategory = useCallback((value: string) => {
+    setFilterCategory(value)
+    applyFilter(value, filterLevel)
+  }, [applyFilter, filterLevel])
+
+  const selectLevel = useCallback((value: string) => {
+    setFilterLevel(value)
+    applyFilter(filterCategory, value)
+  }, [applyFilter, filterCategory])
 
   const toggleShuffle = useCallback(() => {
     setShuffledDeck(d => (d === null ? shuffle(filteredCards) : null))
@@ -145,6 +160,18 @@ export default function FlashcardDeck({ initialCards, initialCategories }: Flash
               </SelectContent>
             </Select>
 
+            <Select value={filterLevel} onValueChange={selectLevel}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="All Levels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Levels</SelectItem>
+                {initialLevels.map(l => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button
               variant={isShuffled ? 'default' : 'outline'}
               size="sm"
@@ -191,7 +218,7 @@ export default function FlashcardDeck({ initialCards, initialCategories }: Flash
         />
       ) : (
         <Card className="text-center py-12">
-          <p className="text-muted-foreground">No cards in this category</p>
+          <p className="text-muted-foreground">No cards match the selected filters</p>
         </Card>
       )}
 

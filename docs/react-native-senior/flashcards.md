@@ -171,3 +171,178 @@ All 91 matrix rows as interviewer-style questions. Answer out loud in English, t
 - You're asked to define the version-control infrastructure and policy for a new mobile project. What do you set up, and which advanced Git operations do you actually use? — [answer](05-dev-processes.md#version-control-system-git)
 - A pre-sale needs an estimate for an app you've never seen. What does your evaluation report contain, and how do you use historical data? — [answer](05-dev-processes.md#estimations)
 - Walk me through Scrum planning from start to end — artifacts and events — and then do the same for Kanban. When would you pick each? — [answer](05-dev-processes.md#development-methodologies)
+
+
+## JavaScript
+
+### ES5 fundamentals (J1–S1)
+
+- Walk me through JavaScript's control-flow constructs, and explain what hoisting does to this code. — [answer](level-js-es5.md#control-flow-and-hoisting) {J1, J2}
+- What are the different ways to create an object in JavaScript, and how do you read, add, and remove its properties? — [answer](level-js-es5.md#object-properties-and-creation) {J1, J2}
+- What is a garbage collector and why does a language need one? — [answer](level-js-es5.md#why-garbage-collection-exists) {J1, J2}
+- List JavaScript's data types and tell me which are primitives. — [answer](level-js-es5.md#the-data-types) {J1, J2}
+- How do you construct a Date and read or set its year, month, and day? — [answer](level-js-es5.md#working-with-date) {J1, J2}
+- How would you deep-clone a plain object using JSON, and when does that break? — [answer](level-js-es5.md#cloning-with-json) {J1, J2}
+- What kinds of functions does JavaScript have, and what problem does an IIFE solve? — [answer](level-js-es5.md#function-types-and-iifes) {J1}
+- What determines the value of `this` inside a function, and how do you control it? — [answer](level-js-es5.md#this-and-binding) {J1}
+- Explain the difference between `__proto__` and `prototype`, and how the prototype chain resolves a property. — [answer](level-js-es5.md#prototypes-and-the-prototype-chain) {J1, J2, J3}
+- JavaScript is single-threaded — so what happens when a piece of code takes a long time to run? — [answer](level-js-es5.md#blocking-code-and-the-single-thread) {J1}
+- What do `setTimeout` and `setInterval` do, why do you need them, and how do you stop them? — [answer](level-js-es5.md#timers-settimeout-and-setinterval) {J1}
+- How do you create a regular expression, what are its two main methods, and how do you make a search global and case-insensitive? — [answer](level-js-es5.md#regular-expression-basics) {J1, J2}
+- What is the `arguments` object, why is it 'array-like', and can you write a recursive function? — [answer](level-js-es5.md#function-constructor-arguments-recursion) {J2, J3}
+- Define a closure, and give a concrete example of why they're useful. — [answer](level-js-es5.md#closures-and-lexical-scope) {J2, J3}
+- How do you handle exceptions in JavaScript, and when should you throw your own? — [answer](level-js-es5.md#trycatch-and-throwing-errors) {J2, J3}
+- Explain the event loop, and predict the output order when a `setTimeout(…, 0)` and a resolved Promise are both queued. — [answer](level-js-es5.md#macrotasks-and-microtasks) {J2, J3, M1}
+- What's wrong with `var`, what happens if you assign to a variable without declaring it, and what does `'use strict'` change? — [answer](level-js-es5.md#var-implicit-globals-and-strict-mode) {J3, M1, M2, M3, S1}
+- What happens when an object is used where a primitive is expected, and how do property descriptors and getters/setters give you control? — [answer](level-js-es5.md#object-internals-descriptors-and-conversion) {J3, M1, M2}
+- How does JavaScript's garbage collector actually decide what to free, and how can you still leak memory in a GC'd language? — [answer](level-js-es5.md#mark-and-sweep-and-reachability) {J3, M1, M2}
+- Explain implicit vs explicit type conversion, and what `typeof` can and can't tell you. — [answer](level-js-es5.md#type-conversion-and-typeof) {J3, M1, M2, M3}
+- How do you parse a date string into a Date, and what makes date parsing risky? — [answer](level-js-es5.md#parsing-dates) {J3, M1, M2, M3}
+- How does `JSON.stringify` convert an object, and what does it silently drop or transform? — [answer](level-js-es5.md#serializing-objects-to-json) {J3, M1, M2, M3}
+- Explain quantifiers and anchors in a regex, and why escaping matters. — [answer](level-js-es5.md#regex-quantifiers-assertions-and-escaping) {J3, M1, M2}
+- How does prototypal inheritance differ from the classical OOP inheritance in languages like Java, and how do you build it with constructor functions? — [answer](level-js-es5.md#prototypal-vs-classical-inheritance) {M1, M2, M3, S1}
+- What is the `finally` block for, and what properties does an Error object carry? — [answer](level-js-es5.md#finally-and-the-error-object) {M1, M2}
+
+### ES6+ (J1–S1)
+
+- Run me through the ES6 features you use daily — let/const, destructuring, arrow functions, and the modern array/object helpers. — [answer](level-js-es6.md#es6-syntax-essentials) {J1, J2}
+- How do ES module imports and exports work — named, namespace, and aliasing? — [answer](level-js-es6.md#modules-importexport) {J1, J2}
+- Show me class basics — inheritance and how private and protected members work in JS. — [answer](level-js-es6.md#classes-syntax-inheritance-privacy) {J1, J2}
+- How do you make a simple request with fetch and handle the response? — [answer](level-js-es6.md#basic-fetch) {J1, J2, J3}
+- When do you pick Map or Set over an object, and how does nullish coalescing differ from ||? — [answer](level-js-es6.md#mapset-assign-vs-spread-nullish-coalescing) {J3, M1, M2, M3}
+- Why do some teams treat default exports as bad practice, and what problem does re-exporting solve? — [answer](level-js-es6.md#default-exports-and-re-exports) {J3, M1, M2, M3}
+- How does instanceof actually work, and when do you use static properties or methods? — [answer](level-js-es6.md#instanceof-and-static-members) {J3, M1, M2}
+- What states does a promise have, and what do promises fix about callbacks? — [answer](level-js-es6.md#promises-states-vs-callbacks-errors) {J3, M1}
+- Give me an async function example — how do you handle errors, and what's the common performance trap? — [answer](level-js-es6.md#asyncawait-basics-and-errors) {J3, M1}
+- What is a Symbol and when would you actually use one? — [answer](level-js-es6.md#symbol-type) {M1, M2, M3}
+- How do you send and read headers with fetch, and how do you get binary data out of a response? — [answer](level-js-es6.md#advanced-fetch-headers-and-binary-data) {M1, M2}
+- Explain promise chaining and fall-through, how you build a custom promise, and what finally is for. — [answer](level-js-es6.md#promise-chaining-custom-promises-finally) {M2, M3}
+- How do you convert a .then chain to async/await, and can class methods be async? — [answer](level-js-es6.md#rewriting-promises-with-asyncawait) {M2, M3}
+- How do generators work, and how do you compose them? — [answer](level-js-es6.md#generators-and-iterators) {M2, M3}
+
+## React
+
+### React foundations (J1–S1)
+
+- What is Fiber in React, and in your own words, what does it do? — [answer](level-react.md#react-fiber) {J1, J2}
+- At a basic level, how does React decide what to work on first? — [answer](level-react.md#scheduling-and-priority) {J1, J2}
+- How do you work with state in a class versus a functional component, and what does setState do? — [answer](level-react.md#component-state-basics) {J1, J2}
+- What is a ref in React, and why would you need one? — [answer](level-react.md#refs-why-and-what) {J1, J2}
+- What is Redux for, and what are its three principles? — [answer](level-react.md#redux-three-principles) {J1, J2, J3, M1, M2}
+- What does Redux's `connect` do, and what role does it play in the architecture? — [answer](level-react.md#connect-hoc) {J1, J2, J3, M1, M2}
+- What is an action in Redux, and what makes it different from a function call? — [answer](level-react.md#redux-actions) {J1, J2, J3, M1, M2}
+- What rules must a reducer follow, and can you write one? — [answer](level-react.md#redux-reducers) {J1, J2, J3, M1, M2}
+- What is middleware in Redux, and why does it exist? — [answer](level-react.md#redux-middleware) {J1, J2, J3, M1, M2}
+- What are hooks, and what problem did they solve? — [answer](level-react.md#why-hooks) {J2, J3}
+- Which lifecycle methods does `useEffect` replace, what's the second argument, and how do you clean up? — [answer](level-react.md#useeffect) {J2, J3}
+- How do `useState`, `useReducer`, and `useContext` work, and what do they take? — [answer](level-react.md#usestate-usereducer-usecontext) {J2, J3}
+- When and why would you use `useCallback` and `useMemo`? — [answer](level-react.md#usecallback-and-usememo) {J2, J3}
+- Explain how Fiber is implemented and how a render actually proceeds. — [answer](level-react.md#fiber-internals) {J3, M1, M2}
+- Explain in depth how React's prioritization works. — [answer](level-react.md#scheduler-priorities) {J3, M1, M2}
+- Why is `setState` asynchronous, and how do the updater form and callback work? — [answer](level-react.md#setstate-and-batching) {J3, M1}
+- Walk me through the main lifecycle methods and what each is for. — [answer](level-react.md#lifecycle-methods) {J3, M1}
+- What are `PureComponent` and `React.memo` for, why did they appear, and how do they differ from a plain component? — [answer](level-react.md#purecomponent-and-memo) {J3, M1}
+- What are refs for, and how does `forwardRef` fit in? — [answer](level-react.md#refs-and-forwardref) {J3, M1}
+- Explain the concept of React Context and when you'd use it. — [answer](level-react.md#react-context) {J3, M1}
+
+## React Native
+
+### RN foundations (J1–S1)
+
+- A new hire can't get the app to build on either platform. Walk me through what actually has to be in place. — [answer](level-react-native.md#xcode-and-android-studio-setup) {J1, J2, J3}
+- What is the bare workflow, and when would you choose it? — [answer](level-react-native.md#bare-workflow) {J1, J2, J3}
+- How does the managed Expo workflow work day to day, from CLI to a running project? — [answer](level-react-native.md#managed-workflow) {J1, J2, J3}
+- Which CLI commands do you actually run in a normal RN/Expo day, and what does each do? — [answer](level-react-native.md#expo-cli-commands) {J1, J2, J3}
+- What is Metro, and what breaks when it misbehaves? — [answer](level-react-native.md#metro-bundler) {J1, J2, J3}
+- How do you structure navigation with React Navigation — stacks, tabs, drawers? — [answer](level-react-native.md#react-navigation-basics) {J1, J2, J3}
+- What's React Native Navigation, and how does it differ from React Navigation? — [answer](level-react-native.md#react-native-navigation-basics) {J1, J2, J3}
+- What is AsyncStorage and what should you never use it for? — [answer](level-react-native.md#asyncstorage-basics) {J1, J2, J3}
+- When would you use requestAnimationFrame instead of setTimeout? — [answer](level-react-native.md#requestanimationframe) {J1, J2, J3}
+- How does layout work in React Native — how is it different from CSS flexbox on the web? — [answer](level-react-native.md#flexbox-layout) {J2, J3}
+- What do styled-components give you in RN, and what's the cost? — [answer](level-react-native.md#styled-components) {J2, J3}
+- How do you get and respond to screen size in RN, and what's the gotcha? — [answer](level-react-native.md#dimensions-api) {J2, J3}
+- What is onLayout and why not just use Dimensions to size things? — [answer](level-react-native.md#onlayout) {J2, J3}
+- Why use FlatList over a ScrollView with a map for a long list? — [answer](level-react-native.md#virtualizedlist-vs-scrollview) {J2, J3}
+- How do you keep content out from under the notch and home indicator? — [answer](level-react-native.md#safeareaview) {J2, J3}
+- Walk me through a basic animation with RN's Animated API. — [answer](level-react-native.md#animated-api-basics) {J3}
+- The app stutters. Using the Performance Monitor, how do you diagnose it? — [answer](level-react-native.md#frame-drops-and-performance-monitor) {J3}
+- What is a provisioning profile and what problem does it solve? — [answer](level-react-native.md#provisioning-profile) {J3, M1}
+- What's a distribution certificate and how does it differ from a development one? — [answer](level-react-native.md#distribution-certificate) {J3, M1}
+- What does 'validating' an app before submission actually check? — [answer](level-react-native.md#app-validation) {J3, M1}
+- Walk me through getting an iOS app from build to the App Store. — [answer](level-react-native.md#app-store-distribution) {J3, M1}
+- How does publishing to Google Play differ from the App Store? — [answer](level-react-native.md#google-play-distribution) {J3, M1}
+- What role does the APNs certificate play in iOS push notifications? — [answer](level-react-native.md#apns-certificate) {J3, M1}
+- What is a device token and how does the push flow use it? — [answer](level-react-native.md#device-token) {J3, M1}
+- How do you inspect component state and network traffic while debugging RN? — [answer](level-react-native.md#react-native-debugger) {J3}
+- What was Flipper used for, and where does it stand now? — [answer](level-react-native.md#flipper) {J3}
+- How do you debug a native Android crash or log output? — [answer](level-react-native.md#logcat) {J3}
+- Beyond a single fade, how do you compose complex animations with the Animated API? — [answer](level-react-native.md#animated-composition-and-imperative-animations) {M1, M2, M3, S1}
+- Why Reanimated over the Animated API, and how does its model differ? — [answer](level-react-native.md#reanimated-declarative-api) {M1, M2, M3, S1}
+- How do gestures work in RN, and how do you combine them with animation? — [answer](level-react-native.md#gesture-responder-system) {M1, M2, M3, S1}
+- An animation is smooth on iOS but janky on Android. How do you approach it? — [answer](level-react-native.md#cross-platform-animation-optimization) {M1, M2, M3, S1}
+- How do you make React Navigation work properly on the web? — [answer](level-react-native.md#react-navigation-on-web) {M1, M2, M3}
+- What does react-native-screens do, and how do modals and overlays fit in? — [answer](level-react-native.md#react-native-screens-and-modals) {M1, M2, M3}
+- How do you keep AsyncStorage in sync with your React state without bugs? — [answer](level-react-native.md#asyncstorage-and-state-sync) {M1, M2, M3}
+- When do you use secure storage, and what are its trade-offs? — [answer](level-react-native.md#secure-storage) {M1, M2, M3}
+- How does linking native libraries work, and when do you link manually? — [answer](level-react-native.md#linking-native-libraries) {M1, M2, M3, S1}
+- How does JavaScript actually communicate with native code in React Native? — [answer](level-react-native.md#js-to-native-bridge-communication) {M1, M2, M3, S1}
+- How do you expose a native view to React, and how do you debug it? — [answer](level-react-native.md#native-ui-components) {M1, M2, M3, S1}
+- What is Hermes and why would you enable it? — [answer](level-react-native.md#hermes-engine) {M1, M2, M3, S1}
+- What is Headless JS and when is it the right tool? — [answer](level-react-native.md#headless-js) {M1, M2, M3, S1}
+- What is Fabric and how does it differ from the old rendering system? — [answer](level-react-native.md#fabric-renderer) {M1, M2, M3, S1}
+- What is JSI and why is it foundational to the New Architecture? — [answer](level-react-native.md#jsi) {M1, M2, M3, S1}
+- How do you handle runtime permissions so the app is store-compliant and doesn't get rejected? — [answer](level-react-native.md#app-permissions) {M2, M3}
+- What is TLS/certificate pinning and what threat does it stop? — [answer](level-react-native.md#tls-pinning) {M2, M3}
+
+## Software Engineering Practices
+
+### Engineering foundations (J1–S1)
+
+- What's the difference between a class and an object, and can you define the four pillars of OOP? — [answer](level-engineering.md#oop-fundamentals) {J1, J2, J3}
+- What is an algorithm, and which basic data structures do you reach for day to day? — [answer](level-engineering.md#algorithms-and-data-structures-basics) {J1, J2, J3}
+- Walk me through how you debug a bug you've never seen before. — [answer](level-engineering.md#the-debugging-process) {J1, J2}
+- What is REST? — [answer](level-engineering.md#rest-fundamentals) {J1, J2, J3}
+- What is GraphQL and what problem does it solve? — [answer](level-engineering.md#graphql-fundamentals) {J1, J2, J3}
+- What is AJAX, how do you make a basic request, and which HTTP methods map to CRUD? — [answer](level-engineering.md#ajax-and-xhr-basics) {J1, J2, J3}
+- Why do we need CORS? — [answer](level-engineering.md#why-cors-exists) {J1, J2, J3}
+- How does long polling work? — [answer](level-engineering.md#how-long-polling-works) {J1, J2, J3}
+- What are the main WebSocket API methods and events? — [answer](level-engineering.md#websocket-api-basics) {J1, J2, J3}
+- What are Server-Sent Events, and what's the API? — [answer](level-engineering.md#server-sent-events-basics) {J1, J2, J3}
+- What is refactoring, and when do you do it? — [answer](level-engineering.md#what-refactoring-is) {J1, J2}
+- Explain test plan, suite, and case, the main test types, and what makes a good unit test. — [answer](level-engineering.md#testing-fundamentals-and-first) {J1, J2}
+- What is functional programming and what are its core concepts? — [answer](level-engineering.md#functional-programming-fundamentals) {J2, J3}
+- How do you make sure you follow a project's code conventions? — [answer](level-engineering.md#following-code-conventions) {J2, J3}
+- What is reactive programming, and what are its main building blocks? — [answer](level-engineering.md#reactive-programming-fundamentals) {J3, M1}
+- What's an automated build, and what does a build tool actually do? — [answer](level-engineering.md#automated-builds-basics) {J3, M1}
+- How do you use the browser console and logging to troubleshoot? — [answer](level-engineering.md#logging-and-the-browser-console) {J3, M1, M2}
+- Cover HTTP vs HTTPS, how you store passwords, and the common form/URL attacks. — [answer](level-engineering.md#web-security-fundamentals) {J3}
+- What code smells and anti-patterns do you watch for, and how do you manage technical debt? — [answer](level-engineering.md#code-smells-and-technical-debt) {J3, M1, M2, M3}
+- Explain the testing pyramid, TDD vs BDD, and the difference between a stub and a mock. — [answer](level-engineering.md#testing-pyramid-tdd-and-test-doubles) {J3, M1}
+- Walk me through SOLID, and give a real example of one you've applied. — [answer](level-engineering.md#solid-principles) {M1, M2, M3}
+- Contrast imperative and functional style, and explain functors, monads, and currying. — [answer](level-engineering.md#functors-monads-and-composition) {M1, M2}
+- Explain Big-O notation and compare a few sorting and searching algorithms. — [answer](level-engineering.md#big-o-and-sorting-algorithms) {M1, M2, M3, S1}
+- Caching is a REST constraint — how does it actually work over HTTP? — [answer](level-engineering.md#rest-caching-constraint) {M1, M2, M3, S1}
+- When would you choose GraphQL over REST, and what do you give up? — [answer](level-engineering.md#graphql-versus-rest) {M1, M2, M3, S1}
+- Difference between PUT, PATCH, and POST — and what do OPTIONS and HEAD do? Also, AJAX vs COMET? — [answer](level-engineering.md#put-patch-post-and-comet) {M1, M2, M3, S1}
+- Walk me through the CORS headers and when a preflight happens. — [answer](level-engineering.md#cors-headers-and-preflight) {M1, M2, M3, S1}
+- Long polling vs regular polling — what's the difference and where do you use each? — [answer](level-engineering.md#long-polling-versus-regular-polling) {M1, M2, M3, S1}
+- How do WebSockets handle cross-origin, and how do you integrate them into an app? — [answer](level-engineering.md#websocket-cross-origin-and-integration) {M1, M2, M3, S1}
+- How does CORS work with SSE and EventSource? — [answer](level-engineering.md#eventsource-and-cors) {M1, M2, M3, S1}
+- Name some threat categories, explain JSON hijacking, and contrast symmetric and asymmetric cryptography. — [answer](level-engineering.md#threats-and-cryptography) {M1, M2, M3}
+- What's your approach to code review, and which software metrics do you actually use? — [answer](level-engineering.md#code-review-and-software-metrics) {M1, M2}
+- What are the hard parts of implementing reactive programming in practice? — [answer](level-engineering.md#reactive-programming-challenges) {M2, M3, S1}
+- How do you build and maintain a real CI/CD pipeline beyond just running tests? — [answer](level-engineering.md#cicd-pipelines-and-release-automation) {M2, M3}
+- Cover the GoF pattern groups, the main macro-architecture patterns, and where UML fits. — [answer](level-engineering.md#architecture-and-design-patterns) {S1}
+
+## Software Development Processes
+
+### Process foundations (J1–S1)
+
+- Why do teams use a bug tracker like Jira instead of a spreadsheet or a Slack thread? — [answer](level-dev-processes.md#bug-tracking-systems) {J1, J2, J3}
+- Walk me through the basic Git operations you use every day and how branching lets a team work in parallel. — [answer](level-dev-processes.md#git-fundamentals-for-teamwork) {J1, J2, J3}
+- How do you estimate the effort for a task you've been assigned? — [answer](level-dev-processes.md#task-estimation-from-a-wbs) {J2, J3}
+- What's the difference between Agile, Scrum, and Kanban? — [answer](level-dev-processes.md#agile-vs-scrum-and-kanban) {J2, J3, M1}
+- What SDLC models do you know, and how do you decide which one fits a project? — [answer](level-dev-processes.md#sdlc-models-and-choosing-one) {J3, M1, M2, M3}
+- Beyond commit and push — how do you configure a repo, inspect history, and undo changes safely? — [answer](level-dev-processes.md#git-repository-administration) {M1, M2}
+- How do you estimate a whole feature or release, not just a single task — and how do you defend the number? — [answer](level-dev-processes.md#estimating-complex-projects) {M1, M2, M3}
+- Compare the Waterfall and Agile life cycles, and describe how a Scrum team is structured. — [answer](level-dev-processes.md#waterfall-vs-agile-and-scrum-roles) {M2, M3, S1}
