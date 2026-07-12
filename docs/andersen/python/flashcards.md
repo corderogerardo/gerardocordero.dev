@@ -37,6 +37,24 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Does Python have multiple inheritance? What is MRO? What class do all other classes in Python inherit from? — [answer](python-core.md#multiple-inheritance-and-mro)
 - What is Mixin? Description of the diamond problem. How does super() behave with multiple inheritance? — [answer](python-core.md#mixins-and-the-diamond-problem)
 
+### Functions & Scope
+
+- What's the difference between positional and keyword arguments, and how do default argument values work? — [answer](python-core.md#positional-keyword-and-default-arguments) {J1, J2, J3}
+- What are *args and **kwargs for, and how do they work? — [answer](python-core.md#args-and-kwargs) {J1, J2, J3}
+- How does variable scope work in Python? What is the LEGB rule? — [answer](python-core.md#scope-and-the-legb-rule) {J2, J3}
+- What do the global and nonlocal keywords do? — [answer](python-core.md#global-and-nonlocal) {J2, J3}
+- What's wrong with def f(items=[]): as a function signature? — [answer](python-core.md#the-mutable-default-argument-trap) {J2, J3}
+- What is a lambda in Python, and when would you use one? — [answer](python-core.md#lambda-functions) {J1, J2}
+
+### OOP Basics
+
+- What is a class in Python, what is an object, and what does self refer to? — [answer](python-core.md#classes-objects-and-self) {J1, J2, J3}
+- What is __init__ used for, and is it the same as a constructor? — [answer](python-core.md#the-__init__-constructor) {J1, J2, J3}
+- What's the difference between an instance attribute and a class attribute? — [answer](python-core.md#instance-attributes-vs-class-attributes) {J2, J3}
+- How does inheritance work in Python? What happens when a subclass doesn't define __init__? — [answer](python-core.md#single-inheritance-basics) {J1, J2, J3}
+- What does super() do, and why not just call the parent class by name? — [answer](python-core.md#what-super-does) {J2, J3}
+- How do you make an attribute private in Python? What's the difference between _name and __name? — [answer](python-core.md#name-mangling-and-private-attributes) {J2, J3}
+
 ## Python Types
 
 ### Python Types
@@ -61,6 +79,24 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is typing.Literal? How to use typing.NewType and how does it differ from other types? What is typing.overload? What is typing.final? — [answer](python-types.md#typingliteral-newtype-overload-and-final)
 - What is invariance, covariance and contravariance in the context of Python type annotations? — [answer](python-types.md#variance-covariance-contravariance-invariance)
 - Do annotations impose any restrictions on runtime? How to use assert_never in type checking? — [answer](python-types.md#do-type-hints-affect-runtime-and-assert_never)
+
+### Core Basics
+
+- What is the difference between static and dynamic typing? — [answer](python-types.md#static-vs-dynamic-typing) {J1, J2, J3}
+- What does "truthiness" mean in Python, and what values are falsy? — [answer](python-types.md#truthiness--what-counts-as-falsy) {J1, J2, J3}
+- How does slicing work in Python, and what does list[::-1] do? — [answer](python-types.md#slicing-lists-and-strings) {J1, J2, J3}
+- What are f-strings and why use them over .format() or %-formatting? — [answer](python-types.md#f-strings) {J1, J2}
+- What is the walrus operator := and what is it for? — [answer](python-types.md#the-walrus-operator) {J1, J2}
+- What does the type() function return in Python, and how is it different from isinstance()? — [answer](python-types.md#what-type-returns) {J1, J2}
+- How do you round a float to a certain number of decimal places, and why can the result look surprising? — [answer](python-types.md#rounding-floats) {J1, J2}
+- Give some examples of methods of the str class. — [answer](python-types.md#useful-str-methods) {J1, J2}
+- How do you declare an empty list, dict, set, and tuple? — [answer](python-types.md#declaring-empty-collections) {J1, J2, J3}
+- How do you remove an element from a list or a dictionary? — [answer](python-types.md#removing-items-from-a-list-or-dict) {J1, J2, J3}
+- How do you increment or decrement an int variable in Python? — [answer](python-types.md#incrementing-a-variable-in-python) {J3}
+- How do you use isinstance() to check against multiple types? — [answer](python-types.md#isinstance-with-multiple-types) {J3}
+- What is the difference between the str.strip(), str.rstrip(), and str.lstrip() methods? — [answer](python-types.md#strip-rstrip-and-lstrip) {J3}
+- How do the | and & operators work with bool values in Python? — [answer](python-types.md#bitwise-operators-on-booleans) {J1, J2}
+- How do you convert between int, float, and str in Python? — [answer](python-types.md#type-conversion-between-int-float-and-str) {J1, J2}
 
 ## Concurrency / Parallelism
 
@@ -220,3 +256,23 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is unit testing? What is integration testing? What is end-to-end testing? How do they differ? — [answer](engineering.md#unit-integration-and-end-to-end-testing) {J2, J3, M1, M2, M3}
 - How can I write tests for a module that interacts with the database? What is mutation testing? — [answer](engineering.md#testing-code-that-touches-the-database-and-mutation-testing) {S1, S2}
 - Differences between unittest and pytest? What is a plugin in pytest? — [answer](engineering.md#pytest-vs-unittest) {M2, M3, S1, S2}
+- What is "test coverage"? — [answer](engineering.md#test-coverage) {J2, J3}
+
+### Environments & Packaging
+
+- Why is a virtual environment (venv) necessary, and what problem does it solve? — [answer](engineering.md#why-use-a-virtual-environment) {J1, J2, J3}
+- What is pip, and what is requirements.txt used for? — [answer](engineering.md#pip-and-requirementstxt) {J1, J2, J3}
+
+### Code Standards & Review
+
+- What is PEP 8? — [answer](engineering.md#what-pep-8-is) {J2, J3}
+- What is a linter? What is a formatter, and how is it different from a linter? — [answer](engineering.md#linters-vs-formatters) {J2, J3}
+- What can docstrings be used for? — [answer](engineering.md#docstrings) {J2, J3}
+- What is a code smell? — [answer](engineering.md#code-smells) {J2, J3}
+- What is code review, and what's it actually for? — [answer](engineering.md#code-review) {J2, J3}
+- What is technical debt, and how do you avoid it piling up? — [answer](engineering.md#technical-debt) {J2, J3}
+
+### Troubleshooting
+
+- Why is the logging module needed in Python? What levels of logging does it offer? — [answer](engineering.md#the-logging-module-and-log-levels) {J3}
+- What is debugging? What methods can you use to debug a problem, including in production? — [answer](engineering.md#debugging-basics) {J3}

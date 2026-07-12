@@ -438,3 +438,194 @@ dependencies {
 
 **Say it:** "`buildType` controls how it's built, `productFlavor` controls what's built, and they multiply into variants — `implementation` hides a dependency from downstream modules while `api` leaks it transitively, which is why `implementation` is the default in any multi-module project that cares about build time."
 **Red flag:** Defaulting every dependency to `api` "to be safe." That widens the transitive compile classpath for every consuming module and directly slows incremental builds across the project — it should be a deliberate exception, not the default.
+
+### The R Class — Generated Resource IDs
+**They ask:** "What is `R`?"
+
+`R` is a class the build system generates automatically — it's not something you write. Every resource under `res/` (a layout, a string, a drawable, an ID) gets a matching integer constant in `R`, organized into nested classes by type: `R.layout.activity_main`, `R.string.app_name`, `R.id.submit_button`. That's what lets code reference resources by a compile-time-checked name instead of a hand-typed string or magic number — a typo in `R.string.wlecome` fails the build, where a typo in a raw string key would just silently fail to find the resource at runtime.
+
+```kotlin
+setContentView(R.layout.activity_main)
+val name = getString(R.string.app_name)
+```
+
+Because `R` is regenerated from the actual `res/` contents on every build, renaming or deleting a resource shows up immediately as a compile error everywhere it's referenced — that traceability is the entire reason resources go through `R` instead of raw strings.
+
+**Say it:** "`R` is generated from `res/` at build time, so every resource reference is compile-time checked — rename or delete a resource and every reference to it fails the build instead of silently breaking at runtime."
+**Red flag:** Hardcoding a resource's raw string path or numeric ID instead of referencing `R`. That throws away the entire compile-time safety net `R` exists to provide.
+
+### What Is an Intent — Explicit vs Implicit, and Passing Data
+**They ask:** "What is an `Intent`, what's the difference between explicit and implicit, and how do you pass data with one?"
+
+An `Intent` is a messaging object — it's how one component asks the system to start another component, or broadcasts that something happened, without the caller needing a direct reference to the target. That decoupling is the whole point: your Activity doesn't need to know `DetailActivity`'s implementation, just its name (or, for implicit intents, not even that).
+
+An **explicit** intent names the exact component class to start — used for navigation within your own app, where you know precisely what you're launching. An **implicit** intent describes an action to perform (`ACTION_VIEW`, `ACTION_SEND`) plus data, and lets the system resolve which installed app (yours or someone else's) can handle it — that's how "open this URL" or "share this text" work without your app knowing which browser or messaging app is installed.
+
+```kotlin
+// explicit — you know exactly which component
+startActivity(Intent(this, DetailActivity::class.java).apply {
+    putExtra("userId", "42")
+})
+
+// implicit — the system resolves a handler
+startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")))
+```
+
+Data travels as key-value **extras** (`putExtra`/`getStringExtra`, etc.), which are ultimately just a `Bundle` attached to the Intent — small, serializable values only, the same size constraints that apply to any `Bundle` passed through Binder.
+
+**Say it:** "Explicit intents name the exact component — that's normal in-app navigation — implicit intents describe an action and let the system resolve a handler, which is how cross-app actions like sharing or opening a link work without hardcoding which app receives them."
+**Red flag:** Using an implicit intent for ordinary in-app navigation "just in case." That adds resolution overhead and ambiguity for a case where you already know exactly which Activity should handle it — explicit is the right default within your own app.
+
+### What Is a Bundle, and How Do You Work With It
+**They ask:** "What is a `Bundle`, and how do you work with it?"
+
+A `Bundle` is a key-value container built to travel across process boundaries efficiently — it's what carries Intent extras, saved instance state, and Fragment arguments. The reason it exists instead of just using a `Map` is that it's designed to be parceled through Binder IPC: every value you put in has to be a primitive, a `String`, or something `Parcelable`/`Serializable` — arbitrary objects aren't allowed, because the whole `Bundle` has to be serializable to cross a process boundary.
+
+```kotlin
+val bundle = Bundle().apply {
+    putString("name", "Ann")
+    putInt("age", 25)
+}
+val name = bundle.getString("name")   // typed getters, with a default if the key is absent
+
+// Fragment arguments — the standard way to pass data into a Fragment
+val fragment = DetailFragment().apply {
+    arguments = Bundle().apply { putString("itemId", "42") }
+}
+```
+
+Typed getters (`getString`, `getInt`, …) return a sensible default (empty string, 0) if the key is missing, rather than throwing — which makes a silent typo in a key name a real bug class worth being deliberate about (constants for keys, not repeated string literals).
+
+**Say it:** "A `Bundle` only accepts primitives, `String`, and `Parcelable`/`Serializable` because the whole thing has to survive being parceled across a process boundary — that constraint is also why it's the standard container for Intent extras, saved state, and Fragment arguments."
+**Red flag:** Repeating a raw string literal as a `Bundle` key at both the put and get call sites. A typo compiles fine and just silently returns the default value — use a shared constant for the key instead.
+
+### SharedPreferences — Simple Key-Value Persistence
+**They ask:** "What is `SharedPreferences`, and when do you use it?"
+
+`SharedPreferences` is Android's simplest persistence mechanism — a key-value store, backed by an XML file per named preferences group, meant for small settings and flags (a theme choice, "has the user seen onboarding," a feature toggle) rather than structured or relational data. Reaching for it over Room for anything list-shaped or queryable is the classic misuse — it has no query capability at all, just get/put by key.
+
+```kotlin
+val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+prefs.edit().putBoolean("onboarding_done", true).apply()   // async write, fire-and-forget
+prefs.edit().putString("theme", "dark").commit()            // sync write, blocks until done
+
+val done = prefs.getBoolean("onboarding_done", false)       // default if key absent
+```
+
+`apply()` writes to the in-memory cache immediately and persists to disk asynchronously — the right default for almost every write, since you don't need to block on the disk I/O. `commit()` writes synchronously and returns a success boolean, which is only worth the blocking cost when you genuinely need to know the write completed before proceeding (rare in practice).
+
+**Say it:** "`SharedPreferences` is for small flags and settings, not structured data — Room is the right tool once there's anything list-shaped or queryable — and `apply()` should be the default write since it doesn't block the caller on disk I/O the way `commit()` does."
+**Red flag:** Calling `commit()` out of habit for every write instead of `apply()`. That blocks the calling thread on disk I/O for no reason in the common case where you don't need a synchronous success guarantee.
+
+### What Is an Activity, and Why Does Android Need It
+**They ask:** "What is an `Activity`?"
+
+An `Activity` is a single, focused screen with a window the user can interact with — it's the entry point Android uses to present UI and route user input, and every app that shows a screen has at least one. It's not just "a screen you draw on": it's a full-blown component registered in the manifest, managed by the system's lifecycle (creation, visibility, focus, destruction), and it's the unit the system's back stack and task model operate on.
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+    }
+}
+```
+
+Because the system owns the Activity's lifecycle rather than your code, an Activity can be created, stopped, and destroyed at times outside your control (backgrounding, low memory, rotation) — which is exactly why lifecycle-aware state handling (`ViewModel`, `onSaveInstanceState`) matters instead of treating an Activity like a plain, long-lived object you fully control.
+
+**Say it:** "An Activity is a single UI screen that the system, not my code, owns the lifecycle of — it's registered in the manifest, participates in the back stack, and can be torn down and recreated outside my control, which is why lifecycle-aware state handling exists."
+**Red flag:** Treating an Activity instance like a regular long-lived object — holding a static reference to one, or assuming it survives as long as the app process does. The system can destroy and recreate it at any time.
+
+### What Is a Fragment, and Why Use One Instead of an Activity
+**They ask:** "What is a `Fragment`, and why would you use one instead of just another Activity?"
+
+A `Fragment` is a reusable, modular piece of UI and behavior that lives *inside* a host Activity — it exists to solve composition: instead of one Activity per screen, you build a screen from several independent, swappable Fragments, which is what makes tablet/multi-pane layouts (a list Fragment and a detail Fragment side by side) and dynamic navigation within one Activity practical.
+
+```kotlin
+class ListFragment : Fragment(R.layout.fragment_list) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // set up this piece of UI independently of whatever else the host Activity shows
+    }
+}
+```
+
+A Fragment can't exist without a host Activity — it has no window of its own, and it inherits (and layers its own lifecycle on top of) the host's lifecycle. The practical payoff over a second Activity: swapping Fragments in and out of a container is cheaper and more flexible than launching a whole new Activity, and it's the natural unit for screens that need to be reused across different layouts or navigation flows (like Jetpack Navigation's destinations).
+
+**Say it:** "A Fragment is a modular, reusable piece of UI that has to live inside a host Activity — I reach for one over a second Activity when a screen needs to be composed, swapped, or reused across different layouts, not just for the sake of splitting code up."
+**Red flag:** Reaching for a Fragment purely to "organize code" for a screen that's really one self-contained flow with no reuse or composition need. A Fragment adds real lifecycle complexity (its own view lifecycle on top of the host's) — that cost should buy you something.
+
+### Basic View Containers — LinearLayout, RelativeLayout, and FrameLayout
+**They ask:** "What are the basic view containers/layouts in Android?"
+
+A layout (`ViewGroup`) exists to arrange its children according to one specific positioning rule — picking the right one avoids fighting the layout to do something it wasn't designed for. `LinearLayout` arranges children in a single row or column, in the order declared, sized via `layout_weight` to distribute extra space — the simplest container, but it can't express "align this view relative to that one," and deeply nested `LinearLayout`s hurt measure/layout performance. `RelativeLayout` (now largely superseded by `ConstraintLayout`) positions each child relative to the parent or to sibling views (`layout_below`, `layout_toEndOf`) — more flexible than `LinearLayout` for complex arrangements, at the cost of `ConstraintLayout` doing the same job with a flatter hierarchy. `FrameLayout` stacks children on top of each other, z-ordered by declaration order — the right tool for overlaying content (a loading spinner over content, a badge over an icon), and it's what a single-Fragment container typically is under the hood.
+
+```xml
+<FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+    <ImageView android:id="@+id/photo" ... />
+    <ProgressBar android:id="@+id/spinner" ... />  <!-- drawn on top -->
+</FrameLayout>
+```
+
+**Say it:** "I pick the container by the arrangement rule I actually need — `LinearLayout` for a simple row/column, `FrameLayout` for stacking/overlaying, and for anything relative or complex, `ConstraintLayout` over `RelativeLayout` for the flatter hierarchy."
+**Red flag:** Nesting several `LinearLayout`s to fake a relative arrangement `ConstraintLayout` would express in one flat layout. Each nested layout is a real extra measure/layout pass — that's a performance cost paid for a layout choice, not a necessity.
+
+### EditText and TextWatcher — Tracking Input Changes
+**They ask:** "How do you keep track of what a user types into an `EditText`?"
+
+`EditText` is the standard text-input `View`, and reacting to what the user types happens through a `TextWatcher` — a listener you attach that fires at each stage of a text change, not just once when the whole thing is "done." That granularity is what makes live behaviors possible: character counters, real-time validation, or search-as-you-type filtering.
+
+```kotlin
+editText.addTextChangedListener(object : TextWatcher {
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+        viewModel.onQueryChanged(s.toString())   // fires on every keystroke
+    }
+    override fun afterTextChanged(s: Editable?) {}
+})
+```
+
+`beforeTextChanged` fires with the old text just before the change; `onTextChanged` fires with the new text mid-change (the one most code actually cares about); `afterTextChanged` fires once the change is fully applied and is the only one where it's safe to *modify* the text without triggering infinite recursion. In Compose, the equivalent is simply observing `TextFieldValue`/`String` state directly — `TextWatcher` is a View-system-specific pattern.
+
+**Say it:** "`TextWatcher` gives me three hooks around a text change — before, during, and after — `onTextChanged` is the one most live-validation and search-as-you-type logic hooks into, and `afterTextChanged` is the only safe place to mutate the text itself."
+**Red flag:** Calling `editText.setText(...)` inside `onTextChanged` to "auto-correct" input. That re-triggers the watcher and can recurse — text mutation belongs in `afterTextChanged`, guarded against re-entrancy.
+
+### RecyclerView Components and LayoutManager Types
+**They ask:** "What are RecyclerView's basic components, and what types of `LayoutManager` are there?"
+
+RecyclerView is deliberately split into three collaborating pieces instead of one monolithic list view, and that split is what makes it configurable. The **Adapter** owns the data and knows how to bind an item at a position to a view (`onCreateViewHolder`/`onBindViewHolder`). The **ViewHolder** caches a single item's view references. The **LayoutManager** owns positioning and scrolling — it's a separate, swappable object specifically so the same Adapter/data can be displayed as a list, a grid, or a staggered grid without touching binding logic at all.
+
+```kotlin
+recyclerView.layoutManager = LinearLayoutManager(context)                    // single column/row
+recyclerView.layoutManager = GridLayoutManager(context, 2)                    // fixed-span grid
+recyclerView.layoutManager = StaggeredGridLayoutManager(2, VERTICAL)          // variable-height grid
+recyclerView.adapter = MyAdapter(items)
+```
+
+`LinearLayoutManager` lays items out in a single scrollable line (vertical or horizontal). `GridLayoutManager` arranges them in a fixed number of columns/rows of equal span. `StaggeredGridLayoutManager` allows items of different lengths in the scroll direction (a Pinterest-style masonry grid), at the cost of items being able to reorder slightly as content loads.
+
+**Say it:** "Adapter owns the data-to-view binding, ViewHolder caches one item's view lookups, and LayoutManager owns positioning — splitting those apart is what lets the same Adapter drive a linear list, a grid, or a staggered grid just by swapping the LayoutManager."
+**Red flag:** Putting layout/positioning logic inside the Adapter "because that's where the data is." That couples data binding to a specific layout shape — the entire reason LayoutManager is a separate, swappable object is to keep those concerns apart.
+
+### Main Thread and Why View Access Must Happen There
+**They ask:** "Why can't you touch a View from a background thread?"
+
+Android's View system is deliberately **not thread-safe** — there's no internal locking protecting a View's state, which is a performance choice, not an oversight: adding synchronization to every View operation would slow down the single-threaded case that's actually the common one. The trade-off the framework makes instead: only the thread that created the View hierarchy (the main/UI thread) is allowed to touch it, enforced by a runtime check.
+
+```kotlin
+Thread {
+    val data = fetchFromNetwork()      // fine — background work
+    textView.text = data               // throws CalledFromWrongThreadException
+}.start()
+
+Thread {
+    val data = fetchFromNetwork()
+    runOnUiThread { textView.text = data }   // correct — hops back to main thread first
+}.start()
+```
+
+Touching a View off the main thread throws `CalledFromWrongThreadException` at runtime specifically to surface the bug immediately and loudly, rather than letting it corrupt View state silently and unpredictably depending on scheduling luck — the same class of bug a real data race would cause, just made deterministic and loud instead of intermittent.
+
+**Say it:** "Views aren't thread-safe by design — only the thread that created them can touch them — and `CalledFromWrongThreadException` exists to fail loudly and immediately instead of letting an unsynchronized View mutation corrupt state unpredictably."
+**Red flag:** "Fixing" the crash by wrapping the background thread's UI update in a try/catch instead of dispatching back to the main thread. That suppresses the crash without fixing the actual thread-safety violation underneath it.

@@ -121,3 +121,48 @@ A custom transition replaces UIKit's default push/present animation with your ow
 
 **Say it:** "Safe area anchors abstract away device-specific chrome so I never hardcode a notch offset — and a custom transition is `UIViewControllerAnimatedTransitioning` plus a transitioning delegate telling UIKit to use it instead of the default push/present animation."
 **Red flag:** Hardcoding a top inset for the status bar or notch instead of anchoring to `safeAreaLayoutGuide` — it silently breaks on the next device with a different safe-area shape.
+
+### The Delegate Pattern
+**They ask:** "What is the delegate pattern, and why is a delegate usually `weak`?"
+
+Delegation is how one object hands off decisions or events to another without hard-coding who that other object is — it's the backbone of UIKit (a `UITableView` doesn't know what to display, so it asks its delegate/dataSource). You define a protocol, the "delegating" object holds a reference typed as that protocol, and another object conforms and does the work. The reference is declared `weak` because the delegate is almost always the owner (a view controller owns the table view, and the table view points back at it) — a strong reference both ways is a retain cycle that leaks both objects.
+
+```swift
+protocol PickerDelegate: AnyObject { func didPick(_ value: String) }
+class Picker { weak var delegate: PickerDelegate? }   // weak breaks the cycle
+```
+
+**Say it:** "Delegation lets an object delegate behavior to another through a protocol, so it stays reusable and doesn't know its owner's type — and I make the delegate `weak` because the delegate usually owns the object, and two strong references would be a retain cycle."
+**Red flag:** Declaring a delegate `strong` (or forgetting `weak`). It silently leaks both objects; the giveaway in an interview is not knowing *why* delegates are weak.
+
+### UIViewController vs UIView
+**They ask:** "What's the difference between a UIView and a UIViewController?"
+
+A `UIView` draws something and handles touches inside its own rectangle — a button, a label, a container. A `UIViewController` manages a *screen's worth* of views plus its lifecycle and navigation: it owns a root view (`self.view`), responds to lifecycle events (`viewDidLoad`, `viewWillAppear`), and is what you push/present when moving between screens. So views are the visual building blocks; the controller is the coordinator that assembles them and connects them to data and navigation.
+
+**Say it:** "A UIView is a single visual/touch element; a UIViewController manages a screen — it owns a root view, gets lifecycle callbacks, and is the unit I navigate between."
+**Red flag:** Putting networking, business logic, and data all inside a `UIViewController` because "that's where the code goes." That's the Massive-View-Controller anti-pattern — the controller should coordinate, not do everything.
+
+### IBOutlet and IBAction
+**They ask:** "What are IBOutlet and IBAction?"
+
+They're the two connections between a Storyboard/XIB and your code. An `@IBOutlet` is a reference *from* code *to* a view laid out in Interface Builder, so you can read or change it at runtime (`label.text = ...`). An `@IBAction` is a method the UI calls *back* when an event happens (a button tap), wired up in Interface Builder. Outlets are usually `weak` because the view hierarchy already holds the view strongly. Mechanically they're just target-action and a property reference with a special attribute so Interface Builder can see them.
+
+**Say it:** "An IBOutlet is a code reference to a view built in Interface Builder so I can update it; an IBAction is a method Interface Builder calls on an event like a tap. Outlets are weak because the view hierarchy already owns the view."
+**Red flag:** A crash like "this class is not key value coding-compliant for the key…" — it almost always means an outlet/action is still wired in the Storyboard to a property you renamed or deleted. Knowing that connection is where a junior earns trust.
+
+### UINavigationController — push and pop
+**They ask:** "How does navigation between screens work with a UINavigationController?"
+
+A `UINavigationController` manages a **stack** of view controllers — the classic drill-in/back flow. You `pushViewController(_:animated:)` to go deeper (new screen slides in, a back button appears automatically), and `popViewController` (or the back button) to return. Presenting modally (`present(_:animated:)`) is the other model — a screen that comes up over everything for a self-contained task, dismissed with `dismiss`. So: push/pop for hierarchical navigation, present/dismiss for a modal interruption.
+
+**Say it:** "A navigation controller is a stack of view controllers — I push to drill in and pop to go back, with the back button managed for me — while present/dismiss is for modal screens that sit on top for a focused task."
+**Red flag:** Trying to push onto a view controller that isn't inside a navigation controller (nothing happens, `navigationController` is nil). Knowing a VC needs to be *embedded* in a nav controller to push is basic but commonly missed.
+
+### Storyboard vs XIB vs programmatic UI
+**They ask:** "What are the ways to build a UIKit screen, and what's the trade-off?"
+
+Three options. **Storyboards** lay out multiple screens and their segues visually — fast to start, but they merge badly in git and hide layout logic from code review. **XIBs** are a single reusable view/cell in Interface Builder — good for a custom cell you reuse. **Programmatic** UI writes views and Auto Layout constraints in Swift — more verbose, but it's diff-friendly, reviewable, and easy to make dynamic. Teams often mix: programmatic for anything shared or complex, XIBs for reusable cells.
+
+**Say it:** "Storyboards are visual and fast but merge-conflict badly; XIBs are good for a reusable cell; programmatic UI is more code but diff-friendly and reviewable — I lean programmatic for shared/complex views and reach for Interface Builder for quick or reusable pieces."
+**Red flag:** Insisting one approach is universally "correct." The senior signal is naming the git-merge and code-review trade-off, not picking a side dogmatically.

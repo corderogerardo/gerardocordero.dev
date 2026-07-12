@@ -317,3 +317,55 @@ const result = schema.safeParse(req.body); // validate at the boundary, reject i
 
 **Say it:** "Validation rejects at the input boundary with a schema so bad data never reaches business logic; sanitization transforms at the output boundary, specific to where the data is headed — conflating the two, like trying to 'sanitize' invalid input into something acceptable, hides bugs instead of surfacing them."
 **Red flag:** "Fixing" invalid input by silently coercing it into something plausible (e.g. clamping an out-of-range value) instead of rejecting the request. The caller never learns their integration is sending bad data, and the silent coercion can mask a real upstream bug.
+
+### Managing secrets across environments
+**They ask:** "How do you handle secrets — DB passwords, API keys — across dev, staging, and prod?"
+
+The principle is **secrets never live in the repo and never in the image** — they're injected at runtime from a secret manager, and the code reads them from the environment. In practice: a real secret store (AWS Secrets Manager, Vault, cloud KMS-backed config) holds the values; the platform injects them as env vars or mounted files at deploy time; each environment has its own set so a leaked staging key can't touch prod; and rotation is possible *because* the value lives in one managed place, not scattered across configs. Local dev uses a **gitignored** `.env` (loaded by the runtime or a tool) with throwaway values — never the production ones.
+
+**Say it:** "Secrets come from a managed store injected at runtime, per-environment, so nothing sensitive is in the repo or the image and I can rotate a key in one place — local dev uses a gitignored .env with dummy values, never prod secrets."
+**Red flag:** A committed `.env` file, or the same API key hardcoded across environments. Once a secret is in git history it's compromised forever (rotate it), and a shared key means a staging leak is a production breach.
+
+### Preventing injection in a Node backend
+**They ask:** "How do you prevent SQL and NoSQL injection in a Node service specifically?"
+
+Injection happens when user input is concatenated into a query so it can change the query's *structure*; the fix is to never build queries by string-joining input. For **SQL**, use parameterized queries / prepared statements — the driver sends the query and the values separately, so input is always data, never executable SQL (an ORM or query builder does this for you, but raw driver calls must use `$1`/`?` placeholders, not template strings). For **NoSQL** like MongoDB, the attack is *operator injection* — a JSON body like `{ "password": { "$gt": "" } }` turns an equality check into "any password" — so you validate/cast input to the expected type (a string stays a string) before it reaches the query, and reject object-shaped values where you expect a scalar.
+
+```js
+// SQL — parameterized, input can never alter structure
+await db.query('SELECT * FROM users WHERE email = $1', [email]);
+// NoSQL — cast/validate so { "$gt": "" } can't sneak in as an operator
+const email = String(req.body.email);
+```
+
+**Say it:** "I never concatenate input into queries — parameterized statements for SQL so input is always data, and type-validating input for Mongo so an attacker can't inject a `$gt` operator where I expect a string."
+**Red flag:** Building a SQL string with template literals (`` `WHERE id = ${id}` ``) "because it's just an internal endpoint," or trusting request-body shapes in a Mongo query. Both are injection; internal endpoints get compromised too.
+
+### Health checks: liveness vs readiness
+**They ask:** "Your service exposes health checks for the orchestrator. What's the difference between liveness and readiness?"
+
+They answer two different questions, and conflating them causes outages. **Liveness** = "is this process broken beyond recovery?" — if it fails, the orchestrator *restarts* the pod. It must be cheap and must NOT depend on downstream services, or a database blip restarts every healthy replica in a cascade. **Readiness** = "can this instance serve traffic *right now*?" — if it fails, the orchestrator stops routing to it but leaves it running. Readiness *should* check dependencies (DB reachable, cache warm, migrations done) and during graceful shutdown you flip readiness to false first so the load balancer drains you before you stop. Same endpoint shape, opposite consequences on failure.
+
+**Say it:** "Liveness answers 'restart me?' and must not depend on downstreams or a DB blip cascades into mass restarts; readiness answers 'route to me?' and does check dependencies, and I fail readiness first on shutdown so traffic drains before the process exits."
+**Red flag:** Putting a database ping in the *liveness* check. When the DB has a hiccup, every replica fails liveness and gets restarted simultaneously — you've turned a brief dependency blip into a full self-inflicted outage.
+
+### Handling file uploads safely
+**They ask:** "A Node endpoint accepts file uploads. What do you have to get right?"
+
+Uploads are a classic attack surface, so a senior names the guardrails without prompting. **Bound the size** — enforce a max at the streaming layer (multer/busboy limits) so a huge upload can't exhaust memory or disk; reject over-limit early. **Validate the type by content, not the filename** — check the magic bytes / real MIME, because an attacker renames `evil.exe` to `photo.png`. **Never trust the client filename for the storage path** — a name like `../../etc/passwd` is a path-traversal write; generate your own id and store under it. And **stream to final storage** (S3/blob) rather than buffering the whole file in the process. Serve uploads from a separate origin/bucket so a malicious file can't run in your app's security context.
+
+**Say it:** "I cap upload size at the stream, validate the real content type by magic bytes rather than the filename, generate my own storage key so the client's filename can't traverse paths, and stream straight to object storage instead of buffering in the process."
+
+### console.log debugging vs a real debugger
+**They ask:** "When do you reach for console.log versus an actual debugger?"
+
+`console.log` is fast and fine for a quick "is this value what I think it is" check, but it doesn't scale — for a real bug you end up adding, removing, and re-adding print statements while guessing at what to log next. A real debugger (`node --inspect app.js`, then attach Chrome DevTools or your editor) lets you set **breakpoints**, pause execution at that exact line, **inspect** every variable in scope at that moment, and **step** through code line by line — no guessing, no rerunning the whole program to check one more value.
+
+```bash
+node --inspect index.js        # then open chrome://inspect, or attach VS Code
+node --inspect-brk index.js    # same, but pauses on the very first line
+```
+
+**Say it:** "console.log is fine for a quick spot-check, but once I'm actually hunting a bug I reach for node --inspect and set a real breakpoint — I can inspect the whole call stack and every variable in scope instead of guessing what to print next."
+**Red flag:** Debugging a non-trivial issue purely by sprinkling `console.log` everywhere and re-running. It's slow and it's easy to leave stray logs in the code — a breakpoint gets you the same information in one pass, without touching the source.
+**Red flag:** Saving an upload using the client-supplied filename into a served directory. That's both path traversal (`../`) and, if it lands somewhere executable or served as HTML, stored XSS or worse — the filename is attacker-controlled input.

@@ -83,3 +83,19 @@ Not every backend is REST/JSON: **SOAP** needs an XML request/response layer (`X
 
 **Say it:** "My APIClient centralizes request building, typed error mapping by status-code range, and retry policy so feature code never touches `URLSession` directly — and for non-REST backends I swap the transport (XML parsing for SOAP, a re-issuing loop for long polling) without changing that contract."
 **Red flag:** Treating every non-2xx response as the same generic "network error." Collapsing 401 and 500 into one case means the UI can't distinguish "log in again" from "retry later."
+
+### Making a Basic Network Request
+**They ask:** "How do you make a simple GET request and decode JSON in Swift?"
+
+You use `URLSession` — no third-party library needed for the basics. Create a data task with a URL, and in the completion handler you get back `data`, a `response`, and an `error`; you check the error, then decode the `data` into a `Codable` model with `JSONDecoder`. The task doesn't start until you call `.resume()`, and the completion runs on a background thread, so any UI update from it must hop to the main thread.
+
+```swift
+struct User: Codable { let id: Int; let name: String }
+URLSession.shared.dataTask(with: url) { data, _, error in
+    guard let data, error == nil else { return }
+    let user = try? JSONDecoder().decode(User.self, from: data)
+}.resume()   // nothing happens without resume()
+```
+
+**Say it:** "I make a `URLSession` data task, check the error, then decode the data into a `Codable` model with `JSONDecoder` — remembering `.resume()` starts it and the callback is off the main thread, so UI updates hop back to main."
+**Red flag:** Forgetting `.resume()` — the request silently never fires, and the junior spends an hour wondering why no data comes back. Naming that catch shows you've actually written the code.

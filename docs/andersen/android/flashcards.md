@@ -4,6 +4,19 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ## Android Core
 
+### Junior Foundations
+
+- What is `R`? — [answer](android-core.md#the-r-class--generated-resource-ids) {J1, J2, J3}
+- What is an `Intent`, what's the difference between explicit and implicit, and how do you pass data with one? — [answer](android-core.md#what-is-an-intent--explicit-vs-implicit-and-passing-data) {J1, J2, J3}
+- What is a `Bundle`, and how do you work with it? — [answer](android-core.md#what-is-a-bundle-and-how-do-you-work-with-it) {J1, J2, J3}
+- What is `SharedPreferences`, and when do you use it? — [answer](android-core.md#sharedpreferences--simple-key-value-persistence) {J1, J2, J3}
+- What is an `Activity`? — [answer](android-core.md#what-is-an-activity-and-why-does-android-need-it) {J1, J2, J3}
+- What is a `Fragment`, and why would you use one instead of just another Activity? — [answer](android-core.md#what-is-a-fragment-and-why-use-one-instead-of-an-activity) {J1, J2, J3}
+- What are the basic view containers/layouts in Android? — [answer](android-core.md#basic-view-containers--linearlayout-relativelayout-and-framelayout) {J1, J2, J3}
+- How do you keep track of what a user types into an `EditText`? — [answer](android-core.md#edittext-and-textwatcher--tracking-input-changes) {J1, J2, J3}
+- What are RecyclerView's basic components, and what types of `LayoutManager` are there? — [answer](android-core.md#recyclerview-components-and-layoutmanager-types) {J1, J2, J3}
+- Why can't you touch a View from a background thread? — [answer](android-core.md#main-thread-and-why-view-access-must-happen-there) {J1, J2, J3}
+
 ### Android Core
 
 - What is `Context`, and what's the difference between Application context and Activity context? — [answer](android-core.md#context--what-it-is-and-the-two-flavors)
@@ -41,6 +54,15 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What's the difference between `buildType` and `productFlavor`, and between the `implementation` and `api` dependency configurations? — [answer](android-core.md#gradle-essentials-buildtype-vs-productflavor-implementation-vs-api)
 
 ## Kotlin
+
+### Junior Foundations
+
+- How do default parameters work in Kotlin, for both methods and constructors? — [answer](kotlin.md#named-and-default-arguments) {J1, J2, J3}
+- What are extension functions, and how do you call one from Java? — [answer](kotlin.md#extension-functions) {J1, J2, J3}
+- What's the syntax for a Kotlin lambda, and what's 'trailing lambda syntax' for? — [answer](kotlin.md#lambda-expressions-and-trailing-lambda-syntax) {J1, J2, J3}
+- How do you check a type at runtime in Kotlin, and what's the difference between `as` and `as?`? — [answer](kotlin.md#type-checks-and-casts--is-and-as) {J1, J2, J3}
+- Why does Kotlin divide collections into mutable and immutable, and what's the difference? — [answer](kotlin.md#mutable-vs-immutable-collections) {J1, J2, J3}
+- What does the `suspend` keyword actually do? — [answer](kotlin.md#what-is-a-suspend-function) {J1, J2, J3}
 
 ### Kotlin
 
@@ -87,6 +109,13 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ## Technologies
 
+### Junior Foundations
+
+- What DI libraries do you know, and how would you pick between them? — [answer](technologies.md#di-libraries-on-android--dagger2-hilt-and-koin-at-a-glance) {J1, J2, J3}
+- What is JSON, and why is it the default data format for Android network calls? — [answer](technologies.md#what-is-json-and-why-does-android-use-it-for-apis) {J1, J2, J3}
+- What is a database, and what's the difference between a primary key and a foreign key? — [answer](technologies.md#what-is-a-database-and-primary-key-vs-foreign-key) {J1, J2, J3}
+- How do you download an image from the network, and why not just do it by hand? — [answer](technologies.md#downloading-an-image-over-the-network) {J1, J2, J3}
+
 ### Dependency Injection
 
 - What is Dependency Injection? How do you implement it, and why is it needed? — [answer](technologies.md#dependency-injection--why-and-how) {J2, J3, M1}
@@ -130,6 +159,17 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - When would you choose coroutines over RxJava, or vice versa, on a real project? — [answer](concurrency.md#coroutines-vs-rxjava--choosing-a-concurrency-model) {S1, S2}
 
 ## JVM
+
+### Junior Foundations
+
+- What is `equals()` for, and how does it differ from `==`? — [answer](jvm.md#equals-vs-reference-equality-in-java) {J1, J2, J3}
+- What are `equals()` and `hashCode()` for, and why do you need to override them together? — [answer](jvm.md#equals-and-hashcode--the-contract) {J1, J2, J3}
+- What methods does every Java `Object` have, and what are they for? — [answer](jvm.md#object-class--core-methods) {J1, J2, J3}
+- What is an `Enum`, and why use one instead of constants? — [answer](jvm.md#enums--what-theyre-for) {J1, J2, J3}
+- What's the difference between an abstract class and an interface? — [answer](jvm.md#abstract-classes-vs-interfaces) {J1, J2, J3}
+- What types of exceptions are there in Java? — [answer](jvm.md#java-exception-hierarchy--error-exception-and-runtimeexception) {J1, J2, J3}
+- Where can `final` be used, and what does it do in each case? — [answer](jvm.md#the-final-keyword) {J1, J2, J3}
+- Where can `static` be used, and how does it affect behavior? — [answer](jvm.md#the-static-keyword) {J1, J2, J3}
 
 ### Memory
 

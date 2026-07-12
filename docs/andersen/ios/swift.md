@@ -175,3 +175,241 @@ Behind the scenes the compiler rewrites that block into calls against a type con
 
 **Say it:** "`@resultBuilder` is what turns SwiftUI's declarative `body` block into a real composed view tree at compile time — `if`/`switch` inside it work because the builder implements `buildEither`, not because SwiftUI runs arbitrary control flow."
 **Red flag:** Treating a `@ViewBuilder` block like ordinary imperative code — no loops without `ForEach`, no more than 10 siblings without grouping, because the compiler is generating nested generic types, not executing a script.
+
+### var vs let
+**They ask:** "When do you use `var` versus `let`, and why does Swift push you toward `let`?"
+
+Swift defaults to immutability because a value that can't change is one entire category of bug you don't have to reason about — you never have to trace where it might have been mutated. `let` declares a constant: assign it once, and any further assignment is a compile error. `var` declares a mutable variable you can reassign as many times as you want. The convention is to declare everything `let` first, and only change to `var` when the compiler actually complains that you're reassigning it.
+
+```swift
+let maxRetries = 3          // never changes — let
+var attempt = 0              // changes each loop — var
+attempt += 1
+```
+
+**Say it:** "I default to `let` and only reach for `var` when the compiler tells me a value genuinely needs to change — immutable-by-default catches a class of bugs before they exist."
+**Red flag:** Declaring everything `var` out of habit. It's not just style — a `let` you can't accidentally reassign is a guarantee the compiler enforces for you, for free.
+
+### Access Control in Swift
+**They ask:** "Walk me through Swift's access levels — private, fileprivate, internal, public, open."
+
+Access control exists to draw a hard line around a type's implementation details so the rest of the codebase — or consumers of your framework — can only touch what you deliberately expose, which is what makes refactoring internals safe. From most to least restrictive: `private` (visible only inside the enclosing declaration, or an extension in the same file since Swift 4), `fileprivate` (visible anywhere in the same file), `internal` (the default — visible anywhere in the same module), `public` (visible outside the module, but not subclassable/overridable from outside), and `open` (public, plus subclassable and overridable from outside the module).
+
+```swift
+public class Account {
+    private var balance: Double = 0          // only Account (and same-file extensions) can touch this
+    public func deposit(_ amount: Double) { balance += amount }   // the only sanctioned way to change it
+}
+```
+
+**Say it:** "`internal` is the default and covers most app code; I reach for `private` to lock down implementation details, and `public`/`open` only at a module boundary — `open` specifically when I want external code to subclass."
+**Red flag:** Marking everything `public` in a framework "to be safe." That locks you into every property and method as permanent API surface — you can't tighten it later without a breaking change.
+
+### Extensions
+**They ask:** "What are Swift extensions for, and what can't they do?"
+
+Extensions add functionality to an existing type — including ones you don't own, like `String` or a UIKit class — without subclassing or modifying the original source. That's the whole value: it lets you organize code by capability (a `Date+Formatting` extension) instead of cramming everything into one type definition, and it's how you retroactively make a type conform to a protocol.
+
+```swift
+extension String {
+    var isValidEmail: Bool { contains("@") && contains(".") }
+}
+
+extension Int: Identifiable {   // retroactively conform a type you don't own
+    public var id: Int { self }
+}
+```
+
+An extension can add computed properties, methods, initializers, and protocol conformances, but it cannot add stored properties or override existing methods — because it doesn't get its own storage layout, and adding one after the fact would break every existing instance of the type.
+
+**Say it:** "Extensions let me add behavior — including protocol conformance — to a type I don't own, without subclassing; the one thing they can't do is add stored properties, because they don't get their own memory layout."
+**Red flag:** Trying to add a stored property in an extension and being surprised it doesn't compile — that's not a syntax gap, it's because extensions don't allocate storage.
+
+### Structs, Tuples, and Enums
+**They ask:** "Give me the quick version — what's a struct, a tuple, and an enum in Swift, and when do you reach for each?"
+
+These are Swift's three lightweight ways to group data, and each earns its place for a different shape of problem. A **struct** is a named value type with properties and methods — reach for it the moment the data has a stable shape you'll reuse (a `User`, a `Point`). A **tuple** is an unnamed, ad-hoc grouping of values — good for a quick, local return of 2-3 related values that don't deserve their own named type. An **enum** models a *closed set of cases* — a value that's exactly one of a fixed list of options, optionally carrying its own data per case.
+
+```swift
+struct User { let id: Int; let name: String }        // reusable, named shape
+func minMax(_ nums: [Int]) -> (min: Int, max: Int) {   // tuple: quick, local, throwaway
+    (nums.min()!, nums.max()!)
+}
+enum Direction { case north, south, east, west }        // closed set of cases
+```
+
+**Say it:** "I reach for a struct when the data has a shape I'll reuse, a tuple for a quick local grouping that doesn't deserve a name, and an enum the moment the value is genuinely one of a fixed, closed set of options."
+**Red flag:** Returning a tuple from a public API instead of a named struct. It works, but it gives callers no labels to lean on at the call site and no room to grow without breaking every caller.
+
+### Computed Properties vs Stored Properties
+**They ask:** "What's the difference between a stored and a computed property?"
+
+A **stored** property holds an actual value in memory — assign it, and it stays until you assign again. A **computed** property holds no storage at all; instead it runs a `get` (and optionally `set`) block every time you access it, deriving its value from other properties. The distinction matters because a computed property is never stale — it always reflects its current inputs — at the cost of recomputing on every access, versus a stored value that's cheap to read but has to be kept in sync manually.
+
+```swift
+struct Rectangle {
+    var width: Double
+    var height: Double
+    var area: Double { width * height }   // computed — always current, recalculated on read
+}
+```
+
+**Say it:** "A stored property holds a value; a computed property derives one on every access — I reach for computed when the value must never go stale relative to its inputs, and accept the small recompute cost."
+**Red flag:** Storing a derived value (like `area`) and manually updating it everywhere `width`/`height` change. That's exactly the staleness bug a computed property exists to eliminate.
+
+### guard vs if let
+**They ask:** "`guard let` versus `if let` — when do you reach for each?"
+
+Both safely unwrap an optional, but they differ in what happens to scope. `if let` binds the unwrapped value only *inside* the `if` block — once you leave it, the binding is gone. `guard let` requires an early exit (`return`, `continue`, `throw`) in its `else` branch, and in exchange the unwrapped value stays available for the *rest* of the enclosing scope, not just one block.
+
+```swift
+func greet(_ name: String?) {
+    guard let name else {          // Swift 5.7+ shorthand: guard let name = name
+        print("no name"); return
+    }
+    print("Hello, \(name)")         // name is available for the rest of the function
+}
+```
+
+The senior default for early-return validation code is `guard let`, precisely because it avoids the "pyramid of doom" — nested `if let`s marching the code rightward — and keeps the happy path un-indented and readable top to bottom.
+
+**Say it:** "`if let` scopes the unwrapped value to one block; `guard let` forces an early exit but keeps the value available for the rest of the function — I default to `guard let` for validation because it keeps the happy path flat instead of nested."
+**Red flag:** Nesting three or four `if let`s instead of a chain of `guard let`s. It compiles, but it's the exact "pyramid of doom" `guard` exists to flatten.
+
+### Error Handling with throws, try, and catch
+**They ask:** "How does Swift's error handling work — `throws`, `try`, `do`/`catch`?"
+
+Swift models recoverable failure as part of a function's *type signature*, not an exception that can silently propagate from anywhere. A function marked `throws` can fail by throwing a value conforming to `Error`; calling it requires `try`, which is a visible marker at the call site that this call can fail — nothing is hidden. You handle the failure with `do { try ... } catch { ... }`, or propagate it further by marking your *own* function `throws` too.
+
+```swift
+enum NetworkError: Error { case invalidURL, noConnection }
+
+func fetchUser(id: Int) throws -> User {
+    guard id > 0 else { throw NetworkError.invalidURL }
+    return User(id: id, name: "Ada")
+}
+
+do {
+    let user = try fetchUser(id: 1)
+} catch NetworkError.invalidURL {
+    print("bad id")
+} catch {
+    print("other failure: \(error)")
+}
+```
+
+`try?` converts the result to an `Optional` (nil on failure, discarding the error), and `try!` force-runs it and crashes on failure — same escape-hatch trade-off as force-unwrapping an optional, and just as narrowly justified.
+
+**Say it:** "`throws` puts 'this can fail' in the function's signature, and `try` marks every call site that can propagate that failure — nothing fails silently, unlike an untyped exception that could come from anywhere."
+**Red flag:** Reaching for `try!` to silence the compiler instead of actually handling the error. It's a force-unwrap in disguise — it crashes at the exact moment the error handling was supposed to prevent that.
+
+### Defining and Conforming to a Protocol
+**They ask:** "What is a protocol in Swift, and how does a type conform to it?"
+
+A protocol is a contract — it declares a set of methods, properties, or requirements a conforming type must implement, without providing any implementation itself (unless you add one via an extension). It's how Swift expresses "any type that can do X" without caring what concrete type X actually is, which is the foundation delegation, dependency injection, and Swift's whole standard library (`Equatable`, `Sequence`) are built on.
+
+```swift
+protocol Describable {
+    var description: String { get }
+    func printDescription()
+}
+
+struct Product: Describable {
+    let name: String
+    var description: String { "Product: \(name)" }
+    func printDescription() { print(description) }   // must satisfy every requirement
+}
+```
+
+A type conforms by listing the protocol after its name and implementing every requirement — the compiler won't let you compile until it's fully satisfied, which is exactly the guarantee a protocol is for: promise met, or it doesn't build.
+
+**Say it:** "A protocol is a contract with no implementation of its own — a type conforms by implementing every requirement, and the compiler enforces that promise at build time, not at runtime."
+**Red flag:** Confusing a protocol with an abstract class. A protocol has no storage and no default behavior unless you add one via an extension — structs and enums can conform, which they could never do with a class-based abstract base.
+
+### Enums with Associated Values
+**They ask:** "What are associated values on a Swift enum, and why are they useful?"
+
+A plain enum case is just a fixed label. An associated value lets *each case* carry its own extra data along with it — so instead of a case plus a separate optional field that's only valid for some cases, the type system itself makes "this data only exists when the case is this one" impossible to get wrong.
+
+```swift
+enum NetworkResult {
+    case success(data: Data)
+    case failure(error: Error)
+}
+
+func handle(_ result: NetworkResult) {
+    switch result {
+    case .success(let data): print("got \(data.count) bytes")
+    case .failure(let error): print("failed: \(error)")
+    }
+}
+```
+
+This is the pattern behind Swift's own `Result<Success, Failure>` type, and it's why "illegal state" bugs — a success case that also happens to have a non-nil error field — are structurally impossible: the compiler's exhaustive `switch` forces you to handle every case, and each case only ever carries the data that's actually valid for it.
+
+**Say it:** "Associated values let each enum case carry its own data, so a success/failure result can't be in an invalid combined state — the compiler's exhaustive switch forces me to handle every case explicitly."
+**Red flag:** Modeling a success/failure result as a struct with an optional `data` and an optional `error` instead of an enum with associated values — nothing stops both being non-nil, or both being nil, at the same time.
+
+### Optional Chaining and Nil-Coalescing
+**They ask:** "What do `?.` and `??` do in Swift?"
+
+They're two tools for working with optionals without force-unwrapping. **Optional chaining** (`?.`) reaches into an optional and stops safely if it's nil — `user?.address?.city` returns `nil` the moment any link is nil, instead of crashing. **Nil-coalescing** (`??`) supplies a fallback when a value is nil — `name ?? "Guest"`. You combine them constantly: `user?.name ?? "Guest"` means "the name if the whole chain is there, otherwise Guest." Both let you handle absence inline instead of nesting `if let`.
+
+```swift
+let city = user?.address?.city ?? "Unknown"   // safe all the way down
+```
+
+**Say it:** "`?.` safely reaches through optionals and short-circuits to nil if any part is missing; `??` gives a default when something is nil — together they let me handle absence in one readable line instead of nested unwraps."
+**Red flag:** Reaching for `!` (force unwrap) to dig into a chain because "I know it's there." One nil anywhere in that chain is a crash; `?.` and `??` express the same intent without the risk.
+
+### Swift Collection Types — Array, Dictionary, Set
+**They ask:** "What are Swift's basic collection types, and when do you use each?"
+
+Three, each with a distinct role. An **Array** is an ordered list you access by index — use it when order matters or you have duplicates. A **Dictionary** maps unique keys to values for fast lookup by key — use it when you look things up by an id rather than a position. A **Set** is an unordered collection of unique values with fast membership tests — use it to dedupe or to ask "does this contain X?" quickly. All three are value types (structs), so assigning or passing one copies it.
+
+**Say it:** "Array for ordered, index-accessed lists; Dictionary for key-to-value lookup by id; Set for uniqueness and fast contains checks — and all three are value types, so they copy on assignment."
+**Red flag:** Using an array and a linear `contains` scan for membership checks on large data when a `Set` gives that in constant time. Picking the structure by its access pattern is a basic seniority signal.
+
+### map, filter, and reduce
+**They ask:** "What do `map`, `filter`, and `reduce` do on a Swift array?"
+
+They're the three functional transforms that replace hand-written loops with intent-revealing code. **`map`** transforms every element into a new one (`names.map { $0.uppercased() }`) — same count, new values. **`filter`** keeps only elements matching a condition (`nums.filter { $0 > 0 }`) — fewer elements, same type. **`reduce`** collapses the whole collection into a single value (`nums.reduce(0, +)` sums them). Reaching for these over a `for` loop says *what* you're doing, not just *how*, and each returns a new array rather than mutating in place.
+
+```swift
+let total = cart.map(\.price).reduce(0, +)   // transform, then collapse
+```
+
+**Say it:** "`map` transforms each element, `filter` keeps the ones matching a predicate, and `reduce` collapses the collection to one value — I prefer them over loops because they express intent and don't mutate the original."
+**Red flag:** Nesting them carelessly on huge collections (each creates an intermediate array) — but for typical UI data, clarity wins; the red flag in an interview is *not* recognizing these as the idiomatic replacement for manual loops.
+
+### Type Inference and Type Annotations
+**They ask:** "How does type inference work in Swift, and when do you still annotate?"
+
+Swift infers a variable's type from its initial value, so `let count = 5` is an `Int` and `let name = "Sam"` is a `String` without you writing the type — it keeps code concise while staying fully type-safe (the type is fixed at compile time, not dynamic). You add an explicit annotation when there's no initial value (`var score: Int`), when you want a different type than the default (`let ratio: Double = 3`), or to document a tricky closure/collection type. Inference is a convenience over a statically-typed core, not dynamic typing.
+
+**Say it:** "Swift infers the type from the initial value so I don't repeat myself, but it's still static and type-safe — I annotate when there's no initializer, when I want a non-default type like Double, or to make a complex type clear."
+**Red flag:** Assuming inference means Swift is dynamically typed like Python. The type is locked at compile time; `var x = 5; x = "hi"` is a compile error, and saying otherwise reveals a misunderstanding.
+
+### String Basics and Interpolation
+**They ask:** "How do you build and combine strings in Swift?"
+
+The idiomatic way is **string interpolation** — `"Hello, \(name)! You have \(count) items"` — which embeds any value directly and is far cleaner than concatenating with `+`. Strings are value types and fully Unicode-correct: `count` gives the number of user-perceived characters (grapheme clusters), not bytes, which is why indexing is by `String.Index` rather than an integer. For multi-line text, triple-quoted `"""..."""` preserves line breaks.
+
+```swift
+let greeting = "Hi \(user.name), you're \(user.age) today"
+```
+
+**Say it:** "I build strings with interpolation — `\(value)` inline — rather than `+` concatenation; Swift strings are value types and Unicode-correct, so `count` is real characters, not bytes."
+**Red flag:** Expecting `str[0]` integer subscripting like other languages. Swift strings index by `String.Index` because a character can be multiple bytes — a small thing that trips juniors up constantly.
+
+### Default and Variadic Parameters
+**They ask:** "What are default parameter values and variadic parameters in Swift?"
+
+**Default values** let a parameter be omitted at the call site — `func greet(_ name: String, loudly: Bool = false)` can be called as `greet("Sam")` — which removes the need for multiple overloads. **Variadic parameters** accept zero or more values of a type with `...`, and inside the function you get an array — `func sum(_ numbers: Int...)` is called `sum(1, 2, 3)`. Together they make Swift APIs flexible without a pile of overloaded signatures.
+
+```swift
+func log(_ items: String..., level: Level = .info) { /* items is [String] */ }
+```
+
+**Say it:** "Default values let callers skip a parameter so I don't need overloads, and a variadic `Type...` accepts any number of arguments as an array inside the function — both keep the API surface small and flexible."
+**Red flag:** Writing three overloads of the same function that differ only by an optional flag, when one default parameter expresses it. It's more code to maintain for no benefit.

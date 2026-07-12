@@ -91,6 +91,80 @@ class DetailViewModel @AssistedInject constructor(
 **Say it:** "Hilt is Dagger with the Android-specific component boilerplate standardized — predefined, lifecycle-tied components instead of hand-rolled ones — and `@AssistedInject` is for the case Hilt/Dagger alone can't handle: mixing graph-resolved dependencies with a runtime-only value in the same constructor."
 **Red flag:** Treating Hilt and Dagger as unrelated alternatives to pick between. Hilt is Dagger underneath — the real decision is "hand-roll the Android wiring" vs. "let Hilt standardize it," not "Dagger vs. some other DI engine."
 
+### DI Libraries on Android — Dagger2, Hilt, and Koin at a Glance
+**They ask:** "What DI libraries do you know, and how would you pick between them?"
+
+The two real families on Android are compile-time codegen (Dagger2, and Hilt built on top of it) versus a runtime service locator (Koin). Dagger generates the actual wiring code at compile time via annotation processing — dependency graph errors are build failures, not runtime crashes, at the cost of more setup ceremony and slower incremental builds on very large graphs. Hilt is Dagger with Android's component boilerplate (Activity/ViewModel/Application scoping) standardized, so it's the common default for a new Dagger-based app today rather than hand-rolling Dagger components. Koin skips codegen entirely — a Kotlin DSL resolves dependencies at runtime — trading Dagger's compile-time safety for a much smaller learning curve and faster build times, at the cost of a missing binding only surfacing as a runtime crash.
+
+```kotlin
+// Koin: no annotation processing, resolved at runtime
+val appModule = module { single<UserRepository> { UserRepositoryImpl(get()) } }
+
+// Hilt: compile-time generated, Android-scoped by default
+@HiltViewModel
+class UserViewModel @Inject constructor(private val repo: UserRepository) : ViewModel()
+```
+
+**Say it:** "The real axis is compile-time-generated versus runtime-resolved — Dagger/Hilt catches a broken graph at build time and is the common choice for larger codebases; Koin trades that safety for simplicity and faster builds, which fits smaller apps or teams that want less ceremony."
+**Red flag:** Picking a DI library "because it's popular" without naming the compile-time-vs-runtime trade-off. That's the actual engineering decision an interviewer is checking for — not brand familiarity.
+
+### What Is JSON, and Why Does Android Use It for APIs
+**They ask:** "What is JSON, and why is it the default data format for Android network calls?"
+
+JSON (JavaScript Object Notation) is a lightweight, text-based format for structured data — objects as key-value pairs, arrays, and a small set of primitive types (string, number, boolean, null) — that became the de facto standard for REST APIs because it's human-readable, has no vendor lock-in, and maps naturally onto the object graphs both client and server already work with.
+
+```json
+{ "id": "42", "name": "Ann", "tags": ["admin", "active"] }
+```
+
+On Android, a converter (Gson, Moshi, or `kotlinx.serialization`) plugs into Retrofit specifically to turn that JSON text into typed Kotlin objects automatically — without one, you'd be manually parsing strings with `JSONObject`, which is exactly the tedious, error-prone work converters exist to eliminate.
+
+```kotlin
+data class User(val id: String, val name: String, val tags: List<String>)
+// Retrofit + a converter factory turns the raw JSON response directly into a User
+```
+
+**Say it:** "JSON won as the API default because it's human-readable, lightweight, and maps directly onto client/server object graphs — a Retrofit converter is what turns that raw text into typed Kotlin data classes automatically instead of hand-parsed `JSONObject` calls."
+**Red flag:** Manually parsing JSON with `JSONObject`/`JSONArray` in new code instead of a converter-backed Retrofit interface. That's real, error-prone boilerplate a converter factory already solves for free.
+
+### What Is a Database, and Primary Key vs Foreign Key
+**They ask:** "What is a database, and what's the difference between a primary key and a foreign key?"
+
+A database is organized, persistent storage for structured data with guarantees a plain file doesn't give you — consistent querying, constraints that prevent invalid data, and (in a relational database) tables related to each other rather than one flat blob. A **primary key** uniquely identifies a row within its own table — no two rows can share one, and it can't be null — that's what every other table references when it needs to point at "this specific row." A **foreign key** is a column in one table that references another table's primary key, which is how relationships between tables (a user has many orders) are expressed and enforced.
+
+```sql
+CREATE TABLE users (id TEXT PRIMARY KEY, name TEXT);
+CREATE TABLE orders (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)   -- points at users' primary key
+);
+```
+
+The database enforces the foreign key constraint: you can't insert an order pointing at a `user_id` that doesn't exist in `users`, which is exactly the kind of data-integrity guarantee a plain file or in-memory structure gives you nothing for free.
+
+**Say it:** "A primary key uniquely identifies a row within its own table; a foreign key is another table's column pointing back at that primary key — that's the mechanism relational databases use to express and enforce relationships between tables instead of trusting application code to keep them consistent."
+**Red flag:** Modeling a relationship (like `orders` belonging to `users`) without a foreign key constraint, relying only on application code to keep the reference valid. The database can catch an orphaned reference for free — skipping the constraint throws that safety net away.
+
+### Downloading an Image Over the Network
+**They ask:** "How do you download an image from the network, and why not just do it by hand?"
+
+Mechanically, downloading an image is just an HTTP GET whose response body is bytes instead of JSON — `URLConnection`/OkHttp fetches the bytes, and `BitmapFactory.decodeStream`/`decodeByteArray` turns them into a `Bitmap`. That's straightforward for a one-off case, but a real app needs it done *safely and repeatedly*: off the main thread, downsampled to the target `ImageView`'s actual size (not decoded at full resolution and then shrunk), cached so the same image isn't re-fetched on every scroll, and cancelled if the view showing it gets recycled before the request finishes.
+
+```kotlin
+// manual — works, but re-solves problems a library already solved
+val bytes = URL(imageUrl).readBytes()               // must run off the main thread
+val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+// with a library — caching, downsampling, lifecycle-aware cancellation included
+Glide.with(context).load(imageUrl).into(imageView)
+```
+
+That's exactly why an image-loading library (Glide, Picasso) is the real-world default rather than hand-rolled downloading — the manual version is easy to get working once and genuinely hard to get right for memory, caching, and lifecycle all at once.
+
+**Say it:** "Downloading is just an HTTP GET plus bitmap decoding — the reason a library is the default in practice is everything around that: off-main-thread execution, memory-safe downsampling, caching, and lifecycle-aware cancellation, which are each individually easy to get wrong by hand."
+**Red flag:** Decoding a downloaded image at full resolution before resizing it for a small thumbnail. The memory spike from the full-size decode already happened before any resize — that's the exact mistake image libraries' downsampling exists to prevent.
+
 ### Retrofit Basics — Building GET/POST Requests
 **They ask:** "How do you create and send GET and POST requests via Retrofit?"
 

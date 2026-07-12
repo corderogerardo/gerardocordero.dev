@@ -257,3 +257,18 @@ For code that still uses callbacks or Combine internally, `XCTestExpectation` re
 
 **Say it:** "Async test functions let me `await` the code under test directly — `XCTestExpectation` is still there for callback-based code, but `fulfillment(of:timeout:)` is the async-native replacement for the old blocking `wait`."
 **Red flag:** Wrapping an `async` API back into a `DispatchSemaphore.wait()` inside a test to make it "synchronous" — that reintroduces the exact deadlock risk structured concurrency was designed to remove.
+
+### The Main Thread Rule
+**They ask:** "Why must UI updates happen on the main thread, and how do you get back to it after a background task?"
+
+UIKit and SwiftUI are **not thread-safe**, and the system assumes all view work happens on the main thread — touching a view from a background thread causes glitches, corrupted rendering, or crashes that are miserable to reproduce. So the rule is: do slow work (a network call, parsing) off the main thread, then hop *back* to the main thread to update the UI. With GCD that's `DispatchQueue.main.async { }`; with modern concurrency it's `await MainActor.run { }` or marking the method `@MainActor`.
+
+```swift
+URLSession.shared.dataTask(with: url) { data, _, _ in
+    let items = parse(data)                 // background thread — fine
+    DispatchQueue.main.async { self.show(items) }   // UI update — back on main
+}.resume()
+```
+
+**Say it:** "UIKit isn't thread-safe, so any view update has to be on the main thread — I do the heavy work on a background queue and hop back with `DispatchQueue.main.async` (or `@MainActor`) to touch the UI."
+**Red flag:** Updating a label or table directly inside a network completion handler without switching to the main queue. It may look fine in the simulator and then flicker or crash on device — a classic junior bug.

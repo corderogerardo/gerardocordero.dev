@@ -107,4 +107,20 @@ A Definition of Done is an explicit, team-agreed checklist that turns "done" fro
 Debt tracked only as tribal knowledge ("yeah, that module's a mess, everyone knows") never competes for prioritization against visible feature work — it needs to become a real, visible backlog item with the same rigor as a bug report: what's the debt, what risk or cost does it impose (slower future changes, a specific class of bug it enables, an on-call pain point), and a rough size estimate to pay it down. The pragmatic prioritization framing that actually works: tie debt paydown to the next feature that touches that code, rather than scheduling a separate "debt sprint" that's the first thing cut under deadline pressure — "we're already in this file for the new feature, this is the cheapest moment to also fix the debt here."
 
 **Say it:** "I track debt as a visible backlog item with a stated cost, not tribal knowledge, and I prioritize paying it down when the next feature already touches that code — that's the cheapest moment to fix it, and it survives deadline pressure better than a dedicated debt sprint does."
+
+### Basic Git workflow: clone, add, commit, push, pull
+**They ask:** "Walk me through the basic Git commands you use day to day."
+
+Before branching strategy or rebase-vs-merge debates matter, you need the everyday loop that gets your code from your machine into a shared repo and back. `git clone <url>` copies a remote repo down locally. `git add <file>` stages changes (moves them into the "about to be committed" set); `git commit -m "message"` snapshots the staged changes into local history. `git push` sends your local commits to the remote; `git pull` fetches the remote's new commits and merges them into your current branch — it's actually `git fetch` + `git merge` in one step.
+
+```bash
+git clone https://github.com/org/repo.git
+git add file.js
+git commit -m "Fix off-by-one in pagination"
+git pull        # bring in remote changes first
+git push        # send your commits up
+```
+
+**Say it:** "Clone gets the repo, add stages what I want in the next snapshot, commit takes that snapshot locally, and push/pull sync it with the remote — I pull before I push so I merge in anyone else's changes before I try to send mine."
+**Red flag:** Running `git push` without pulling first when others are working on the same branch. If the remote has commits you don't have locally, the push is rejected — pull (or fetch + rebase) first so your history includes theirs.
 **Red flag:** Treating technical debt as something to schedule in a separate, dedicated cleanup sprint disconnected from any feature work. That sprint is almost always the first thing cut when a deadline gets tight, and the debt just keeps compounding.

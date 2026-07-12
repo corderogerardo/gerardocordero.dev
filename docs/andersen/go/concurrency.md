@@ -1,5 +1,37 @@
 # Go — concurrency, sync, and patterns
 
+### Starting a Goroutine
+**They ask:** "What does the `go` keyword actually do?"
+
+Prefixing any function call with `go` launches it as a goroutine — it starts running concurrently and the calling code continues immediately without waiting for it to finish. That's the entire syntax; there's no separate "goroutine type" to construct. The catch that trips up beginners: if `main` returns (or the calling function returns, for a goroutine launched inside it) before a goroutine finishes, the goroutine is simply cut off mid-execution — Go doesn't wait for background goroutines automatically, which is why real code coordinates completion with a `sync.WaitGroup` or a channel.
+
+```go
+func main() {
+    go doWork()              // starts concurrently, main doesn't wait
+    time.Sleep(time.Second)  // crude wait — use WaitGroup in real code
+}
+```
+
+**Say it:** "go before a call launches it concurrently and returns control immediately — nothing waits for it automatically, so any real program needs an explicit coordination point like a WaitGroup or channel before it exits, or the goroutine just gets cut off."
+**Red flag:** Launching a goroutine in main with no WaitGroup, channel, or other coordination and expecting it to always finish — it's a race against main returning, and it will lose intermittently under load or on a fast machine.
+
+### Creating and Using a Channel
+**They ask:** "How do you actually create and use a channel to pass a value between goroutines?"
+
+`make(chan T)` creates a channel that carries values of type `T` between goroutines — it's Go's built-in mechanism for communicating instead of sharing memory directly. You send with `ch <- value` and receive with `value := <-ch`; both are blocking operations by default (see Buffered vs Unbuffered Channels for the exact blocking rules), which is what makes a channel double as both a data pipe and a synchronization point between two goroutines.
+
+```go
+ch := make(chan string)
+go func() {
+    ch <- "done" // send
+}()
+msg := <-ch // receive — blocks until the goroutine sends
+fmt.Println(msg)
+```
+
+**Say it:** "make(chan T) creates the channel, <- sends or receives depending on which side of the variable it's on, and because both operations block by default, a channel isn't just moving data — it's synchronizing the two goroutines at the handoff."
+**Red flag:** Sending on a channel with no goroutine ever reading it (or vice versa) — since sends and receives on an unbuffered channel block until both sides are ready, a missing counterpart deadlocks that goroutine forever.
+
 ### The GMP Scheduler Model
 **They ask:** "Explain Go's GMP scheduler model — what are G, M, and P?"
 

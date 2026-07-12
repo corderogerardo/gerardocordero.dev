@@ -128,3 +128,28 @@ class LineSplitter extends Transform {
 
 **Say it:** "_transform must call its callback exactly once per chunk to signal readiness for the next one, push() is for emitting zero-or-more outputs per input, and _flush is where any buffered leftover gets emitted when the source ends — miss any of those three and the stream either stalls or drops data."
 **Red flag:** Doing async work inside `_transform` without waiting for it before calling `callback` — the stream will pull the next chunk before your async work finishes, breaking ordering guarantees the whole point of a Transform depends on.
+
+### Error handling across a stream pipeline
+**They ask:** "You chain three streams with .pipe(). One errors mid-flight. What happens, and what should you do instead?"
+
+With manual `.pipe()`, an error on one stream does **not** propagate or tear down the others — the upstream keeps producing, the file descriptors and sockets stay open, and you leak resources every time it happens. That's exactly the failure `stream.pipeline()` was built to fix: it wires an error/completion callback across the whole chain and **destroys every stream** if any one of them fails or the destination closes early. So the senior answer is "never hand-chain `.pipe()` in production" — use `pipeline` (or its promise form) so one error cleans up the entire chain.
+
+```js
+const { pipeline } = require('node:stream/promises');
+await pipeline(
+  fs.createReadStream('in.gz'),
+  zlib.createGunzip(),
+  fs.createWriteStream('out.txt'),
+); // any stage errors → all streams destroyed, promise rejects
+```
+
+**Say it:** "A raw .pipe() chain leaks streams when one errors because the error doesn't propagate — pipeline() destroys every stage on failure and gives me one place to catch it, so that's what I use for anything real."
+**Red flag:** Adding a `.on('error')` handler to only the last stream in a `.pipe()` chain. An error on an earlier stream never reaches it, and the earlier streams are never destroyed — you've handled the wrong end of the pipe.
+
+### highWaterMark and stream throughput
+**They ask:** "What is highWaterMark, and when would you tune it?"
+
+`highWaterMark` is the buffer threshold that drives backpressure — it's the number of bytes (or objects, in object mode) a stream will buffer internally before `.write()` returns `false` to tell the producer to pause. The default (64 KB for byte streams, 16 objects in object mode) is a deliberate memory-vs-throughput trade: bigger means fewer, larger reads/writes and higher throughput, at the cost of more memory held per stream. You raise it for high-throughput bulk transfer where memory is cheap; you *lower* it when you have thousands of concurrent streams and need to cap total buffered memory. It's a tuning knob, not a correctness one — backpressure works at any value.
+
+**Say it:** "highWaterMark is the backpressure threshold — how much a stream buffers before it tells the writer to slow down. I raise it for bulk throughput and lower it when I have many concurrent streams and need to bound total memory."
+**Red flag:** Cranking `highWaterMark` way up to "make streams faster" on a server with many concurrent connections — you multiply the buffer by every open stream and can blow the heap under load. The default exists for a reason.

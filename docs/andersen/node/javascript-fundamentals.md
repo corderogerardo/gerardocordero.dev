@@ -342,3 +342,118 @@ One Node/V8 gotcha worth knowing: `Error.captureStackTrace(this, NotFoundError)`
 
 **Say it:** "Custom Error subclasses let calling code branch on error *type*, not message text — I extend `Error`, call `super(message)`, and attach structured context like a status code as properties instead of stuffing it into the message."
 **Red flag:** Branching on `error.message.includes('not found')` instead of `instanceof`. It's brittle to wording changes and doesn't survive translation or refactors — model errors as types.
+
+### Array iteration methods: map, filter, find, and reduce
+**They ask:** "Walk me through map, filter, find, and reduce — when do you reach for each?"
+
+These four replace hand-written `for` loops for the most common array transformations, and reaching for the right one signals you think in terms of intent, not mechanics. `map` transforms every element 1:1 into a new array (same length in, same length out). `filter` keeps only elements that pass a test, producing a shorter (or equal) array. `find` returns the first element that passes a test, or `undefined` — not an array. `reduce` folds the whole array down to a single accumulated value (a sum, an object, another array) via a callback that receives the running accumulator.
+
+```js
+const orders = [{ total: 20 }, { total: 5 }, { total: 40 }];
+const totals = orders.map(o => o.total);               // [20, 5, 40]
+const big = orders.filter(o => o.total > 10);           // orders over 10
+const first = orders.find(o => o.total > 30);           // {total: 40}
+const sum = orders.reduce((acc, o) => acc + o.total, 0); // 65
+```
+
+None of them mutate the original array — each returns a new array (or value), which is why they compose cleanly in a chain.
+
+**Say it:** "I reach for map when I'm transforming every item 1:1, filter when I'm narrowing the set, find when I want one matching item, and reduce when I'm folding the array into a single value — and none of them mutate the original array."
+**Red flag:** Using `forEach` with a `push` to build a new array where `map`/`filter` would say the same thing more directly — it works, but it hides the intent and is easy to get subtly wrong (forgetting to return, mutating outer state).
+
+### What is a callback function?
+**They ask:** "What is a callback function, and why does JavaScript use them so much?"
+
+A callback exists because JavaScript needs a way to say "run this code later, once some other work finishes" — functions are values in JS, so you just pass one in to be called when the time comes. Mechanically, a callback is nothing special: it's a plain function passed as an argument to another function, which invokes ("calls back") that function at the appropriate point — synchronously (like `array.map(fn)`) or asynchronously (like `fs.readFile(path, fn)` once the file is read, or `setTimeout(fn, 1000)` once the timer fires).
+
+```js
+function greet(name, callback) {
+  callback(`Hello, ${name}`);
+}
+greet('Ann', (message) => console.log(message)); // "Hello, Ann"
+```
+
+Before Promises existed, callbacks were the *only* way to handle asynchronous work in JS, which is why older Node APIs (like `fs.readFile`) still take a callback as their last argument.
+
+**Say it:** "A callback is just a function passed into another function to be run later — synchronously or async — and it's the original mechanism Node used for async work before Promises, which is why a lot of core Node APIs still take one."
+**Red flag:** Confusing "callback" with "asynchronous." Callbacks can run synchronously too (`array.forEach(cb)` runs `cb` immediately, in order) — what makes something async is *when* the callback fires, not that a callback is involved.
+
+### Function declarations vs function expressions vs arrow functions
+**They ask:** "What's the difference between a function declaration, a function expression, and an arrow function?"
+
+They differ in hoisting and in how `this` is bound, and picking the wrong one is a common source of bugs. A **function declaration** (`function foo() {}`) is hoisted with its full body, so it can be called before its line in the file, and it gets its own `this` bound at call time. A **function expression** (`const foo = function() {}`) is just a value assigned to a variable — the variable is hoisted (if `var`) but stays `undefined` until the assignment runs, so calling it early throws. An **arrow function** (`const foo = () => {}`) is always an expression, has no `this` of its own (it inherits `this` from the enclosing scope), and can't be used as a constructor.
+
+```js
+sayHi(); // works — declaration is hoisted
+function sayHi() { console.log('hi'); }
+
+sayBye(); // TypeError — sayBye is undefined at this point
+var sayBye = function() { console.log('bye'); };
+```
+
+**Say it:** "Declarations hoist whole and get their own `this`; expressions don't hoist their value; arrow functions never have their own `this` — they close over the surrounding scope's, which is exactly why I use them for callbacks inside class methods or event handlers."
+**Red flag:** Using an arrow function as an object method that needs `this` to refer to the object. `const obj = { name: 'x', greet: () => this.name }` doesn't work — `this` there is the outer scope, not `obj`. Use a regular method or function expression when you need the caller's `this`.
+
+### JavaScript's primitive data types
+**They ask:** "What are the primitive data types in JavaScript?"
+
+Knowing the primitives cold matters because everything that isn't one of these seven is an object, and objects behave completely differently (see: primitive vs reference types). JavaScript has: `string`, `number`, `boolean`, `undefined`, `null`, `symbol` (ES6+, unique identifiers), and `bigint` (ES2020+, arbitrary-precision integers). All primitives are immutable and compared **by value** — two strings with the same characters are `===` equal, unlike two objects with the same shape.
+
+```js
+typeof 'hi';       // "string"
+typeof 42;          // "number"
+typeof true;         // "boolean"
+typeof undefined;   // "undefined"
+typeof null;        // "object" — a famous, unfixed JS bug
+typeof Symbol();    // "symbol"
+typeof 10n;          // "bigint"
+```
+
+**Say it:** "JS has seven primitives — string, number, boolean, undefined, null, symbol, and bigint — they're all immutable and compared by value, and everything else in the language is an object compared by reference."
+**Red flag:** Trusting `typeof null === 'object'` as meaningful. It's a long-standing language bug, not a design choice — check for `null` explicitly with `=== null`, don't rely on `typeof`.
+
+### Object literals: creating and accessing properties
+**They ask:** "How do you create and work with a plain object in JS?"
+
+The object literal is the fastest way to model a record — a bag of related key/value pairs — without a class or constructor, and it's the shape most JSON and function arguments take. You create one with `{}`, read/write properties with dot notation (`obj.name`) when the key is a known identifier, or bracket notation (`obj['first-name']`) when the key is dynamic or not a valid identifier. Properties can be added, overwritten, or deleted after creation — object literals are mutable by default.
+
+```js
+const user = { name: 'Ann', age: 30 };
+user.age = 31;              // update
+user['email'] = 'a@x.com';  // add via bracket notation
+delete user.age;             // remove
+const key = 'name';
+console.log(user[key]);      // dynamic access -> 'Ann'
+```
+
+**Say it:** "I use dot notation for known, static keys and bracket notation when the key comes from a variable or isn't a valid identifier — and I remember object literals are mutable, so I don't assume a passed-in object is safe to mutate without checking."
+**Red flag:** Trying `obj.first-name` instead of `obj['first-name']` for a key with a hyphen. Dot notation only works for valid JS identifiers — anything with a hyphen, space, or leading digit needs bracket notation.
+
+### Synchronous vs asynchronous code
+**They ask:** "What's the difference between synchronous and asynchronous code, in plain terms?"
+
+The distinction is about *when* code runs relative to the rest of the program, and it's the first mental model you need before anything about Promises or the event loop makes sense. **Synchronous** code runs immediately, in order, and blocks the next line until it finishes — like reading a recipe top to bottom. **Asynchronous** code kicks off a task and lets the rest of the program keep running; the async task's result arrives later, on its own turn, via a callback, Promise, or `await`.
+
+```js
+console.log('1');
+setTimeout(() => console.log('2 (async, runs later)'), 0);
+console.log('3');
+// logs: 1, 3, 2 — because setTimeout's callback is deferred, not run in place
+```
+
+**Say it:** "Synchronous code runs top to bottom and blocks; asynchronous code schedules work to happen later and lets the rest of the script keep going in the meantime — that's why `console.log('3')` above logs before the `setTimeout` callback, even with a 0ms delay."
+**Red flag:** Assuming `setTimeout(fn, 0)` runs `fn` immediately. It always defers `fn` to run *after* the current synchronous code finishes, no matter how small the delay.
+
+### What JSON.stringify and JSON.parse actually do
+**They ask:** "What are JSON.stringify and JSON.parse for?"
+
+JSON exists as a plain-text format both sides of a network call can agree on — JS objects can't travel over HTTP or into a file as-is, so you need to convert them to text and back. `JSON.stringify(value)` serializes a JS value into a JSON string; `JSON.parse(jsonString)` does the reverse, turning a JSON string back into a live JS value. This pair is how request/response bodies, `localStorage`, and config files move structured data as text.
+
+```js
+const user = { name: 'Ann', age: 30 };
+const json = JSON.stringify(user);   // '{"name":"Ann","age":30}'
+const back = JSON.parse(json);       // { name: 'Ann', age: 30 } — a new object
+```
+
+**Say it:** "stringify turns a JS value into JSON text for sending or storing; parse turns that text back into a JS value — it's how data survives crossing a network call or a file, since you can't send a live object over HTTP."
+**Red flag:** Assuming `JSON.parse(JSON.stringify(obj))` is a safe universal deep clone. It silently drops functions, `undefined`, and `Symbol` values, and turns `Date`s into strings — fine for plain data, wrong for anything with those types.

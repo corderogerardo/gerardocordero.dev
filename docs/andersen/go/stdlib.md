@@ -67,6 +67,28 @@ Across a network hop, the trace ID isn't magic — it's serialized into an outgo
 **Say it:** "Tracing rides on `context.Context` in-process, and crosses the wire as a propagated header like `traceparent` that the next service turns back into a span parented to the caller's."
 **Red flag:** Generating a fresh trace ID at every service instead of propagating the inbound one. That breaks the trace into disconnected fragments and defeats the entire point of distributed tracing.
 
+### The Basic Error-Return Convention
+**They ask:** "Why does Go use return values for errors instead of exceptions?"
+
+`error` is just a built-in interface with one method, `Error() string` — nothing more exotic than that — and Go's convention is to return it as the last value from any function that can fail, with the caller checking `if err != nil` immediately after the call. This makes failure paths visible and local instead of invisible control flow that can jump out of a function from anywhere, the way a thrown exception does; the cost is that every call site has explicit boilerplate, a trade-off Go's designers made deliberately in favor of explicitness over brevity.
+
+```go
+func Divide(a, b int) (int, error) {
+    if b == 0 {
+        return 0, errors.New("divide by zero")
+    }
+    return a / b, nil
+}
+
+result, err := Divide(10, 0)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Say it:** "error is just an interface with an Error() string method, and Go's convention is to return it explicitly and check it at the call site — that trades some boilerplate for control flow you can actually see, instead of exceptions that can surface far from where the failure happened."
+**Red flag:** Ignoring an error return with `_` or checking it but doing nothing in the branch — an unchecked or silently-swallowed error is exactly the invisible-failure problem the explicit convention exists to prevent.
+
 ### errors.Is and sentinel error comparison
 **They ask:** "What's the difference between comparing an error with `==` and using `errors.Is`, and why does it matter with wrapped errors?"
 
@@ -280,3 +302,37 @@ assert.Equal(t, 30, user.Age) // still runs even if Name check above failed
 
 **Say it:** "`require` stops the test on failure, `assert` lets it keep going — I use `require` for preconditions like a nil-check on `err`, so a later assertion doesn't panic on a value that was never valid."
 **Red flag:** Using `assert.NoError` right before dereferencing the value it's checking. If the assertion fails, the test keeps running and panics on the nil dereference instead of failing cleanly — that should be `require`.
+
+### errors.Join and aggregating multiple errors
+**They ask:** "You run several operations and more than one can fail. How do you return all the failures, not just the first?"
+
+`errors.Join` (Go 1.20) — it wraps multiple errors into one that reports them together and, crucially, still works with `errors.Is`/`errors.As` against *any* of the joined errors. Before it, you either lost all but the first failure or hand-rolled a multi-error type. It's the right tool for "validate every field and report every problem," or "close N resources and surface whichever closes failed" — you accumulate non-nil errors and join them, and a `nil` in the set is skipped, so joining is safe even when some steps succeeded.
+
+```go
+var errs []error
+for _, f := range fields {
+    if err := f.Validate(); err != nil {
+        errs = append(errs, fmt.Errorf("%s: %w", f.Name, err))
+    }
+}
+return errors.Join(errs...) // nil if errs is empty; Is/As match any joined error
+```
+
+**Say it:** "I use errors.Join to aggregate independent failures so the caller sees every problem at once, and because Is/As still match any joined error, callers can branch on a specific one without me building a custom multi-error type."
+**Red flag:** Returning only the first error from a validation or cleanup loop. The user fixes one field, resubmits, hits the next — a frustrating round-trip per error that `errors.Join` eliminates by reporting them all together.
+
+### encoding/json: custom marshaling and the gotchas
+**They ask:** "What do senior engineers get wrong with encoding/json in Go?"
+
+The one that bites everyone: `encoding/json` only sees **exported** fields — a lowercase field is silently omitted on marshal and left at its zero value on unmarshal, with no error. Beyond that, the senior toolkit is: implement `MarshalJSON`/`UnmarshalJSON` on a type when the wire shape differs from the Go shape (custom time formats, enums as strings); use `json.RawMessage` to defer decoding part of a payload whose shape depends on another field (discriminated unions); and use `json.Decoder` (with `DisallowUnknownFields` when you want strictness) to stream-decode large or newline-delimited input instead of buffering it all. `omitempty` drops zero-valued fields — but note it can't distinguish "absent" from "explicitly zero," which is why nullable fields often need a pointer.
+
+```go
+type Event struct {
+    Type string          `json:"type"`
+    Data json.RawMessage `json:"data"` // decode later based on Type
+    ts   time.Time       // unexported → invisible to json, silently
+}
+```
+
+**Say it:** "encoding/json only touches exported fields, so a lowercase field silently vanishes — beyond that I reach for custom MarshalJSON when the wire shape differs, json.RawMessage for payloads whose shape depends on a discriminator, and a pointer when I need to tell 'absent' from 'zero'."
+**Red flag:** Wondering why a struct field "isn't saving" and never suspecting the lowercase name. It's the single most common `encoding/json` bug, and it fails silently — no error, just a missing field.

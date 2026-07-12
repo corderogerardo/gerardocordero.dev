@@ -340,3 +340,74 @@ process.on('SIGTERM', async () => {
 
 **Say it:** "SIGTERM is the orchestrator's polite request to stop — I close the listener first so no new work comes in, drain what's in flight, close downstream connections, then exit, all before the grace period runs out and SIGKILL forces it."
 **Red flag:** Ignoring `SIGTERM` entirely and relying on the orchestrator's forceful `SIGKILL`. That drops in-flight requests and can leave DB transactions or queue messages in an inconsistent, unacknowledged state.
+
+### AsyncLocalStorage for request context
+**They ask:** "How do you attach a request ID or user to every log line without passing it through every function?"
+
+`AsyncLocalStorage` — it's Node's built-in continuation-local storage, and it solves the exact problem that a single-threaded async server makes hard: there's no thread-local, and threading a context object through every call is invasive and leaky. You `run()` a callback with a store at the start of each request (in middleware), and any code executing within that async call chain — however deep, across awaits and callbacks — reads the same store via `getStore()`. Your logger pulls the request ID from it automatically, so every log line is correlated with zero plumbing.
+
+```js
+const { AsyncLocalStorage } = require('node:async_hooks');
+const als = new AsyncLocalStorage();
+app.use((req, _res, next) => als.run({ reqId: crypto.randomUUID() }, next));
+// anywhere downstream, no params threaded through:
+log.info({ reqId: als.getStore()?.reqId }, 'order created');
+```
+
+**Say it:** "AsyncLocalStorage gives me per-request context that follows the async call chain, so the logger stamps a request ID on every line without me passing it through a dozen function signatures."
+**Red flag:** Storing request context on a module-level or global variable to avoid passing it. On a concurrent server it's shared across all in-flight requests — request B overwrites A's context between awaits, and you get logs and data attributed to the wrong user.
+
+### Sharing state between worker_threads
+**They ask:** "Two worker_threads need to share data. What are your options and their costs?"
+
+Two mechanisms, and the choice is about copy cost. **Message passing** (`postMessage`) is the default: the payload is *structured-cloned* — deep-copied — so each thread gets its own isolated copy, which is safe but expensive for large data and shares nothing live. For genuinely shared memory you use a **`SharedArrayBuffer`**: both threads see the same bytes with no copy, and you coordinate access with the `Atomics` API (atomic loads/stores and `Atomics.wait/notify` as a lock primitive). SharedArrayBuffer is the only way to share live state, but you've now signed up for real concurrency hazards — data races if you skip `Atomics`. Most workloads are better served by passing messages and keeping each worker's state private.
+
+**Say it:** "postMessage structured-clones the payload, so it's safe but copies — for large shared state I use a SharedArrayBuffer with Atomics for coordination, accepting that I'm now doing real shared-memory concurrency with all its race hazards."
+**Red flag:** Assuming worker threads share memory like OS threads in Java or C++ by default. They don't — each has its own V8 isolate and heap; the only shared memory is an explicit `SharedArrayBuffer`, and a plain object you `postMessage` is a copy, not a reference.
+
+### Cluster, sticky sessions, and shared state
+**They ask:** "You scale with the cluster module behind a load balancer. What breaks for WebSockets or in-memory sessions?"
+
+Anything that assumed one process breaks, because now a client's requests can land on *any* worker. In-memory sessions fail: worker 1 stored the session, worker 2 gets the next request and has no idea who the user is. WebSockets fail worse: the handshake and the ongoing connection can hit different workers. Two fixes, and seniors name both: **sticky sessions** (route a client to the same worker by IP/cookie hash) keep a connection pinned, but they weaken load balancing and still lose state if that worker dies. The durable fix is to **externalize shared state** — sessions in Redis, and a pub/sub adapter (e.g. Socket.io's Redis adapter) so a broadcast on any worker reaches clients connected to all of them.
+
+**Say it:** "Once I fork with cluster, in-memory session and socket state is per-worker, so I move sessions to Redis and use a pub/sub adapter for broadcasts — sticky sessions alone just pin the problem to one worker instead of solving it."
+**Red flag:** Keeping sessions or socket rooms in a module variable after adding cluster and assuming it "just scales." It works in dev with one worker and silently loses state the moment a second worker handles a request.
+
+### Buffer.alloc vs Buffer.allocUnsafe
+**They ask:** "What's the difference between Buffer.alloc and Buffer.allocUnsafe, and why does it matter for security?"
+
+`Buffer.alloc(n)` returns a zero-filled buffer; `Buffer.allocUnsafe(n)` grabs a chunk of memory from Node's internal pool **without clearing it**, so it can contain whatever was there before — potentially fragments of other requests' data, keys, or tokens. `allocUnsafe` is faster because it skips the zero-fill, but if you don't immediately overwrite every byte you write out uninitialized memory, which is a real information-disclosure bug. The rule: default to `Buffer.alloc`; only use `allocUnsafe` in a hot path where you provably fill the entire buffer before anyone reads it.
+
+**Say it:** "alloc zero-fills, allocUnsafe hands back uninitialized pooled memory that may hold old data — I default to alloc and only reach for allocUnsafe when I'm about to overwrite every byte in a performance-critical path."
+**Red flag:** Using `allocUnsafe` (or the deprecated `new Buffer(n)`) by default "for speed" and returning or logging it before fully overwriting it. That leaks whatever was previously in that memory — a classic Node information-disclosure vulnerability.
+
+### Timeouts and cancellation with AbortSignal
+**They ask:** "How do you put a timeout on any async operation — a fetch, a DB call — and cancel it cleanly?"
+
+`AbortSignal` is the standard cancellation primitive, and modern Node gives you `AbortSignal.timeout(ms)` to create one that fires automatically — pass it to any API that accepts a signal (`fetch`, `fs` promises, many DB drivers) and the operation rejects with an `AbortError` when time's up, releasing its resources instead of hanging. For "timeout *or* the user navigated away," combine signals with `AbortSignal.any([...])` so whichever fires first cancels the work. This is how a senior stops a slow dependency from holding a request (and its DB connection) open indefinitely.
+
+```js
+const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
+// timeout OR external cancel:
+const signal = AbortSignal.any([AbortSignal.timeout(2000), req.signal]);
+```
+
+**Say it:** "I wrap slow async calls in AbortSignal.timeout so they reject and release resources instead of hanging, and AbortSignal.any lets me cancel on whichever comes first — the timeout or the client disconnecting."
+**Red flag:** Using `Promise.race` with a `setTimeout` as a homemade timeout. The losing promise keeps running — the fetch or query isn't actually cancelled, so it still holds a connection and can still fire side effects after you've "timed out."
+
+### Stream-processing a file too big for memory
+**They ask:** "You need to process a multi-gigabyte CSV or JSON file. How do you do it without loading it into memory?"
+
+You never `readFile` it — you create a read stream and pipe it through an incremental parser so only a small window is in memory at once, and backpressure keeps the reader from outrunning your processing. For CSV, a streaming parser (`csv-parse`) emits row by row; for large JSON, a streaming parser like `stream-json` emits values/array-items as they're parsed instead of building the whole tree. You pipe read → parse → your transform (validate, map, write to DB in batches) → destination, and `pipeline()` ties error handling and cleanup together across all of it.
+
+```js
+const { pipeline } = require('node:stream/promises');
+await pipeline(
+  fs.createReadStream('huge.csv'),
+  parse({ columns: true }),          // csv-parse: emits one row at a time
+  new Transform({ objectMode: true, transform(row, _e, cb) { /* batch-insert */ cb(); } }),
+);
+```
+
+**Say it:** "For a file bigger than memory I stream it through an incremental parser — csv-parse or stream-json — so I'm only ever holding a few rows, and backpressure through pipeline() stops the reader from overwhelming the database writes."
+**Red flag:** `JSON.parse(fs.readFileSync(...))` on a large file. It reads the whole thing into memory and blocks the event loop for the entire parse — it works on your laptop's sample and OOMs or stalls the server on the real file.

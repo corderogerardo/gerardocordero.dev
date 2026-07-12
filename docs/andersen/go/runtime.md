@@ -254,3 +254,65 @@ Beyond giving each case an addressable name (`go test -run TestX/case_name`), `t
 
 **Say it:** "t.Run gives me per-case isolation and addressability, which is what makes it safe to add `t.Parallel()` to individual table cases — a bare for-loop with t.Fatal inside it stops the whole table on the first failure, subtests don't."
 **Red flag:** Calling `t.Parallel()` inside a table-driven subtest without capturing the loop variable correctly in pre-1.22 Go — every parallel subtest can end up running with the same (final) case value.
+
+### Reducing allocations in a hot path
+**They ask:** "A hot code path is allocating too much and GC pressure is hurting latency. How do you bring allocations down?"
+
+You measure first, then attack the escapes — allocation reduction is a profile-driven loop, never a guess. Run the benchmark with `-benchmem` to get `allocs/op`, and `go build -gcflags="-m"` to see exactly what escapes to the heap and why. Then the standard levers: **preallocate** slices and maps with a known capacity (`make([]T, 0, n)`) so append doesn't repeatedly grow-and-copy; **reuse buffers** with `sync.Pool` or a `bytes.Buffer` you `Reset` instead of allocating per call; **avoid interface boxing and unnecessary pointers** in the hot loop, since those force heap escapes; and prefer `strings.Builder` over `+=` for building strings. The goal is fewer, larger allocations kept on the stack — each heap allocation you remove is work the GC never has to do.
+
+```bash
+go test -bench=. -benchmem        # allocs/op is the number to drive down
+go build -gcflags="-m" ./...      # "escapes to heap" tells you where
+```
+
+**Say it:** "I profile with -benchmem and -gcflags=-m to find what's escaping, then cut allocations by preallocating with known capacity, reusing buffers via sync.Pool, and keeping values off the heap — fewer heap allocations is directly less GC work, which is what's actually hurting the latency."
+**Red flag:** Reaching for `sync.Pool` first, before profiling. Pool has real complexity and only pays off for genuinely hot, short-lived, expensive-to-allocate objects — for most hot paths, preallocating a slice with the right capacity removes more allocations for far less risk.
+
+### Program Structure: package, import, func main
+**They ask:** "What's the minimal skeleton of a runnable Go program?"
+
+Every Go file starts with a `package` declaration — `package main` specifically marks a program as executable (any other name, like `package util`, marks it as a library package meant to be imported, not run). `import` brings in other packages by their module path, and an executable package must have exactly one `func main()` with no arguments and no return value — that's the entry point the compiled binary actually calls.
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("hello")
+}
+```
+
+**Say it:** "package main plus a func main() is what makes a Go program executable instead of just an importable library — go build only produces a runnable binary for a main package."
+**Red flag:** Naming the package something other than `main` and then being confused why `go build` produces no runnable binary — a non-main package compiles as a library; it has nothing to execute.
+
+### go run vs go build
+**They ask:** "What's actually different between `go run` and `go build`?"
+
+`go build` compiles the package into a binary on disk and stops there — you get an artifact you can distribute, run repeatedly, or deploy without the Go toolchain installed. `go run` compiles to a temporary location, executes it immediately, and discards the binary afterward — convenient for quick iteration during development, but not what you want for anything you're going to run more than once or ship. Neither one runs tests; that's `go test`'s job.
+
+```bash
+go build -o app .    # produces ./app binary, doesn't run it
+go run .             # compiles to a temp binary, runs it, deletes it
+```
+
+**Say it:** "go run is for fast local iteration — compile, execute, discard — go build is what actually produces the binary you deploy or hand off, which is why CI pipelines build and then run the artifact, not `go run` the source."
+**Red flag:** Using `go run` in a Dockerfile or deploy script — it recompiles on every invocation and leaves nothing durable behind; a real deploy needs `go build`'s binary.
+
+### Writing a Basic Test Function
+**They ask:** "What makes a function in Go a test, and how does `go test` find it?"
+
+`go test` discovers tests by naming convention and file suffix, not annotations — a test lives in a `_test.go` file, in a function named `TestXxx` (capital first letter after `Test`) that takes a single `*testing.T` parameter. Inside, you signal failure by calling `t.Error`/`t.Errorf` (logs the failure but keeps running the rest of the test) or `t.Fatal`/`t.Fatalf` (logs and stops that test immediately) — there's no `assert` keyword built in, which is why testing libraries like testify exist to add that on top.
+
+```go
+// math_test.go
+func TestAdd(t *testing.T) {
+    got := Add(2, 3)
+    if got != 5 {
+        t.Errorf("Add(2, 3) = %d, want 5", got)
+    }
+}
+```
+
+**Say it:** "go test finds tests purely by convention — a _test.go file, a TestXxx function taking *testing.T — and t.Errorf keeps the test running after a failure while t.Fatalf stops it immediately, which matters when a later assertion would panic on bad state."
+**Red flag:** Using `t.Fatal` inside a goroutine launched from within a test — `Fatal` calls `runtime.Goexit`, which only stops the goroutine that called it, not the whole test, and the test can report a false pass while the failure is silently swallowed.

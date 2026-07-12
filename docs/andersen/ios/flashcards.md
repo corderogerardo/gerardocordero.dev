@@ -17,6 +17,10 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ## Concurrency
 
+### Junior Foundations
+
+- Why must UI updates happen on the main thread, and how do you get back to it after a background task? — [answer](concurrency.md#the-main-thread-rule) {J1, J2, J3}
+
 ### Concurrency
 
 - Walk me through Grand Central Dispatch — sync vs async, queues, and QoS. — [answer](concurrency.md#gcd-fundamentals)
@@ -34,6 +38,24 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ## Swift
 
+### Junior Foundations
+
+- When do you use `var` versus `let`, and why does Swift push you toward `let`? — [answer](swift.md#var-vs-let) {J1, J2, J3}
+- Walk me through Swift's access levels — private, fileprivate, internal, public, open. — [answer](swift.md#access-control-in-swift) {J1, J2, J3}
+- What are Swift extensions for, and what can't they do? — [answer](swift.md#extensions) {J1, J2, J3}
+- Give me the quick version — what's a struct, a tuple, and an enum in Swift, and when do you reach for each? — [answer](swift.md#structs-tuples-and-enums) {J1, J2, J3}
+- What's the difference between a stored and a computed property? — [answer](swift.md#computed-properties-vs-stored-properties) {J1, J2, J3}
+- `guard let` versus `if let` — when do you reach for each? — [answer](swift.md#guard-vs-if-let) {J1, J2, J3}
+- How does Swift's error handling work — `throws`, `try`, `do`/`catch`? — [answer](swift.md#error-handling-with-throws-try-and-catch) {J1, J2, J3}
+- What is a protocol in Swift, and how does a type conform to it? — [answer](swift.md#defining-and-conforming-to-a-protocol) {J1, J2, J3}
+- What are associated values on a Swift enum, and why are they useful? — [answer](swift.md#enums-with-associated-values) {J1, J2, J3}
+- What do `?.` and `??` do in Swift? — [answer](swift.md#optional-chaining-and-nil-coalescing) {J1, J2, J3}
+- What are Swift's basic collection types, and when do you use each? — [answer](swift.md#swift-collection-types--array-dictionary-set) {J1, J2, J3}
+- What do `map`, `filter`, and `reduce` do on a Swift array? — [answer](swift.md#map-filter-and-reduce) {J1, J2, J3}
+- How does type inference work in Swift, and when do you still annotate? — [answer](swift.md#type-inference-and-type-annotations) {J1, J2, J3}
+- How do you build and combine strings in Swift? — [answer](swift.md#string-basics-and-interpolation) {J1, J2, J3}
+- What are default parameter values and variadic parameters in Swift? — [answer](swift.md#default-and-variadic-parameters) {J1, J2, J3}
+
 ### Swift
 
 - Walk me through Swift's optionals — why does the language force you to unwrap them, and what are the safe ways to do it? — [answer](swift.md#optionals-and-safe-unwrapping)
@@ -47,6 +69,12 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is `@resultBuilder` and how does SwiftUI use it? — [answer](swift.md#resultbuilder)
 
 ## SwiftUI
+
+### Junior Foundations
+
+- What is a View in SwiftUI, and how is it different from a UIView? — [answer](swiftui.md#what-is-a-swiftui-view) {J1, J2, J3}
+- What do `@State` and `@Binding` do, and how do they relate? — [answer](swiftui.md#state-and-binding-basics) {J1, J2, J3}
+- SwiftUI or UIKit — how do you choose today? — [answer](swiftui.md#uikit-vs-swiftui--when-to-use-each) {J1, J2, J3}
 
 ### SwiftUI
 
@@ -62,6 +90,14 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - You've got a SwiftUI screen with hundreds of animating elements and it's dropping frames — what tools do you reach for? — [answer](swiftui.md#high-performance-swiftui)
 
 ## UIKit
+
+### Junior Foundations
+
+- What is the delegate pattern, and why is a delegate usually `weak`? — [answer](uikit.md#the-delegate-pattern) {J1, J2, J3}
+- What's the difference between a UIView and a UIViewController? — [answer](uikit.md#uiviewcontroller-vs-uiview) {J1, J2, J3}
+- What are IBOutlet and IBAction? — [answer](uikit.md#iboutlet-and-ibaction) {J1, J2, J3}
+- How does navigation between screens work with a UINavigationController? — [answer](uikit.md#uinavigationcontroller--push-and-pop) {J1, J2, J3}
+- What are the ways to build a UIKit screen, and what's the trade-off? — [answer](uikit.md#storyboard-vs-xib-vs-programmatic-ui) {J1, J2, J3}
 
 ### UIKit
 
@@ -86,6 +122,10 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ## Data Persistence
 
+### Junior Foundations
+
+- What is UserDefaults, and what should you *not* store in it? — [answer](persistence.md#userdefaults-basics) {J1, J2, J3}
+
 ### Data Persistence
 
 - Keychain, UserDefaults, and .plist — how do you decide which one to use, and how do you share data across an app and its extensions? — [answer](persistence.md#keychain-userdefaults-plist-and-app-groups) {J3, M1}
@@ -95,6 +135,10 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Beyond Core Data and UserDefaults, what are your other options for persisting data on-device? — [answer](persistence.md#nsfilemanager-archiving-sqlite-nscache-and-uidocument) {M2, M3, S1, S2}
 
 ## Network
+
+### Junior Foundations
+
+- How do you make a simple GET request and decode JSON in Swift? — [answer](networking.md#making-a-basic-network-request) {J1, J2, J3}
 
 ### Networking
 

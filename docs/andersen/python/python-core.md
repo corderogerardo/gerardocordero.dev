@@ -588,3 +588,234 @@ class Service(LoggingMixin, Base):
 
 **Say it:** "`super()` means 'the next class in the MRO,' not 'my parent' — that's what makes the diamond problem resolvable, but it also means every class in a cooperative multiple-inheritance chain must call `super().__init__()` or the next mixin in line gets silently skipped."
 **Red flag:** Calling `Base.__init__(self)` directly instead of `super().__init__()` in a mixin — it bypasses the MRO and can run a base class's initializer twice, or skip a sibling mixin entirely.
+
+### Positional, keyword, and default arguments
+**They ask:** "What's the difference between positional and keyword arguments, and how do default argument values work?"
+
+The point of the distinction is call-site clarity and flexibility: positional arguments are matched by order, keyword arguments are matched by name, and a function can accept both. Keyword arguments let a caller skip ahead to a later parameter without naming everything before it, and they make a call self-documenting (`create_user(name="Al", active=False)` reads better than three unlabeled positions). A default value (`def f(x, y=10):`) makes a parameter optional — it's evaluated **once**, when the function is *defined*, not on each call, which is the root of Python's most famous gotcha (see the mutable-default-argument card).
+
+```python
+def greet(name, greeting="Hello"):
+    return f"{greeting}, {name}!"
+
+greet("Ana")                      # "Hello, Ana!" — greeting uses the default
+greet("Ana", greeting="Hi")        # "Hi, Ana!" — keyword argument
+greet(name="Ana", greeting="Hi")   # same, both as keywords
+```
+
+**Say it:** "Positional args are matched by order, keyword args by name, and a default value is evaluated once at function-definition time — not per call — which is why I never default to a mutable object."
+**Red flag:** Assuming a default argument's expression re-evaluates on every call — it doesn't, which matters a lot the moment the default is something like `[]` or `datetime.now()`.
+
+### *args and **kwargs
+**They ask:** "What are `*args` and `**kwargs` for, and how do they work?"
+
+They exist for writing functions that accept a variable, not-known-in-advance number of arguments — wrapper functions, decorators, and APIs that need to forward whatever they're given. `*args` collects any extra **positional** arguments into a tuple; `**kwargs` collects any extra **keyword** arguments into a dict. The names `args`/`kwargs` are convention, not syntax — the `*`/`**` unpacking is what matters. The same syntax works in reverse at a call site: `*a_list` unpacks a list into positional arguments, `**a_dict` unpacks a dict into keyword arguments.
+
+```python
+def log_call(*args, **kwargs):
+    print(f"called with args={args}, kwargs={kwargs}")
+
+log_call(1, 2, name="Al")   # args=(1, 2), kwargs={'name': 'Al'}
+
+def wrapper(*args, **kwargs):
+    return real_function(*args, **kwargs)   # forwards everything through unchanged
+```
+
+**Say it:** "`*args` gathers extra positional arguments into a tuple and `**kwargs` gathers extra keyword arguments into a dict — the most common real use is a wrapper or decorator that needs to forward an arbitrary call through unchanged with `func(*args, **kwargs)`."
+**Red flag:** Overusing `**kwargs` in a public API to avoid writing explicit parameters — it hides the actual function signature from callers, IDEs, and type checkers; reserve it for genuine pass-through cases like decorators.
+
+### Scope and the LEGB rule
+**They ask:** "How does variable scope work in Python? What is the LEGB rule?"
+
+LEGB is the order Python searches when resolving a name: **L**ocal (the current function), **E**nclosing (any outer function, for closures), **G**lobal (the module level), **B**uilt-in (Python's built-ins like `len`, `print`). Python stops at the first scope where the name is found — a local variable shadows a global one with the same name, which is usually what you want but can also hide a bug if it's accidental. Unlike some languages, Python has no block scope: a variable defined inside an `if` or `for` block is visible in the whole enclosing function, not just that block.
+
+```python
+x = "global"
+def outer():
+    x = "enclosing"
+    def inner():
+        x = "local"
+        print(x)         # "local" — L found first
+    inner()
+    print(x)              # "enclosing" — E, inner's assignment didn't touch this x
+outer()
+print(x)                  # "global"
+```
+
+**Say it:** "LEGB — local, enclosing, global, built-in — is the order Python resolves a name in, stopping at the first match, and unlike C-family languages Python has no block scope, so a variable assigned inside an `if` or `for` leaks into the whole function."
+**Red flag:** Assuming a `for` loop variable or an `if` block's assignment is scoped to that block, the way it would be in Java or JS — in Python it's visible for the rest of the enclosing function.
+
+### global and nonlocal
+**They ask:** "What do the `global` and `nonlocal` keywords do?"
+
+Both exist to solve the same problem — Python's default behavior is that *assigning* to a name inside a function creates a new local variable, even if a same-named variable exists in an outer scope (reading doesn't have this issue; only assignment does). `global` tells the interpreter "when I assign to this name, modify the module-level variable, don't shadow it locally." `nonlocal` does the same thing one level up: it targets the nearest **enclosing function's** variable, not the global one — used inside closures that need to mutate a variable from their outer function.
+
+```python
+counter = 0
+def increment():
+    global counter
+    counter += 1   # without `global`, this raises UnboundLocalError
+
+def make_counter():
+    count = 0
+    def increment():
+        nonlocal count
+        count += 1   # without `nonlocal`, this raises UnboundLocalError
+        return count
+    return increment
+```
+
+**Say it:** "Assigning to a name inside a function makes it local by default, even if an outer variable shares the name — `global` opts into modifying the module-level variable instead, and `nonlocal` does the same for the nearest enclosing function, which is what a closure needs to mutate captured state."
+**Red flag:** Reaching for `global` as a general way to share state between functions — it usually signals the state belongs in a class or should be passed explicitly as a parameter/return value instead.
+
+### The mutable default argument trap
+**They ask:** "What's wrong with `def f(items=[]):`? Why is it considered a common Python bug?"
+
+This is one of the most-asked Python gotchas because it looks completely reasonable and silently corrupts state. A default argument value is evaluated **once**, at function-definition time, and that *same object* is reused on every call that doesn't pass its own value — so if the default is mutable (a list, dict, or set) and the function mutates it, changes persist across unrelated calls. The fix is to default to `None` and create the mutable object inside the function body, which runs fresh on every call.
+
+```python
+def add_item(item, items=[]):   # BUG: same list reused across all calls
+    items.append(item)
+    return items
+
+add_item("a")   # ["a"]
+add_item("b")   # ["a", "b"] — surprise! not a fresh list
+
+def add_item_fixed(item, items=None):
+    if items is None:
+        items = []
+    items.append(item)
+    return items
+```
+
+**Say it:** "A mutable default is created once at def-time and shared across every call that doesn't override it — I always default to `None` and build the list or dict inside the function body instead."
+**Red flag:** Defaulting a parameter to `[]`, `{}`, or a class instance directly in the signature — it's a bug waiting to surface the first time two callers rely on the default in a row.
+
+### Lambda functions
+**They ask:** "What is a lambda in Python, and when would you use one?"
+
+A lambda is a small anonymous function, restricted to a single expression (no statements, no assignments beyond its own body) — it exists for cases where a full `def` would be more ceremony than the logic deserves, typically as a short callback passed inline to something like `sorted()`, `map()`, or `filter()`. It's still just a function object; it can take arguments and defaults like any other.
+
+```python
+sorted(users, key=lambda u: u.age)                # inline sort key
+list(filter(lambda x: x % 2 == 0, range(10)))       # even numbers
+add = lambda a, b: a + b                             # works, but prefer `def add` — name it
+```
+
+**Say it:** "A lambda is a one-expression anonymous function — I reach for it as an inline callback, most often a sort or filter key, and switch to a named `def` the moment the logic needs more than one expression or a docstring."
+**Red flag:** Assigning a lambda to a name (`add = lambda a, b: a + b`) instead of just writing `def add(a, b): return a + b` — PEP 8 explicitly calls this out; a named `def` gives a better traceback and is no more verbose.
+
+### Classes, objects, and self
+**They ask:** "What is a class in Python, what is an object, and what does `self` refer to?"
+
+A **class** is a blueprint — it defines the attributes and methods instances will have, but creates nothing by itself. An **object** (or instance) is a concrete thing built from that blueprint via `ClassName()`; a program can create many independent objects from one class, each with its own state. `self` is how a method refers to *the specific instance it was called on* — when you write `user.greet()`, Python actually calls `User.greet(user)`, passing the instance as the first argument automatically; `self` is just the conventional name for that parameter, not a keyword.
+
+```python
+class Dog:
+    def bark(self):
+        return f"{self.name} says woof"
+
+rex = Dog()
+rex.name = "Rex"
+rex.bark()   # "Rex says woof" — self is rex, bound automatically
+```
+
+**Say it:** "A class is the blueprint, an object is an instance built from it, and `self` is just the instance itself, passed automatically as the first argument whenever you call a method on it — `user.greet()` is really `User.greet(user)` under the hood."
+**Red flag:** Forgetting `self` as the first parameter in an instance method definition — Python doesn't insert it for you in the signature, only at the call site, so `def greet():` on an instance method raises a `TypeError` about a missing argument the first time it's called.
+
+### The __init__ constructor
+**They ask:** "What is `__init__` used for, and is it the same as a constructor?"
+
+`__init__` is the initializer, called automatically right after a new instance is created, and it's where you set up an object's starting state — assigning arguments to `self.attribute` so every instance starts consistent. It's technically not the constructor in the strictest sense (that's `__new__`, which actually allocates the object — see the `__new__` vs `__init__` card) but for everyday class-writing, `__init__` is what people mean by "the constructor," and that's fine in casual usage.
+
+```python
+class User:
+    def __init__(self, name, active=True):
+        self.name = name
+        self.active = active
+
+u = User("Ana")   # __init__ runs automatically, sets self.name and self.active
+```
+
+**Say it:** "`__init__` runs automatically right after instance creation and is where I set up initial state on `self` — strictly `__new__` is the actual constructor that allocates the object, but `__init__` is what does the everyday work of initializing it."
+**Red flag:** Doing meaningful setup work in a separate `setup()` method that has to be called manually after `User()` — that's what `__init__` is for; forgetting to call a manual setup method is a bug `__init__` structurally prevents.
+
+### Instance attributes vs. class attributes
+**They ask:** "What's the difference between an instance attribute and a class attribute?"
+
+A **class attribute** is defined directly in the class body and shared by every instance — one object in memory, all instances see the same value until an instance shadows it. An **instance attribute** is set on `self` (usually in `__init__`) and belongs to just that one object. The trap: reading a class attribute through an instance works fine, but if that attribute is mutable and you mutate it through an instance without reassigning, you're mutating the *shared* object — every instance sees the change, which is rarely what's intended.
+
+```python
+class Dog:
+    species = "Canis familiaris"   # class attribute — shared
+    def __init__(self, name):
+        self.name = name             # instance attribute — per-object
+
+a, b = Dog("Rex"), Dog("Fido")
+a.species   # "Canis familiaris" — shared
+a.name      # "Rex" — unique to a
+```
+
+**Say it:** "Class attributes live once on the class and are shared by every instance; instance attributes live on `self` and are per-object — the bug to avoid is mutating a mutable class attribute through an instance, since that change is visible to every other instance too."
+**Red flag:** Using a mutable class attribute (`tags = []`) as if it were a fresh per-instance default — every instance shares that exact list object, so appending through one instance leaks into all the others. This is the class-level cousin of the mutable-default-argument trap.
+
+### Single inheritance basics
+**They ask:** "How does inheritance work in Python? What happens when a subclass doesn't define `__init__`?"
+
+Inheritance lets a class (the subclass) reuse and extend another class's (the superclass's) attributes and methods, expressed by `class Sub(Base):`. If the subclass doesn't define its own `__init__`, it inherits the base class's `__init__` unchanged — Python looks up the method resolution order to find one. If the subclass *does* define `__init__`, it fully overrides the base's — the base's `__init__` won't run automatically anymore, which is why a subclass that wants both its own setup and the base's setup calls `super().__init__(...)` explicitly.
+
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    def speak(self):           # overrides Animal.speak
+        return f"{self.name} says woof"
+    # no __init__ defined — inherits Animal.__init__ as-is
+
+Dog("Rex").speak()   # "Rex says woof"
+```
+
+**Say it:** "A subclass inherits everything from its base by default, including `__init__`, unless it defines its own — and if it defines its own `__init__`, it has to call `super().__init__(...)` explicitly to still run the base class's setup, because overriding a method doesn't automatically chain to the parent's version."
+**Red flag:** Defining `__init__` in a subclass and forgetting `super().__init__(...)` — any setup the base class did (assigning attributes, opening a connection) silently doesn't happen.
+
+### What super() does
+**They ask:** "What does `super()` do, and why not just call the parent class by name?"
+
+`super()` returns a proxy that routes attribute/method lookups to the next class in the method resolution order, letting a subclass call the base class's version of a method it's overriding — most commonly `super().__init__(...)` to run the parent's setup before adding the subclass's own. Calling the parent class by name directly (`Animal.__init__(self, name)`) works for simple single inheritance, but breaks down under multiple inheritance because it hardcodes a specific class instead of following the MRO — `super()` is the version that stays correct if the class hierarchy changes.
+
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+class Dog(Animal):
+    def __init__(self, name, breed):
+        super().__init__(name)   # runs Animal.__init__ first
+        self.breed = breed
+```
+
+**Say it:** "`super()` calls the next class in the MRO rather than hardcoding a specific parent by name, which is why it's the correct way to invoke a base class's method even in simple single inheritance — it stays correct if the hierarchy ever grows into multiple inheritance."
+**Red flag:** Hardcoding `Animal.__init__(self, name)` instead of `super().__init__(name)` — it works today, but breaks the moment the class hierarchy changes, and it's simply not the idiom.
+
+### Name mangling and "private" attributes
+**They ask:** "How do you make an attribute private in Python? What's the difference between `_name` and `__name`?"
+
+Python has no true access-control keywords like `private`/`protected` — enforcement is by convention, not the language. A single leading underscore (`_name`) is a convention meaning "internal, not part of the public API" — nothing stops external code from accessing it, it's a signal to other developers. A double leading underscore (`__name`, no trailing underscores) triggers **name mangling**: Python rewrites it internally to `_ClassName__name`, which mainly exists to avoid accidental name collisions in subclasses, not to enforce privacy — it's still accessible via the mangled name if someone really wants it.
+
+```python
+class Account:
+    def __init__(self, balance):
+        self._balance = balance     # convention: "internal, please don't touch"
+        self.__secret = "x"          # name-mangled to _Account__secret
+
+a = Account(100)
+a._balance          # 100 — accessible, just a convention against it
+a._Account__secret  # "x" — still accessible via the mangled name
+```
+
+**Say it:** "Python doesn't have real private attributes — a single underscore is a convention meaning 'internal,' and a double underscore triggers name mangling to avoid subclass name collisions, but it's still reachable via `_ClassName__attr` — neither one actually enforces access control."
+**Red flag:** Claiming `__name` "makes it private" in the access-control sense — it's collision avoidance for subclasses, not a security or encapsulation boundary; Python trusts the caller.
