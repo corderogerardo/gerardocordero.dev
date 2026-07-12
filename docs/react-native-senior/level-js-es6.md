@@ -1,11 +1,13 @@
 # JavaScript (ES6+) — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### ES6 syntax essentials
 **They ask:** "Run me through the ES6 features you use daily — let/const, destructuring, arrow functions, and the modern array/object helpers."
 
 These features exist to kill whole classes of bugs and boilerplate that `var` and ES5 loops created. `let`/`const` are block-scoped, so a variable can't leak out of a `for` block; `const` fixes the binding (the object's contents can still mutate). The Temporal Dead Zone is the span from the top of a block to the declaration line — the binding is hoisted but uninitialized, so touching it early throws a `ReferenceError` instead of silently reading `undefined`.
 
-Destructuring pulls fields out with renaming and defaults; spread (`...`) expands an iterable into a shallow copy (the backbone of immutable updates), while rest collects leftovers. Optional chaining (`?.`) short-circuits to `undefined` on `null`/`undefined` so a missing path doesn't crash. Arrow functions bind `this` lexically — the reason they replaced `.bind(this)` in callbacks. `for...of` iterates values (not keys like `for...in`), template literals interpolate, and `Object.entries`/`fromEntries` plus `flat`/`flatMap`/`includes`/`Array.from` replace hand-rolled loops.
+Destructuring pulls fields out with renaming and defaults; spread (`...`) makes shallow copies — but it's two rules, not one: in an array or call it expands an **iterable**, while in an object literal (`{ ...defaults }`) it copies **enumerable own properties** — the backbone of immutable updates, while rest collects leftovers. Optional chaining (`?.`) short-circuits to `undefined` on `null`/`undefined` so a missing path doesn't crash. Arrow functions bind `this` lexically — the reason they replaced `.bind(this)` in callbacks. `for...of` iterates values (not keys like `for...in`), template literals interpolate, and `Object.entries`/`fromEntries` plus `flat`/`flatMap`/`includes`/`Array.from` replace hand-rolled loops.
 
 ```js
 const { name = 'anon', ...rest } = user;

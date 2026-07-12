@@ -218,7 +218,7 @@ export default function FlashcardDeck({ initialCards, initialCategories, initial
         />
       ) : (
         <Card className="text-center py-12">
-          <p className="text-muted-foreground">No cards in this category</p>
+          <p className="text-muted-foreground">No cards match the selected filters</p>
         </Card>
       )}
 

@@ -1,5 +1,7 @@
 # Software Development Processes — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### Bug tracking systems
 **They ask:** "Why do teams use a bug tracker like Jira instead of a spreadsheet or a Slack thread?"
 
@@ -75,7 +77,7 @@ To handle uncertainty I use **PERT**: for each task take optimistic (O), most li
 
 The core trade is *when you find out you were wrong*. Waterfall runs phases once and in order — requirements → design → build → test → deploy → maintain — with each phase gated and signed off before the next. It's predictable and heavily documented, but feedback comes late: if the requirements were wrong, you learn it at the testing/deploy phase, when change is most expensive. Agile inverts that — it delivers working software in short iterations so feedback arrives every cycle and the plan bends to reality; the cost is less up-front certainty on final scope and date.
 
-A Scrum team has three roles. The **Product Owner** owns the backlog and priorities — the *what and why*. The **Scrum Master** is a facilitator who removes blockers and protects the process — not a manager. The **Development Team** is cross-functional and self-organizing — they decide *how* and commit to the sprint. Ceremonies (planning, daily standup, review, retro) keep the loop tight.
+A Scrum team has three roles. The **Product Owner** owns the backlog and priorities — the *what and why*. The **Scrum Master** is a facilitator who removes blockers and protects the process — not a manager. The **Developers** (the Scrum Guide's current term — it dropped "Development Team" in 2020) are cross-functional and self-managing — they decide *how* and *forecast* the sprint's work rather than formally committing to a fixed scope. Ceremonies (planning, daily standup, review, retro) keep the loop tight.
 
 **Say it:** "Waterfall gates phases and gets feedback late; Agile iterates and gets it every cycle. In Scrum the PO owns priorities, the Scrum Master removes blockers, and a cross-functional team owns the how."
 **Red flag:** Calling the Scrum Master the team's boss. Say they're a facilitator who clears impediments — the team is self-organizing and the Product Owner, not the Scrum Master, sets priorities.

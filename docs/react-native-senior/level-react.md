@@ -1,5 +1,7 @@
 # React — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### React Fiber
 **They ask:** "What is Fiber in React, and in your own words, what does it do?"
 
@@ -217,7 +219,7 @@ Both exist to preserve *referential identity* across renders — and the senior 
 They earn their keep in two situations: skipping an genuinely expensive recomputation on every render, and keeping a stable reference so a `React.memo` child or an effect dependency doesn't re-run needlessly.
 
 ```jsx
-const sorted = useMemo(() => bigList.sort(cmp), [bigList]);
+const sorted = useMemo(() => [...bigList].sort(cmp), [bigList]); // copy first — sort() mutates in place
 const onSelect = useCallback(id => setSelected(id), []);
 ```
 

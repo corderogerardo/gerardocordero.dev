@@ -1,5 +1,7 @@
 # JavaScript (ES5) — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### Control flow and hoisting
 **They ask:** "Walk me through JavaScript's control-flow constructs, and explain what hoisting does to this code."
 
@@ -167,7 +169,7 @@ The senior nuance: `try/catch` only catches *synchronous* throws. A rejected Pro
 ### Macrotasks and microtasks
 **They ask:** "Explain the event loop, and predict the output order when a `setTimeout(…, 0)` and a resolved Promise are both queued."
 
-The event loop is the model that explains *why* async code runs in the order it does — get it wrong and you'll write race conditions you can't debug. JavaScript runs synchronous code on one call stack; when the stack is empty, the event loop pulls queued callbacks in to run. There are two queues, and their priority is the whole interview: the **microtask** queue (Promise callbacks, `queueMicrotask`) and the **macrotask** queue (`setTimeout`, `setInterval`, I/O).
+The event loop is the model that explains *why* async code runs in the order it does — get it wrong and you'll write race conditions you can't debug. JavaScript runs synchronous code on one call stack; when the stack is empty, the event loop pulls queued callbacks in to run. The priority between two *kinds* of work is the whole interview: **microtasks** (Promise callbacks, `queueMicrotask`) and **macrotasks** (`setTimeout`, `setInterval`, I/O). The portable guarantee is that the microtask queue drains completely after each macrotask, before the next one runs — hosts actually have several task sources and their own phases (Node's event-loop phases, the browser's render steps), so "two queues" is the mental model, not the literal implementation.
 
 The rule: after each macrotask (and after the initial sync code), the engine drains the *entire* microtask queue before touching the next macrotask. So `setTimeout(fn, 0)` does **not** run immediately — the `0` means "as soon as possible," but every pending microtask jumps ahead of it. Trace:
 
@@ -280,7 +282,7 @@ Dog.prototype.constructor = Dog;
 
 `finally` exists to guarantee cleanup runs no matter how the `try` exits — success, thrown error, or even a `return` — which is what keeps you from leaking resources on the error path. It runs after `try`/`catch` unconditionally, so it's where you close a connection, hide a spinner, or release a lock. The senior detail: `finally` runs *even if* `try` or `catch` returns or rethrows — its cleanup still executes before control actually leaves.
 
-The `Error` object is what you catch, and it carries three useful properties: `name` (the error type, e.g. `"TypeError"`), `message` (the human-readable description you passed to `new Error(...)`), and `stack` (a non-standard but universally supported trace of where it was thrown). Built-in subclasses — `TypeError`, `RangeError`, `SyntaxError` — let you branch on `err.name` or `err instanceof TypeError`, and you can extend `Error` for custom domain errors.
+The `Error` object is what you catch, and it carries three useful properties: `name` (the error type, e.g. `"TypeError"`), `message` (the human-readable description you passed to `new Error(...)`), and `stack` (a trace of where it was thrown — commonly available across engines but non-standard, not guaranteed by the language spec). Built-in subclasses — `TypeError`, `RangeError`, `SyntaxError` — let you branch on `err.name` or `err instanceof TypeError`, and you can extend `Error` for custom domain errors.
 
 **Say it:** "`finally` always runs — even on a return or rethrow — so it's my cleanup guarantee; and I catch `Error` objects for their `name`, `message`, and `stack`, branching on `instanceof` for typed handling."
 **Red flag:** Putting cleanup only in `try` or `catch`. If `try` throws, the cleanup in `try` never runs, and duplicating it in both branches is fragile — `finally` is the one place that always executes.
