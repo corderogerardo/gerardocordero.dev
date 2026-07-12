@@ -1,5 +1,7 @@
 # React Native — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### Xcode and Android Studio setup
 **They ask:** "A new hire can't get the app to build on either platform. Walk me through what actually has to be in place."
 
@@ -343,11 +345,11 @@ The pattern: on mount, `getItem` and hydrate state (guarding an initial loading 
 ### Secure Storage
 **They ask:** "When do you use secure storage, and what are its trade-offs?"
 
-Secure storage exists for one job: keeping secrets — auth tokens, refresh tokens, keys — out of plaintext by putting them in the platform's hardware-backed vault (iOS Keychain, Android Keystore/EncryptedSharedPreferences). The lead is the threat model: AsyncStorage is readable plaintext on a compromised or rooted device, so anything that grants account access belongs in secure storage.
+Secure storage exists for one job: keeping secrets — auth tokens, refresh tokens, keys — out of plaintext by putting them in the platform's OS-protected keystore (iOS Keychain, Android Keystore/EncryptedSharedPreferences) — hardware-backed (Secure Enclave / TEE / StrongBox) when the device supports it, and software-encrypted as a fallback otherwise. The lead is the threat model: AsyncStorage is readable plaintext on a compromised or rooted device, so anything that grants account access belongs in secure storage.
 
 The advantages: encryption at rest, OS-level access control, and optional biometric gating. The disadvantages a senior names honestly: it's slower and small-capacity (not for bulk data), the API is key-value only, values can be wiped on passcode removal or restored inconsistently across device migrations, and on a jailbroken device even the Keychain isn't absolute. In Expo you use `expo-secure-store`. So: secrets in secure storage, everything else in AsyncStorage/MMKV.
 
-**Say it:** "Secure storage puts tokens and keys in the hardware-backed Keychain or Keystore with encryption and optional biometrics — I use it for anything that grants account access, and keep bulk non-secret data in AsyncStorage since secure storage is slow and small."
+**Say it:** "Secure storage puts tokens and keys in the OS Keychain or Keystore with encryption and optional biometrics — hardware-backed when the device supports it — and I use it for anything that grants account access, keeping bulk non-secret data in AsyncStorage since secure storage is slow and small."
 **Red flag:** "I'll just encrypt values myself in AsyncStorage." Rolling your own crypto with a key you also have to store is weaker than the OS vault — use secure storage.
 
 ### Linking native libraries

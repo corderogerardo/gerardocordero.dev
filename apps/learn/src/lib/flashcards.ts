@@ -92,14 +92,15 @@ export function getAllFlashcards(): Flashcard[] {
   return cards
 }
 
-export function getCategories(): string[] {
-  return [...new Set(getAllFlashcards().map(c => c.category))]
+/** Derive from an already-parsed deck so a page parses the deck once, not per value. */
+export function getCategories(cards: Flashcard[]): string[] {
+  return [...new Set(cards.map(c => c.category))]
 }
 
 /** Andersen matrix levels present in the deck, in career order (J1 → S2). */
-export function getLevels(): string[] {
+export function getLevels(cards: Flashcard[]): string[] {
   const order = ['J1', 'J2', 'J3', 'M1', 'M2', 'M3', 'S1', 'S2']
-  const present = new Set(getAllFlashcards().flatMap(c => c.levels))
+  const present = new Set(cards.flatMap(c => c.levels))
   return order.filter(l => present.has(l))
 }
 

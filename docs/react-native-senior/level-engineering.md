@@ -1,5 +1,7 @@
 # Software Engineering Practices — Andersen matrix, junior→middle levels
 
+## Interview questions
+
 ### OOP fundamentals
 **They ask:** "What's the difference between a class and an object, and can you define the four pillars of OOP?"
 
@@ -47,7 +49,7 @@ GraphQL is a query language for APIs where the client declares exactly the data 
 
 Mechanically: the server publishes a **schema** of types and fields; the client sends a **query** naming precisely the fields it needs, nested to match the shape it wants; the server resolves each field and returns matching JSON. **Queries** read, **mutations** write, **subscriptions** stream. Concretely: instead of hitting `/user` then `/user/bookings` then `/booking/walker`, I send one query for `user { name bookings { walker { name } } }` and get exactly that tree back — no more, no less.
 
-**Say it:** "GraphQL lets the client ask for exactly the fields it needs from one typed endpoint, killing the over-fetch and the N+1 round trips REST forces on mobile."
+**Say it:** "GraphQL lets the client ask for exactly the fields it needs from one typed endpoint, killing the over-fetch and the extra round trips a naive REST client makes on mobile — REST can avoid them too with embedded representations or a BFF, GraphQL just makes it the default."
 **Red flag:** Saying GraphQL "replaces REST because it's newer." It's a trade-off — say it shines for nested/variable data needs but adds server complexity and complicates HTTP caching.
 
 ### AJAX and XHR basics
@@ -165,17 +167,17 @@ Mechanically, a build tool (webpack, Vite, esbuild; older Gulp/Grunt task runner
 
 Logging exists to make a running system observable — the difference between "it's broken somewhere" and "it fails at this line with this value" is whether you logged the right thing at the right level. The console is your first window; structured logging is the long game.
 
-The **console** beyond `console.log`: `console.error`/`console.warn` for severity, `console.table` for arrays of objects, `console.group` to nest, `console.time`/`timeEnd` for quick timing, plus the Network and Sources (breakpoints) tabs. For **app logging**, use **levels** — `debug`, `info`, `warn`, `error` — so you can turn down noise in production and still capture errors, and route them to a service (Sentry) instead of relying on someone watching a console. Concretely: I log at `error` with context (user id, request id) so a production crash is traceable, not just `console.log(x)`.
+The **console** beyond `console.log`: `console.error`/`console.warn` for severity, `console.table` for arrays of objects, `console.group` to nest, `console.time`/`timeEnd` for quick timing, plus the Network and Sources (breakpoints) tabs. For **app logging**, use **levels** — `debug`, `info`, `warn`, `error` — so you can turn down noise in production and still capture errors, and route them to a service (Sentry) instead of relying on someone watching a console. Concretely: I log at `error` with context (a request id, plus approved opaque ids — never raw PII) so a production crash is traceable, not just `console.log(x)`; where a real user identifier is genuinely needed I redact and cap retention.
 
 **Say it:** "I use log levels — debug/info/warn/error — so production stays quiet but every error is captured with context like a request id, and I route them to a service rather than a console nobody's watching."
-**Red flag:** Leaving `console.log` debugging statements in committed code. Say you use levels and remove or gate debug logs — stray logs leak data and clutter production.
+**Red flag:** Leaving `console.log` debugging statements in committed code, or logging raw user data. Say you use levels, gate debug logs, and keep PII out of logs — stray logs leak data and create needless retention risk.
 
 ### Web security fundamentals
 **They ask:** "Cover HTTP vs HTTPS, how you store passwords, and the common form/URL attacks."
 
 Security is non-negotiable because one gap exposes every user at once — so I treat inputs as hostile and never store what I can't afford to leak. **HTTPS** is HTTP over TLS: same semantics, but the transport is encrypted and the server authenticated, so traffic can't be read or tampered with in transit. Everything sensitive is HTTPS-only.
 
-**Passwords** are never stored plaintext or even plain-hashed — I use a slow, salted password hash (bcrypt/argon2) so a stolen database can't be reversed. A **hash** is one-way (integrity); an **HMAC** adds a secret key so you can verify the message came from someone who holds the key (authenticity), which a bare hash can't. **Attacks**: **XSS** injects script into a page — defend by escaping/encoding output and never `innerHTML` with user data; **CSRF** rides the user's cookies to forge requests — defend with anti-CSRF tokens and `SameSite` cookies; **semantic URL** attacks tamper with ids in the URL (`/account/123` → `/account/124`) — defend with server-side authorization checks. And **filter/validate all input** server-side.
+**Passwords** are never stored plaintext or even plain-hashed — I use a slow, salted password hash (bcrypt/argon2) so a stolen database can't be reversed. A **hash** is one-way (integrity); an **HMAC** adds a secret key so you can verify the message came from someone who holds the key (authenticity), which a bare hash can't. **Attacks**: **XSS** injects script into a page — defend by escaping/encoding output and never `innerHTML` with user data; **CSRF** rides the user's cookies to forge requests — defend with anti-CSRF tokens and `SameSite` cookies; **IDOR** (insecure direct object reference, aka BOLA) tampers with ids in the URL (`/account/123` → `/account/124`) — defend with a server-side authorization check on every object access, not just authentication. And **filter/validate all input** server-side.
 
 **Say it:** "I store passwords with a slow salted hash like bcrypt, serve everything over HTTPS, escape output against XSS, use anti-CSRF tokens, and validate every input server-side — a hash proves integrity, an HMAC adds authenticity with a secret key."
 **Red flag:** "I hash passwords with SHA-256." Fast hashes are brute-forceable — say bcrypt/argon2 with a salt. And never trust client-side validation for security; it's UX only.
@@ -235,15 +237,15 @@ The ladder: **O(1)** constant (hash lookup), **O(log n)** logarithmic (binary se
 
 Cacheability is one of REST's architectural constraints precisely because statelessness would otherwise force every read to hit the origin — caching is what buys REST its scalability, letting responses be reused without recomputation or another round trip. The uniform interface makes responses self-describing enough to cache safely.
 
-Mechanically, the server marks responses cacheable with headers: `Cache-Control` (`max-age`, `no-cache`, `private`/`public`) sets freshness; `ETag` gives a version fingerprint so the client can revalidate with `If-None-Match` and get a cheap `304 Not Modified` instead of the full body; `Last-Modified`/`If-Modified-Since` do the same by date. **GET** should be safe and idempotent, which is exactly why it's cacheable — POST generally isn't. Concretely: a walker list rarely changes, so I serve it with `Cache-Control: max-age=60` and an `ETag`; repeat loads within a minute skip the network entirely, and after that a 304 confirms nothing changed.
+Mechanically, the server marks responses cacheable with headers: `Cache-Control` (`max-age`, `no-cache`, `private`/`public`) sets freshness; `ETag` gives a version fingerprint so the client can revalidate with `If-None-Match` and get a cheap `304 Not Modified` instead of the full body; `Last-Modified`/`If-Modified-Since` do the same by date. Cacheability is ultimately driven by the response headers, not the verb — `GET` and `HEAD` are the safe, idempotent methods that are cacheable by default, but even a `POST` response can be cached when it explicitly opts in (`Cache-Control` on the response), which is rare in practice. Concretely: a walker list rarely changes, so I serve it with `Cache-Control: max-age=60` and an `ETag`; repeat loads within a minute skip the network entirely, and after that a 304 confirms nothing changed.
 
-**Say it:** "Caching is a REST constraint because statelessness would otherwise mean every read hits the origin — `Cache-Control` sets freshness and `ETag` enables cheap 304 revalidation, so GETs are reused instead of recomputed."
-**Red flag:** Caching non-idempotent requests. Say only safe methods (GET) are cacheable — caching a POST that mutates state is a correctness bug, not an optimization.
+**Say it:** "Caching is a REST constraint because statelessness would otherwise mean every read hits the origin — `Cache-Control` sets freshness and `ETag` enables cheap 304 revalidation, and cacheability is header-driven, GET just being the default cacheable method."
+**Red flag:** Conflating 'safe/idempotent' with 'cacheable' — they're separate. Cacheability is header-driven, but caching a mutating `POST` by accident is still a correctness bug: cache GETs by default and opt anything else in deliberately.
 
 ### GraphQL versus REST
 **They ask:** "When would you choose GraphQL over REST, and what do you give up?"
 
-The honest framing is trade-offs, not "newer is better." REST's role: resource-oriented, one URL per resource, leans on HTTP's built-in caching. GraphQL's role: a single typed endpoint where the client shapes the response — it eliminates over-fetching and the N+1 round trips REST forces when a screen needs data from several resources.
+The honest framing is trade-offs, not "newer is better." REST's role: resource-oriented, one URL per resource, leans on HTTP's built-in caching. GraphQL's role: a single typed endpoint where the client shapes the response — it eliminates over-fetching and the extra round trips you'd otherwise make when a screen needs data from several resources (REST can collapse them too with a compound endpoint or BFF, but that's bespoke work).
 
 GraphQL wins when the client's data needs are **nested and variable** — a mobile screen assembling user + bookings + walker in one query instead of three requests, each client asking for only the fields it renders. REST wins when data is **resource-shaped and cache-heavy** — HTTP caching, CDNs, and `ETag`s work out of the box, whereas GraphQL's single POST endpoint bypasses that and needs its own caching layer. GraphQL also adds server complexity (schema, resolvers, N+1 on the *server* side needing DataLoader) and makes rate-limiting harder since one query's cost is variable.
 

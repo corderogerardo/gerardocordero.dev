@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function HomePage() {
   const flashcards = getAllFlashcards()
-  const categories = getCategories()
-  const levels = getLevels()
+  const categories = getCategories(flashcards)
+  const levels = getLevels(flashcards)
 
   return (
     <main className="min-h-screen bg-background">
