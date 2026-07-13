@@ -15,6 +15,7 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How does libuv abstract OS-level I/O notification (epoll, kqueue, IOCP) into one event loop? — [answer](event-loop.md#epoll-kqueue-and-iocp)
 - Why can a single Node process handle thousands of concurrent connections without a thread per connection? — [answer](event-loop.md#why-one-thread-can-handle-thousands-of-connections)
 - How does Node's single-threaded event loop model compare to Apache's thread-per-request model, and what's the trade-off? — [answer](event-loop.md#comparing-nodes-model-to-a-traditional-thread-per-request-server)
+- What's the difference between setImmediate and setTimeout(fn, 0), and which runs first? — [answer](event-loop.md#setimmediate-vs-settimeoutfn-0)
 
 ## Frameworks
 
@@ -58,6 +59,12 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How does require() find and cache a module? — [answer](nodejs-core.md#commonjs-module-resolution-and-caching)
 - What are the real differences between CommonJS and native ES modules in Node, and where do they clash? — [answer](nodejs-core.md#commonjs-vs-es-modules)
 - What happens when two CommonJS modules require each other? — [answer](nodejs-core.md#circular-dependencies-in-commonjs)
+- What does the `exports` field in package.json do, and why is it stricter than `main`? — [answer](nodejs-core.md#the-packagejson-exports-field)
+- npm dependencies are a supply-chain risk — what do you actually do about it? — [answer](nodejs-core.md#defending-against-supply-chain-attacks)
+- What's the difference between Node.js and npm? — [answer](nodejs-core.md#whats-the-difference-between-nodejs-and-npm) {J1, J2, J3}
+- What are npm scripts, and how do you run one? — [answer](nodejs-core.md#npm-scripts) {J1, J2, J3}
+- What is the node_modules folder, and why don't we commit it to git? — [answer](nodejs-core.md#what-is-node_modules-and-why-isnt-it-committed) {J1, J2, J3}
+- What's the difference between `npm install` and `npm ci`? — [answer](nodejs-core.md#npm-install-vs-npm-ci) {J1, J2, J3}
 
 ## Streams
 
@@ -69,6 +76,20 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is object mode in streams, and when would you use it? — [answer](streams.md#object-mode-streams)
 - How would you gzip a file being streamed to an HTTP response without loading it into memory? — [answer](streams.md#piping-streams-to-compresstransform-on-the-fly)
 - How would you implement a custom Transform stream, and what do you have to get right? — [answer](streams.md#implementing-a-custom-transform-stream)
+- Three streams are chained with .pipe() and one errors mid-flight — what happens, and what should you use instead? — [answer](streams.md#error-handling-across-a-stream-pipeline)
+- What is highWaterMark, and when would you tune it up or down? — [answer](streams.md#highwatermark-and-stream-throughput)
+
+## Performance & Diagnostics
+
+### Profiling and diagnostics
+
+- A Node endpoint is pegging a CPU core — how do you find the hot function? — [answer](performance.md#profiling-a-cpu-bound-node-process) {M1, M2, M3, S1, S2}
+- Requests are slow but CPU looks fine and the DB is fast — what's your first suspicion, and how do you measure it? — [answer](performance.md#measuring-and-fixing-event-loop-lag) {M1, M2, M3, S1, S2}
+- A service's memory climbs until it OOMs every few days — how do you find the leak? — [answer](performance.md#diagnosing-a-memory-leak-in-a-running-service) {M1, M2, M3, S1, S2}
+- p99 latency tripled in production but p50 barely moved — walk me through debugging it. — [answer](performance.md#debugging-a-p99-latency-spike) {M2, M3, S1, S2}
+- When would you touch V8's heap and GC flags, and which ones? — [answer](performance.md#tuning-the-v8-heap-and-gc-flags) {M2, M3, S1, S2}
+- How do you tell whether garbage collection is what's hurting your latency? — [answer](performance.md#diagnosing-gc-pauses-that-hurt-latency) {M2, M3, S1, S2}
+- How do you load-test a Node API, and which latency number do you actually watch? — [answer](performance.md#load-testing-and-reading-percentiles) {M1, M2, M3, S1, S2}
 
 ## JavaScript (ES5)
 
@@ -97,6 +118,13 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is catastrophic backtracking in regex, and why is it a security concern (ReDoS)? — [answer](javascript-fundamentals.md#catastrophic-backtracking) {J1, J2, J3, M1, M2, M3, S1, S2}
 - What are the precise semantics of try/catch/finally, especially with return values? — [answer](javascript-fundamentals.md#trycatchfinally-semantics) {J2, J3, M1, M2, M3, S1, S2}
 - Why and how do you create custom Error subclasses? — [answer](javascript-fundamentals.md#custom-error-subclasses) {J2, J3, M1, M2, M3, S1, S2}
+- Walk me through `map`, `filter`, `find`, and `reduce` — when do you reach for each? — [answer](javascript-fundamentals.md#array-iteration-methods-map-filter-find-and-reduce) {J1, J2, J3}
+- What is a callback function, and why does JavaScript use them so much? — [answer](javascript-fundamentals.md#what-is-a-callback-function) {J1, J2, J3}
+- What's the difference between a function declaration, a function expression, and an arrow function? — [answer](javascript-fundamentals.md#function-declarations-vs-function-expressions-vs-arrow-functions) {J1, J2, J3}
+- What are the primitive data types in JavaScript? — [answer](javascript-fundamentals.md#javascripts-primitive-data-types) {J1, J2, J3}
+- How do you create and work with a plain object in JS? — [answer](javascript-fundamentals.md#object-literals-creating-and-accessing-properties) {J1, J2, J3}
+- What's the difference between synchronous and asynchronous code, in plain terms? — [answer](javascript-fundamentals.md#synchronous-vs-asynchronous-code) {J1, J2, J3}
+- What are `JSON.stringify` and `JSON.parse` for? — [answer](javascript-fundamentals.md#what-jsonstringify-and-jsonparse-actually-do) {J1, J2, J3}
 
 ## JavaScript (ES6+)
 
@@ -134,6 +162,10 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is the iterator protocol, and how does `for...of` rely on it? — [answer](javascript-modern.md#the-iterator-protocol) {M2, M3, S1, S2}
 - What is an async generator, and when do you reach for it? — [answer](javascript-modern.md#async-generators-and-for-await-of) {M2, M3, S1, S2}
 
+### ES6 classes
+
+- What does the ES6 class syntax actually give you? — [answer](javascript-modern.md#es6-class-syntax-basics) {J1, J2, J3}
+
 ## Node.js API
 
 ### HTTP, timers, filesystem, and events
@@ -157,11 +189,15 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What are the differences between `spawn`, `exec`, and `fork` in `child_process`? — [answer](nodejs-api.md#spawn-exec-and-fork) {J3, M1, M2, M3, S1}
 - How does a parent process communicate with a child created via `fork`? — [answer](nodejs-api.md#ipc-between-parent-and-child-processes) {J3, M1, M2, M3, S1}
 - What's the distinction between operational and programmer errors, and why does it change how you handle them? — [answer](nodejs-api.md#operational-vs-programmer-errors) {J3, M1, M2, M3, S1}
+- How do you attach a request ID or user to every log line without passing it through every function? — [answer](nodejs-api.md#asynclocalstorage-for-request-context) {M1, M2, M3, S1, S2}
+- How do you put a timeout on any async operation — a fetch or a DB call — and cancel it cleanly? — [answer](nodejs-api.md#timeouts-and-cancellation-with-abortsignal) {M1, M2, M3, S1, S2}
 
 ### Cluster and worker threads
 
 - How does the `cluster` module let a single-threaded Node process use multiple CPU cores? — [answer](nodejs-api.md#the-cluster-module) {J3, M1, M2, M3, S1}
 - When do you reach for `worker_threads` instead of `cluster`? — [answer](nodejs-api.md#worker_threads-vs-cluster) {J3, M1, M2, M3, S1}
+- Two worker_threads need to share data — what are your options and their costs? — [answer](nodejs-api.md#sharing-state-between-worker_threads) {M1, M2, M3, S1, S2}
+- You scale with the cluster module behind a load balancer — what breaks for WebSockets or in-memory sessions? — [answer](nodejs-api.md#cluster-sticky-sessions-and-shared-state) {M1, M2, M3, S1, S2}
 
 ### Native modules and Buffer
 
@@ -170,6 +206,8 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is `Buffer`, and why does Node need a separate binary type when JS has strings? — [answer](nodejs-api.md#buffer-and-binary-data) {J3, M1, M2, M3, S1, S2}
 - How does `Buffer` relate to JS's standard `TypedArray`/`ArrayBuffer`? — [answer](nodejs-api.md#buffer-vs-typedarray) {J3, M1, M2, M3, S1, S2}
 - How do you shut a Node server down cleanly instead of dropping in-flight requests? — [answer](nodejs-api.md#graceful-shutdown-and-process-signals) {M1, M2, M3, S1, S2}
+- What's the difference between Buffer.alloc and Buffer.allocUnsafe, and why does it matter for security? — [answer](nodejs-api.md#bufferalloc-vs-bufferallocunsafe) {J3, M1, M2, M3, S1, S2}
+- You need to process a multi-gigabyte CSV or JSON file — how do you do it without loading it into memory? — [answer](nodejs-api.md#stream-processing-a-file-too-big-for-memory) {M1, M2, M3, S1, S2}
 
 ## Databases
 
@@ -256,6 +294,7 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is AJAX, and how does the modern `fetch` API relate to the older `XMLHttpRequest`? — [answer](networking.md#ajax-and-xmlhttprequest-vs-fetch) {J1, J2, J3, M1, M2, M3, S1, S2}
 - What problem does CORS solve, and what triggers a preflight request? — [answer](networking.md#cors-what-it-protects-and-preflight-requests) {J1, J2, J3, M1, M2, M3, S1, S2}
 - What's the most common dangerous CORS misconfiguration you see in real APIs? — [answer](networking.md#cors-misconfigurations) {J1, J2, J3, M1, M2, M3, S1, S2}
+- What do HTTP status codes actually communicate, and what do the ranges mean? — [answer](networking.md#http-status-codes-2xx-4xx-5xx) {J1, J2, J3}
 - How does long polling work, and why was it used before WebSockets were widely available? — [answer](networking.md#long-polling) {J1, J2, J3, M1, M2, M3, S1}
 - How does a WebSocket connection get established, and how is it different from HTTP after that? — [answer](networking.md#websocket-handshake-and-protocol) {J1, J2, J3, M1, M2, M3, S1, S2}
 - For a real-time feature, how do you decide between WebSocket, polling, long polling, and SSE? — [answer](networking.md#websocket-vs-http-polling) {J1, J2, J3, M1, M2, M3, S1, S2}
@@ -280,6 +319,8 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Why does structured logging matter more than readable console output in production? — [answer](engineering.md#structured-logging) {J1, J2, J3, M1, M2, M3, S1, S2}
 - What's the difference between logs, metrics, and traces, and why do you need all three? — [answer](engineering.md#application-monitoring-and-metrics) {J1, J2, J3, M1, M2, M3, S1, S2}
 - How does distributed tracing actually work across service boundaries? — [answer](engineering.md#distributed-tracing) {J1, J2, J3, M1, M2, M3, S1, S2}
+- Your service exposes health checks for the orchestrator — what's the difference between liveness and readiness? — [answer](engineering.md#health-checks-liveness-vs-readiness) {M1, M2, M3, S1, S2}
+- When do you reach for `console.log` versus an actual debugger? — [answer](engineering.md#consolelog-debugging-vs-a-real-debugger) {J1, J2, J3}
 
 ### Refactoring
 
@@ -317,6 +358,9 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What's the practical difference between hashing and encryption, and why does password storage need one specifically, never the other? — [answer](engineering.md#hashing-vs-encryption) {J3, M1, M2, M3, S1, S2}
 - JWT vs server-side sessions — what's the actual trade-off, not just 'JWT is stateless'? — [answer](engineering.md#jwt-and-session-based-auth-trade-offs) {J3, M1, M2, M3, S1, S2}
 - What's the difference between validation and sanitization, and where should each happen? — [answer](engineering.md#input-validation-and-sanitization) {J3, M1, M2, M3, S1, S2}
+- How do you handle secrets — DB passwords, API keys — across dev, staging, and prod? — [answer](engineering.md#managing-secrets-across-environments) {J3, M1, M2, M3, S1, S2}
+- How do you prevent SQL and NoSQL injection in a Node service specifically? — [answer](engineering.md#preventing-injection-in-a-node-backend) {J3, M1, M2, M3, S1, S2}
+- A Node endpoint accepts file uploads — what do you have to get right? — [answer](engineering.md#handling-file-uploads-safely) {M1, M2, M3, S1, S2}
 
 ### Architecture and Design
 
@@ -343,6 +387,7 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - Compare trunk-based development, Git Flow, and GitHub Flow — what does each optimize for? — [answer](process.md#git-branching-strategies) {J1, J2, J3, M1, M2, M3, S1, S2}
 - When do you rebase vs merge, and what's the actual risk with rebase? — [answer](process.md#git-rebase-vs-merge) {J1, J2, J3, M1, M2, M3, S1, S2}
 - Walk through how you actually resolve a non-trivial merge conflict correctly, not just make the markers go away. — [answer](process.md#resolving-merge-conflicts) {J1, J2, J3, M1, M2, M3, S1, S2}
+- Walk me through the basic Git commands you use day to day. — [answer](process.md#basic-git-workflow-clone-add-commit-push-pull) {J1, J2, J3}
 
 ### Estimations
 

@@ -175,3 +175,166 @@ Both, for different guarantees, is the honest answer. Pure business logic that h
 
 **Say it:** "pytest wins on less ceremony — plain-function tests, plain assert with rich diffs, and composable fixtures instead of setUp/tearDown — and its plugin architecture is why things like async test support and parallel execution are drop-in instead of built into core."
 **Red flag:** Writing new tests as `unittest.TestCase` subclasses in a pytest-based project "because that's the standard library way." That gives up parametrize, fixture composition, and plain-assert diffing for no real benefit in a codebase already running pytest.
+
+### Test coverage
+**They ask:** "What is 'test coverage'?"
+
+Test coverage is the percentage of your code that's actually executed while the test suite runs, most often measured per line (line coverage) or per branch (branch coverage — did both sides of every `if` get exercised, not just one). It's a diagnostic for *finding untested code*, not a proof of correctness — a line can execute during a test without that test actually asserting anything meaningful about its behavior, which is why 100% coverage doesn't mean bug-free (mutation testing exists precisely to catch that gap). In Python, `pytest-cov` (built on `coverage.py`) is the standard tool, run as `pytest --cov=mypackage`.
+
+```bash
+# the --cov flags come from pytest-cov, so it must be installed (pip install pytest-cov)
+pytest --cov=mypackage --cov-report=term-missing
+# shows % covered per file, and which specific line numbers were never executed
+```
+
+**Say it:** "Coverage tells me what code my tests never touch, which is useful for finding gaps — but it's not a quality metric on its own, since a line can run during a test without the test asserting anything about it. I treat a coverage drop as a signal to investigate, not the goal itself."
+**Red flag:** Chasing 100% coverage as an end goal — it drives people to write tests that execute code without meaningfully asserting on it, just to move the number, which is worse than no test at all because it creates false confidence.
+
+### Why use a virtual environment
+**They ask:** "Why is a virtual environment (`venv`) necessary, and what problem does it solve?"
+
+Without one, every Python project on a machine shares the same global set of installed packages — so two projects needing different versions of the same library (or Python itself) directly conflict, and installing a new project's dependencies can silently break an unrelated one. A virtual environment is an isolated, self-contained copy of the Python interpreter plus its own `site-packages` directory, so `pip install` inside it only affects that project. The standard-library way is `python -m venv .venv`, activated per shell session; the project's dependencies then get pinned in `requirements.txt` so anyone (or CI) can recreate a *compatible* environment — venv isolates the package set, but it still depends on the base interpreter it was built from, so it doesn't guarantee a byte-identical Python build.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate     # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Say it:** "A virtual environment isolates a project's dependencies from every other project and from the system Python, so `pip install` here can't silently break something else — I always create one per project rather than installing into the global interpreter."
+**Red flag:** Running `pip install` without an active virtual environment "just this once" — it pollutes the global interpreter and is exactly how "works on my machine" dependency conflicts start.
+
+### pip and requirements.txt
+**They ask:** "What is pip, and what is `requirements.txt` used for?"
+
+`pip` is Python's standard package installer — it fetches packages (and their own dependencies) from PyPI (the Python Package Index) and installs them into whatever environment is currently active. `requirements.txt` is the conventional way to capture a project's dependency snapshot: `pip freeze > requirements.txt` records the installed packages it reports — every version it lists, transitive dependencies included, though it omits bootstrap tools like `pip` and `setuptools` by default — and `pip install -r requirements.txt` reinstalls that same set elsewhere — a teammate's machine, a CI runner, a production container. Pinning exact versions (`requests==2.31.0` rather than just `requests`) gets "it worked in dev" most of the way to working in prod too, but it's a compatible snapshot, not a guaranteed identical environment — the same pinned versions can still resolve to different wheels/builds across OS, architecture, or Python version, and `pip freeze` doesn't capture a fully resolved, hash-verified dependency graph the way a lockfile does. For that stronger reproducibility guarantee, a lockfile tool (`pip-tools`, `poetry`, `uv`) with hash pinning is the better story.
+
+```bash
+pip install requests            # install one package
+pip freeze > requirements.txt    # snapshot everything currently installed
+pip install -r requirements.txt  # recreate that exact environment elsewhere
+```
+
+**Say it:** "pip installs from PyPI into whatever environment is active, and `requirements.txt` is how I get a compatible dependency snapshot across machines — I pin exact versions so CI and production install close to what I tested against, not just 'whatever's newest today,' but if I need a guaranteed identical, hash-verified environment I reach for a lockfile tool instead of just `pip freeze`."
+**Red flag:** Committing a `requirements.txt` with unpinned versions (`requests` instead of `requests==2.31.0`) on an application (not a library) — a new install six months later can silently pull a breaking major version.
+
+### What PEP 8 is
+**They ask:** "What is PEP 8?"
+
+PEP 8 is Python's official style guide — a PEP (Python Enhancement Proposal) that documents the naming, formatting, and layout conventions the language's own standard library follows, so that Python code across different teams and projects reads consistently. It covers things like 4-space indentation (never tabs), `snake_case` for functions and variables, `PascalCase` for classes, a line-length limit (PEP 8 itself recommends 79 characters for code and 72 for comments/docstrings — 88 is Black's default, not a PEP 8 number), and two blank lines between top-level definitions. It's a convention, not enforced by the interpreter — nothing stops non-compliant code from running — which is exactly why linters and formatters exist to enforce it automatically instead of relying on manual review.
+
+```python
+# PEP 8
+def calculate_total(items):        # snake_case function name
+    return sum(i.price for i in items)
+
+class OrderProcessor:               # PascalCase class name
+    MAX_ITEMS = 100                  # UPPER_CASE constant
+```
+
+**Say it:** "PEP 8 is the Python style guide — snake_case for functions and variables, PascalCase for classes, 4-space indentation — and since the interpreter doesn't enforce any of it, I let a formatter and linter apply it automatically rather than relying on manual review in code review."
+**Red flag:** Treating PEP 8 as optional bikeshedding not worth automating — inconsistent style across a codebase adds real friction to every code review; the fix is a pre-commit formatter, not more vigilance.
+
+### Linters vs. formatters
+**They ask:** "What is a linter? What is a formatter, and how is it different from a linter?"
+
+Both exist to take style and correctness enforcement off code review, but they catch different classes of problems. A **linter** (e.g. `ruff`, `flake8`, `pylint`) *analyzes* code and reports problems — unused imports, undefined names, overly complex functions, PEP 8 violations — without changing anything; a human (or CI) still has to fix what it flags. A **formatter** (e.g. `black`, `ruff format`) *rewrites* code into a consistent style automatically — quote style, line breaks, indentation — with no judgment calls left to the developer, which ends "tabs vs. spaces"-style arguments entirely since the tool just decides. Many teams run both: the formatter for automatic style, the linter for things a mechanical rewrite can't fix (like an unused variable).
+
+```bash
+ruff check .      # linter: reports problems, doesn't change files
+black .            # formatter: rewrites files into a consistent style
+```
+
+**Say it:** "A linter reports problems without fixing them — unused imports, style violations — and a formatter rewrites the code into a consistent style automatically with no decisions left for the developer. I run both in CI so style is never a code-review discussion."
+**Red flag:** Debating formatting choices (tabs vs. spaces, quote style) in code review instead of just running a formatter — that's exactly the class of problem formatters exist to remove from human judgment.
+
+### Docstrings
+**They ask:** "What can docstrings be used for?"
+
+A docstring is a string literal as the first statement in a module, class, or function, documenting what it does — unlike a `#` comment, it's stored as the object's `__doc__` attribute at runtime, which is what powers `help(my_function)` and IDE tooltips. Beyond documentation, tools build on that: `doctest` can extract and run example code embedded in a docstring as actual tests, and documentation generators (Sphinx, `mkdocs`) parse docstrings to build API reference pages automatically, so writing one doc comment feeds both the IDE and the published docs.
+
+```python
+def divide(a, b):
+    """Divide a by b.
+
+    Raises ZeroDivisionError if b is 0.
+    """
+    return a / b
+
+divide.__doc__   # "Divide a by b.\n\n    Raises ZeroDivisionError if b is 0.\n    "
+help(divide)       # prints the docstring
+```
+
+**Say it:** "A docstring isn't just a comment — it's stored on the function as `__doc__`, so it's what `help()` and IDE tooltips show, and documentation tools like Sphinx generate API references directly from it, which is why I write one on every public function, not just the tricky ones."
+**Red flag:** Writing a docstring that just repeats the function name in words ("Gets the user") instead of documenting behavior that isn't obvious from the signature — parameters with non-obvious meaning, exceptions raised, return value shape.
+
+### Code smells
+**They ask:** "What is a code smell?"
+
+A code smell is a surface-level symptom in code that suggests a deeper design problem, without necessarily being a bug — the code works, but the smell is a signal that maintaining or extending it will get harder over time. Common examples: a function that's grown to do five unrelated things (long method), a class with too many responsibilities (god object), duplicated logic in several places, deeply nested conditionals, or a long parameter list. Smells are a prompt to refactor, not an automatic failure — recognizing them early is cheaper than discovering the underlying design problem after it's caused a production bug.
+
+```python
+# smell: long parameter list + duplicated validation logic
+def create_user(name, email, age, address, phone, country, is_admin, is_verified):
+    ...
+```
+
+**Say it:** "A code smell is a symptom, not a bug — the code runs fine today, but something about its shape (a god object, duplicated logic, a long parameter list) signals it'll be expensive to change later, so I treat it as a prompt to refactor before it compounds."
+**Red flag:** Conflating "code smell" with "bug" in an interview — a smell is about maintainability risk, not incorrect behavior; code with no smells can still have bugs, and smelly code can still work correctly.
+
+### Code review
+**They ask:** "What is code review, and what's it actually for?"
+
+Code review is having at least one other person read a change before it merges — its value is catching what the author can't see because they're too close to their own code: logic errors, missed edge cases, a pattern that doesn't match the rest of the codebase, or a simpler approach they didn't consider. It's also how a team spreads knowledge of the codebase and enforces consistency without every rule living in someone's head. The useful distinction junior engineers often miss: review is about the code, not the person — phrasing feedback as a question or suggestion ("what happens if `items` is empty here?") keeps it collaborative rather than adversarial.
+
+**Say it:** "Code review exists because the author is too close to their own change to see everything — a second reviewer catches missed edge cases, spreads codebase knowledge across the team, and keeps style and patterns consistent without relying on everyone remembering every convention."
+**Red flag:** Treating review comments as personal criticism, or on the flip side, writing review feedback as blunt commands instead of questions — either one turns a collaborative process adversarial and slows the team down.
+
+### Technical debt
+**They ask:** "What is technical debt, and how do you avoid it piling up?"
+
+Technical debt is the implied future cost of a shortcut taken now to ship faster — like financial debt, it's sometimes a reasonable deliberate trade (ship an MVP with a known-hacky piece to hit a deadline, fix it later) and sometimes it's accidental (nobody chose it, it just accumulated from time pressure or not knowing better). The problem isn't debt existing — it's debt nobody tracks, which compounds silently until every change to that area takes longer than it should. Managing it means naming it explicitly (a `TODO` with context, a tracked ticket) so it's a visible, prioritizable decision instead of invisible drag, and paying it down incrementally rather than only during a dedicated "rewrite" that rarely gets scheduled.
+
+**Say it:** "Technical debt is a deliberate or accidental shortcut with a future cost — the risk isn't taking it on, it's taking it on silently. I flag it explicitly, with a ticket or a `TODO` that explains the shortcut and the fix, so it's a visible trade-off the team chose, not a surprise six months later."
+**Red flag:** Treating "we'll fix it later" as a plan without writing it down anywhere — undocumented debt is indistinguishable from a design decision nobody remembers making, and it never gets prioritized because no one can see it.
+
+### The logging module and log levels
+**They ask:** "Why is the `logging` module needed in Python? What levels of logging does it offer?"
+
+`print()` isn't a debugging strategy for anything beyond a throwaway script — it can't be turned off without deleting the call, has no severity, and doesn't record where or when it happened. The standard-library `logging` module solves all three: it has severity **levels** so you can filter what's shown without touching call sites, it can route output to multiple destinations (console, file, a log aggregator) at once, and — given an explicit `format`/`datefmt` — it can timestamp and tag each entry with its source (the default `basicConfig()` format has no timestamp; you opt into one explicitly). The levels, low to high severity: `DEBUG` (detailed diagnostic info), `INFO` (confirmation things are working as expected), `WARNING` (something unexpected, but not breaking), `ERROR` (a real failure), `CRITICAL` (the program may not be able to continue). Setting a logger's level to `WARNING` silences `DEBUG`/`INFO` calls without deleting them — they're still in the code, just filtered.
+
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+key, user_id, err = "session:42", 7, "card declined"
+
+logger.debug("cache miss for key=%s", key)      # filtered out at INFO level
+logger.info("user %s logged in", user_id)         # shown, with timestamp
+logger.error("payment failed: %s", err)            # shown, with timestamp
+```
+
+**Say it:** "Logging gives me severity levels I can filter without touching call sites, unlike `print`, plus a timestamp and source on every entry — I default to `INFO` in production and reserve `DEBUG` for local troubleshooting, so turning up verbosity is a config change, not a code change."
+**Red flag:** Leaving `print()` statements in for debugging production issues — they can't be filtered, disabled, or routed anywhere, and someone has to remember to delete them (or doesn't).
+
+### Debugging basics
+**They ask:** "What is debugging? What methods can you use to debug a problem, including in production?"
+
+Debugging is the process of finding *why* code doesn't behave as expected — locating the gap between what you expected to happen and what actually happened, then narrowing it down to a specific line or assumption. Locally, the tools are `print`/logging statements, and `pdb` (Python's built-in interactive debugger — `breakpoint()` drops you into a REPL at that exact line, letting you inspect variables and step through execution), or an IDE's visual debugger with breakpoints. In production, you generally can't attach a debugger to a live process, so the toolkit shifts to: structured logs (searchable, with enough context to reconstruct what happened), error-tracking tools (Sentry and similar, which capture the full stack trace and surrounding state automatically), and metrics/dashboards to spot *when* and *how often* something goes wrong before diving into a specific instance.
+
+```python
+def process(items):
+    total = 0
+    for i in items:
+        breakpoint()      # drops into pdb here — inspect `i`, `total`, step with `n`/`c`
+        total += i.value
+    return total
+```
+
+**Say it:** "Debugging is narrowing the gap between expected and actual behavior — locally I reach for `breakpoint()` and the interactive debugger to inspect state directly; in production, where I can't attach a debugger to a live process, it's structured logging and an error tracker like Sentry that reconstruct what happened after the fact."
+**Red flag:** Debugging a production issue by adding a `print()` and redeploying, one guess at a time — that's slow and disruptive; production debugging leans on the logs and error-tracking data that were already being captured before the bug happened, not on adding new instrumentation reactively.

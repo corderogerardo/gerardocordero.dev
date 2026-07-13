@@ -219,3 +219,11 @@ gRPC uses Protocol Buffers (a binary, strongly-typed schema format) over HTTP/2,
 
 **Say it:** "I reach for gRPC for internal service-to-service calls where both ends are mine and performance plus a strict shared contract matter — for public APIs and anything a browser calls directly, REST/JSON's human-readability and universal client support still win."
 **Red flag:** Choosing gRPC for a public-facing API consumed directly by third-party browser clients. It needs gRPC-Web plus a proxy to work in a browser at all, which is exactly the kind of friction a public API shouldn't impose on integrators.
+
+### HTTP status codes: 2xx, 4xx, 5xx
+**They ask:** "What do HTTP status codes actually communicate, and what do the ranges mean?"
+
+The status code is the first thing a client checks to decide *how* to handle a response, before it even looks at the body — getting the right one back (and returning the right one from your own API) is a basic professionalism signal. The ranges each mean something distinct: **2xx** = success (`200 OK` for a normal success, `201 Created` after a POST that made something, `204 No Content` for a success with no body). **4xx** = the client's request was the problem (`400 Bad Request` for malformed input, `401 Unauthorized` for missing/invalid auth, `403 Forbidden` for valid auth but no permission, `404 Not Found`). **5xx** = the server's problem (`500 Internal Server Error` for an unhandled exception, `503 Service Unavailable` when it's temporarily down).
+
+**Say it:** "2xx means success, 4xx means the client sent something the server can't or won't process, and 5xx means the server itself failed — I make sure my API returns the range that actually matches what happened, not 200 for everything with an error message buried in the body."
+**Red flag:** Returning `200 OK` for every response, including failures, with an `{ error: '...' }` body. That forces every client to parse the body just to know if the call succeeded — status codes exist so failure is detectable without reading the payload.

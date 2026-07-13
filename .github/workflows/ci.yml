@@ -513,8 +513,9 @@ jobs:
   # folded in from the former apps/learn-reactnative workspace). The self-contained
   # `out/` export is what deploys (no node_modules, well under the Pages 20k limit).
   #
-  # Trigger paths: the app, and the markdown the /reactnative flashcards are
-  # generated from at build time.
+  # Trigger paths: the app, the markdown the /reactnative flashcards are
+  # generated from at build time, and docs/andersen/ (the per-spec /practice
+  # decks are parsed from there at build time by src/lib/andersen-decks.ts).
   deploy-learn:
     needs: verify
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -523,10 +524,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Detect changes under apps/learn or docs/react-native-senior
+      - name: Detect changes under apps/learn, docs/react-native-senior, or docs/andersen
         id: detect
         run: |
-          PATHS='^(apps/learn/|docs/react-native-senior/)'
+          PATHS='^(apps/learn/|docs/react-native-senior/|docs/andersen/)'
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
@@ -535,7 +536,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes under apps/learn or docs/react-native-senior — skipping deploy."
+            echo "No changes under apps/learn, docs/react-native-senior, or docs/andersen — skipping deploy."
           fi
       - uses: pnpm/action-setup@v4
         if: steps.detect.outputs.changed == 'true'

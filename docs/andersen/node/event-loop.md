@@ -127,3 +127,20 @@ The practical implication for architecture: Node rewards keeping request handler
 
 **Say it:** "Thread-per-request buys isolation at the cost of concurrency ceiling; Node buys concurrency at the cost of shared fate on one thread — which is why a single misbehaving synchronous handler in Node hurts every other request, not just its own."
 **Red flag:** Presenting this as "Node is just better" without naming the isolation trade-off — a senior answer names both directions of the trade, not just the one that favors Node.
+
+### setImmediate vs setTimeout(fn, 0)
+**They ask:** "What's the difference between setImmediate and setTimeout(fn, 0), and which runs first?"
+
+They both mean "run this later," but they live in *different phases* — `setImmediate` fires in the **check** phase, `setTimeout(fn, 0)` in the **timers** phase — and that's why their relative order isn't guaranteed at the top level. From the main module, the outcome depends on how long the process took to reach the loop's first pass, so either can win. But inside an **I/O callback** the order is deterministic: `setImmediate` always fires first, because after the poll phase the loop goes straight to check before wrapping around to timers. So `setImmediate` is the right tool for "run right after this I/O completes, before any timer."
+
+```js
+const fs = require('node:fs');
+fs.readFile(__filename, () => {
+  setTimeout(() => console.log('timeout'), 0);
+  setImmediate(() => console.log('immediate'));
+});
+// inside an I/O callback, ALWAYS: immediate, then timeout
+```
+
+**Say it:** "setImmediate runs in the check phase and setTimeout(0) in the timers phase — at the top level their order is a race, but inside an I/O callback setImmediate always wins because check comes right after poll."
+**Red flag:** Claiming `setImmediate` and `setTimeout(fn, 0)` are interchangeable. They resolve in a fixed order inside I/O callbacks, and code that relies on "immediate is sooner" will break if someone swaps it for a zero timer.

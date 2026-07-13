@@ -345,3 +345,232 @@ def handle(status: Literal["pending", "active", "closed"]) -> str:
 
 **Say it:** "Type hints don't enforce anything at runtime by default — that's a deliberate choice by libraries like Pydantic, not the language — and I use `assert_never` in exhaustive `Literal`/`Enum` branches so adding a new case without handling it fails at type-check time, not in production."
 **Red flag:** Treating a passing mypy run as proof the code can't raise a `TypeError` at runtime — hints are unenforced unless something explicit (Pydantic, an `assert`, manual validation) checks them where untyped input enters the system.
+
+### Static vs. dynamic typing
+**They ask:** "What is the difference between static and dynamic typing?"
+
+The distinction matters because it changes *when* a type error surfaces — before the program runs, or while it's running. In a statically typed language (Java, C++), the compiler checks types at compile time, before a single line executes. Python is dynamically typed: a variable is just a name bound to an object, and the object carries its own type — nothing checks that a function's argument is the "right" type until that line actually runs. That's why `def add(a, b): return a + b` happily accepts ints, strings, or lists at call time — the error, if any, shows up on the `+` at runtime, not before. Type hints (`a: int`) don't change this — they're optional, unenforced by the interpreter, and only checked by an external tool like mypy.
+
+```python
+def add(a, b):
+    return a + b
+
+add(1, 2)        # 3
+add("a", "b")     # "ab" — no type error, Python doesn't care until it runs
+```
+
+**Say it:** "Python is dynamically typed — types live on the object, not the variable, and nothing is checked until the line actually executes, which is why type hints are a static-analysis aid, not a runtime guarantee."
+**Red flag:** Saying Python "has no types" — it's strongly and dynamically typed: `"1" + 1` still raises a `TypeError`, it just raises it at runtime instead of compile time.
+
+### Truthiness — what counts as falsy
+**They ask:** "What does 'truthiness' mean in Python, and what values are falsy?"
+
+Truthiness matters because Python lets you write `if some_list:` instead of `if len(some_list) > 0:`, and getting the falsy set wrong is a real source of bugs — especially `if x:` silently treating `0` or `""` the same as "missing." Every object has a truth value, used implicitly in `if`/`while`/`and`/`or`. Falsy: `None`, `False`, `0`, `0.0`, empty sequences and collections (`""`, `[]`, `()`, `{}`, `set()`), and any object whose `__bool__` returns `False` — or, if it defines no `__bool__`, whose `__len__` returns `0`. These two contracts aren't interchangeable: `__bool__` must return an actual `bool`, so a custom `__bool__` that returns `0` instead of `False` raises `TypeError`; `__len__` returning `0` is the one that's valid and makes the object falsy by proxy. Everything else is truthy, including nonempty strings like `"0"` and `"False"`.
+
+```python
+if []: print("truthy")      # skipped — empty list is falsy
+if [0]: print("truthy")      # printed — nonempty list, even with a falsy element
+if "0": print("truthy")      # printed — nonempty string is truthy regardless of content
+```
+
+**Say it:** "Falsy in Python is None, False, zero, and anything empty — an empty list, string, or dict — everything else, including the string `'0'`, is truthy, so I write `if not items:` instead of comparing length to zero."
+**Red flag:** Using `if x == None:` or `if len(x) == 0:` out of habit from another language — idiomatic Python leans on truthiness (`if x is None:`, `if not x:`) instead.
+
+### Slicing lists and strings
+**They ask:** "How does slicing work in Python, and what does `list[::-1]` do?"
+
+Slicing exists because indexing one element at a time is tedious — `seq[start:stop:step]` pulls a sub-sequence in one expression, and it works identically on any sequence type: `list`, `tuple`, `str`. `start` is inclusive, `stop` is exclusive, and any of the three can be omitted to mean "from the beginning," "to the end," or "step of 1." A negative `step` walks backward, which is why `seq[::-1]` reverses a sequence — no explicit loop needed. Slicing never raises `IndexError` for out-of-range bounds (unlike single-index access) — it just clips to what's available, which makes it forgiving but occasionally hides a bug where you expected an error.
+
+```python
+s = "hello world"
+s[0:5]      # "hello"
+s[6:]       # "world"
+s[:5]       # "hello"
+s[::-1]     # "dlrow olleh" — reversed
+s[100:200]  # "" — out of range, no error, just empty
+```
+
+**Say it:** "Slicing takes `start:stop:step` on any sequence, `stop` is exclusive, and a negative step walks backward — which is why `[::-1]` is the idiomatic one-liner to reverse a list or string without writing a loop."
+**Red flag:** Forgetting `stop` is exclusive and off-by-one on a slice boundary — `s[0:5]` is 5 characters (indices 0–4), not 6.
+
+### f-strings
+**They ask:** "What are f-strings and why use them over `.format()` or `%`-formatting?"
+
+f-strings exist to make string interpolation read like the output it produces, instead of a template with separate arguments to keep in sync. Prefixing a string literal with `f` lets you embed any expression directly inside `{}`, evaluated at the point the string is built — including function calls, attribute access, and format specs (`{price:.2f}`). They're also often faster than `.format()` or `%`-formatting, since the interpolation is compiled in rather than resolved by parsing a separate format string at runtime.
+
+```python
+name, price = "widget", 9.5
+f"{name}: ${price:.2f}"     # "widget: $9.50"
+f"{2 + 2}"                   # "4" — any expression works
+```
+
+**Say it:** "f-strings put the expression right where it's used instead of a separate positional or keyword argument list, which is both more readable and often faster than `.format()` since the interpolation is compiled in rather than parsed at runtime."
+**Red flag:** Still reaching for `%`-formatting or string concatenation with `+` in new code — f-strings have been the idiomatic choice since Python 3.6 and handle format specs and nested expressions more cleanly.
+
+### The walrus operator
+**They ask:** "What is the walrus operator `:=` and what is it for?"
+
+The walrus operator exists to collapse "compute a value, then check it" into one expression, avoiding a wasted duplicate call. `:=` assigns to a name *and* evaluates to that value in the same expression — most commonly inside an `if` or `while` condition, or a comprehension, where you'd otherwise have to compute something twice (once to check it, once to use it) or split it across two lines.
+
+```python
+# without walrus: n gets computed twice, or split across two lines
+if (n := len(data)) > 10:
+    print(f"too long: {n} items")
+
+# useful in comprehensions too — avoids calling expensive() twice
+results = [y for x in data if (y := expensive(x)) is not None]
+```
+
+**Say it:** "The walrus operator assigns and returns a value in the same expression, so I use it to avoid computing something twice inside a condition or comprehension — most often `if (n := len(x)) > threshold:`."
+**Red flag:** Overusing `:=` to cram assignments into places that hurt readability — it's for avoiding a genuine duplicate computation, not for shortening every two-line block into one.
+
+### What type() returns
+**They ask:** "What does the `type()` function return in Python, and how is it different from `isinstance()`?"
+
+`type(obj)` returns the exact class object an instance was constructed from — useful for introspection, debugging, and the rare case where you need exact-type matching rather than "is this a kind of X." `isinstance(obj, cls)` is the one you want for almost everything else, because it also returns `True` for subclasses, respecting polymorphism — `isinstance(True, int)` is `True` since `bool` subclasses `int`, but `type(True) is int` is `False`. `type()` with three arguments is also how classes are created dynamically at runtime (`type(name, bases, dict)`), which is what a metaclass hooks into.
+
+```python
+type(5)                  # <class 'int'>
+type(True) is int        # False — exact type, bool != int
+isinstance(True, int)    # True — respects the subclass relationship
+```
+
+**Say it:** "`type()` gives the exact class and `isinstance()` respects subclassing — I default to `isinstance()` for type checks in application code, and reach for `type()` only when I genuinely need an exact match, not a 'kind of' match."
+**Red flag:** Writing `if type(x) == list:` for a type check — it breaks polymorphism by rejecting valid subclasses that `isinstance(x, list)` would correctly accept.
+
+### Rounding floats
+**They ask:** "How do you round a float to a certain number of decimal places, and why can the result look surprising?"
+
+`round(number, ndigits)` is the built-in for rounding, but the "surprising" part interviewers are fishing for is that floats are binary approximations of decimal numbers, so `round(2.675, 2)` gives `2.67`, not `2.68` — `2.675` isn't exactly representable in binary floating point, it's stored as something microscopically less than `2.675`. Python's `round()` also uses "round half to even" (banker's rounding) for tie-breaking, so `round(0.5)` is `0` and `round(1.5)` is `2` — not the "always round .5 up" behavior some languages default to. For money or anywhere exactness matters, `Decimal` avoids the binary-representation error, but only when it's constructed from a decimal string or an integer — `Decimal("2.675")`, not `Decimal(2.675)`, which first builds the imprecise float and inherits its rounding error before `Decimal` ever sees it. Even built correctly, `Decimal` doesn't skip rounding altogether — it rounds according to whatever rounding context (`ROUND_HALF_EVEN` by default, configurable) it's set to.
+
+```python
+round(3.14159, 2)   # 3.14
+round(2.675, 2)      # 2.67 — not 2.68, due to float representation
+round(0.5), round(1.5)   # (0, 2) — round-half-to-even
+```
+
+**Say it:** "`round()` handles the common case, but I know it uses round-half-to-even and that float imprecision can make a rounding result look 'off' by a cent — for money specifically I reach for `Decimal` instead of float."
+**Red flag:** Being surprised in an interview that `round(2.675, 2) != 2.68` and not being able to explain why — it's binary floating-point representation, not a bug in `round()`.
+
+### Useful str methods
+**They ask:** "Give some examples of methods of the `str` class."
+
+String methods matter because `str` is immutable — every one of these returns a *new* string rather than modifying in place, which trips people up if they expect `s.upper()` to change `s`. The high-frequency ones: `.split()`/`.join()` for converting between string and list, `.strip()` for trimming whitespace, `.replace()` for substitution, `.upper()`/`.lower()` for case, `.startswith()`/`.endswith()` for prefix/suffix checks, and `.find()`/`.index()` for locating a substring (the difference being `.find()` returns `-1` on no match, `.index()` raises `ValueError`).
+
+```python
+"a,b,c".split(",")        # ["a", "b", "c"]
+"-".join(["a", "b", "c"])  # "a-b-c"
+"  hi  ".strip()           # "hi"
+"hello".replace("l", "L")  # "heLLo"
+"hello".find("z")          # -1
+"hello".index("z")         # raises ValueError
+```
+
+**Say it:** "str methods always return a new string since str is immutable, and the pair I reach for constantly is split/join for converting between a string and a list — `','.join(parts)` is the idiomatic reverse of `.split(',')`."
+**Red flag:** Writing `s.strip()` and expecting `s` itself to change — every str method returns a new object; you have to reassign (`s = s.strip()`) to keep the result.
+
+### Declaring empty collections
+**They ask:** "How do you declare an empty list, dict, set, and tuple?"
+
+The distinction that catches people is that `{}` is an empty **dict**, not an empty set — there's no empty-set literal, so `set()` is the only way to get one. Everything else has an obvious literal, though the function form works too and is sometimes preferred for readability.
+
+```python
+empty_list = []       # or list()
+empty_dict = {}        # or dict() — NOT set()!
+empty_set = set()      # {} is a dict, so this is the only way
+empty_tuple = ()       # or tuple()
+```
+
+**Say it:** "`{}` is an empty dict, not an empty set — there's no set literal for empty, so `set()` is the only way to create one, which is a common gotcha coming from other languages."
+**Red flag:** Writing `{}` expecting an empty set and being confused later when `type(x)` says `dict`.
+
+### Removing items from a list or dict
+**They ask:** "How do you remove an element from a list or a dictionary?"
+
+Python gives you a few different removal tools depending on whether you know the index/key, the value, or just want the last item — picking the right one avoids an unnecessary linear scan. For a list: `del lst[i]` removes by index, `lst.remove(value)` removes the first matching value (raises `ValueError` if absent), and `lst.pop(i)` removes by index *and returns* the removed value (defaults to the last item). For a dict: `del d[key]` removes by key (raises `KeyError` if absent), and `d.pop(key, default)` removes and returns the value, with an optional default to avoid the exception.
+
+```python
+lst = [1, 2, 3]
+lst.remove(2)      # [1, 3] — by value
+del lst[0]          # [3] — by index
+d = {"a": 1, "b": 2}
+d.pop("a")           # 1, d is now {"b": 2}
+d.pop("z", None)     # None — no KeyError, thanks to the default
+```
+
+**Say it:** "For a list I pick `remove()` when I have the value, `pop(i)`/`del` when I have the index; for a dict, `pop(key, default)` is my default because it avoids a `KeyError` for a missing key without an extra `if key in d` check."
+**Red flag:** Calling `.remove(value)` on a list inside a `for` loop that's iterating that same list — mutating a list while iterating it skips elements; iterate over a copy (`list[:]`) or build a new list instead.
+
+### Incrementing a variable in Python
+**They ask:** "How do you increment or decrement an `int` variable in Python?"
+
+Python has no `++`/`--` operators — that's a deliberate omission, not a missing feature, because `++x` would be ambiguous with unary `+` applied twice and adds a way to write off-by-one bugs. The idiomatic form is `x += 1` (shorthand for `x = x + 1`), which works because `+=` calls `__iadd__` if defined, falling back to `__add__` — for an immutable `int` it always rebinds `x` to a new object rather than mutating in place, since ints can't be mutated.
+
+```python
+x = 5
+x += 1   # 6 — the idiomatic way
+x -= 1   # 5
+# x++ and ++x are both syntax errors in Python
+```
+
+**Say it:** "Python doesn't have `++`/`--` — that's intentional, it removes a class of pre/post-increment ambiguity bugs — the idiom is `x += 1`, which for an int rebinds the name since ints are immutable, it doesn't mutate in place."
+**Red flag:** Writing `x++` in an interview out of muscle memory from C/Java/JS — it's a syntax error in Python.
+
+### isinstance with multiple types
+**They ask:** "How do you use `isinstance()` to check against multiple types?"
+
+Passing a tuple of types as the second argument checks "is this an instance of *any* of these" in one call, which is both more readable and avoids the classic bug of chaining `or` with the wrong operand.
+
+```python
+isinstance(5, (int, float))         # True
+isinstance("x", (int, float))        # False
+isinstance(5, int) or isinstance(5, float)   # same result, more verbose
+```
+
+**Say it:** "`isinstance()` takes a tuple of types for an 'any of these' check — `isinstance(x, (int, float))` — which is cleaner and less error-prone than chaining multiple `isinstance` calls with `or`."
+**Red flag:** Writing `isinstance(x, int) or float` — that doesn't do what it looks like; `or float` evaluates to the (always truthy) `float` class itself, so the condition is always `True`.
+
+### strip, rstrip, and lstrip
+**They ask:** "What is the difference between the `str.strip()`, `str.rstrip()`, and `str.lstrip()` methods?"
+
+All three remove characters from the ends of a string, not the middle — the difference is direction. `.strip()` removes from both ends, `.lstrip()` only the left/start, `.rstrip()` only the right/end. By default all three strip whitespace, but each accepts an argument naming a set of characters to strip instead — not a substring to remove, but a *set* of characters, stripped as long as they keep matching from that end.
+
+```python
+"  hi  ".strip()       # "hi"
+"  hi  ".lstrip()       # "hi  "
+"  hi  ".rstrip()       # "  hi"
+"xxhixx".strip("x")      # "hi" — strips the *characters* 'x', from both ends
+```
+
+**Say it:** "strip removes from both ends, lstrip only the left, rstrip only the right — and the optional argument is a set of characters to strip, not a substring, which is the part that trips people up."
+**Red flag:** Expecting `"xyhixy".strip("xy")` to remove the substring `"xy"` — it strips any characters in `{'x','y'}` from each end until it hits one that isn't in the set, which can strip more (or less) than the literal substring.
+
+### Bitwise operators on booleans
+**They ask:** "How do the `|` and `&` operators work with `bool` values in Python?"
+
+`|` and `&` are the bitwise OR/AND operators, but because `bool` is a subclass of `int` (`True == 1`, `False == 0`), they also work correctly as logical OR/AND on booleans — `True & False` is `False`, `True | False` is `True`. The reason they exist alongside `and`/`or` and matter in real code: `|` and `&` don't short-circuit (both sides always evaluate) and, unlike `and`/`or`, they're overridable via `__and__`/`__or__` — which is exactly why pandas/numpy boolean masking uses `&`/`|` instead of `and`/`or` (`and`/`or` can't be overloaded to work element-wise on an array).
+
+```python
+True & False    # False
+True | False     # True
+mask = (df["age"] > 18) & (df["active"] == True)   # pandas: must use &, not `and`
+```
+
+**Say it:** "`&`/`|` are bitwise operators that happen to work as logical AND/OR on bools because `bool` subclasses `int` — the practical reason to know them is they don't short-circuit and they're overloadable, which is why pandas/numpy masking requires `&`/`|` instead of `and`/`or`."
+**Red flag:** Using `and`/`or` for element-wise boolean masking on a pandas Series or numpy array — it raises `ValueError: The truth value of an array is ambiguous`, because `and`/`or` can't be overloaded per-element the way `&`/`|` can.
+
+### Type conversion between int, float, and str
+**They ask:** "How do you convert between `int`, `float`, and `str` in Python?"
+
+Python does almost no *implicit* type conversion between these — `"5" + 5` raises `TypeError` rather than silently coercing — so explicit conversion via the type's constructor is the normal path: `int()`, `float()`, `str()`. Each has failure modes worth knowing: `int("5.5")` raises `ValueError` (it won't parse a decimal string directly — go through `float` first, or truncate explicitly), and `int(5.9)` truncates toward zero rather than rounding (`int(5.9) == 5`, not `6`).
+
+```python
+int("42")        # 42
+int("5.5")        # ValueError — go through float first
+int(float("5.5"))  # 5 — truncates, doesn't round
+str(42)            # "42"
+float("3.14")       # 3.14
+```
+
+**Say it:** "Python doesn't implicitly coerce between str, int, and float — you convert explicitly with the constructor — and the gotcha to know is `int()` truncates rather than rounds, and won't parse a decimal string directly, so `int("5.5")` fails but `int(float("5.5"))` works."
+**Red flag:** Expecting `int(5.9)` to round to `6` — it truncates toward zero, giving `5`; use `round()` if you actually want rounding.

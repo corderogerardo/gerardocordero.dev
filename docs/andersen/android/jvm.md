@@ -106,3 +106,150 @@ val cache = ConcurrentHashMap<String, User>()   // fine-grained internal locking
 
 **Say it:** "volatile gives visibility but not atomicity for compound ops — that's what Atomic classes fix via CAS — Executors exist to stop raw-Thread-per-task from exhausting the system, and CopyOnWriteArrayList/ConcurrentHashMap outperform the synchronizedX wrappers under real concurrency because they avoid serializing every access through one global lock."
 **Red flag:** Using `count++` on a `volatile` field expecting it to be thread-safe. Visibility isn't atomicity — that's precisely the gap `AtomicInteger` exists to close.
+
+### Equals vs Reference Equality in Java
+**They ask:** "What is `equals()` for, and how does it differ from `==`?"
+
+`==` on objects compares **references** — whether two variables point at the exact same object in memory — never the content. `equals()` is a method meant to compare **logical/content equality** — whether two objects represent the same value, even if they're different instances. `Object`'s default `equals()` just falls back to `==` (reference comparison), which is exactly why a class has to override it to get meaningful value comparison.
+
+```java
+String a = new String("hi");
+String b = new String("hi");
+System.out.println(a == b);        // false — different objects
+System.out.println(a.equals(b));   // true — same content
+```
+
+`String` and the boxed primitive wrapper types already override `equals()` for you; a custom class (a `User`, a `Point`) has to override it explicitly, or `==` semantics leak through `equals()` too and two logically-identical objects compare as unequal.
+
+**Say it:** "`==` always compares references, `equals()` is supposed to compare content — but that only holds once a class actually overrides `equals()`, since the default `Object` implementation is just reference comparison in disguise."
+**Red flag:** Comparing two boxed values or custom objects with `==` expecting content comparison. For anything beyond a few cached small Integer values, `==` on objects is a reference check, full stop.
+
+### Equals and hashCode — The Contract
+**They ask:** "What are `equals()` and `hashCode()` for, and why do you need to override them together?"
+
+The Java contract is strict: if two objects are `equal()`, they **must** return the same `hashCode()` — the reverse isn't required (equal hash codes don't have to mean equal objects, that's just a collision). Hash-based collections (`HashMap`, `HashSet`) rely on this contract structurally: they use `hashCode()` to pick a bucket first, then `equals()` to confirm a match within that bucket — break the contract and a lookup can miss an object that's logically present, because it landed in a different bucket than an "equal" one.
+
+```java
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof User)) return false;
+    return id.equals(((User) o).id);
+}
+@Override
+public int hashCode() { return id.hashCode(); }   // must use the same fields as equals()
+```
+
+The practical rule: override both together, based on the *same* fields, or not at all — an IDE-generated pair or Kotlin's `data class` (which generates both from the constructor properties automatically) is the safe default over hand-writing one and forgetting the other.
+
+**Say it:** "The contract is one-directional but strict: equal objects must have equal hash codes, or hash-based collections silently fail to find entries that are logically present — which is why `equals` and `hashCode` always get overridden together, from the same fields."
+**Red flag:** Overriding `equals()` without `hashCode()` (or vice versa) on a class ever used as a `HashMap`/`HashSet` key. That breaks the contract silently — no compile error, just entries that mysteriously "aren't found" at runtime.
+
+### Object Class — Core Methods
+**They ask:** "What methods does every Java `Object` have, and what are they for?"
+
+Every class implicitly extends `Object`, which is why every instance — without writing anything — already has: `equals()` (identity comparison by default), `hashCode()` (identity-based hash by default), `toString()` (a `ClassName@hexHash` string by default, which is why unoverridden objects print unreadable garbage in logs), `getClass()` (runtime type introspection), and the wait/notify family (`wait()`, `notify()`, `notifyAll()` — low-level thread coordination primitives, mostly superseded by `java.util.concurrent` in real code today).
+
+```java
+class User { String name; }
+System.out.println(new User());   // User@1b6d3586 — toString() not overridden
+```
+
+`toString()` is the one worth overriding on almost anything you'll ever log or debug — the default is genuinely useless for diagnosis, since it tells you the class and an identity hash, nothing about the object's actual state.
+
+**Say it:** "Every object gets `equals`, `hashCode`, `toString`, `getClass`, and the wait/notify family for free from `Object` — `toString()` is the one I override on almost everything, since the default prints an unreadable class-and-hash string instead of anything useful for debugging."
+**Red flag:** Debugging with `println(someObject)` and being confused by a `ClassName@hexHash` string. That's the unoverridden default `toString()` — the fix is overriding it, not squinting at the hash.
+
+### Enums — What They're For
+**They ask:** "What is an `Enum`, and why use one instead of constants?"
+
+An enum defines a fixed, closed set of named values — its whole purpose is replacing a set of loose `int`/`String` constants (`STATUS_PENDING = 0`, `STATUS_DONE = 1`) with actual type-safe values the compiler can check. Passing a raw `int` where a status is expected compiles even if the value is meaningless (`setStatus(99)`); passing an enum where one is expected literally can't compile with an invalid value, because there is no invalid value — only the ones declared.
+
+```kotlin
+enum class OrderStatus { PENDING, SHIPPED, DELIVERED, CANCELLED }
+
+fun handle(status: OrderStatus) = when (status) {   // exhaustive — no else needed
+    OrderStatus.PENDING -> "waiting"
+    OrderStatus.SHIPPED -> "on the way"
+    OrderStatus.DELIVERED -> "done"
+    OrderStatus.CANCELLED -> "cancelled"
+}
+```
+
+An enum can also carry its own properties and methods (a constructor per constant, computed behavior per value), which plain integer constants can't — that's the difference between "a set of labels" and "a set of small, well-defined types."
+
+**Say it:** "An enum replaces loose int/string constants with a closed, type-safe set the compiler enforces — you can't accidentally pass an invalid status, because every possible value is one of the declared constants."
+**Red flag:** Reaching for a raw `Int`/`String` constant set ("magic numbers") for a genuinely fixed set of states instead of an enum. That trades compile-time safety for nothing — it's strictly worse once the set of valid values is actually closed.
+
+### Abstract Classes vs Interfaces
+**They ask:** "What's the difference between an abstract class and an interface?"
+
+Both let you define a contract some methods must fulfill without providing a full implementation, but they answer different questions. An **abstract class** models "is-a" with shared state and partial implementation — it can hold fields, constructors, and a mix of implemented and unimplemented (`abstract`) methods, but a class can only extend *one*. An **interface** models a capability/contract — traditionally no state and no implementation at all, though modern Java/Kotlin interfaces can include default method bodies — and a class can implement *many* of them.
+
+```kotlin
+abstract class Animal(val name: String) {           // shared state + partial implementation
+    abstract fun speak(): String                      // subclass must provide this
+    fun describe() = "$name says ${speak()}"           // shared, already implemented
+}
+interface Flyer { fun fly(): String }                 // pure contract, no state
+
+class Bird(name: String) : Animal(name), Flyer {      // one abstract class, multiple interfaces
+    override fun speak() = "Tweet"
+    override fun fly() = "Flying"
+}
+```
+
+The practical decision rule: reach for an abstract class when subclasses genuinely share state or implementation and the "is-a" relationship is singular; reach for an interface when you're describing a capability that unrelated classes might all need (`Comparable`, `Flyer`) — multiple inheritance of interfaces is exactly what lets unrelated classes share a capability without a forced class hierarchy.
+
+**Say it:** "Abstract class is for shared state and a genuine 'is-a' hierarchy — single inheritance only — interface is for a capability contract that unrelated classes can all implement, which is why a class can implement several interfaces but extend only one abstract class."
+**Red flag:** Reaching for an abstract class just to share a couple of default methods between unrelated classes. If there's no real state or "is-a" relationship, an interface with default methods usually fits better and doesn't burn the single-inheritance slot.
+
+### Java Exception Hierarchy — Error, Exception, and RuntimeException
+**They ask:** "What types of exceptions are there in Java?"
+
+Every throwable descends from `Throwable`, which splits into two branches with very different meanings. `Error` represents a problem the application generally shouldn't try to recover from — `OutOfMemoryError`, `StackOverflowError` — serious enough that catching it rarely makes sense. `Exception` represents a recoverable problem, and it splits again: **checked** exceptions (`IOException`, direct `Exception` subclasses not extending `RuntimeException`) must be declared with `throws` or caught, enforced by the compiler; **unchecked** exceptions (`RuntimeException` and its subclasses — `NullPointerException`, `IllegalArgumentException`, `IndexOutOfBoundsException`) need no such declaration, and typically signal a programming bug rather than an expected, recoverable condition.
+
+```text
+Throwable
+├── Error (OutOfMemoryError, StackOverflowError — don't catch)
+└── Exception
+    ├── RuntimeException (unchecked — NullPointerException, IllegalArgumentException)
+    └── checked exceptions (IOException, SQLException — must declare or catch)
+```
+
+**Say it:** "Everything throwable splits into `Error` — don't try to recover — and `Exception`, which further splits into checked exceptions the compiler forces you to handle and unchecked `RuntimeException`s that usually mean a bug, not an expected condition."
+**Red flag:** Catching `Throwable` or `Exception` broadly "to be safe." That swallows `Error`s you can't meaningfully recover from alongside real bugs, hiding both behind one silent catch instead of letting each fail the way it should.
+
+### The final Keyword
+**They ask:** "Where can `final` be used, and what does it do in each case?"
+
+`final` means "cannot be changed further," but what that means depends on where it's applied. On a **variable**, it means the reference can be assigned exactly once — like Kotlin's `val` — but, just like `val`, the object it points to can still be internally mutable. On a **method**, it prevents a subclass from overriding it — useful when a method's behavior is load-bearing for the class's invariants and overriding it would be unsafe. On a **class**, it prevents any subclassing at all — Kotlin actually flips this and makes `final` the *default* for every class and method, requiring `open` to allow overriding instead.
+
+```java
+final int MAX = 10;          // reference/value can't be reassigned
+final class Utils { ... }    // can't be subclassed
+class Base {
+    final void validate() { ... }   // can't be overridden
+}
+```
+
+**Say it:** "`final` means single-assignment on a variable, non-overridable on a method, and non-subclassable on a class — and it's worth knowing Kotlin inverted the class/method default, making everything final unless you explicitly mark it `open`."
+**Red flag:** Assuming `final` on a variable makes the referenced object immutable. It only locks the reference — a `final List` can still have elements added or removed, same trap as Kotlin's `val`.
+
+### The static Keyword
+**They ask:** "Where can `static` be used, and how does it affect behavior?"
+
+`static` ties a member to the **class** itself rather than to any instance — a static field is shared across every instance (one copy total, not one per object), and a static method can be called without creating an instance at all (`Math.max(a, b)`, no `Math` object needed). That's the trade-off to know: a static method has no access to instance (`this`) state, because there's no guaranteed instance behind the call.
+
+```java
+class Counter {
+    static int totalCreated = 0;     // one copy, shared by every instance
+    Counter() { totalCreated++; }
+}
+int total = Counter.totalCreated;   // accessed via the class, not an instance
+```
+
+A static nested class (as opposed to a plain inner class) doesn't hold an implicit reference to an outer instance, which is why it's the safer default for a nested class that doesn't need outer-class state — an inner class implicitly captures the outer instance, which is a common, easy-to-miss memory leak source (an inner class outliving the outer instance it's silently holding onto).
+
+**Say it:** "`static` ties a field or method to the class, not an instance — one shared copy for a field, no `this` access for a method — and a static nested class deliberately drops the implicit outer-instance reference a plain inner class holds, which matters for avoiding leaks."
+**Red flag:** Using a non-static inner class purely out of habit when it never touches outer-class state. That implicit outer reference is a real, easy-to-miss leak source — default to `static` nested unless outer access is actually needed.

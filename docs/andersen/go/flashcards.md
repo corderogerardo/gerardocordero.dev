@@ -32,6 +32,8 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How does Go detect 'all goroutines are asleep' deadlocks, and what's a common cause? — [answer](concurrency.md#deadlock-detection)
 - How does golang.org/x/sync/errgroup improve on a raw WaitGroup? — [answer](concurrency.md#errgroup-for-concurrent-error-handling)
 - How do you bound concurrency with a buffered channel used as a semaphore? — [answer](concurrency.md#semaphore-pattern-with-buffered-channels)
+- What does the `go` keyword actually do? — [answer](concurrency.md#starting-a-goroutine) {J1, J2, J3}
+- How do you actually create and use a channel to pass a value between goroutines? — [answer](concurrency.md#creating-and-using-a-channel) {J1, J2, J3}
 
 ## Go Core
 
@@ -61,6 +63,21 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - What is a type constraint, and how do you write one beyond the built-in comparable? — [answer](go-core.md#generic-constraints)
 - When can you compare two structs with ==, and when do you need reflect.DeepEqual? — [answer](go-core.md#struct-comparison-and-equality)
 - How do you decide between a pointer receiver and a value receiver, and how does that affect interface satisfaction? — [answer](go-core.md#method-sets-pointer-vs-value-receivers)
+- What do senior engineers get wrong with encoding/json in Go? — [answer](go-core.md#encodingjson-custom-marshaling-and-the-gotchas)
+- When do you use `:=` instead of `var`, and what's actually different? — [answer](go-core.md#short-variable-declaration-vs-var) {J1, J2, J3}
+- What value does an uninitialized variable actually have in Go? — [answer](go-core.md#zero-values) {J1, J2, J3}
+- Go has no while or do-while keyword — how do you write those loops? — [answer](go-core.md#the-for-loop) {J1, J2, J3}
+- What's that pattern where people write `if err := doThing(); err != nil`? — [answer](go-core.md#if-with-an-init-statement) {J1, J2, J3}
+- Why does almost every Go function return two values, like value, err? — [answer](go-core.md#multiple-return-values) {J1, J2, J3}
+- What's the difference between `T{...}` and `&T{...}` when constructing a struct? — [answer](go-core.md#struct-literals-named-fields-vs-t-pointer) {J1, J2, J3}
+- What's the difference between `make` and `new` in Go? — [answer](go-core.md#make-vs-new) {J1, J2, J3}
+- What do the two values you get from `range` actually mean for a slice versus a map? — [answer](go-core.md#range-over-slices-and-maps) {J1, J2, J3}
+- What's the difference between `%v`, `%+v`, `%#v`, and `%T` in Printf? — [answer](go-core.md#fmtprintf-verbs) {J1, J2, J3}
+- Is a nil slice the same as an empty slice? What about a nil map? — [answer](go-core.md#nil-for-slices-maps-and-pointers) {J1, J2, J3}
+- How is Go's switch different from C or Java's? — [answer](go-core.md#basic-switch-statement) {J1, J2, J3}
+- Why won't Go let me assign an int to a float64 variable directly? — [answer](go-core.md#explicit-type-conversion) {J1, J2, J3}
+- What does the underscore `_` actually mean in Go? — [answer](go-core.md#the-blank-identifier) {J1, J2, J3}
+- What actually makes a function a method in Go? — [answer](go-core.md#methods-functions-with-a-receiver) {J1, J2, J3}
 
 ## Runtime
 
@@ -86,6 +103,10 @@ Every matrix row as an interviewer question. Filter by level and category in the
 - How do you test an HTTP handler without starting a real server? — [answer](runtime.md#httptest-package)
 - What does testify add over the standard testing package? — [answer](runtime.md#testify)
 - How do t.Run subtests improve on a plain table-driven loop? — [answer](runtime.md#subtests-and-test-organization)
+- A hot code path is allocating too much and GC pressure is hurting latency — how do you bring allocations down? — [answer](runtime.md#reducing-allocations-in-a-hot-path)
+- What's the minimal skeleton of a runnable Go program? — [answer](runtime.md#program-structure-package-import-func-main) {J1, J2, J3}
+- What's actually different between `go run` and `go build`? — [answer](runtime.md#go-run-vs-go-build) {J1, J2, J3}
+- What makes a function in Go a test, and how does `go test` find it? — [answer](runtime.md#writing-a-basic-test-function) {J1, J2, J3}
 
 ## Stdlib & Idioms
 
@@ -98,11 +119,13 @@ Every matrix row as an interviewer question. Filter by level and category in the
 
 ### Error Handling
 
+- Why does Go use return values for errors instead of exceptions? — [answer](stdlib.md#the-basic-error-return-convention) {J1, J2, J3}
 - What's the difference between comparing an error with == and using errors.Is, and why does it matter with wrapped errors? — [answer](stdlib.md#errorsis-and-sentinel-error-comparison) {J1, J2, J3, M1, M2, M3, S1, S2}
 - When do you use errors.As instead of errors.Is, and how do you write a custom error type that supports it? — [answer](stdlib.md#errorsas-and-typed-error-extraction) {J1, J2, J3, M1, M2, M3, S1, S2}
 - When do you define a sentinel error versus a custom error struct? — [answer](stdlib.md#custom-error-types-vs-sentinel-errors) {J1, J2, J3, M1, M2, M3, S1, S2}
 - When is panic/recover the right tool in Go, given that Go's idiom is explicit error returns? — [answer](stdlib.md#panic-and-recover-semantics) {J1, J2, J3, M1, M2, M3, S1, S2}
 - Where in a Go HTTP service should you install a recover, and why not scatter it everywhere? — [answer](stdlib.md#panicrecover-at-service-boundaries) {J1, J2, J3, M1, M2, M3, S1, S2}
+- Several operations run and more than one can fail — how do you return all the failures, not just the first? — [answer](stdlib.md#errorsjoin-and-aggregating-multiple-errors) {J3, M1, M2, M3, S1, S2}
 
 ### Testing Depth
 

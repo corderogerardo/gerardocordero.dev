@@ -213,3 +213,41 @@ Accessibility is part of the same performance conversation in a real interview: 
 
 **Say it:** "For a heavy, many-element animating scene I reach for `.drawingGroup()` to flatten compositing onto Metal — and anything I draw manually with `Canvas` needs explicit `.accessibilityElement` calls, because custom-drawn content has no accessibility tree by default."
 **Red flag:** Slapping `.drawingGroup()` on every view "for performance" without profiling first — it has real costs (rasterization, some hit-testing changes) and is a targeted fix for compositing-bound scenes, not a universal speedup.
+
+### What Is a SwiftUI View
+**They ask:** "What is a View in SwiftUI, and how is it different from a UIView?"
+
+A SwiftUI `View` is a lightweight **value type** (a struct) that *describes* what the UI should look like for the current state — it's not the on-screen object itself. SwiftUI takes your description, builds the real views, and re-runs your `body` to produce a fresh description whenever state changes, diffing it against the last one to update only what changed. That's the opposite of UIKit's `UIView`, a heavyweight reference-type object you mutate directly. So in SwiftUI you don't hold and poke views — you describe UI as a function of state and let the framework reconcile.
+
+```swift
+struct Greeting: View {
+    let name: String
+    var body: some View { Text("Hello, \(name)") }   // a description, recomputed on change
+}
+```
+
+**Say it:** "A SwiftUI View is a value-type description of the UI for the current state — the framework builds and diffs the real views — whereas a UIKit UIView is a mutable object I change directly. SwiftUI is declarative: UI as a function of state."
+**Red flag:** Trying to store a reference to a SwiftUI view and mutate it like a UIView. Views are recreated constantly and cheaply; state drives the UI, not direct mutation.
+
+### @State and @Binding Basics
+**They ask:** "What do `@State` and `@Binding` do, and how do they relate?"
+
+They're how a SwiftUI view owns and shares mutable state. **`@State`** is a view's own private, source-of-truth value — when it changes, SwiftUI re-renders that view (`@State private var count = 0`). **`@Binding`** is a **two-way connection** to state owned somewhere else — not a reference in the reference-type sense, just a conduit that lets a child view read *and write* the parent's value without owning it — you pass it with the `$` prefix (`Toggle(isOn: $isOn)`). So `@State` owns; `@Binding` is the conduit back to that owned value.
+
+```swift
+struct Parent: View {
+    @State private var on = false
+    var body: some View { Toggle("On", isOn: $on) }   // $on is a Binding
+}
+```
+
+**Say it:** "`@State` is a view's private source-of-truth that triggers a re-render when it changes; `@Binding` is a two-way conduit to state owned elsewhere, passed with `$`, so a child can mutate the parent's value without owning it."
+**Red flag:** Marking a value `@State` in a child view when the parent should own it — you get two separate copies that drift out of sync. The fix is `@Binding` (or lifting the state up), and knowing which owns the data is the whole point.
+
+### UIKit vs SwiftUI — When to Use Each
+**They ask:** "SwiftUI or UIKit — how do you choose today?"
+
+They're declarative vs imperative, and the honest answer is "SwiftUI first, UIKit where it's still needed." **SwiftUI** builds UI as a function of state — far less code, live previews, and it's Apple's clear direction, so it's the default for new screens. **UIKit** is the mature, imperative framework with deeper control and API coverage; you drop to it for things SwiftUI still does poorly (very complex collection layouts, some camera/text APIs, legacy code) — and the two interoperate via `UIViewRepresentable`. So: default to SwiftUI, reach for UIKit for the gaps.
+
+**Say it:** "I default to SwiftUI for new work — declarative, less code, Apple's direction — and drop to UIKit through UIViewRepresentable where SwiftUI still lacks control, like complex list layouts or certain system APIs."
+**Red flag:** Claiming SwiftUI fully replaces UIKit today, or that UIKit is obsolete. A senior names the real gaps and the interop path rather than treating it as all-or-nothing.

@@ -340,3 +340,241 @@ var _ interface{ Inc() } = &Counter{} // works
 
 **Say it:** "If any method needs a pointer receiver to mutate state, I make all methods on that type pointer receivers for consistency — and I remember that only `*T`, not `T`, satisfies an interface requiring a pointer-receiver method."
 **Red flag:** Mixing pointer and value receivers on the same type inconsistently — it's legal but it's a code-review flag because it makes the type's addressability requirements unpredictable for callers.
+
+### encoding/json: custom marshaling and the gotchas
+**They ask:** "What do senior engineers get wrong with encoding/json in Go?"
+
+The one that bites everyone: `encoding/json` only sees **exported** fields — a lowercase field is silently omitted on marshal and left at its zero value on unmarshal, with no error. Beyond that, the senior toolkit is: implement `MarshalJSON`/`UnmarshalJSON` on a type when the wire shape differs from the Go shape (custom time formats, enums as strings); use `json.RawMessage` to defer decoding part of a payload whose shape depends on another field (discriminated unions); and use `json.Decoder` (with `DisallowUnknownFields` when you want strictness) to stream-decode large or newline-delimited input instead of buffering it all. `omitempty` drops zero-valued fields — but note it can't distinguish "absent" from "explicitly zero," which is why nullable fields often need a pointer.
+
+```go
+type Event struct {
+    Type string          `json:"type"`
+    Data json.RawMessage `json:"data"` // decode later based on Type
+    ts   time.Time       // unexported → invisible to json, silently
+}
+```
+
+**Say it:** "encoding/json only touches exported fields, so a lowercase field silently vanishes — beyond that I reach for custom MarshalJSON when the wire shape differs, json.RawMessage for payloads whose shape depends on a discriminator, and a pointer when I need to tell 'absent' from 'zero'."
+**Red flag:** Wondering why a struct field "isn't saving" and never suspecting the lowercase name. It's the single most common `encoding/json` bug, and it fails silently — no error, just a missing field.
+
+### Short Variable Declaration vs var
+**They ask:** "When do you use `:=` instead of `var`, and what's actually different?"
+
+`:=` is Go's short variable declaration — it declares **and** infers the type in one step, and only works inside a function body (not at package level). `var` is the explicit form: you can declare without initializing (giving a zero value), declare with an explicit type Go won't infer correctly, or declare at package scope where `:=` isn't legal. Mechanically `:=` requires at least one new variable on the left side; mixing new and existing names in a multi-assignment redeclares only the new ones.
+
+```go
+var count int           // zero value, explicit type
+count = 5
+total := 0               // inferred int, only inside a func
+name, err := fetch()     // both new
+name, err2 := fetch()    // name reused, err2 new — still legal
+```
+
+**Say it:** "`:=` is shorthand for `var` with type inference, restricted to function scope — I reach for `var` when I need a zero value with no initializer yet, an explicit type, or package-level scope."
+**Red flag:** Using `:=` to "reassign" an existing variable inside a new block (`if`/`for`) — it silently creates a new shadowed variable scoped to that block instead of updating the outer one.
+
+### Zero Values
+**They ask:** "What value does an uninitialized variable actually have in Go?"
+
+Go has no uninitialized memory — every declared variable gets a deterministic zero value the moment it's declared, which is why `var x int` is always safe to use immediately without an explicit initializer. The zero value is type-specific: numeric types get `0`, `bool` gets `false`, `string` gets `""` (empty, not nil), and pointers, slices, maps, channels, funcs, and interfaces all get `nil`. This design decision is what makes a freshly declared struct usable immediately — every field is already valid.
+
+```go
+var i int     // 0
+var s string  // ""
+var b bool    // false
+var p *int    // nil
+var sl []int  // nil, but len(sl) == 0 and it's safe to range over
+```
+
+**Say it:** "Every Go value is zero-initialized deterministically — numbers to 0, strings to empty, pointers/slices/maps/channels/interfaces to nil — so a freshly declared variable or struct is always in a valid, usable state without an explicit initializer."
+**Red flag:** Assuming a nil slice or map behaves identically to an initialized one — reading and ranging a nil slice or map is safe, but writing to a nil map panics.
+
+### The for Loop
+**They ask:** "Go has no `while` or `do-while` keyword — how do you write those loops?"
+
+`for` is Go's only looping construct — deliberately, to keep the language small — and it covers every loop shape other languages spread across `for`/`while`/`do-while`. The three-clause form (`init; condition; post`) is the classic counted loop; drop the init and post and you get a `while` loop; drop the condition entirely and you get an infinite loop you `break` out of explicitly. Since Go 1.22, `for range n` (an integer) also works, replacing the old `for i := 0; i < n; i++` idiom for simple counted iteration.
+
+```go
+for i := 0; i < 5; i++ { }   // classic counted loop
+for cond { }                  // "while" — condition only
+for { }                       // infinite — break to exit
+for i := range 5 { }          // Go 1.22+: counted range over an int
+```
+
+**Say it:** "Go collapsed for/while/do-while into one `for` keyword with optional clauses — same construct, fewer keywords to learn — and range over an int since 1.22 covers the simple counted case even more concisely."
+**Red flag:** Writing `for true { ... break ... }` out of habit from another language, instead of the idiomatic bare `for { ... break ... }` — the condition `true` is redundant noise in Go.
+
+### if with an Init Statement
+**They ask:** "What's that pattern where people write `if err := doThing(); err != nil`?"
+
+`if` (and `switch`) can carry an init statement before the condition, separated by a semicolon — the variable it declares is scoped only to the `if`/`else` block, not leaked into the surrounding function. This is why `err := f(); err != nil` is everywhere in idiomatic Go: it declares `err` right where it's checked and used, instead of polluting the enclosing scope with an `err` variable that lives on after the check is done.
+
+```go
+if v, err := fetch(); err != nil {
+    return err
+} else {
+    use(v) // v and err both scoped to this if/else
+}
+```
+
+**Say it:** "The if-with-init form scopes the declared variable to just the if/else block, which is why `err := f(); err != nil` is idiomatic — it keeps the error variable from leaking into the rest of the function."
+**Red flag:** Declaring `err` outside the `if` just to check it once inside — that keeps a stale, unused-after-this-point variable alive in the enclosing scope for no reason.
+
+### Multiple Return Values
+**They ask:** "Why does almost every Go function return two values, like `value, err`?"
+
+Go functions can return more than one value natively — no tuple type, no wrapper object needed — and the language leans on this hard for the `(result, error)` convention instead of exceptions. This is why error handling in Go is explicit at every call site: you get both values back and the caller is forced to at least acknowledge the error is there, even if they only check for nil.
+
+```go
+func divide(a, b int) (int, error) {
+    if b == 0 {
+        return 0, errors.New("divide by zero")
+    }
+    return a / b, nil
+}
+result, err := divide(10, 2)
+```
+
+**Say it:** "Multiple return values are a language feature, not a convention layered on top — Go uses them for the (result, error) pattern specifically so error handling is visible and explicit at every call site instead of hidden in a try/catch."
+**Red flag:** Discarding the error return with `_` just to make code compile faster during a review — that's the one value Go handed you specifically so failures aren't silent.
+
+### Struct Literals: Named Fields vs T Pointer
+**They ask:** "What's the difference between `T{...}` and `&T{...}` when constructing a struct?"
+
+A struct literal `T{Field: value, ...}` constructs a value of type `T` with the named fields set and every other field at its zero value — field names make the literal self-documenting and order-independent, unlike the positional `T{value1, value2}` form, which breaks the moment someone reorders the struct's fields. Prefixing with `&` (`&T{...}`) does the same construction but yields a `*T` — a pointer to a freshly allocated value — which is the idiomatic way to build a pointer without a separate `new(T)` plus field assignments.
+
+```go
+u := User{Name: "Ana", Age: 30}   // value, named fields — safe if fields reorder
+p := &User{Name: "Ana"}           // *User, same literal syntax
+bad := User{"Ana", 30}            // positional — breaks silently if field order changes
+```
+
+**Say it:** "I always use named fields in a struct literal — it's order-independent and self-documenting — and I prefix with `&` when I need a pointer, which is Go's idiomatic shortcut for allocate-then-assign."
+**Red flag:** Using positional struct literals (`User{"Ana", 30}`) outside a very small, stable, same-package type — a reordered field silently swaps values into the wrong field with no compiler error if the types happen to match.
+
+### make vs new
+**They ask:** "What's the difference between `make` and `new` in Go?"
+
+Both allocate, but for different purposes and return different things. `new(T)` allocates zeroed memory for any type `T` and returns a `*T` pointer to it — it's a generic allocator you rarely need directly, since `&T{}` does the same thing more idiomatically for structs. `make` is narrower and only works on slices, maps, and channels — the three built-in types that need internal initialization beyond a zeroed memory block (a slice needs a backing array and length/capacity, a map needs its hash table initialized, a channel needs its internal buffer) — and `make` returns the initialized value itself, not a pointer.
+
+```go
+p := new(int)              // *int, points to 0
+s := make([]int, 0, 5)     // []int, ready to use — not *[]int
+m := make(map[string]int)  // map[string]int, ready to write to
+```
+
+**Say it:** "`new` gives you a zeroed pointer to any type; `make` is specifically for slices, maps, and channels because those need internal setup a zeroed block doesn't provide, and `make` returns the value itself, not a pointer to it."
+**Red flag:** Calling `new(map[string]int)` expecting a usable map — it gives you a pointer to a nil map, which still panics on write; `make` is the one that actually initializes it.
+
+### range Over Slices and Maps
+**They ask:** "What do the two values you get from `range` actually mean for a slice versus a map?"
+
+`range` is Go's iteration construct over slices, arrays, maps, strings, and channels, and what the two returned values mean depends on the type: for a slice/array it's `(index, value)`; for a map it's `(key, value)`; for a string it's `(byte-index, decoded rune)` — see rune/byte encoding for why that last one surprises people. Critically, the value in `for _, v := range items` is a **copy** on each iteration, not a reference into the original — mutating `v` doesn't mutate the underlying element, which trips people up with structs.
+
+```go
+for i, v := range []string{"a", "b"} { }    // i=index, v=copy of element
+for k, v := range map[string]int{"x": 1} {} // k=key, v=value
+for i := range items { }                     // index only, value dropped
+```
+
+**Say it:** "range's second value is always a copy, so mutating it in the loop body never changes the original slice or map — if I need to mutate elements in place I index with `items[i]` instead."
+**Red flag:** Writing `for _, item := range items { item.Field = x }` expecting the underlying slice to change — `item` is a copy; the fix is `items[i].Field = x` or making `items` a slice of pointers.
+
+### fmt.Printf Verbs
+**They ask:** "What's the difference between `%v`, `%+v`, `%#v`, and `%T` in Printf?"
+
+fmt's formatting verbs exist because `Println` alone can't show type information or struct internals usefully. `%v` prints a value's default representation; `%+v` adds field names for structs; `%#v` prints a Go-syntax representation you could paste back into source; `%T` prints the value's type instead of its value — invaluable when debugging why an `interface{}` isn't behaving as expected. `%d`, `%s`, `%f` are the typed verbs for int, string, float specifically, and Printf writes an ugly inline error string into the output (not a real panic) if you pass the wrong type for a typed verb.
+
+```go
+u := User{Name: "Ana"}
+fmt.Printf("%v\n", u)   // {Ana}
+fmt.Printf("%+v\n", u)  // {Name:Ana}
+fmt.Printf("%#v\n", u)  // main.User{Name:"Ana"}
+fmt.Printf("%T\n", u)   // main.User
+```
+
+**Say it:** "%v is the general default, %+v adds field names for structs, %#v gives a Go-syntax literal, and %T tells me the actual type — that last one is my go-to when I'm debugging what's actually inside an interface{}."
+**Red flag:** Reaching for `fmt.Println` everywhere and manually string-concatenating for debug output — `%+v` on a struct gives far more useful information in one call, especially for nested structs.
+
+### nil for Slices, Maps, and Pointers
+**They ask:** "Is a nil slice the same as an empty slice? What about a nil map?"
+
+`nil` means "no underlying value," but its safety depends entirely on the type. A nil slice is safe to range over and index-read `len`/`cap` on, and even append to (`append` allocates a new backing array on first use) — `len(nilSlice) == 0` works fine. A nil map is safe to read from (a missing key just returns the zero value) but panics on write — `m[k] = v` on a nil map crashes. A nil pointer is the narrowest case: the *only* safe operation is comparing it to `nil` — there's no value behind it to read, so dereferencing it (`*p`) panics immediately, it isn't a "read." The pattern to internalize: slices and maps tolerate reads on nil, pointers don't have a read to tolerate — `== nil` is the one safe thing you can do with one.
+
+```go
+var s []int           // nil, but len(s)==0 and append(s, 1) works
+var m map[string]int  // nil, m["x"] reads fine (returns 0), m["x"]=1 PANICS
+var p *int            // nil, p == nil is safe, *p PANICS
+```
+
+**Say it:** "A nil slice tolerates reads and even appends, a nil map tolerates reads but panics on write, and a nil pointer only tolerates a `== nil` comparison — dereferencing it isn't a read, it panics — so I always `make(map[K]V)` before assigning into a map that might be nil, and I never dereference a pointer without checking it first."
+**Red flag:** Returning a nil map from a constructor and letting a caller write to it — that's a panic waiting for whichever caller doesn't happen to check, when `make(map[K]V)` up front would have prevented it entirely.
+
+### Basic switch Statement
+**They ask:** "How is Go's `switch` different from C or Java's?"
+
+Go's `switch` breaks after each matching case automatically — no fallthrough by default, which removes the classic "forgot the break" bug — and you opt into C-style fallthrough explicitly with the `fallthrough` keyword when you actually want it. A case can also list multiple comma-separated values, and `switch` with no expression at all (`switch { case cond1: ... }`) is a clean, idiomatic replacement for a long `if`/`else if` chain.
+
+```go
+switch day {
+case "Sat", "Sun":
+    fmt.Println("weekend")
+default:
+    fmt.Println("weekday")
+}
+
+switch { // no expression — acts like if/else-if
+case score > 90:
+    grade = "A"
+case score > 80:
+    grade = "B"
+}
+```
+
+**Say it:** "Go's switch auto-breaks per case, so there's no fallthrough footgun by default — and the expression-less form is my go-to replacement for a long if/else-if chain because it reads cleaner."
+**Red flag:** Adding an explicit `break` at the end of every case out of C/Java habit — it's redundant; Go already breaks automatically, and a stray `break` inside a switch nested in a loop can even confuse readers about which construct it's breaking out of.
+
+### Explicit Type Conversion
+**They ask:** "Why won't Go let me assign an `int` to a `float64` variable directly?"
+
+Go has no implicit type coercion between distinct types, even numeric ones that other languages widen automatically — the compiler forces an explicit conversion `T(v)` at every boundary where types differ. This is a deliberate safety trade-off: it costs a few extra keystrokes but makes every precision-changing conversion visible in the code instead of happening silently — the conversion itself can still truncate or overflow (see `int(f)` below), Go just refuses to let that happen invisibly.
+
+```go
+var i int = 5
+var f float64 = float64(i)  // must convert explicitly
+var i2 int = int(f)         // truncates toward zero, not rounds
+```
+
+**Say it:** "Go requires an explicit conversion between any two distinct types, including numeric ones — it's more typing but it means every precision-changing conversion is visible in the code instead of happening silently."
+**Red flag:** Assuming `int(3.9)` rounds to 4 — conversion from float to int truncates toward zero, so `int(3.9)` is 3 and `int(-3.9)` is -3, not -4.
+
+### The Blank Identifier
+**They ask:** "What does the underscore `_` actually mean in Go?"
+
+`_` is the blank identifier — a write-only placeholder that discards whatever value is assigned to it, satisfying Go's rule that every declared variable must be used without actually creating a usable variable. It shows up constantly: discarding one of multiple return values (`value, _ := f()`), discarding the loop variable you don't need (`for _, v := range s`), or importing a package purely for its side effects (`import _ "net/http/pprof"`).
+
+```go
+_, err := doWork()          // discard the value, keep the error
+for _, v := range items {}  // discard the index
+import _ "embed"            // side-effect-only import
+```
+
+**Say it:** "The blank identifier is a write-only discard — it lets me satisfy Go's unused-variable rule when I only need some of what a function or range gives back, without inventing a name for a value I'll never touch."
+**Red flag:** Discarding an error with `_` as a default habit instead of a deliberate choice — every `_` on an error return is a decision that a failure there is truly safe to ignore, and that should be rare enough to stand out in review.
+
+### Methods: Functions with a Receiver
+**They ask:** "What actually makes a function a method in Go?"
+
+A method is just a function with an extra receiver argument written before the name — `func (a Account) Balance() int` — and that receiver is what lets you call it as `a.Balance()` instead of `Balance(a)`. There's no special method syntax beyond that receiver; methods and functions are the same underlying construct, which is also why a method can be referenced as a plain function value (`a.Balance` is a bound function value you can pass around). The receiver can be a value (`T`) or a pointer (`*T`) — see Method Sets for how that choice affects mutation and interface satisfaction.
+
+```go
+type Account struct{ balance int }
+func (a Account) Balance() int { return a.balance }  // method
+func Balance(a Account) int { return a.balance }     // equivalent function
+
+acc := Account{balance: 100}
+acc.Balance() // method call sugar for Balance(acc)
+```
+
+**Say it:** "A method is a function with a receiver bound to a type — that receiver is what gives you the acc.Method() call syntax, and under the hood it's no different from passing acc as an argument to a plain function."
+**Red flag:** Treating methods as a fundamentally different mechanism from functions, the way a class-based language does — in Go they're the same construct, which is exactly why a method value can be passed around like any other function.

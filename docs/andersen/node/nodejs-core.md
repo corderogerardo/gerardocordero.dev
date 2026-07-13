@@ -237,3 +237,71 @@ The fix is usually to restructure so the cycle doesn't exist (extract the shared
 
 **Say it:** "A circular require doesn't error — it hands back whatever's been exported so far, which can be an empty object if the cycle closes before the other module finished running, so I break the cycle by extracting the shared piece rather than requiring lazily as a workaround."
 **Red flag:** Treating a circular-dependency bug as random or flaky — it's completely deterministic based on require order; tracing which module requires which first tells you exactly what each side sees.
+
+### The package.json exports field
+**They ask:** "What does the `exports` field in package.json do, and why is it stricter than `main`?"
+
+`exports` defines your package's **public API surface and its resolution rules** — it's a stricter *alternative* to `main`, not a replacement: if a package has no `exports` field at all, `main` still works exactly as before, and plenty of packages never add one. Once `exports` is present, though, it takes precedence over `main` for anything it covers, and gains two big powers `main` never had: **encapsulation** — anything not listed is un-importable, so `require('your-pkg/src/internal/util')` hard-fails instead of coupling consumers to your internals; and **conditional exports** — the same specifier resolves to different files based on condition, most commonly `import` vs `require` (ship both ESM and CJS) and `types` for TypeScript. That's how a modern dual-package works.
+
+```json
+{
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.mjs", "require": "./dist/index.cjs" },
+    "./package.json": "./package.json"
+  }
+}
+```
+
+**Say it:** "exports is a stricter alternative to main, not a replacement — main still works if exports is absent, but once exports is there it takes precedence and locks down deep imports so consumers can't reach into my internals, and its conditional map is how one package serves ESM, CJS, and types from the same specifier."
+**Red flag:** Being surprised that a deep import into a dependency's internal file suddenly breaks after an upgrade. If the package added an `exports` map, unlisted paths are intentionally sealed off — you were relying on an internal that was never public.
+
+### Defending against supply-chain attacks
+**They ask:** "npm dependencies are a supply-chain risk. What do you actually do about it?"
+
+The threat is real — a transitive dep gets compromised and runs code in your build or your production process — and a senior has a layered answer, not just "run npm audit." **Reproducibility:** commit the lockfile and install with `npm ci` (fails if `package.json` and the lockfile disagree, and installs exactly the locked tree) so a build can't silently pull a different version. **Blast radius:** run install scripts off by default where you can (`--ignore-scripts`) since that's a common execution vector, and keep the dependency count low — every dep is trust you're extending. **Detection:** `npm audit` in CI for known CVEs, and pin/enable provenance where the registry supports it. The mindset is "every dependency is code I'm choosing to run," so I minimize and verify what I pull.
+
+**Say it:** "I treat every dependency as code I'm running: `npm ci` against a committed lockfile for reproducible installs, minimal dependencies, install scripts disabled where possible, and `npm audit` in CI — supply-chain defense is layered, not one command."
+**Red flag:** Running `npm install` (not `npm ci`) in CI and deleting or ignoring the lockfile. Every build can then resolve a different version, so a compromised release can slip in without any change to your `package.json`, and your builds aren't reproducible.
+
+### What's the difference between Node.js and npm?
+**They ask:** "What's the difference between Node.js and npm?"
+
+They get bundled together in installers, but they solve completely different problems — Node.js is the **JavaScript runtime**: it embeds V8 to execute JS outside a browser and adds APIs like `fs`, `http`, and `process`. npm (Node Package Manager) is a **package manager and registry**: it installs third-party code (dependencies) into `node_modules`, tracks them in `package.json`, and runs project scripts. You can run plain JS files with `node file.js` without ever touching npm; npm becomes relevant the moment your project depends on code you didn't write.
+
+**Say it:** "Node is the runtime that actually executes JavaScript outside the browser; npm is the package manager that installs and tracks the dependencies that runtime code needs — one runs your code, the other manages what your code depends on."
+**Red flag:** Saying "install Node" and "install npm" as if they're separate steps for separate purposes day to day. They ship together in the official Node installer, but conceptually they're distinct layers, and interviewers listen for whether you know why.
+
+### npm scripts
+**They ask:** "What are npm scripts, and how do you run one?"
+
+The `scripts` field in `package.json` exists so a project's common commands — start the app, run tests, build, lint — have one memorized name instead of everyone needing to know the exact underlying CLI invocation. Each key is a script name, each value is a shell command; `npm run <name>` executes it (with `node_modules/.bin` automatically on `PATH`, so scripts can call locally installed CLIs without a global install). `start` and `test` are special-cased and don't need `run`: `npm start` and `npm test` work directly.
+
+```json
+{
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest",
+    "build": "tsc"
+  }
+}
+```
+Run with `npm start`, `npm test`, or `npm run build`.
+
+**Say it:** "npm scripts are named shortcuts for a project's common commands, defined once in package.json so everyone runs `npm test` instead of memorizing the real CLI invocation — and they automatically get local `node_modules/.bin` binaries on PATH."
+**Red flag:** Installing a CLI tool globally just to run it in a script. Add it as a devDependency instead — npm scripts already put `node_modules/.bin` on PATH, so the project stays reproducible for every teammate and CI without relying on what happens to be installed globally.
+
+### What is node_modules, and why isn't it committed?
+**They ask:** "What is the node_modules folder, and why don't we commit it to git?"
+
+`node_modules` is where npm physically installs every dependency your project declared in `package.json` (plus their own transitive dependencies) — it's generated output, not source you wrote. It's excluded from git (via `.gitignore`) for two reasons: it's regenerable from `package.json` + `package-lock.json` with a single `npm install`, and it can be huge (thousands of files, often larger than the project itself) — committing it would bloat the repo and cause constant, meaningless diff noise on every install. What *does* get committed is `package.json` (what you depend on) and `package-lock.json` (the exact resolved versions), which together are enough for anyone to reproduce the same `node_modules`.
+
+**Say it:** "node_modules is generated output from package.json and the lockfile — it's regenerable with npm install, so we gitignore it and commit only the manifest and lockfile, which is enough for anyone to reproduce the exact same dependency tree."
+**Red flag:** Committing `node_modules` "just to be safe." It bloats the repo, creates merge-conflict noise on a folder nobody hand-edits, and can even hide platform-specific native binaries that don't work on a teammate's OS — the lockfile is the actual source of truth.
+
+### npm install vs npm ci
+**They ask:** "What's the difference between npm install and npm ci?"
+
+Both install dependencies, but they answer different questions: "get me *a* working set of dependencies" vs "get me *exactly* the locked set, guaranteed." `npm install` reads `package.json`, resolves versions against semver ranges, may *update* `package-lock.json` if it's out of sync, and will add new packages if you pass one. `npm ci` (clean install) requires an existing, valid `package-lock.json`, deletes `node_modules` first, and installs the **exact** versions the lockfile pins — it fails outright if `package.json` and the lockfile disagree, instead of silently reconciling them. That's why CI pipelines and Docker builds use `npm ci`: reproducibility over convenience.
+
+**Say it:** "npm install resolves and can update the lockfile, which is what I want locally when adding a package; npm ci installs exactly what's locked and fails loudly if the lockfile is out of sync, which is what I want in CI so a build can't silently pull a different dependency tree than what was tested."
+**Red flag:** Using `npm install` in a CI pipeline. It can quietly update the lockfile and install slightly different versions than what was tested locally — `npm ci` is the reproducible, fail-fast choice for automated environments.

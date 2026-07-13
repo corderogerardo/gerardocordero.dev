@@ -93,3 +93,11 @@ The trade-off that actually decides it: Core Data is Apple-native, integrates wi
 
 **Say it:** "For arbitrary files I use `NSFileManager` with `Caches` for regenerable data; for structured objects I reach for `Codable` to disk or SQLite directly when I need real relational queries; `NSCache` handles in-memory eviction-aware caching like images, and `UIDocument` is for when the app's unit of data really is a document with autosave and iCloud conflict handling built in."
 **Red flag:** Using a plain `Dictionary` as an image cache. It never evicts under memory pressure and isn't thread-safe — `NSCache` solves both for free.
+
+### UserDefaults Basics
+**They ask:** "What is UserDefaults, and what should you *not* store in it?"
+
+`UserDefaults` is a simple key-value store for small pieces of user preference — a theme choice, an "onboarding seen" flag, a last-selected tab. It persists across launches and is trivial to use (`UserDefaults.standard.set(true, forKey: "seenIntro")`). The critical limit: it's **not secure and not for large or sensitive data**. It's stored as an unencrypted plist, so passwords and tokens belong in the **Keychain**, and big or structured data belongs in a database like Core Data or SQLite — dumping a large array into UserDefaults bloats launch time because the whole thing loads into memory.
+
+**Say it:** "UserDefaults is for small non-sensitive preferences like flags and settings — it persists across launches but it's an unencrypted plist, so secrets go in the Keychain and large or structured data goes in Core Data or SQLite."
+**Red flag:** Storing an auth token or password in UserDefaults. It's readable on a jailbroken device and in backups — a security issue an interviewer will flag immediately; the Keychain exists exactly for this.
