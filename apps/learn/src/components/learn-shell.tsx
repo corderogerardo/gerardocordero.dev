@@ -104,7 +104,7 @@ function importProgress() {
   };
 }
 
-export default function LearnShell({ course, locale, children }: { course: Course; locale?: string; children: ReactNode }) {
+export default function LearnShell({ course, children }: { course: Course; children: ReactNode }) {
   return (
     <CourseProvider course={course}>
       <LearnShellContent course={course}>{children}</LearnShellContent>

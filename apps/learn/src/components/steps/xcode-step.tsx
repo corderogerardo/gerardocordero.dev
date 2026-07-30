@@ -21,8 +21,6 @@ export default function XcodeStep({
   const setDone = useCourseStore((s) => s.setDone);
   const isDone = !!done[stepKey];
 
-  const allChecked = step.items.every((_, ci) => checks[`${stepKey}/${ci}`]);
-
   const handleCheck = (ci: number, checked: boolean) => {
     setCheck(`${stepKey}/${ci}`, checked);
     const nextAll = step.items.every((_, i) =>

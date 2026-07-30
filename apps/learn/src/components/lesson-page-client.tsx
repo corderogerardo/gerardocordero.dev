@@ -61,7 +61,6 @@ export default function LessonPageClient() {
   const setReveal = useCourseStore((s) => s.setReveal);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const locale = (params.locale as string) || "en";
   const moduleId = params.module as string;
   const lessonId = params.lesson as string;
 
@@ -102,7 +101,6 @@ export default function LessonPageClient() {
   }
 
   const { m, l, mi, li } = found;
-  const lid = `${m.id}/${l.id}`;
   const isComplete = lessonCompleteInternal(m.id, l.id, l, reveal, done);
   const lastIdx = revealed - 1;
   const lastStep = l.steps[lastIdx];

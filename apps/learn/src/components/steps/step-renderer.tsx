@@ -1,6 +1,6 @@
 "use client";
 
-import type { Step, LangId } from "@/lib/course-data";
+import type { Step } from "@/lib/course-data";
 import { useI18n } from "@/lib/i18n";
 import TextStep from "@/components/steps/text-step";
 import CodeStep from "@/components/steps/code-step";

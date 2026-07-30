@@ -1,25 +1,9 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
-import type { Module } from "@/lib/course-data";
-
-function modProgress(m: Module, done: Record<string, true | "help" | "skip">, reveal: Record<string, number>) {
-  let total = 0;
-  let completed = 0;
-  for (const l of m.lessons) {
-    const lid = `${m.id}/${l.id}`;
-    const r = reveal[lid] ?? 1;
-    total += l.steps.length;
-    if (r >= l.steps.length && l.steps.every((s, i) => {
-      if (s.type !== "quiz" && s.type !== "exercise" && s.type !== "xcode") return true;
-      return !!done[`${lid}/${i}`];
-    })) completed += l.steps.length; else completed += Math.min(r, l.steps.length);
-  }
-  return { total, completed };
-}
 
 export default function Sidebar() {
   const { course } = useCourse();
@@ -40,7 +24,6 @@ export default function Sidebar() {
   return (
     <div id="module-list">
       {course.modules.map((m, mi) => {
-        const { completed, total } = modProgress(m, done, reveal);
         const doneCount = m.lessons.filter((l) => {
           const lid = `${m.id}/${l.id}`;
           const r = reveal[lid] ?? 1;

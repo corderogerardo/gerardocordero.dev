@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LOCALES, COURSE_IDS } from "@/lib/i18n-config";
+import { LOCALES } from "@/lib/i18n-config";
 import { getSpecs } from "@/lib/andersen-decks";
 
 const COURSES: { id: string; title: string; emoji: string }[] = [
