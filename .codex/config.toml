@@ -1,0 +1,17 @@
+[mcp_servers.expo]
+command = "pnpm"
+args = [
+    "exec",
+    "expo-mcp",
+    "--dev-server-url",
+    "http://localhost:8081",
+    "--root",
+    "apps/portfolio",
+]
+
+[mcp_servers.maestro]
+command = "maestro"
+args = ["mcp"]
+
+[mcp_servers.maestro.env]
+JAVA_HOME = "/opt/homebrew/opt/openjdk@17"
