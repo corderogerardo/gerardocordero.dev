@@ -28,7 +28,7 @@ export default async function CourseLayout({
 
   return (
     <ErrorBoundary>
-      <LearnShell course={course} locale={locale}>
+      <LearnShell course={course}>
         {children}
       </LearnShell>
     </ErrorBoundary>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
@@ -52,10 +53,31 @@ function lessonCompleteInternal(
   );
 }
 
+function LessonNotFound({ locale }: { locale: string }) {
+  return (
+    <div className="lesson-wrap" role="status">
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4" aria-hidden="true">🔍</div>
+        <h2 className="text-2xl font-semibold mb-2">
+          {locale === "es" ? "Lección no encontrada" : "Lesson not found"}
+        </h2>
+        <p className="text-muted mb-6">
+          {locale === "es"
+            ? "Esta lección no existe o ha sido movida."
+            : "This lesson doesn't exist or has been moved."}
+        </p>
+        <Link href={`/${locale}/learn/${locale}`} className="btn">
+          {locale === "es" ? "Volver al inicio" : "Back to courses"}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function LessonPageClient() {
   const params = useParams();
   const { course } = useCourse();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const reveal = useCourseStore((s) => s.reveal);
   const done = useCourseStore((s) => s.done);
   const setReveal = useCourseStore((s) => s.setReveal);
@@ -82,6 +104,8 @@ export default function LessonPageClient() {
       found.l.steps.length,
     );
     setReveal(key, nextReveal);
+    // Scroll to top of new step
+    scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [found, reveal, setReveal]);
 
   const handleStepProgress = useCallback(() => {
@@ -97,7 +121,7 @@ export default function LessonPageClient() {
   }, [found, reveal, setReveal]);
 
   if (!found) {
-    return <p>{t("lesson.notfound")}</p>;
+    return <LessonNotFound locale={locale} />;
   }
 
   const { m, l, mi, li } = found;
@@ -109,8 +133,8 @@ export default function LessonPageClient() {
 
   return (
     <div className="lesson-wrap" ref={scrollRef}>
-      <div className="crumb-row">
-        <div className="crumbs mono-caption">
+      <nav aria-label="Lesson progress" className="crumb-row">
+        <div className="crumbs mono-caption" aria-live="polite">
           {t("lesson.crumbs", {
             mi: String(mi).padStart(2, "0"),
             module: m.title,
@@ -119,37 +143,47 @@ export default function LessonPageClient() {
             est: Math.max(2, Math.round(l.steps.length * 1.5)),
           })}
         </div>
-      </div>
+      </nav>
 
-      <h2 className="lesson-title">{l.title}</h2>
+      <h1 className="lesson-title">{l.title}</h1>
 
-      {l.steps.slice(0, revealed).map((step, i) => (
-        <StepRenderer
-          key={i}
-          step={step}
-          mId={m.id}
-          lId={l.id}
-          i={i}
-          onProgress={handleStepProgress}
-        />
-      ))}
+      <section aria-label="Lesson content" aria-live="polite">
+        {l.steps.slice(0, revealed).map((step, i) => (
+          <StepRenderer
+            key={i}
+            step={step}
+            mId={m.id}
+            lId={l.id}
+            i={i}
+            onProgress={handleStepProgress}
+          />
+        ))}
+      </section>
 
       {!isComplete && (
         <div className="continue-row" style={{ display: allRevealed && !blocked ? "none" : "" }}>
-          <button className="btn" disabled={blocked} onClick={handleContinue}>
+          <button
+            className="btn"
+            disabled={blocked}
+            onClick={handleContinue}
+            aria-busy={false}
+            aria-disabled={blocked}
+          >
             {t("lesson.continue")}
           </button>
           {blocked && (
-            <span className="hintline">{t("lesson.blocked")}</span>
+            <span className="hintline" role="alert" aria-live="polite">
+              {t("lesson.blocked")}
+            </span>
           )}
         </div>
       )}
 
       <div id="complete-slot">
         {isComplete && (
-          <div className="complete-card">
-            <div className="big">🐾</div>
-            <h3>{t("lesson.complete.title", { title: l.title })}</h3>
+          <div className="complete-card" role="status" aria-live="polite">
+            <div className="big" aria-hidden="true">🐾</div>
+            <h2>{t("lesson.complete.title", { title: l.title })}</h2>
             <p>{t("lesson.complete.body")}</p>
           </div>
         )}
