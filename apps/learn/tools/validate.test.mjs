@@ -1,15 +1,15 @@
-// Tests for tools/validate.mjs, focused on the Go course support added in this
-// PR: the new "lessons-go" entry in ALL_DIRS/KNOWN_LANGS, and the schema /
-// solvability rules the validator enforces against fixture Go modules.
+// Tests for tools/validate.mjs: the lesson schema/solvability rules (Go-course
+// era) and the Phase 0 token-parity guard for the unified styles.css namespace.
 //
 // Zero dependencies, matching the rest of apps/learn — run with:
 //   node --test apps/learn/tools/validate.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateTokenParity } from "./validate.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const LEARN_ROOT = join(here, ".."); // apps/learn
@@ -323,4 +323,144 @@ window.COURSE.push({
     const res = runValidate([dir]);
     assert.equal(res.status, 0, `expected success, stderr:\n${res.stderr}`);
   });
+});
+
+// ---------- Phase 0: unified token namespace parity guard ----------
+
+const STYLES_CSS = join(LEARN_ROOT, "styles.css");
+
+// Builds the 8 declarations (4 steps × hex + -hsl twin) of one course ramp.
+function ramp(id, { base, baseHsl, strong, strongHsl, soft, softHsl, on, onHsl }) {
+  const decl = (step, hex, hsl) => `--course-${id}-${step}: ${hex}; --course-${id}-${step}-hsl: ${hsl};`;
+  return decl("base", base, baseHsl) + decl("strong", strong, strongHsl) +
+    decl("soft", soft, softHsl) + decl("on", on, onHsl);
+}
+
+// A styles.css-shaped fixture: a :root block plus an optional dark media block.
+function cssWith(lightDecls, darkDecls) {
+  const dark = darkDecls ? `\n@media (prefers-color-scheme: dark) { :root { ${darkDecls} } }` : "";
+  return `:root { ${lightDecls} }${dark}`;
+}
+
+const IOS = ramp("ios", {
+  base: "#1B6BBB", baseHsl: "210 75% 42%",
+  strong: "#16599C", strongHsl: "210 75% 35%",
+  soft: "#E7F0F9", softHsl: "210 60% 94%",
+  on: "#FFFFFF", onHsl: "0 0% 100%",
+});
+const IOS_DARK = ramp("ios", {
+  base: "#6CADEF", baseHsl: "210 80% 68%",
+  strong: "#91C2F3", strongHsl: "210 80% 76%",
+  soft: "#152637", softHsl: "210 45% 15%",
+  on: "#0E0C17", onHsl: "251 31% 7%",
+});
+const ANDROID = ramp("android", {
+  base: "#188653", baseHsl: "152 70% 31%",
+  strong: "#157548", strongHsl: "152 70% 27%",
+  soft: "#E7F9F0", softHsl: "152 60% 94%",
+  on: "#FFFFFF", onHsl: "0 0% 100%",
+});
+const ANDROID_DARK = ramp("android", {
+  base: "#70EBB1", baseHsl: "152 75% 68%",
+  strong: "#94F0C5", strongHsl: "152 75% 76%",
+  soft: "#153727", softHsl: "152 40% 15%",
+  on: "#0E0C17", onHsl: "251 31% 7%",
+});
+
+test("token parity accepts a complete ramp defined in both light and dark", () => {
+  assert.doesNotThrow(() => validateTokenParity(cssWith(IOS, IOS_DARK)));
+});
+
+test("token parity accepts multiple complete ramps in both modes", () => {
+  assert.doesNotThrow(() => validateTokenParity(cssWith(IOS + ANDROID, IOS_DARK + ANDROID_DARK)));
+});
+
+test("token parity rejects a course ramp missing entirely from dark mode", () => {
+  // Fixture required by Phase 0: the whole ios ramp exists in :root but has no
+  // dark counterpart. The per-mode loops would not visit it, so the cross-mode
+  // assertion must catch it.
+  assert.throws(
+    () => validateTokenParity(cssWith(IOS, "")),
+    /Parity violation: course ramp "ios" is missing from dark mode/
+  );
+});
+
+test("token parity rejects a course ramp missing entirely from light mode", () => {
+  assert.throws(
+    () => validateTokenParity(cssWith("", IOS_DARK)),
+    /Parity violation: course ramp "ios" is missing from light mode/
+  );
+});
+
+test("token parity rejects a missing ramp step in light mode, naming token and mode", () => {
+  const partial = IOS.replace("--course-ios-strong: #16599C; --course-ios-strong-hsl: 210 75% 35%;", "");
+  assert.throws(
+    () => validateTokenParity(cssWith(partial, IOS_DARK)),
+    /Parity violation \(light\): --course-ios-strong missing for course ios in :root/
+  );
+});
+
+test("token parity rejects a missing ramp step in dark mode independently of light", () => {
+  // Light is complete; only the dark copy is missing a step. This must fail the
+  // dark loop — the guard checks each mode independently, not with an OR.
+  const partialDark = IOS_DARK.replace("--course-ios-soft: #152637; --course-ios-soft-hsl: 210 45% 15%;", "");
+  assert.throws(
+    () => validateTokenParity(cssWith(IOS, partialDark)),
+    /Parity violation \(dark\): --course-ios-soft missing for course ios in @media \(prefers-color-scheme: dark\)/
+  );
+});
+
+test("token parity rejects an orphan -hsl variable with no matching base variable", () => {
+  // Spec scenario: Tailwind references --course-new-hsl but the hex base is missing.
+  const orphan = "--course-new-base-hsl: 210 75% 42%;";
+  assert.throws(
+    () => validateTokenParity(cssWith(orphan, "")),
+    /Parity violation \(light\): --course-new-base-hsl has no matching base variable --course-new-base/
+  );
+});
+
+test("CLI exits 1 and names the violation when styles.css fails parity", () => {
+  const dir = mkdtempSync(join(LEARN_ROOT, ".tmp-validate-fixture-"));
+  try {
+    const badCss = join(dir, "bad.css");
+    writeFileSync(badCss, cssWith(IOS, ""), "utf8");
+    const res = spawnSync(process.execPath, [VALIDATE_SCRIPT], {
+      encoding: "utf8",
+      cwd: LEARN_ROOT,
+      env: { ...process.env, VALIDATE_STYLES_CSS: badCss },
+    });
+    assert.equal(res.status, 1);
+    assert.match(res.stderr, /Parity violation: course ramp "ios" is missing from dark mode/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the real styles.css defines complete course ramps and passes token parity", () => {
+  const css = readFileSync(STYLES_CSS, "utf8");
+  // 8 courses × 8 declarations (4 steps × hex+hsl) × 2 modes = 128 --course-* decls.
+  const courseDecls = css.match(/--course-[a-z0-9-]+:/g) || [];
+  assert.ok(courseDecls.length >= 128, `expected ≥128 course token declarations, got ${courseDecls.length}`);
+  assert.match(css, /--course-ios-base:/);
+  assert.match(css, /--course-expoui-base:/);
+  const darkBlock = css.match(/@media \(prefers-color-scheme: dark\) \{[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(darkBlock, /--course-ios-base:/, "dark media block must contain the ios ramp");
+  assert.doesNotThrow(() => validateTokenParity(css));
+});
+
+test("the real styles.css defines the Phase 0 type scale, radius, and shadow tokens", () => {
+  const css = readFileSync(STYLES_CSS, "utf8");
+  assert.match(css, /--text-hero:\s*clamp\(40px,\s*6vw,\s*64px\)/);
+  assert.match(css, /--text-page-title:\s*32px/);
+  assert.match(css, /--text-section-label:\s*13px/);
+  assert.match(css, /--text-section-label-font-family:\s*var\(--mono\)/);
+  assert.match(css, /--text-body:\s*16\.5px/);
+  assert.match(css, /--text-caption:\s*12\.5px/);
+  assert.match(css, /--radius-lg:\s*18px/);
+  assert.match(css, /--radius-xl:\s*24px/);
+  // Dark shadow tokens with a 5% white tint (design's corrected values).
+  assert.match(css, /--shadow-sm-dark:\s*0 1px 2px rgba\(255,\s*255,\s*255,\s*0\.05\)/);
+  assert.match(css, /--shadow-md-dark:\s*0 4px 12px rgba\(255,\s*255,\s*255,\s*0\.06\)/);
+  assert.match(css, /--ease-rise:/);
+  assert.match(css, /--duration-progress:\s*600ms/);
 });
