@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
 import { StepRenderer } from "@/components/steps/step-renderer";
+import { isGated, isStepDone, lessonCompleteInternal } from "@/lib/course-progress";
 import type { Lesson, Module } from "@/lib/course-data";
 
 function findLesson(
@@ -22,35 +23,6 @@ function findLesson(
     }
   }
   return null;
-}
-
-function isGated(step: { type: string }): boolean {
-  return step.type === "quiz" || step.type === "exercise" || step.type === "xcode";
-}
-
-function isStepDone(
-  mId: string,
-  lId: string,
-  i: number,
-  step: { type: string },
-  done: Record<string, true | "help" | "skip">,
-): boolean {
-  if (!isGated(step)) return true;
-  return !!done[`${mId}/${lId}/${i}`];
-}
-
-function lessonCompleteInternal(
-  mId: string,
-  lId: string,
-  lesson: Lesson,
-  reveal: Record<string, number>,
-  done: Record<string, true | "help" | "skip">,
-): boolean {
-  const r = reveal[`${mId}/${lId}`] ?? 1;
-  return (
-    r >= lesson.steps.length &&
-    lesson.steps.every((s, i) => isStepDone(mId, lId, i, s, done))
-  );
 }
 
 function LessonNotFound({ locale }: { locale: string }) {
