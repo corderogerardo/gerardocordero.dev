@@ -1,12 +1,15 @@
 // Validates every *.js file in a lessons directory: syntax, schema, and — critically —
 // that each exercise's own solution passes its own checks (so every exercise is solvable).
+// Also checks token parity in styles.css: every course ramp (base/strong/soft/on, hex + -hsl
+// twin) must exist in BOTH :root and the dark media block, independently per mode.
 // Usage: node tools/validate.mjs [dir]   (from apps/learn/)
 //   - with a dir arg: validates just that directory
-//   - with no arg: validates all four course dirs (lessons, lessons-android,
-//     lessons-ruby, lessons-python) and exits non-zero if any of them has errors
+//   - with no arg: validates all eight course dirs (lessons, lessons-android,
+//     lessons-ruby, lessons-python, lessons-go, lessons-node, lessons-native,
+//     lessons-expoui) and exits non-zero if any of them has errors
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { types } from "node:util";
 import vm from "node:vm";
 
@@ -156,14 +159,128 @@ function validateDir(dir) {
 }
 
 const argDir = process.argv[2];
-if (argDir) {
-  validateDir(argDir);
-} else {
-  let allOk = true;
-  for (const dir of ALL_DIRS) {
-    console.log(`\n=== ${dir} ===`);
-    if (!validateDir(dir)) allOk = false;
+const isMain = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+// ---------- Token parity guard (Phase 0: unified token namespace) ----------
+
+// Finds every brace-balanced block whose header matches headerRe (which MUST
+// carry the /g flag, e.g. /@media ...dark...\{/g or /:root\s*\{/g). Returns
+// [{ start, end, content }] where end is just past the closing brace.
+function extractBlocks(css, headerRe) {
+  const blocks = [];
+  for (const match of css.matchAll(headerRe)) {
+    const open = match[0].lastIndexOf("{");
+    if (open === -1) continue;
+    let depth = 1;
+    let i = match.index + open + 1;
+    for (; i < css.length && depth > 0; i++) {
+      if (css[i] === "{") depth++;
+      else if (css[i] === "}") depth--;
+    }
+    if (depth === 0) blocks.push({ start: match.index, end: i, content: css.slice(match.index + open + 1, i - 1) });
   }
-  if (!allOk) process.exit(1);
+  return blocks;
 }
-if (errors.length) process.exit(1);
+
+// Collects every `--name:` custom property declared inside a block's content.
+// Comments are stripped first so prose documenting tokens can't false-positive.
+function collectTokens(content) {
+  const vars = new Set();
+  const code = content.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const m of code.matchAll(/(--[a-z0-9][a-z0-9-]*)\s*:/g)) vars.add(m[1]);
+  return vars;
+}
+
+const DARK_HEADER = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{/g;
+const ROOT_HEADER = /:root\s*\{/g;
+
+// Ensures the unified token namespace in styles.css is complete:
+//   - every course ramp (base/strong/soft/on, hex + -hsl twin) exists in BOTH
+//     :root and the dark media block, each mode checked independently;
+//   - no -hsl variable exists without its hex base twin in the same mode;
+//   - every course id present in one mode's base tokens is present in the other.
+// Throws with a message naming the missing token and mode; the CLI maps it to
+// exit code 1.
+export function validateTokenParity(cssContent) {
+  const darkBlocks = extractBlocks(cssContent, DARK_HEADER);
+  let remainder = cssContent;
+  for (const b of darkBlocks) {
+    remainder = remainder.slice(0, b.start) + remainder.slice(b.end);
+  }
+  const lightBlocks = extractBlocks(remainder, ROOT_HEADER);
+
+  const light = collectTokens(lightBlocks.map((b) => b.content).join("\n"));
+  const dark = collectTokens(darkBlocks.map((b) => b.content).join("\n"));
+
+  const requiredSteps = ["base", "strong", "soft", "on"];
+  const formats = ["", "-hsl"];
+  const courseIdOf = (name) => (/^--course-(.+)-base$/.exec(name) || [])[1];
+
+  for (const [modeName, vars, where] of [
+    ["light", light, ":root"],
+    ["dark", dark, "@media (prefers-color-scheme: dark)"],
+  ]) {
+    for (const name of vars) {
+      const courseId = courseIdOf(name);
+      if (courseId) {
+        for (const step of requiredSteps) {
+          for (const fmt of formats) {
+            const expected = `--course-${courseId}-${step}${fmt}`;
+            if (!vars.has(expected)) {
+              throw new Error(`Parity violation (${modeName}): ${expected} missing for course ${courseId} in ${where}`);
+            }
+          }
+        }
+      }
+      if (name.endsWith("-hsl")) {
+        const base = name.slice(0, -4);
+        if (!vars.has(base)) {
+          throw new Error(`Parity violation (${modeName}): ${name} has no matching base variable ${base}`);
+        }
+      }
+    }
+  }
+
+  const courseIds = (vars) => new Set([...vars].map(courseIdOf).filter(Boolean));
+  const lightIds = courseIds(light);
+  const darkIds = courseIds(dark);
+  for (const id of lightIds) {
+    if (!darkIds.has(id)) {
+      throw new Error(`Parity violation: course ramp "${id}" is missing from dark mode (@media (prefers-color-scheme: dark))`);
+    }
+  }
+  for (const id of darkIds) {
+    if (!lightIds.has(id)) {
+      throw new Error(`Parity violation: course ramp "${id}" is missing from light mode (:root)`);
+    }
+  }
+}
+
+function runParityCheck() {
+  const cssPath = process.env.VALIDATE_STYLES_CSS || join(root, "styles.css");
+  try {
+    validateTokenParity(readFileSync(cssPath, "utf8"));
+    console.log(`✓ Token parity valid (${cssPath}).`);
+    return true;
+  } catch (e) {
+    console.error(`\n✗ ${e.message}`);
+    process.exitCode = 1;
+    return false;
+  }
+}
+
+if (isMain) {
+  if (!runParityCheck()) process.exit(1);
+
+  if (argDir) {
+    validateDir(argDir);
+  } else {
+    let allOk = true;
+    for (const dir of ALL_DIRS) {
+      console.log(`\n=== ${dir} ===`);
+      if (!validateDir(dir)) allOk = false;
+    }
+    if (!allOk) process.exit(1);
+  }
+  if (errors.length) process.exit(1);
+}
