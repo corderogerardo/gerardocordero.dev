@@ -526,23 +526,44 @@ pre.md-code {
   gap: 16px; margin-bottom: 64px;
 }
 .course-card {
+  --tint-hsl: var(--accent-hsl);
+  --card-soft: var(--accent-soft);
+  --card-base: var(--accent);
+  --card-strong: var(--accent-strong);
   display: flex; flex-direction: column; gap: 14px;
-  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
-  padding: 24px 20px; text-decoration: none; color: var(--ink);
+  background: var(--card); border: 1.5px solid var(--line);
+  border-radius: var(--radius-lg); padding: 22px 20px;
+  text-decoration: none; color: var(--ink);
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  transition: border-color 0.15s, transform 0.12s var(--ease-rise), box-shadow 0.2s var(--ease-rise);
   position: relative; overflow: hidden;
 }
 .course-card::before {
-  content: ""; position: absolute; inset: 0 0 auto;
-  height: 3px; background: var(--accent);
+  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
+  background: linear-gradient(90deg, var(--card-base), hsl(var(--tint-hsl) / 0.5));
   opacity: 0; transition: opacity 0.2s;
 }
-.course-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.course-card:hover {
+  border-color: hsl(var(--tint-hsl) / 0.55);
+  transform: translateY(-3px); box-shadow: var(--shadow-tint);
+}
 .course-card:hover::before { opacity: 1; }
+.course-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.course-emoji-tile {
+  display: grid; place-items: center; width: 52px; height: 52px;
+  border-radius: var(--radius-md); background: var(--card-soft);
+  border: 1px solid hsl(var(--tint-hsl) / 0.3); font-size: 26px; line-height: 1;
+}
+.course-card-title { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+/* Root language-picker page (src/app/page.tsx) legacy classes */
 .course-emoji { font-size: 28px; line-height: 1; }
 .course-title { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
-.course-meta { margin-top: auto; color: var(--ink-soft); font-size: 12.5px; }
+.course-meta { margin-top: auto; color: var(--ink-soft); font-size: var(--text-caption); font-family: var(--mono); }
+
+.progress-ring { flex-shrink: 0; }
+.ring-track { stroke: var(--line); }
+.ring-fill { transition: stroke-dashoffset 0.6s var(--ease-out); }
+.ring-label { font: 600 9.5px var(--mono); fill: var(--ink-soft); }
 
 .picker-note {
   display: flex; align-items: center; gap: 12px;
