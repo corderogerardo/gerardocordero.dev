@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { LOCALES } from "@/lib/i18n-config";
 import { getSpecs } from "@/lib/andersen-decks";
 import { getCourseData } from "@/lib/course-loader";
@@ -11,6 +12,14 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "go",      title: "Go Backend",        emoji: "🐹" },
   { id: "native",  title: "Native RN & Expo Modules", emoji: "🛰️" },
   { id: "expoui",  title: "Rebuild @expo/ui",         emoji: "🎛️" },
+];
+
+const SCENE_TILES = [
+  { emoji: "📱", hue: "var(--course-ios-hsl)" },
+  { emoji: "🤖", hue: "var(--course-android-hsl)" },
+  { emoji: "💎", hue: "var(--course-ruby-hsl)" },
+  { emoji: "🐍", hue: "var(--course-python-hsl)" },
+  { emoji: "🐹", hue: "var(--course-go-hsl)" },
 ];
 
 export function generateStaticParams() {
@@ -44,27 +53,59 @@ export default async function HomePage({
       </p>
 
       <header className="course-hero">
-        <h1>
-          {es ? (
-            <>Construye la app PawWalk — <em>paso a paso</em>.</>
-          ) : (
-            <>Build the PawWalk app — <em>step by step</em>.</>
-          )}
-        </h1>
-        <p>
-          {es
-            ? "Cursos interactivos donde escribes código real, lo compruebas al instante y avanzas a tu ritmo. Sin cuenta, sin instalación: tu progreso se guarda en el navegador."
-            : "Interactive courses where you write real code, get instant feedback, and learn at your own pace. No account, no install — progress is saved in your browser."}
-        </p>
-        <div className="hero-actions">
-          <Link href={`/${locale}/learn/ios`} className="hero-chip">
-            {es ? "Empezar con iOS" : "Start with iOS"} →
-          </Link>
-          <Link href="/reactnative" className="hero-chip ghost-chip">
-            🧠 {es ? "Práctica RN" : "RN Practice"}
-          </Link>
+        <div className="hero-copy">
+          <h1 className="hero-headline">
+            {es ? (
+              <>Construye la app PawWalk — <em>paso a paso</em>.</>
+            ) : (
+              <>Build the PawWalk app — <em>step by step</em>.</>
+            )}
+          </h1>
+          <p className="hero-subcopy">
+            {es
+              ? "Cursos interactivos donde escribes código real, lo compruebas al instante y avanzas a tu ritmo. Sin cuenta, sin instalación: tu progreso se guarda en tu navegador."
+              : "Interactive courses where you write real code, get instant feedback, and learn at your own pace. No account, no install — progress is saved in your browser."}
+          </p>
+          <div className="hero-actions">
+            <Link
+              href={`/${locale}/learn/ios`}
+              className="hero-chip"
+              style={{ "--chip-hue": "var(--course-ios-hsl)" } as CSSProperties}
+            >
+              {es ? "Empezar con iOS" : "Start with iOS"} →
+            </Link>
+            <Link href="/reactnative" className="hero-chip ghost-chip">
+              🧠 {es ? "Práctica RN" : "RN Practice"}
+            </Link>
+          </div>
+        </div>
+        <div className="hero-scene" aria-hidden="true">
+          {SCENE_TILES.map((t) => (
+            <div
+              key={t.emoji}
+              className="scene-tile"
+              style={{ "--tile-hue": t.hue } as CSSProperties}
+            >
+              {t.emoji}
+            </div>
+          ))}
         </div>
       </header>
+
+      <div className="stats-strip" aria-label={es ? "Estadísticas del catálogo" : "Catalog stats"}>
+        <div className="stat">
+          <span className="stat-num">{totalLessons}</span>
+          <span className="stat-label">{es ? "lecciones" : "lessons"}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-num">{courses.length}</span>
+          <span className="stat-label">{es ? "cursos" : "courses"}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-num">{specs.length + 1}</span>
+          <span className="stat-label">{es ? "barajas" : "decks"}</span>
+        </div>
+      </div>
 
       <h2 className="picker-section-label">
         {es ? "Cursos" : "Courses"}
