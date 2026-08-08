@@ -3,6 +3,8 @@ import type { CSSProperties } from "react";
 import { LOCALES } from "@/lib/i18n-config";
 import { getSpecs } from "@/lib/andersen-decks";
 import { getCourseData } from "@/lib/course-loader";
+import { buildCourseProgressShape } from "@/lib/course-progress";
+import CourseCard from "@/components/course-card";
 
 const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "ios",     title: "iOS & Swift",      emoji: "📱" },
@@ -40,7 +42,12 @@ export default async function HomePage({
       ? data.modules.reduce((n, m) => n + m.lessons.length, 0)
       : 0;
     const modules = data ? data.modules.length : 0;
-    return { ...c, lessons, modules };
+    return {
+      ...c,
+      lessons,
+      modules,
+      shape: data ? buildCourseProgressShape(data) : null,
+    };
   });
   const specs = getSpecs();
   const totalLessons = courses.reduce((n, c) => n + c.lessons, 0);
@@ -113,14 +120,17 @@ export default async function HomePage({
       </h2>
       <div className="course-grid">
         {courses.map((c) => (
-          <Link key={c.id} href={`/${locale}/learn/${c.id}`} className="course-card">
-            <span className="course-emoji">{c.emoji}</span>
-            <span className="course-title">{c.title}</span>
-            <span className="course-meta">
-              {c.lessons} {es ? "lecciones" : "lessons"} · {c.modules}{" "}
-              {es ? "módulos" : "modules"}
-            </span>
-          </Link>
+          <CourseCard
+            key={c.id}
+            href={`/${locale}/learn/${c.id}`}
+            title={c.title}
+            emoji={c.emoji}
+            meta={`${c.lessons} ${es ? "lecciones" : "lessons"} · ${c.modules} ${
+              es ? "módulos" : "modules"
+            }`}
+            shape={c.shape}
+            courseId={c.id}
+          />
         ))}
       </div>
 
