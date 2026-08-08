@@ -359,7 +359,9 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.detect.outputs.changed == 'true'
         with:
-          node-version: 20
+          # Node >= 23.6 required: course-progress.test.mjs imports the TS
+          # source directly and relies on built-in type stripping.
+          node-version: 24
       - name: Validate lessons
         if: steps.detect.outputs.changed == 'true'
         working-directory: apps/learn
