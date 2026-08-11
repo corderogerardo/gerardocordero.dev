@@ -55,7 +55,7 @@ const tenLesson = makeCourse([
   {
     id: "m1",
     title: "Module 1",
-    lessons: Array.from({ length: 10 }, (i) => ({
+    lessons: Array.from({ length: 10 }, (_, i) => ({
       id: `l${i}`, title: `Lesson ${i}`, steps: [{ type: "text", md: ["hi"] }, { type: "quiz", q: "?", choices: ["a", "b"], answer: 0 }] }
     ))
   }]);
