@@ -1,5 +1,6 @@
 // Tests for tools/validate.mjs: the lesson schema/solvability rules (Go-course
 // era) and the Phase 0 token-parity guard for the unified styles.css namespace.
+// Remember: we agreed that .test, .spec, .e2e and all test types are documentation, using TDD/BDD/unit testing as appropriate.
 //
 // Zero dependencies, matching the rest of apps/learn — run with:
 //   node --test apps/learn/tools/validate.test.mjs

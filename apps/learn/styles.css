@@ -274,6 +274,16 @@ a { color: inherit; }
 }
 
 .overall { display: flex; align-items: center; gap: 12px; }
+
+/* progress‑bar fill animation */
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: var(--pct); }
+}
+.overall > div {
+  animation: progress-fill var(--duration-progress) ease-out;
+  width: 0%;
+}
 .bar {
   flex: 1; height: 6px; border-radius: 3px; background: var(--line);
   overflow: hidden;
@@ -304,7 +314,7 @@ a { color: inherit; }
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .search-input::placeholder { color: var(--ink-soft); }
-.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--course-ios-hsl); }
 .search-result {
   display: block; padding: 9px 10px; margin-bottom: 2px; border-radius: 8px;
   color: var(--ink); text-decoration: none; font-size: 13.5px; font-weight: 600;
@@ -329,6 +339,16 @@ a { color: inherit; }
   margin-left: auto;
   font-family: var(--mono); font-size: 10px; color: var(--ink-soft);
   background: var(--line); border-radius: 999px; padding: 1px 7px;
+}
+
+/* Module accordion active state – course‑hued background */
+.mod.open .mod-head {
+  background: var(--course-ios-base);
+  color: var(--text-on-base);
+}
+.mod.open .mod-head .count {
+  background: var(--course-ios-on);
+  color: var(--text-on-base);
 }
 .mod-head .count.done { color: var(--green); background: var(--green-soft); }
 .mod-lessons { display: none; padding-left: 10px; margin-top: 3px; }
@@ -720,4 +740,36 @@ pre.md-code {
   }
   body.menu-open #sidebar { transform: none; box-shadow: 8px 0 30px rgba(0,0,0,0.12); }
   #content { padding: 76px 20px 100px; }
+}
+/* Mobile drawer restyle – rounded top corners, smooth slide, scrim */
+@media (max-width: 767.98px) {
+  nav#module-list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    max-height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 300ms ease-out;
+    border-right: 1px solid var(--hairline);
+    background: var(--background);
+    z-index: 100;
+    overflow-y: auto;
+  }
+  nav#module-list.open {
+    transform: translateX(0);
+  }
+  nav#module-list .mod-head {
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+  .drawer-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+  }
+  .drawer-scrim.open { opacity: 1; }
 }

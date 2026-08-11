@@ -1,13 +1,14 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { LOCALES } from "@/lib/i18n-config";
-import i18nEn from "../../../public/data/i18n/en.json";
-import i18nEs from "../../../public/data/i18n/es.json";
+import i18nEn from "@public/data/i18n/en.json";
+import i18nEs from "@public/data/i18n/es.json";
 import { getSpecs } from "@/lib/andersen-decks";
 import { getCourseData } from "@/lib/course-loader";
 import { buildCourseProgressShape } from "@/lib/course-progress";
 import CourseCard from "@/components/course-card";
 import { CoursesGrid } from "@/components/CoursesGrid";
+import SceneTiles from "@/components/SceneTiles";
 
 // Locale dictionaries
 const EN = i18nEn;
@@ -100,17 +101,7 @@ export default async function HomePage({
             </Link>
           </div>
         </div>
-        <div className="hero-scene" aria-hidden="true">
-          {SCENE_TILES.map((t) => (
-            <div
-              key={t.emoji}
-              className="scene-tile"
-              style={{ "--tile-hue": t.hue } as CSSProperties}
-            >
-              {t.emoji}
-            </div>
-          ))}
-        </div>
+        <SceneTiles tiles={SCENE_TILES} />
       </header>
 
       <div className="stats-strip" aria-label={t("section_label", locale)}>
