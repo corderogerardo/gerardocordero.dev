@@ -1,13 +1,12 @@
-// Tests for tools/validate.mjs, focused on the Go course support added in this
-// PR: the new "lessons-go" entry in ALL_DIRS/KNOWN_LANGS, and the schema /
-// solvability rules the validator enforces against fixture Go modules.
+// Tests for tools/validate.mjs: the lesson schema/solvability rules (Go-course
+// era) and the Phase 0 token-parity guard for the unified styles.css namespace.
 //
 // Zero dependencies, matching the rest of apps/learn — run with:
 //   node --test apps/learn/tools/validate.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 

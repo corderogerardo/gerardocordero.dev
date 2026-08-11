@@ -58,36 +58,41 @@ export default function CourseCard({
       } as CSSProperties)
     : undefined;
 
-  return (
+return (
     <Link href={href} className={cn("course-card", variant)} style={vars}>
-      {variant === "vertical" ? (
-        <span className="course-card-head vertical">
-          <span className="course-emoji-tile" aria-hidden="true">
-            {emoji}
-          </span>
-          {shape && (
-            <ProgressRing
-              pct={pct}
-              hueHsl={`var(--course-${courseId}-hsl)`}
-            />
-          )}
-        </span>
-        <span className="course-card-body">
-          <span className="course-card-title">{title}</span>
-          <span className="course-meta">{meta}</span>
-        </span>
-      ) : (
-        <span className="course-card-head">
-          <span className="course-emoji-tile" aria-hidden="true">
-            {emoji}
-          </span>
-          {shape && (
-            <ProgressRing pct={pct} hueHsl={`var(--course-${courseId}-hsl)`} />
-          )}
-        </span>
-        <span className="course-card-title">{title}</span>
-        <span className="course-meta">{meta}</span>
-      </span>}
+      <div>
+        {variant === "vertical" ? (
+          <>
+            <span className="course-card-head vertical">
+              <span className="course-emoji-tile" aria-hidden="true">
+                {emoji}
+              </span>
+{shape && (
+                <ProgressRing
+                  pct={pct}
+                  hueHsl={`var(--course-${courseId}-hsl)`} />
+              )}
+</span>
+            <span className="course-card-body">
+              <span className="course-card-title">{title}</span>
+              <span className="course-meta">{meta}</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="course-card-head">
+              <span className="course-emoji-tile" aria-hidden="true">
+                {emoji}
+              </span>
+              {shape && (
+                <ProgressRing pct={pct} hueHsl={`var(--course-${courseId}-hsl)`} />
+              )}
+            </span>
+            <span className="course-card-title">{title}</span>
+            <span className="course-meta">{meta}</span>
+          </>
+        )}
+      </div>
     </Link>
   );
 }

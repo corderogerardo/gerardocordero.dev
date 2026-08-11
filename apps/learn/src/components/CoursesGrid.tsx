@@ -1,9 +1,17 @@
 import Link from "next/link";
 import CourseCard from "./course-card";
+import { getSpecs, AndersenSpec } from "@/lib/andersen-decks";
 
 interface CourseGridProps {
-  courses: typeof COURSES;
-  specs: ReturnType<typeof getSpecs>[""];
+  courses: {
+    id: string;
+    title: string;
+    emoji: string;
+    lessons?: number;
+    modules?: number;
+    shape?: import("@/lib/course-progress").CourseProgressShape | null;
+  }[];
+  specs: AndersenSpec[];
   locale: string;
   totalLessons: number;
 }

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { LOCALES } from "@/lib/i18n-config";
-import i18nEn from "@/public/data/i18n/en.json";
-import i18nEs from "@/public/data/i18n/es.json";
+import i18nEn from "../../../public/data/i18n/en.json";
+import i18nEs from "../../../public/data/i18n/es.json";
 import { getSpecs } from "@/lib/andersen-decks";
 import { getCourseData } from "@/lib/course-loader";
 import { buildCourseProgressShape } from "@/lib/course-progress";
@@ -109,7 +109,7 @@ export default async function HomePage({
             >
               {t.emoji}
             </div>
-          ))
+          ))}
         </div>
       </header>
 
