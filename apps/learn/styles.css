@@ -3,53 +3,221 @@
    layered shadows, a quieter modular progress system. Class hooks are unchanged
    from the original "Subtle HUD" skin, so every component keeps working. */
 
+/* PawWalk Academy — editorial redesign.
+   Refined neutral canvas + purple accent, generous whitespace, hairline borders,
+   layered shadows, a quieter modular progress system. Class hooks are unchanged
+   from the original "Subtle HUD" skin, so every component keeps working.
+
+   Unified token namespace (Phase 0, playful redesign): styles.css :root is the
+   single source of truth for BOTH styling systems. Every color token has a hex
+   value for plain CSS and an HSL-triple twin (--*-hsl) for Tailwind's
+   hsl(var(--*-hsl)) mapping. Course ramps (--course-{id}-{step}) come in
+   base/strong/soft/on × hex+hsl × light+dark. tools/validate.mjs enforces
+   parity: each mode is checked independently, and every course id present in
+   light must exist in dark (and vice versa). */
+
 :root {
+  /* ---- Foundation palette (hex + -hsl twin for Tailwind) ---- */
   --canvas: #FAFAF8;
+  --canvas-hsl: 60 17% 98%;
   --canvas-deep: #F1F0F6;
+  --canvas-deep-hsl: 250 25% 95%;
   --card: #FFFFFF;
+  --card-hsl: 0 0% 100%;
   --ink: #1B1830;
+  --ink-hsl: 248 33% 14%;
   --ink-soft: rgba(27, 24, 48, 0.6);
+  --ink-soft-hsl: 248 33% 14% / 0.6;
   --accent: #5B4BE0;
+  --accent-hsl: 246 71% 59%;
   --accent-strong: #4434C7;
+  --accent-strong-hsl: 247 59% 49%;
   --accent-soft: rgba(91, 75, 224, 0.1);
+  --accent-soft-hsl: 246 71% 59% / 0.1;
   --green: #3E7A5C;
+  --green-hsl: 150 33% 36%;
   --green-soft: rgba(62, 122, 92, 0.12);
+  --green-soft-hsl: 150 33% 36% / 0.12;
   --amber: #A97B1A;
+  --amber-hsl: 41 73% 38%;
   --amber-soft: rgba(169, 123, 26, 0.12);
+  --amber-soft-hsl: 41 73% 38% / 0.12;
   --red: #B3453E;
+  --red-hsl: 4 49% 47%;
   --red-soft: rgba(179, 69, 62, 0.12);
+  --red-soft-hsl: 4 49% 47% / 0.12;
   --line: rgba(27, 24, 48, 0.08);
+  --line-hsl: 248 33% 14% / 0.08;
   --hairline: rgba(27, 24, 48, 0.05);
+  --hairline-hsl: 248 33% 14% / 0.05;
   --code-bg: #191631;
+  --code-bg-hsl: 247 38% 14%;
   --code-ink: #ECEAF7;
+  --code-ink-hsl: 249 45% 94%;
+
+  /* ---- Course hue ramps (base / strong / soft / on, hex + -hsl) ---- */
+  --course-ios-base: #1B6BBB; --course-ios-base-hsl: 210 75% 42%;
+  --course-ios-strong: #16599C; --course-ios-strong-hsl: 210 75% 35%;
+  --course-ios-soft: #E7F0F9; --course-ios-soft-hsl: 210 60% 94%;
+  --course-ios-on: #FFFFFF; --course-ios-on-hsl: 0 0% 100%;
+  --course-android-base: #188653; --course-android-base-hsl: 152 70% 31%;
+  --course-android-strong: #157548; --course-android-strong-hsl: 152 70% 27%;
+  --course-android-soft: #E7F9F0; --course-android-soft-hsl: 152 60% 94%;
+  --course-android-on: #FFFFFF; --course-android-on-hsl: 0 0% 100%;
+  --course-ruby-base: #BB301B; --course-ruby-base-hsl: 8 75% 42%;
+  --course-ruby-strong: #9C2816; --course-ruby-strong-hsl: 8 75% 35%;
+  --course-ruby-soft: #F9E9E7; --course-ruby-soft-hsl: 8 60% 94%;
+  --course-ruby-on: #FFFFFF; --course-ruby-on-hsl: 0 0% 100%;
+  --course-python-base: #1C8271; --course-python-base-hsl: 170 65% 31%;
+  --course-python-strong: #187263; --course-python-strong-hsl: 170 65% 27%;
+  --course-python-soft: #E7F9F6; --course-python-soft-hsl: 170 60% 94%;
+  --course-python-on: #FFFFFF; --course-python-on-hsl: 0 0% 100%;
+  --course-go-base: #157E93; --course-go-base-hsl: 190 75% 33%;
+  --course-go-strong: #116778; --course-go-strong-hsl: 190 75% 27%;
+  --course-go-soft: #E7F6F9; --course-go-soft-hsl: 190 60% 94%;
+  --course-go-on: #FFFFFF; --course-go-on-hsl: 0 0% 100%;
+  --course-node-base: #278634; --course-node-base-hsl: 128 55% 34%;
+  --course-node-strong: #22772E; --course-node-strong-hsl: 128 55% 27%;
+  --course-node-soft: #E7F8EA; --course-node-soft-hsl: 128 55% 94%;
+  --course-node-on: #FFFFFF; --course-node-on-hsl: 0 0% 100%;
+  --course-native-base: #3420B6; --course-native-base-hsl: 248 70% 42%;
+  --course-native-strong: #2B1B98; --course-native-strong-hsl: 248 70% 35%;
+  --course-native-soft: #E9E7F9; --course-native-soft-hsl: 248 60% 94%;
+  --course-native-on: #FFFFFF; --course-native-on-hsl: 0 0% 100%;
+  --course-expoui-base: #A06A0D; --course-expoui-base-hsl: 38 85% 34%;
+  --course-expoui-strong: #8E5E0B; --course-expoui-strong-hsl: 38 85% 27%;
+  --course-expoui-soft: #F9F2E7; --course-expoui-soft-hsl: 38 60% 94%;
+  --course-expoui-on: #FFFFFF; --course-expoui-on-hsl: 0 0% 100%;
+
+  /* ---- Radius scale ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius: 14px; /* legacy — consumed by existing surfaces, unchanged */
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* ---- Shadow scale (3 elevations; dark variants live in the dark block) ----
+     --shadow-tint is the course-hue hover elevation: a component sets
+     --tint-hsl: var(--course-{id}-hsl) where the hue is known. */
   --shadow-sm: 0 1px 2px rgba(27, 24, 48, 0.04), 0 1px 3px rgba(27, 24, 48, 0.05);
   --shadow-md: 0 4px 12px rgba(27, 24, 48, 0.06), 0 2px 4px rgba(27, 24, 48, 0.04);
-  --radius: 14px;
+  --shadow-lg: 0 12px 32px rgba(27, 24, 48, 0.10), 0 4px 8px rgba(27, 24, 48, 0.06);
+  --shadow-tint: 0 8px 24px hsl(var(--tint-hsl, var(--accent-hsl)) / 0.12), 0 2px 6px hsl(var(--tint-hsl, var(--accent-hsl)) / 0.08);
+
+  /* ---- Motion scale (easing curves + durations) ---- */
+  --ease-rise: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-flip: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-rise: 350ms;
+  --duration-progress: 600ms;
+  --duration-flip: 600ms;
+  --duration-drawer: 300ms;
+  --duration-confetti: 900ms;
+  --confetti-piece-count: 16;
+
+  /* ---- Type scale ---- */
+  --text-hero: clamp(40px, 6vw, 64px);
+  --text-hero-weight: 700;
+  --text-hero-line-height: 1.06;
+  --text-page-title: 32px;
+  --text-page-title-weight: 700;
+  --text-page-title-line-height: 1.18;
+  --text-section-label: 13px;
+  --text-section-label-weight: 600;
+  --text-section-label-letter-spacing: 0.12em;
+  --text-section-label-text-transform: uppercase;
+  --text-section-label-font-family: var(--mono);
+  --text-body: 16.5px;
+  --text-body-line-height: 1.6;
+  --text-caption: 12.5px;
+  --text-caption-line-height: 1.5;
+
   --sans: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: var(--font-fredoka), "Nunito", "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --canvas: #0E0C17;
+    --canvas-hsl: 251 31% 7%;
     --canvas-deep: #17142A;
+    --canvas-deep-hsl: 248 35% 12%;
     --card: #191631;
+    --card-hsl: 247 38% 14%;
     --ink: #ECEAF7;
+    --ink-hsl: 249 45% 94%;
     --ink-soft: rgba(236, 234, 247, 0.62);
+    --ink-soft-hsl: 249 45% 94% / 0.62;
     --accent: #8E7DFF;
+    --accent-hsl: 248 100% 75%;
     --accent-strong: #A697FF;
+    --accent-strong-hsl: 249 100% 80%;
     --accent-soft: rgba(142, 125, 255, 0.16);
+    --accent-soft-hsl: 248 100% 75% / 0.16;
     --green: #9FD3C0;
+    --green-hsl: 158 37% 73%;
     --green-soft: rgba(159, 211, 192, 0.14);
+    --green-soft-hsl: 158 37% 73% / 0.14;
     --amber: #E3B25E;
+    --amber-hsl: 38 70% 63%;
     --amber-soft: rgba(227, 178, 94, 0.14);
+    --amber-soft-hsl: 38 70% 63% / 0.14;
     --red: #E08A84;
+    --red-hsl: 4 60% 70%;
     --red-soft: rgba(224, 138, 132, 0.14);
+    --red-soft-hsl: 4 60% 70% / 0.14;
     --line: rgba(236, 234, 247, 0.12);
+    --line-hsl: 249 45% 94% / 0.12;
     --hairline: rgba(236, 234, 247, 0.07);
+    --hairline-hsl: 249 45% 94% / 0.07;
     --code-bg: #07050F;
+    --code-bg-hsl: 252 50% 4%;
     --code-ink: #ECEAF7;
+    --code-ink-hsl: 249 45% 94%;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.25);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.3);
+
+    /* Lightened course ramps (dark mode): base/strong are lighter for contrast
+       on the dark canvas; on-color flips to the dark ink. */
+    --course-ios-base: #6CADEF; --course-ios-base-hsl: 210 80% 68%;
+    --course-ios-strong: #91C2F3; --course-ios-strong-hsl: 210 80% 76%;
+    --course-ios-soft: #152637; --course-ios-soft-hsl: 210 45% 15%;
+    --course-ios-on: #0E0C17; --course-ios-on-hsl: 251 31% 7%;
+    --course-android-base: #70EBB1; --course-android-base-hsl: 152 75% 68%;
+    --course-android-strong: #94F0C5; --course-android-strong-hsl: 152 75% 76%;
+    --course-android-soft: #153727; --course-android-soft-hsl: 152 45% 15%;
+    --course-android-on: #0E0C17; --course-android-on-hsl: 251 31% 7%;
+    --course-ruby-base: #EF7E6C; --course-ruby-base-hsl: 8 80% 68%;
+    --course-ruby-strong: #F39E91; --course-ruby-strong-hsl: 8 80% 76%;
+    --course-ruby-soft: #371A15; --course-ruby-soft-hsl: 8 45% 15%;
+    --course-ruby-on: #0E0C17; --course-ruby-on-hsl: 251 31% 7%;
+    --course-python-base: #74E7D3; --course-python-base-hsl: 170 70% 68%;
+    --course-python-strong: #97EDDE; --course-python-strong-hsl: 170 70% 76%;
+    --course-python-soft: #153732; --course-python-soft-hsl: 170 45% 15%;
+    --course-python-on: #0E0C17; --course-python-on-hsl: 251 31% 7%;
+    --course-go-base: #6CD9EF; --course-go-base-hsl: 190 80% 68%;
+    --course-go-strong: #91E2F3; --course-go-strong-hsl: 190 80% 76%;
+    --course-go-soft: #153237; --course-go-soft-hsl: 190 45% 15%;
+    --course-go-on: #0E0C17; --course-go-on-hsl: 251 31% 7%;
+    --course-node-base: #7CDE89; --course-node-base-hsl: 128 60% 68%;
+    --course-node-strong: #9DE7A7; --course-node-strong-hsl: 128 60% 76%;
+    --course-node-soft: #15371A; --course-node-soft-hsl: 128 45% 15%;
+    --course-node-on: #0E0C17; --course-node-on-hsl: 251 31% 7%;
+    --course-native-base: #8170EB; --course-native-base-hsl: 248 75% 68%;
+    --course-native-strong: #A094F0; --course-native-strong-hsl: 248 75% 76%;
+    --course-native-soft: #1A1537; --course-native-soft-hsl: 248 45% 15%;
+    --course-native-on: #0E0C17; --course-native-on-hsl: 251 31% 7%;
+    --course-expoui-base: #EFBF6C; --course-expoui-base-hsl: 38 80% 68%;
+    --course-expoui-strong: #F3CF91; --course-expoui-strong-hsl: 38 80% 76%;
+    --course-expoui-soft: #372B15; --course-expoui-soft-hsl: 38 45% 15%;
+    --course-expoui-on: #0E0C17; --course-expoui-on-hsl: 251 31% 7%;
+
+    /* Dark shadows: white tint at 4-8% opacity (5% base) instead of black. */
+    --shadow-sm-dark: 0 1px 2px rgba(255,255,255,0.05), 0 1px 3px rgba(255,255,255,0.05);
+    --shadow-md-dark: 0 4px 12px rgba(255,255,255,0.06), 0 2px 4px rgba(255,255,255,0.05);
+    --shadow-lg-dark: 0 12px 32px rgba(255,255,255,0.08), 0 4px 8px rgba(255,255,255,0.06);
   }
 }
 ::selection { background: var(--accent-soft); color: var(--ink); }
@@ -279,7 +447,6 @@ pre.md-code {
   text-transform: uppercase; color: var(--ink-soft);
   border-bottom: 1px solid var(--line);
 }
-.codeblock .code-title .cmd { opacity: 0.6; }
 .codeblock .code-title.code-title-run { justify-content: flex-end; }
 .codeblock pre {
   margin: 0; padding: 16px 18px; overflow-x: auto;
@@ -438,149 +605,75 @@ pre.md-code {
 
 /* ---------- Course picker (homepage) ---------- */
 .course-picker {
-  max-width: 900px; margin: 0 auto; padding: 96px 20px 80px;
+  max-width: 860px; margin: 0 auto; padding: 96px 20px 80px;
 }
 .course-eyebrow {
-  font-family: var(--mono); font-size: var(--text-section-label);
-  font-weight: var(--text-section-label-weight);
-  letter-spacing: var(--text-section-label-letter-spacing);
-  text-transform: var(--text-section-label-text-transform);
-  color: hsl(var(--course-ios-hsl));
-  margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 14px;
+  display: flex; align-items: center; gap: 8px;
 }
-.course-hero {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  gap: 40px; align-items: center; margin-bottom: 40px;
+.course-hero { max-width: 640px; margin-bottom: 56px; }
+.course-hero h1 {
+  font-size: clamp(34px, 6vw, 52px);
+  letter-spacing: -0.03em; line-height: 1.06;
+  margin: 0 0 18px; font-weight: 700;
 }
-.hero-copy { max-width: 640px; }
-.hero-headline {
-  font-family: var(--display);
-  font-size: var(--text-hero); font-weight: var(--text-hero-weight);
-  line-height: var(--text-hero-line-height);
-  letter-spacing: -0.03em; margin: 0 0 18px; color: var(--ink);
+.course-hero p {
+  font-size: clamp(16.5px, 2vw, 18.5px);
+  color: var(--ink-soft); margin: 0;
+  max-width: 560px; line-height: 1.6;
 }
-.hero-headline em { font-style: italic; }
-.hero-subcopy {
-  font-size: var(--text-body); line-height: var(--text-body-line-height);
-  color: var(--ink-soft); margin: 0; max-width: 540px;
-}
-.hero-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.course-hero .hero-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
 .hero-chip {
-  --chip-hue: var(--accent-hsl);
   display: inline-flex; align-items: center; gap: 8px;
-  background: hsl(var(--chip-hue) / 0.14); color: hsl(var(--chip-hue) / 1);
-  border-radius: 999px; padding: 9px 16px;
-  font: 600 13.5px var(--sans); text-decoration: none;
+  background: var(--accent-soft); color: var(--accent);
+  border-radius: 999px; padding: 8px 14px;
+  font: 600 13px var(--sans); text-decoration: none;
   transition: background 0.15s, color 0.15s, transform 0.1s;
 }
-.hero-chip:hover { background: hsl(var(--chip-hue) / 1); color: #fff; transform: translateY(-1px); }
-.hero-chip.ghost-chip { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line); }
-.hero-chip.ghost-chip:hover { color: var(--ink); border-color: var(--ink-soft); background: var(--card); transform: none; }
-
-.hero-scene { position: relative; width: 300px; height: 210px; }
-.scene-tile {
-  --tile-hue: var(--accent-hsl);
-  position: absolute; width: 64px; height: 64px;
-  display: grid; place-items: center; font-size: 30px; line-height: 1;
-  border-radius: var(--radius-lg);
-  background: hsl(var(--tile-hue) / 0.16);
-  border: 1px solid hsl(var(--tile-hue) / 0.4);
-  box-shadow: 0 10px 22px hsl(var(--tile-hue) / 0.22);
-  animation: scene-float 5s var(--ease-rise) infinite alternate;
-}
-.scene-tile:nth-child(1) { top: 6px; left: 4px; rotate: -8deg; animation-delay: 0s; animation-duration: 4.6s; }
-.scene-tile:nth-child(2) { top: 58px; left: 96px; width: 78px; height: 78px; font-size: 36px; rotate: 4deg; animation-delay: 0.7s; animation-duration: 5.4s; z-index: 2; }
-.scene-tile:nth-child(3) { top: 132px; left: 6px; rotate: 9deg; animation-delay: 1.2s; animation-duration: 5s; }
-.scene-tile:nth-child(4) { top: 6px; left: 212px; rotate: 6deg; animation-delay: 0.4s; animation-duration: 5.8s; }
-.scene-tile:nth-child(5) { top: 132px; left: 206px; rotate: -7deg; animation-delay: 0.9s; animation-duration: 4.8s; }
-@keyframes scene-float {
-  from { translate: 0 0; }
-  to { translate: 0 -8px; }
-}
-
-.stats-strip { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 56px; }
-.stat {
-  display: flex; align-items: baseline; gap: 8px;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: var(--radius-md); padding: 10px 16px; box-shadow: var(--shadow-sm);
-}
-.stat-num { font-family: var(--display); font-weight: 700; font-size: 26px; color: hsl(var(--course-ios-hsl)); line-height: 1; }
-.stat-label { font-family: var(--mono); font-size: var(--text-caption); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+.hero-chip:hover { background: var(--accent); color: #fff; }
+.hero-chip.ghost-chip { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+.hero-chip.ghost:hover { color: var(--ink); border-color: var(--ink-soft); background: var(--card); transform: none; }
 
 .picker-section-label {
-  display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
-  font-family: var(--mono); font-size: var(--text-section-label);
-  font-weight: var(--text-section-label-weight);
-  letter-spacing: var(--text-section-label-letter-spacing);
-  text-transform: var(--text-section-label-text-transform);
-  color: var(--ink-soft);
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 0 0 18px;
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
 }
-.picker-section-label .count {
-  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
-  border-radius: 999px; background: hsl(var(--course-ios-hsl) / 0.14);
-  color: hsl(var(--course-ios-hsl)); font-size: 11px;
-}
+.picker-section-label .count { color: var(--accent); }
 
 .course-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px; margin-bottom: 64px;
 }
 .course-card {
-  --tint-hsl: var(--accent-hsl);
-  --card-soft: var(--accent-soft);
-  --card-base: var(--accent);
-  --card-strong: var(--accent-strong);
   display: flex; flex-direction: column; gap: 14px;
-  background: var(--card); border: 1.5px solid var(--line);
-  border-radius: var(--radius-lg); padding: 22px 20px;
-  text-decoration: none; color: var(--ink);
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+  padding: 24px 20px; text-decoration: none; color: var(--ink);
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s, transform 0.12s var(--ease-rise), box-shadow 0.2s var(--ease-rise);
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
   position: relative; overflow: hidden;
 }
 .course-card::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
-  background: linear-gradient(90deg, var(--card-base), hsl(var(--tint-hsl) / 0.5));
+  content: ""; position: absolute; inset: 0 0 auto;
+  height: 3px; background: var(--accent);
   opacity: 0; transition: opacity 0.2s;
 }
-.course-card:hover {
-  border-color: hsl(var(--tint-hsl) / 0.55);
-  transform: translateY(-3px); box-shadow: var(--shadow-tint);
-}
+.course-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .course-card:hover::before { opacity: 1; }
-.course-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-.course-emoji-tile {
-  display: grid; place-items: center; width: 52px; height: 52px;
-  border-radius: var(--radius-md); background: var(--card-soft);
-  border: 1px solid hsl(var(--tint-hsl) / 0.3); font-size: 26px; line-height: 1;
-}
-.course-card-title { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
-/* Root language-picker page (src/app/page.tsx) legacy classes */
 .course-emoji { font-size: 28px; line-height: 1; }
 .course-title { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
-.course-meta { margin-top: auto; color: var(--ink-soft); font-size: var(--text-caption); font-family: var(--mono); }
-
-.progress-ring { flex-shrink: 0; }
-.ring-track { stroke: var(--line); }
-.ring-fill { transition: stroke-dashoffset 0.6s var(--ease-out); }
-.ring-label { font: 600 9.5px var(--mono); fill: var(--ink-soft); }
+.course-meta { margin-top: auto; color: var(--ink-soft); font-size: 12.5px; }
 
 .picker-note {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--card); border: 1px dashed hsl(var(--accent-hsl) / 0.45);
-  border-radius: var(--radius-md); padding: 16px 20px;
-  font-size: var(--text-caption); line-height: 1.55; color: var(--ink-soft);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px dashed var(--line); border-radius: 12px;
+  padding: 14px 18px; font-size: 13.5px; color: var(--ink-soft);
 }
 .picker-note a { color: var(--accent); text-decoration: none; }
 .picker-note a:hover { text-decoration: underline; }
-
-@media (max-width: 820px) {
-  .course-hero { grid-template-columns: 1fr; }
-  .hero-scene { display: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .scene-tile { animation: none; }
-}
 
 /* ---------- Sidebar header (legacy overrides) ---------- */
 .brand { margin-bottom: 18px; }
