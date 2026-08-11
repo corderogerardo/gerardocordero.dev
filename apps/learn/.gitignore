@@ -3,6 +3,9 @@
 out/
 *.log
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # wrangler pages dev local state
 .wrangler/
 
