@@ -1,0 +1,13 @@
+{
+  "homepage_headline": "Construye la app PawWalk — paso a paso.",
+  "homepage_subtitle": "Cursos interactivos donde escribes código real, lo compruebas al instante y avanzas a tu ritmo. Sin cuenta, sin instalación: tu progreso se guarda en tu navegador.",
+  "cta_start_ios": "Empezar con iOS →",
+  "cta_rn_practice": "Práctica RN",
+  "section_label": "Cursos",
+  "lessons_label": "lecciones",
+  "modules_label": "módulos",
+  "practice_label": "Práctica",
+  "rn_practice_label": "Práctica RN (senior)",
+  "rn_practice_description": "Flashcards + retos de código",
+  "progress_stored": "Todo el progreso (incluido el código que escribes) se guarda localmente en tu navegador — {count} lecciones en total, sin cuenta necesaria."
+}

@@ -1,0 +1,13 @@
+{
+  "homepage_headline": "Build the PawWalk app — step by step.",
+  "homepage_subtitle": "Interactive courses where you write real code, get instant feedback, and learn at your own pace. No account, no install — progress is saved in your browser.",
+  "cta_start_ios": "Start with iOS →",
+  "cta_rn_practice": "RN Practice",
+  "section_label": "Courses",
+  "lessons_label": "lessons",
+  "modules_label": "modules",
+  "practice_label": "Practice",
+  "rn_practice_label": "RN Interview Practice",
+  "rn_practice_description": "Flashcards + coding challenges",
+  "progress_stored": "All progress (including the code you type) is stored locally in your browser — {count} lessons across the catalog, no account needed."
+}

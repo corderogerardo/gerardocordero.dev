@@ -667,6 +667,37 @@ pre.md-code {
 .course-title { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
 .course-meta { margin-top: auto; color: var(--ink-soft); font-size: 12.5px; }
 
+.course-card.vertical {
+  flex-direction: row; align-items: center; gap: 16px;
+  padding: 20px 16px;
+}
+.course-card.vertical .course-emoji-tile {
+  font-size: 32px;
+}
+.course-card.vertical .course-card-body {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.course-card.vertical .course-card-title {
+  font-weight: 700; font-size: 16px;
+}
+.course-card.vertical .course-meta {
+  color: var(--ink-soft); font-size: 12.5px;
+}
+
+.course-card.horizontal {
+  flex-direction: column; gap: 14px;
+  padding: 24px 20px;
+}
+.course-card.horizontal .course-emoji-tile {
+  order: -1; margin-bottom: 12px;
+}
+.course-card.horizontal .course-card-title {
+  font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
+}
+.course-card.horizontal .course-meta {
+  margin-top: auto; color: var(--ink-soft); font-size: 12.5px;
+}
+
 .picker-note {
   display: flex; align-items: center; gap: 10px;
   background: var(--card); border: 1px dashed var(--line); border-radius: 12px;
