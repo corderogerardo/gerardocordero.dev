@@ -1,6 +1,6 @@
-# Tecnicas para resolver problemas de LeetCode y Codewars, algoritmos, opiniones, con que se come cada solucion xD?
+# Tecnicas para resolver problemas de LeetCode y Codewars, algoritmos, opiniones.
 
-## Tecnica Expand around the center / Expandir alrededor del centro, que es? con que se come?
+## Tecnica Expand around the center / Expandir alrededor del centro, que es?
 
 ### Que pude entender de esta tecnica, la idea es fijar un centro y chequear a su izquierda y a su derecha, esta tecnica es funciona para todos los casos, par e impar, seguro lo que estes iterando, un arreglo, un string, 'having our center both be the character we are iterating on AND the space in between each character.'
 
@@ -23,7 +23,7 @@ La idea es tener 2 centros, 1. El char que iteramos, y 2. El espacio entre char.
 
 ## Que es DFS?
 
-
 ## Window mirroring technique
 
 ### En esta tecnica defines 2 punteros LEFT y RIGHT, y comienzas a iterar de izquierda a derecha y de derecha a izquierda hasta llegar al medio y terminar, sirve para buscar palindromes, para poder encontrar si el caracter del inicio es igual al caracter del final, comparas como si el arreglo fuera un espejo.
+
