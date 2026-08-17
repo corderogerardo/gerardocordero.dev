@@ -51,6 +51,9 @@ yarn-error.log*
 # learn-academy throwaway lesson projects
 apps/learn/playground/
 
+# AI skills directory — kept out of repo, skills are managed via .agents
+.agents/
+
 # Assembled Cloudflare Pages upload for academy.gerardocordero.dev (deploy-learn)
 dist-academy/
 node_modules
