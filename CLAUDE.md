@@ -195,3 +195,20 @@ EAS dashboard).
 
 When adding any of the above, wire it through Turbo and document the command here so it
 becomes part of the standing loop.
+
+## Global frontend engineering policy
+
+Every frontend task MUST apply `.claude/skills/global-frontend-engineering/SKILL.md`
+and route to the narrowest stack skills before editing. Use `nextjs-best-practices`
+and `nextjs-app-router-patterns` for Next.js, `react-dev`/`react-patterns`/
+`react-useeffect` for React, and `react-native-architecture` for React Native/Expo.
+Add UI/accessibility and verification skills when the change requires them. The
+PostToolUse harness typechecks edited source files in `apps/portfolio`,
+`apps/learn`, and `apps/*-prep`; report any skipped delivery gate explicitly.
+
+Before creating or expanding a component or screen, evaluate `packages/` for a
+real second consumer, check the unit's approximate line count, and split large
+units into cohesive, reusable, testable pieces when useful. Apply SOLID
+pragmatically; do not fragment code only to meet a line threshold. Keep web UI
+out of the existing React Native-only `packages/ui` unless its contract is
+intentionally redesigned.

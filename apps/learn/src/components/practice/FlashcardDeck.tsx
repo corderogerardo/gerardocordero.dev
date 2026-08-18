@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Check,
   RotateCcw,
-  RotateCw,
   Shuffle,
   Sparkles,
   CircleCheck,
@@ -16,11 +14,7 @@ import { Flashcard } from '@/lib/flashcards';
 import { FLASHCARD_PROGRESS_KEY, loadProgress, saveProgress, clearProgress } from '@/lib/progress';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { PracticeFlashcard } from '@/components/practice/PracticeFlashcard';
 
 interface FlashcardDeckProps {
   initialCards: Flashcard[];
@@ -40,20 +34,6 @@ function shuffle<T>(items: T[]): T[] {
   }
   return out;
 }
-
-const levelStyles: Record<string, string> = {
-  J1: 'bg-success/15 text-success',
-  J2: 'bg-success/15 text-success',
-  J3: 'bg-success/15 text-success',
-  M1: 'bg-chart-4/15 text-chart-4',
-  M2: 'bg-chart-4/15 text-chart-4',
-  M3: 'bg-chart-4/15 text-chart-4',
-  S1: 'bg-destructive/15 text-destructive',
-  S2: 'bg-destructive/15 text-destructive',
-  easy: 'bg-success/15 text-success',
-  medium: 'bg-chart-4/15 text-chart-4',
-  hard: 'bg-destructive/15 text-destructive',
-};
 
 const levelLabels: Record<string, string> = {
   J1: 'J1',
@@ -167,9 +147,6 @@ useEffect(() => {
   const flip = useCallback(() => {
     setFlipped((f) => !f);
   }, []);
-
-  const answered = Object.keys(progress).length;
-  const correct = Object.values(progress).filter((v) => v === 'correct').length;
 
   const categoryProgress = initialCategories.map((name) => {
     const cards = initialCards.filter((card) => card.category === name);
@@ -302,80 +279,12 @@ useEffect(() => {
       {/* Flashcard */}
       {currentCard ? (
         <div className="relative mt-16">
-          <div className="perspective-1000">
-            <button
-              onClick={() => setFlipped((f) => !f)}
-              aria-label={flipped ? 'Show question' : 'Show answer'}
-              className="group relative block h-[min(560px,calc(100svh-220px))] w-full min-h-[420px] transition-transform duration-300"
-              style={{ marginBottom: 'clamp(20px, 8vh, 60px)' }}
-            >
-              <div
-                className={cn(
-                  'transform-3d relative h-full w-full transition-transform duration-500',
-                  flipped && 'rotate-y-180',
-                )}
-              >
-                {/* Front */}
-                <div className="backface-hidden absolute inset-0 flex flex-col rounded-3xl border border-border bg-card p-6 shadow-xl md:p-10">
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-                      {currentCard.category}
-                    </span>
-                    <span
-                      className={cn(
-                        'rounded-full px-3 py-1 text-xs font-medium capitalize',
-                        levelStyles[currentCard.levels[0]] || 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      {levelLabels[currentCard.levels[0]] || currentCard.levels[0]}
-                    </span>
-                    {progress[currentCard.id] && (
-                      <span
-                        className={cn(
-                          'ml-auto rounded-full px-3 py-1 text-xs font-medium',
-                          progress[currentCard.id] === 'correct'
-                            ? 'bg-success/15 text-success'
-                            : 'bg-chart-4/15 text-chart-4',
-                        )}
-                      >
-                        {progress[currentCard.id] === 'correct' ? 'Correcta' : 'Por repasar'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-1 items-center justify-center py-8">
-                    <p className="max-w-3xl text-balance text-center text-xl font-medium leading-relaxed sm:text-2xl md:text-3xl">
-                      {currentCard.question}
-                    </p>
-                  </div>
-                  <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <RotateCw className="h-4 w-4" />
-                    Toca o presiona{' '}
-                    <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs">
-                      Espacio
-                    </kbd>{' '}
-                    para revelar
-                  </p>
-                </div>
-
-                {/* Back */}
-                <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col overflow-auto rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-6 shadow-xl md:p-10">
-                  <div className="flex items-center gap-3 border-b border-primary/15 pb-4">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">A</span>
-                    <div>
-                      <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-primary">Respuesta</span>
-                      <span className="block text-xs text-muted-foreground">Explicación del mentor</span>
-                    </div>
-                  </div>
-                  <div className="markdown-readable prose prose-lg mt-6 max-w-4xl text-foreground prose-headings:tracking-tight prose-headings:text-2xl sm:prose-headings:text-3xl prose-p:text-lg sm:prose-p:text-xl prose-p:leading-8 prose-li:text-lg sm:prose-li:text-xl prose-li:leading-8 prose-code:before:content-none prose-code:after:content-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentCard.answer}</ReactMarkdown>
-                  </div>
-                  {currentCard.heading && (
-                    <p className="mt-5 border-l-2 border-primary/40 pl-3 text-base font-medium text-muted-foreground">{currentCard.heading}</p>
-                  )}
-                </div>
-              </div>
-            </button>
-          </div>
+          <PracticeFlashcard
+            card={currentCard}
+            flipped={flipped}
+            status={progress[currentCard.id]}
+            onFlip={flip}
+          />
 
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-4">

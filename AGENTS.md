@@ -196,6 +196,33 @@ EAS dashboard).
 When adding any of the above, wire it through Turbo and document the command here so it
 becomes part of the standing loop.
 
+## Global frontend engineering policy
+
+Every frontend task MUST apply the project-local skill at
+`.claude/skills/global-frontend-engineering/SKILL.md` and route to the narrowest
+stack skills before editing. The policy covers Next.js App Router, React 19,
+React Native/Expo, TypeScript, accessibility, UI, and verification.
+
+Required routing:
+
+- Next.js: `nextjs-best-practices` + `nextjs-app-router-patterns`
+- React: `react-dev` + `react-patterns` + `react-useeffect`
+- React Native/Expo: `react-native-architecture` (+ `react-native-best-practices` for performance)
+- UI/accessibility: `frontend-ui-engineering` + `accessibility` + `ui-ux-pro-max`
+- Verification: `test-driven-development` + `code-review-and-quality`; add browser testing for web behavior
+
+The PostToolUse harness typechecks edited source files in `apps/portfolio`,
+`apps/learn`, and `apps/*-prep`. Before delivery, run the relevant app gates
+listed in the global skill and report any skipped gate explicitly. This policy
+is a guardrail, not a reason to add speculative abstractions or unrelated fixes.
+
+Component design gate: before creating or expanding a component or screen,
+check whether it belongs in `packages/` for a real second consumer, record its
+approximate line count, and split large units into smaller reusable/testable
+pieces when that improves cohesion. Apply SOLID pragmatically; do not fragment
+components merely to satisfy a numeric limit. Keep web UI out of the existing
+React Native-only `packages/ui` unless that package is intentionally redesigned.
+
 ## Agent skills
 
 ### Issue tracker
