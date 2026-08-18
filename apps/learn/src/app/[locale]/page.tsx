@@ -96,7 +96,7 @@ export default async function HomePage({
             >
               {t("cta_start_ios", locale)}
             </Link>
-            <Link href="/reactnative" className="hero-chip ghost-chip">
+            <Link href="/practice/reactnative" className="hero-chip ghost-chip">
               🧠 {t("cta_rn_practice", locale)}
             </Link>
           </div>

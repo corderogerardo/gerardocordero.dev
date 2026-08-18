@@ -1,6 +1,15 @@
 {
-  "app.title": "PawWalk Academy",
+  "app.title": "Academy",
   "app.subtitle": "Interactive courses — build the PawWalk app step by step",
+  "homepage_headline": "Interactive courses — build the PawWalk app step by step",
+  "homepage_subtitle": "Learn through interactive lessons, quizzes, and hands-on projects",
+  "cta_start_ios": "Start iOS Course",
+  "cta_rn_practice": "React Native Practice",
+  "section_label": "Stats",
+  "lessons_label": "Lessons",
+  "modules_label": "Modules",
+  "everything_included": "Everything included",
+  "progress_stored": "Progress stored {count} lessons",
   "app.lang.en": "English",
   "app.lang.es": "Spanish",
 

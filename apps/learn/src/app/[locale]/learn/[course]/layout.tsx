@@ -4,6 +4,7 @@ import LearnShell from "@/components/learn-shell";
 import ErrorBoundary from "@/components/error-boundary";
 import type { ReactNode } from "react";
 import { LOCALES, COURSE_IDS } from "@/lib/i18n-config";
+import "../../../../../styles.css";
 
 export function generateStaticParams() {
   const params: { locale: string; course: string }[] = [];

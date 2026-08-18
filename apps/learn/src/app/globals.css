@@ -1,1 +1,178 @@
-@import "../../styles.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 248 33% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 248 33% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 248 33% 14%;
+    --primary: 246 71% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 255 10% 96%;
+    --secondary-foreground: 248 33% 14%;
+    --muted: 255 10% 96%;
+    --muted-foreground: 248 33% 14%;
+    --accent: 255 10% 95%;
+    --accent-foreground: 248 33% 14%;
+    --destructive: 4 49% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 248 33% 14% / 8%;
+    --input: 248 33% 14% / 8%;
+    --ring: 246 71% 59%;
+    --radius: 0.75rem;
+
+    /* Chart colors */
+    --chart-1: 246 71% 59%;
+    --chart-2: 190 65% 31%;
+    --chart-3: 150 33% 36%;
+    --chart-4: 41 73% 38%;
+    --chart-5: 4 49% 47%;
+
+    /* Sidebar colors */
+    --sidebar: 0 0% 98.5%;
+    --sidebar-foreground: 248 33% 14%;
+    --sidebar-primary: 246 71% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 255 10% 97%;
+    --sidebar-accent-foreground: 248 33% 14%;
+    --sidebar-border: 248 33% 14% / 8%;
+    --sidebar-ring: 246 71% 59%;
+
+    /* Brand colors */
+    --brand: 246 71% 59%;
+    --brand-foreground: 0 0% 100%;
+    --success: 150 33% 36%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 251 31% 7%;
+    --foreground: 249 45% 94%;
+    --card: 247 38% 14%;
+    --card-foreground: 249 45% 94%;
+    --popover: 247 38% 14%;
+    --popover-foreground: 249 45% 94%;
+    --primary: 248 100% 75%;
+    --primary-foreground: 251 31% 7%;
+    --secondary: 250 25% 27%;
+    --secondary-foreground: 249 45% 94%;
+    --muted: 250 25% 27%;
+    --muted-foreground: 249 45% 94% / 70%;
+    --accent: 250 25% 30%;
+    --accent-foreground: 249 45% 94%;
+    --destructive: 4 60% 70%;
+    --destructive-foreground: 251 31% 7%;
+    --border: 249 45% 94% / 10%;
+    --input: 249 45% 94% / 15%;
+    --ring: 248 100% 75%;
+
+    --chart-1: 248 100% 75%;
+    --chart-2: 190 80% 68%;
+    --chart-3: 158 37% 73%;
+    --chart-4: 38 70% 63%;
+    --chart-5: 4 60% 70%;
+
+    --sidebar: 250 25% 7%;
+    --sidebar-foreground: 249 45% 94%;
+    --sidebar-primary: 248 100% 75%;
+    --sidebar-primary-foreground: 251 31% 7%;
+    --sidebar-accent: 250 25% 27%;
+    --sidebar-accent-foreground: 249 45% 94%;
+    --sidebar-border: 249 45% 94% / 10%;
+    --sidebar-ring: 248 100% 75%;
+
+    --brand: 248 100% 75%;
+    --brand-foreground: 251 31% 7%;
+    --success: 158 37% 73%;
+    --success-foreground: 251 31% 7%;
+  }
+
+  /* Course hue variables */
+  :root {
+    --course-ios-hsl: 210 75% 42%;
+    --course-android-hsl: 152 70% 31%;
+    --course-ruby-hsl: 8 75% 42%;
+    --course-python-hsl: 170 65% 31%;
+    --course-go-hsl: 190 75% 33%;
+    --course-node-hsl: 128 55% 34%;
+    --course-native-hsl: 248 70% 42%;
+    --course-expoui-hsl: 38 85% 34%;
+  }
+
+  .dark {
+    --course-ios-hsl: 210 80% 68%;
+    --course-android-hsl: 152 75% 68%;
+    --course-ruby-hsl: 8 80% 68%;
+    --course-python-hsl: 170 70% 68%;
+    --course-go-hsl: 190 80% 68%;
+    --course-node-hsl: 128 60% 68%;
+    --course-native-hsl: 248 75% 68%;
+    --course-expoui-hsl: 38 80% 68%;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
+@layer components {
+  /* Read-only Markdown content used by flashcards and challenge explanations. */
+  .markdown-readable pre {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border: 1px solid hsl(var(--border));
+    border-radius: 1rem;
+    background: hsl(var(--foreground)) !important;
+    padding: 1.25rem;
+    color: hsl(var(--background)) !important;
+    font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  .markdown-readable pre code {
+    display: block;
+    background: transparent !important;
+    padding: 0 !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .markdown-readable :not(pre) > code {
+    border-radius: 0.375rem;
+    background: hsl(var(--muted));
+    padding: 0.15rem 0.4rem;
+    color: hsl(var(--foreground));
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+}

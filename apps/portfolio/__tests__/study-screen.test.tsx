@@ -27,13 +27,13 @@ describe("<StudyScreen />", () => {
 
   it("shows a flashcard once progress hydrates", async () => {
     await renderScreen();
-    expect(await screen.findByTestId("flashcard")).toBeOnTheScreen();
+    expect(await screen.findByTestId("study-flashcard")).toBeOnTheScreen();
     expect(screen.getByText("TAP TO REVEAL")).toBeOnTheScreen();
   });
 
   it("reveals the answer and exposes grade controls on tap", async () => {
     await renderScreen();
-    const card = await screen.findByTestId("flashcard");
+    const card = await screen.findByTestId("study-flashcard");
     await fireEvent.press(card);
 
     expect(await screen.findByTestId("grade-good")).toBeOnTheScreen();
@@ -43,7 +43,7 @@ describe("<StudyScreen />", () => {
 
   it("advances to the next card after grading", async () => {
     await renderScreen();
-    await fireEvent.press(await screen.findByTestId("flashcard"));
+    await fireEvent.press(await screen.findByTestId("study-flashcard"));
     await fireEvent.press(await screen.findByTestId("grade-good"));
 
     // Back to an unrevealed card, with the progress counter moved on.

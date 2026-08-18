@@ -1,13 +1,18 @@
 /** @type {import('tailwindcss').Config} */
-// Scoped to the /reactnative section only. preflight is DISABLED so Tailwind's
-// global reset never touches the plain-CSS course pages (styles.css owns those);
-// the RN section opts into a minimal scoped reset via `.rn-root` in reactnative.css.
+// Extended to cover practice sections (flashcards, challenges, quiz) while keeping
+// preflight disabled so Tailwind's global reset never touches the plain-CSS course
+// pages (styles.css owns those). The practice sections opt into a minimal scoped
+// reset via `.practice-root` in their layout.
 module.exports = {
   darkMode: 'class',
   corePlugins: { preflight: false },
   content: [
-    './src/app/reactnative/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/reactnative/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/practice/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/practice/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/ui/**/*.{js,ts,jsx,tsx,mdx}',
     './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
@@ -46,11 +51,26 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          foreground: 'hsl(var(--brand-foreground))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)',
+        '2xl': 'calc(var(--radius) + 8px)',
+        '3xl': 'calc(var(--radius) + 12px)',
+      },
+      fontFamily: {
+        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
       },
     },
   },

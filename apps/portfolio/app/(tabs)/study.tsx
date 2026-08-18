@@ -280,7 +280,7 @@ export default function StudyScreen() {
             <GCBar value={progressPct} />
 
             <Pressable
-              testID="flashcard"
+              testID="study-flashcard"
               onPress={() =>
                 !session.revealed && setSession((p) => ({ ...p, revealed: true }))
               }

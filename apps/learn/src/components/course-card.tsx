@@ -7,10 +7,12 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { BookOpen } from "lucide-react";
 import { computeCourseProgress, parseStoredProgress } from "@/lib/course-progress";
 import type { CourseProgressShape } from "@/lib/course-progress";
-import { cn } from "@/lib/utils";
+import { Brain } from "lucide-react";
 
 interface CourseCardProps {
   href: string;
@@ -58,38 +60,44 @@ export default function CourseCard({
       } as CSSProperties)
     : undefined;
 
-return (
-    <Link href={href} className={cn("course-card", variant)} style={vars}>
-      <div>
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "rounded-2xl border border-border bg-card p-5 transition-colors hover:shadow-lg hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer",
+        variant,
+      )}
+    >
+      <div className="flex flex-col min-w-0">
         {variant === "vertical" ? (
           <>
-            <span className="course-card-head vertical">
-              <span className="course-emoji-tile" aria-hidden="true">
-                {emoji}
-              </span>
-{shape && (
+            <span className="course-card-head vertical flex-1 flex flex-col items-center justify-center gap-2 pt-4 pb-6">
+              <BookOpen className="course-emoji-tile h-5 w-5" />
+              {shape && (
                 <ProgressRing
                   pct={pct}
                   hueHsl={`var(--course-${courseId}-hsl)`} />
               )}
-</span>
-            <span className="course-card-body">
-              <span className="course-card-title">{title}</span>
-              <span className="course-meta">{meta}</span>
+            </span>
+            <span className="course-card-body flex-1 px-1">
+              <span className="course-card-title text-sm font-medium">{title}</span>
+              <span className="course-meta text-xs text-muted-foreground">{meta}</span>
             </span>
           </>
         ) : (
           <>
-            <span className="course-card-head">
-              <span className="course-emoji-tile" aria-hidden="true">
-                {emoji}
-              </span>
+            <span className="course-card-head flex-shrink-0 w-14 h-14 rounded-lg bg-card/50 flex items-center justify-center">
+              <BookOpen className="course-emoji-tile h-5 w-5" />
               {shape && (
-                <ProgressRing pct={pct} hueHsl={`var(--course-${courseId}-hsl)`} />
+                <ProgressRing
+                  pct={pct}
+                  hueHsl={`var(--course-${courseId}-hsl)`} />
               )}
             </span>
-            <span className="course-card-title">{title}</span>
-            <span className="course-meta">{meta}</span>
+            <span className="flex-1 flex flex-col gap-2 pt-4 pb-6">
+              <span className="course-card-title text-sm font-medium">{title}</span>
+              <span className="course-meta text-xs text-muted-foreground">{meta}</span>
+            </span>
           </>
         )}
       </div>
