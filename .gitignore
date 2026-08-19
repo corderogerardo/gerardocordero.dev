@@ -59,3 +59,5 @@ dist-academy/
 node_modules
 # Local AI runtime state
 .atl/
+
+packages/interview-prep/shadow-practice
