@@ -1,13 +1,18 @@
-import { Fredoka } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
-// Display font for the playful learning brand (Phase 0). Self-hosted + subset
-// by next/font, preloaded, `display: swap` — static-export safe. The CSS
-// fallback chain lives in styles.css `--display`:
-//   var(--font-fredoka), "Nunito", "DM Sans", system-ui, ...
-// The variable is injected on <html> by the root layout.
-export const fredoka = Fredoka({
+// Single type family for the whole app: UI, body, display headings and code.
+// Self-hosted + subset by next/font, preloaded, `display: swap` — static-export
+// safe. Both variables are injected on <html> by the root layout and consumed
+// through --font-geist-sans / --font-geist-mono (Tailwind fontFamily in
+// tailwind.config.js and the --sans/--mono stacks in styles.css).
+export const geistSans = Geist({
   subsets: ["latin"],
-  weight: "variable",
   display: "swap",
-  variable: "--font-fredoka",
+  variable: "--font-geist-sans",
+});
+
+export const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-mono",
 });

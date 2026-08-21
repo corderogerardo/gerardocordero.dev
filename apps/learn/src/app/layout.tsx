@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { I18nProvider } from "@/lib/i18n";
+import { geistSans, geistMono } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata = {
@@ -9,7 +10,11 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
       <body>
         <I18nProvider locale="en">{children}</I18nProvider>
       </body>

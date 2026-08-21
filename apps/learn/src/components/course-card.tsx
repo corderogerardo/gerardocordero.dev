@@ -64,7 +64,7 @@ export default function CourseCard({
     <Link
       href={href}
       className={cn(
-        "rounded-2xl border border-border bg-card p-5 transition-colors hover:shadow-lg hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer",
+        "rounded-2xl border border-border bg-card p-5 transition-colors hover:shadow-lg hover:border-primary/30 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer",
         variant,
       )}
     >

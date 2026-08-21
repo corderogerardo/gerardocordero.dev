@@ -29,12 +29,19 @@ export function I18nProvider({
   locale: Locale;
   children: ReactNode;
 }) {
-  const [locale, setLocale] = useState<Locale>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("pawwalk-locale") as Locale) || initialLocale;
-    }
-    return initialLocale;
-  });
+  // Hydrate with the server-provided locale. Reading localStorage during the
+  // first client render diverges from the server HTML and breaks hydration.
+  const [locale, setLocale] = useState<Locale>(initialLocale);
+
+  // Mount-only restore of the persisted locale (after hydration).
+  useEffect(() => {
+    const stored = localStorage.getItem("pawwalk-locale") as Locale | null;
+    // Syncing with an external store (localStorage) post-hydration is the
+    // documented effect use-case; reading it during render breaks SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored && stored !== locale) setLocale(stored);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only restore
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("pawwalk-locale", locale);

@@ -1,124 +1,152 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4 entry. Preflight is intentionally NOT imported: the plain-CSS
+   course pages (styles.css) own their base styling, exactly as with the v3
+   corePlugins.preflight=false setup. We import only theme + utilities layers.
+   Design tokens are ported from design-system-ui/app/globals.css (oklch). */
+
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  /* Radius scale preserved from the v3 config (base --radius = 0.75rem). */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+}
+
+:root {
+  color-scheme: light;
+  --background: oklch(0.985 0.003 247);
+  --foreground: oklch(0.21 0.03 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.03 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.03 260);
+  --primary: oklch(0.55 0.2 262);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.96 0.01 255);
+  --secondary-foreground: oklch(0.3 0.03 260);
+  --muted: oklch(0.96 0.01 255);
+  --muted-foreground: oklch(0.52 0.02 258);
+  --accent: oklch(0.95 0.03 255);
+  --accent-foreground: oklch(0.4 0.1 262);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.9 0.008 255);
+  --input: oklch(0.9 0.008 255);
+  --ring: oklch(0.55 0.2 262);
+  --chart-1: oklch(0.55 0.2 262);
+  --chart-2: oklch(0.62 0.15 190);
+  --chart-3: oklch(0.62 0.15 155);
+  --chart-4: oklch(0.7 0.16 60);
+  --chart-5: oklch(0.6 0.2 20);
+  --brand: oklch(0.55 0.2 262);
+  --brand-foreground: oklch(0.985 0 0);
+  --success: oklch(0.62 0.15 155);
+  --success-foreground: oklch(0.985 0 0);
+  --radius: 0.75rem;
+
+  /* Course hue variables (HSL triples; hex ramps live in styles.css). */
+  --course-ios-hsl: 210 75% 42%;
+  --course-android-hsl: 152 70% 31%;
+  --course-ruby-hsl: 8 75% 42%;
+  --course-python-hsl: 170 65% 31%;
+  --course-go-hsl: 190 75% 33%;
+  --course-node-hsl: 128 55% 34%;
+  --course-native-hsl: 248 70% 42%;
+  --course-expoui-hsl: 38 85% 34%;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.17 0.02 265);
+  --foreground: oklch(0.96 0.005 250);
+  --card: oklch(0.21 0.025 265);
+  --card-foreground: oklch(0.96 0.005 250);
+  --popover: oklch(0.21 0.025 265);
+  --popover-foreground: oklch(0.96 0.005 250);
+  --primary: oklch(0.65 0.19 262);
+  --primary-foreground: oklch(0.15 0.02 265);
+  --secondary: oklch(0.27 0.025 265);
+  --secondary-foreground: oklch(0.96 0.005 250);
+  --muted: oklch(0.27 0.025 265);
+  --muted-foreground: oklch(0.7 0.02 258);
+  --accent: oklch(0.3 0.05 262);
+  --accent-foreground: oklch(0.85 0.1 262);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.15 0.02 265);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.65 0.19 262);
+  --chart-1: oklch(0.65 0.19 262);
+  --chart-2: oklch(0.7 0.15 190);
+  --chart-3: oklch(0.7 0.15 155);
+  --chart-4: oklch(0.75 0.16 60);
+  --chart-5: oklch(0.68 0.2 20);
+  --brand: oklch(0.65 0.19 262);
+  --brand-foreground: oklch(0.15 0.02 265);
+  --success: oklch(0.7 0.15 155);
+  --success-foreground: oklch(0.15 0.02 265);
+
+  --course-ios-hsl: 210 80% 68%;
+  --course-android-hsl: 152 75% 68%;
+  --course-ruby-hsl: 8 80% 68%;
+  --course-python-hsl: 170 70% 68%;
+  --course-go-hsl: 190 80% 68%;
+  --course-node-hsl: 128 60% 68%;
+  --course-native-hsl: 248 75% 68%;
+  --course-expoui-hsl: 38 80% 68%;
+}
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 248 33% 14%;
-    --card: 0 0% 100%;
-    --card-foreground: 248 33% 14%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 248 33% 14%;
-    --primary: 246 71% 59%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 255 10% 96%;
-    --secondary-foreground: 248 33% 14%;
-    --muted: 255 10% 96%;
-    --muted-foreground: 248 33% 14%;
-    --accent: 255 10% 95%;
-    --accent-foreground: 248 33% 14%;
-    --destructive: 4 49% 47%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 248 33% 14% / 8%;
-    --input: 248 33% 14% / 8%;
-    --ring: 246 71% 59%;
-    --radius: 0.75rem;
-
-    /* Chart colors */
-    --chart-1: 246 71% 59%;
-    --chart-2: 190 65% 31%;
-    --chart-3: 150 33% 36%;
-    --chart-4: 41 73% 38%;
-    --chart-5: 4 49% 47%;
-
-    /* Sidebar colors */
-    --sidebar: 0 0% 98.5%;
-    --sidebar-foreground: 248 33% 14%;
-    --sidebar-primary: 246 71% 59%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 255 10% 97%;
-    --sidebar-accent-foreground: 248 33% 14%;
-    --sidebar-border: 248 33% 14% / 8%;
-    --sidebar-ring: 246 71% 59%;
-
-    /* Brand colors */
-    --brand: 246 71% 59%;
-    --brand-foreground: 0 0% 100%;
-    --success: 150 33% 36%;
-    --success-foreground: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 251 31% 7%;
-    --foreground: 249 45% 94%;
-    --card: 247 38% 14%;
-    --card-foreground: 249 45% 94%;
-    --popover: 247 38% 14%;
-    --popover-foreground: 249 45% 94%;
-    --primary: 248 100% 75%;
-    --primary-foreground: 251 31% 7%;
-    --secondary: 250 25% 27%;
-    --secondary-foreground: 249 45% 94%;
-    --muted: 250 25% 27%;
-    --muted-foreground: 249 45% 94% / 70%;
-    --accent: 250 25% 30%;
-    --accent-foreground: 249 45% 94%;
-    --destructive: 4 60% 70%;
-    --destructive-foreground: 251 31% 7%;
-    --border: 249 45% 94% / 10%;
-    --input: 249 45% 94% / 15%;
-    --ring: 248 100% 75%;
-
-    --chart-1: 248 100% 75%;
-    --chart-2: 190 80% 68%;
-    --chart-3: 158 37% 73%;
-    --chart-4: 38 70% 63%;
-    --chart-5: 4 60% 70%;
-
-    --sidebar: 250 25% 7%;
-    --sidebar-foreground: 249 45% 94%;
-    --sidebar-primary: 248 100% 75%;
-    --sidebar-primary-foreground: 251 31% 7%;
-    --sidebar-accent: 250 25% 27%;
-    --sidebar-accent-foreground: 249 45% 94%;
-    --sidebar-border: 249 45% 94% / 10%;
-    --sidebar-ring: 248 100% 75%;
-
-    --brand: 248 100% 75%;
-    --brand-foreground: 251 31% 7%;
-    --success: 158 37% 73%;
-    --success-foreground: 251 31% 7%;
-  }
-
-  /* Course hue variables */
-  :root {
-    --course-ios-hsl: 210 75% 42%;
-    --course-android-hsl: 152 70% 31%;
-    --course-ruby-hsl: 8 75% 42%;
-    --course-python-hsl: 170 65% 31%;
-    --course-go-hsl: 190 75% 33%;
-    --course-node-hsl: 128 55% 34%;
-    --course-native-hsl: 248 70% 42%;
-    --course-expoui-hsl: 38 85% 34%;
-  }
-
-  .dark {
-    --course-ios-hsl: 210 80% 68%;
-    --course-android-hsl: 152 75% 68%;
-    --course-ruby-hsl: 8 80% 68%;
-    --course-python-hsl: 170 70% 68%;
-    --course-go-hsl: 190 80% 68%;
-    --course-node-hsl: 128 60% 68%;
-    --course-native-hsl: 248 75% 68%;
-    --course-expoui-hsl: 38 80% 68%;
-  }
-
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    /* Preflight is excluded, so nothing assigns the default UI font — set the
+       single app family explicitly (theme var --font-sans → Geist stack). */
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   a {
@@ -127,32 +155,33 @@
   }
 }
 
-@layer utilities {
-  .perspective-1000 {
-    perspective: 1000px;
-  }
-  .transform-3d {
-    transform-style: preserve-3d;
-  }
-  .backface-hidden {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-  .rotate-y-180 {
-    transform: rotateY(180deg);
-  }
+/* 3D flip helpers used by PracticeFlashcard (kept explicit so behavior is
+   identical regardless of v4 built-in availability). */
+@utility perspective-1000 {
+  perspective: 1000px;
+}
+@utility transform-3d {
+  transform-style: preserve-3d;
+}
+@utility backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+@utility rotate-y-180 {
+  transform: rotateY(180deg);
 }
 
 @layer components {
-  /* Read-only Markdown content used by flashcards and challenge explanations. */
+  /* Read-only Markdown content used by flashcards and challenge explanations.
+     Tokens are plain var() references now that colors are oklch strings. */
   .markdown-readable pre {
     overflow-x: auto;
     margin: 1.5rem 0;
-    border: 1px solid hsl(var(--border));
+    border: 1px solid var(--border);
     border-radius: 1rem;
-    background: hsl(var(--foreground)) !important;
+    background: var(--foreground) !important;
     padding: 1.25rem;
-    color: hsl(var(--background)) !important;
+    color: var(--background) !important;
     font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 1rem;
     line-height: 1.75;
@@ -169,9 +198,9 @@
 
   .markdown-readable :not(pre) > code {
     border-radius: 0.375rem;
-    background: hsl(var(--muted));
+    background: var(--muted);
     padding: 0.15rem 0.4rem;
-    color: hsl(var(--foreground));
+    color: var(--foreground);
     font-size: 0.9em;
     font-weight: 600;
   }

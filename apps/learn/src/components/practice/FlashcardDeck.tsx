@@ -210,7 +210,7 @@ useEffect(() => {
       </p>
 
       {/* Session Panel */}
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 lg:p-8">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-6 lg:p-8">
         <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center">
           <div className="flex flex-1 flex-wrap items-center gap-3">
             <Select value={filterCategory} onValueChange={selectCategory}>
@@ -352,7 +352,7 @@ useEffect(() => {
               setFilterLevel('all');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="rounded-3xl border border-border bg-card/50 p-4 sm:p-5 lg:p-6 text-left transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+            className="rounded-3xl border border-border bg-card/50 p-4 sm:p-5 lg:p-6 text-left transition-colors hover:border-primary/30 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
           >
             <div className="flex items-center justify-between gap-3">
               <span className="font-medium font-display">{name}</span>

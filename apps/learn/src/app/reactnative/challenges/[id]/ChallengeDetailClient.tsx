@@ -243,7 +243,7 @@ export default function ChallengeDetailClient({ challenge }: Props) {
               <textarea
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                className="w-full h-[300px] font-mono text-sm p-4 bg-muted rounded-md border resize-y focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-[300px] font-mono text-sm p-4 bg-muted rounded-md border resize-y focus:outline-hidden focus:ring-2 focus:ring-ring"
                 spellCheck={false}
               />
               {runtimeError && (

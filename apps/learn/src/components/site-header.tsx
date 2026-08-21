@@ -8,14 +8,15 @@ import { useI18n } from '@/lib/i18n';
 import { useState } from 'react';
 
 const navItems = [
-  { href: '/', label: 'Home', icon: Brain },
-  { href: '/en/learn/ios', label: 'Courses', icon: BookOpen },
-  { href: '/practice', label: 'Practice', icon: Code2 },
+  { href: '/', labelKey: 'nav.home', icon: Brain },
+  // Index anchor into the courses grid on home — not a single course.
+  { href: '/#courses', labelKey: 'nav.courses', icon: BookOpen },
+  { href: '/practice', labelKey: 'nav.practice', icon: Code2 },
 ];
 
 const reactNativeItems = [
-  { href: '/practice/reactnative', label: 'Flashcards', icon: Layers },
-  { href: '/practice/reactnative/challenges', label: 'Challenges', icon: Code2 },
+  { href: '/practice/reactnative', labelKey: 'nav.flashcards', icon: Layers },
+  { href: '/practice/reactnative/challenges', labelKey: 'nav.challenges', icon: Code2 },
 ];
 
 export function SiteHeader() {
@@ -27,6 +28,7 @@ export function SiteHeader() {
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
+    if (href === '/#courses') return false; // index anchor — never active
     if (href === '/practice') {
       return pathname === '/practice' || (pathname.startsWith('/practice/') && !isReactNativePractice);
     }
@@ -58,14 +60,14 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                  'flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -78,7 +80,7 @@ export function SiteHeader() {
               key={lang}
               onClick={() => setLocale(lang as 'en' | 'es')}
               className={cn(
-                'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 locale === lang
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -91,10 +93,10 @@ export function SiteHeader() {
           </div>
           <button
             type="button"
-            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-label={open ? t('nav.close_menu') : t('nav.open_menu')}
             aria-expanded={open}
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary md:hidden"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -109,7 +111,7 @@ export function SiteHeader() {
               return (
                 <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={cn('flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium', active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground')}>
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}

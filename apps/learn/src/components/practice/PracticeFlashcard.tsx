@@ -3,6 +3,7 @@
 import { RotateCw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useEffect, useRef, useState } from 'react';
 import type { Flashcard } from '@/lib/flashcards';
 import { cn } from '@/lib/utils';
 
@@ -27,8 +28,37 @@ const levelStyles: Record<string, string> = {
   easy: 'bg-success/15 text-success', medium: 'bg-chart-4/15 text-chart-4', hard: 'bg-destructive/15 text-destructive',
 };
 
+/** Floor so a tiny question never renders a cramped card. */
+const MIN_CARD_HEIGHT = 320;
+
+/**
+ * Auto-sized flip card: both faces are stacked in the same grid cell (so each
+ * keeps its natural content height) and the button's height tracks the ACTIVE
+ * face via ResizeObserver — the card grows/shrinks as you flip. Faces are
+ * capped at 70svh with internal scroll for oversized answers.
+ */
 export function PracticeFlashcard({ card, flipped, status, onFlip }: PracticeFlashcardProps) {
   const level = card.levels[0];
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const [faceHeights, setFaceHeights] = useState<{ front: number; back: number } | null>(null);
+
+  useEffect(() => {
+    const front = frontRef.current;
+    const back = backRef.current;
+    if (!front || !back) return;
+    const measure = () => {
+      setFaceHeights({ front: front.offsetHeight, back: back.offsetHeight });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(front);
+    observer.observe(back);
+    return () => observer.disconnect();
+  }, [card.id]);
+
+  const measured = flipped ? faceHeights?.back : faceHeights?.front;
+  const activeHeight = measured ? Math.max(measured, MIN_CARD_HEIGHT) : undefined;
 
   return (
     <div className="perspective-1000">
@@ -37,10 +67,16 @@ export function PracticeFlashcard({ card, flipped, status, onFlip }: PracticeFla
         onClick={onFlip}
         aria-label={flipped ? 'Show question' : 'Show answer'}
         aria-pressed={flipped}
-        className="group relative block h-[min(560px,calc(100svh-220px))] min-h-[420px] w-full appearance-none border-0 bg-transparent p-0 text-left text-inherit shadow-none outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-4"
+        style={activeHeight ? { height: `${activeHeight}px` } : undefined}
+        className="group relative block h-[min(560px,calc(100svh-220px))] w-full appearance-none border-0 bg-transparent p-0 text-left text-inherit shadow-none outline-none transition-[height] duration-300 ease-out focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-4 motion-reduce:transition-none"
       >
-        <div className={cn('transform-3d relative h-full w-full transition-transform duration-500', flipped && 'rotate-y-180')}>
-          <div className="backface-hidden absolute inset-0 flex flex-col rounded-3xl border border-border bg-card p-6 shadow-xl md:p-10">
+        {/* transform-3d wrapper doubles as the stacking grid: both faces share
+            one cell, aligned to the top so each keeps its natural height. */}
+        <div className={cn('transform-3d relative grid h-full w-full transition-transform duration-500', flipped && 'rotate-y-180')}>
+          <div
+            ref={frontRef}
+            className="backface-hidden [grid-area:1/1] flex max-h-[70svh] flex-col self-start overflow-y-auto rounded-3xl border border-border bg-card p-6 shadow-xl md:p-10"
+          >
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">{card.category}</span>
               <span className={cn('rounded-full px-3 py-1 text-xs font-medium capitalize', levelStyles[level] || 'bg-muted text-muted-foreground')}>
@@ -61,7 +97,10 @@ export function PracticeFlashcard({ card, flipped, status, onFlip }: PracticeFla
             </p>
           </div>
 
-          <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col overflow-y-auto rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-6 text-left shadow-xl md:p-10">
+          <div
+            ref={backRef}
+            className="backface-hidden rotate-y-180 [grid-area:1/1] flex max-h-[70svh] flex-col self-start overflow-y-auto rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-6 text-left shadow-xl md:p-10"
+          >
             <div className="flex items-center gap-3 border-b border-primary/15 pb-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">A</span>
               <div>

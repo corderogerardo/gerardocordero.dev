@@ -45,7 +45,7 @@ export default function PracticeIndexPage() {
               <Link
                 key={spec.slug}
                 href={`/practice/${spec.slug}`}
-                className="group rounded-3xl border-2 border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-sm hover:shadow-lg/20 transform-hover"
+                className="group rounded-3xl border-2 border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-xs hover:shadow-lg/20 transform-hover"
               >
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -73,7 +73,7 @@ export default function PracticeIndexPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link
               href="/practice/reactnative"
-              className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-sm"
+              className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-xs"
             >
               <div className="flex items-center gap-3 mb-3">
                     <Smartphone className="h-5 w-5 text-primary" />
@@ -87,7 +87,7 @@ export default function PracticeIndexPage() {
             </Link>
             <Link
               href="/learn/ios"
-              className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-sm"
+              className="rounded-3xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all hover:border-primary/30 hover:bg-card/80 shadow-xs"
             >
               <div className="flex items-center gap-3 mb-3">
                 <BookOpen className="h-5 w-5 text-primary" />

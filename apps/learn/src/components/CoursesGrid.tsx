@@ -50,7 +50,7 @@ export function CoursesGrid({ courses, specs, locale, totalLessons }: CourseGrid
         <Link
           href="/practice/reactnative"
           className={cn(
-            "rounded-xl border border-border bg-surface p-4 flex flex-col items-start gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            "rounded-xl border border-border bg-card p-4 flex flex-col items-start gap-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
             "cursor-pointer",
           )}
         >
@@ -68,7 +68,7 @@ export function CoursesGrid({ courses, specs, locale, totalLessons }: CourseGrid
             key={s.slug}
             href={`/practice/${s.slug}`}
             className={cn(
-              "rounded-xl border border-border bg-surface p-4 flex flex-col items-start gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+              "rounded-xl border border-border bg-card p-4 flex flex-col items-start gap-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               "cursor-pointer",
             )}
           >
