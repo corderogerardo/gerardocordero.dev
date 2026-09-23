@@ -79,6 +79,16 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - **Checks:** Structural readback completed; no test or project checks were run for this documentation-only task.
 - **Likely files:** `docs/architecture/fitness-functions.md`, `docs/adr/0001-workspace-dependency-boundaries.md`.
 
+### ODD-AFF-05 — Enable safe feature-branch verification in GitHub Actions — IN PROGRESS
+- [ ] Add `feature/**` alongside `main` in the existing `.github/workflows/ci.yml` `push.branches` filter; do not change deploy job conditions.
+- [ ] After the work-unit commit and its RDD assessment/review, push `feature/architecture-fitness-functions` to `origin` and verify the corresponding GitHub Actions run without opening a PR.
+- **Route:** Do not dispatch `ci.yml` manually. Its existing `workflow_dispatch` also enables deployment jobs; the selected route is the feature-branch push trigger.
+- **First-push behavior:** With an all-zero `before` SHA, path-detection jobs may treat all paths as changed and run the `apps/learn`, backend, iOS, and Android validation/build jobs. Deployment jobs remain skipped on this feature-branch push because their existing conditions require a main push or manual dispatch.
+- **Acceptance:** A push to `feature/architecture-fitness-functions` triggers CI verification without a PR or deployment; record the GitHub Actions result honestly.
+- **Remote authorization:** Destination `origin` -> `https://github.com/corderogerardo/gerardocordero.dev`, branch `feature/architecture-fitness-functions`; use the active GitHub CLI HTTPS session `corderogerardo`. No SSH, PR, or deployment operation is authorized.
+- **Verification:** Review the workflow structure locally; after commit, run RDD assessment/review; after the authorized push, inspect the GitHub Actions run. Do not dispatch `ci.yml` manually. Local post-change `pnpm lint` remains UNVERIFIED until the workflow run reports its result.
+- **Likely file:** `.github/workflows/ci.yml`.
+
 ## Applicable Checks
 - Focused RED/GREEN: `node --test scripts/architecture-fitness.test.mjs`.
 - Fitness check: `pnpm architecture:check`.
@@ -86,13 +96,14 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - Record unavailable, failed, partial, or skipped checks honestly; do not attribute the initial typecheck failure to this change.
 
 ## Authorized Scope
-This feature plan authorizes the four tasks above only. Do not alter application behavior, workspace dependency declarations, tests in educational apps, or the unrelated `.atl` modifications in the original checkout. Do not enable receipt-driven development, push, or create a PR.
+This feature plan authorizes ODD-AFF-01 through ODD-AFF-05 only. ODD-AFF-05 authorizes adding `feature/**` to the existing CI push branch filter, then pushing only `feature/architecture-fitness-functions` to `origin` at `https://github.com/corderogerardo/gerardocordero.dev` using the active GitHub CLI HTTPS session `corderogerardo`, and inspecting that run. Keep existing deploy job conditions unchanged. Do not dispatch `ci.yml`, use SSH, open a PR, or perform any deployment operation. Preserve the existing dependency declarations, application behavior, and unrelated `.atl` modifications in the original checkout.
 
 ## Progress
 - [x] Baseline architecture mapping and gate inventory.
 - [x] Workspace dependency fitness function and tests.
 - [x] CI integration.
 - [x] Decision/metric documentation and ADR.
+- [ ] Feature-branch CI verification (in progress).
 
 ## Next Step
-Optional future follow-up: gather baselines for cross-workspace change coupling, CI p50/p95 duration, and app-specific runtime signals; then decide whether source-level boundary enforcement or CLI failure-path tests are warranted. This tracker authorizes no new targets or implementation.
+Implement ODD-AFF-05 by adding the feature branch to the CI push filter, then commit, complete RDD review, push only the authorized branch, and record the Actions result. Keep local post-change `pnpm lint` unverified until that workflow run reports its result.
