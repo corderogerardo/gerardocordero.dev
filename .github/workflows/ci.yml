@@ -44,6 +44,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Architecture fitness
+        run: pnpm architecture:check
+
   # Ship the live web build. `needs: verify` is the gate — this job cannot start
   # until typecheck + lint + test all pass, so a red main can never reach production.
   # The `if` restricts it to actual pushes to main (PRs and other branches skip it).

@@ -37,17 +37,26 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - [x] Record test/typecheck caveats and exclusions.
 - **Evidence:** `pnpm -r list --depth -1 --json`, package manifests, `turbo.json`, and `.github/workflows/ci.yml`; baseline results above.
 
-### ODD-AFF-02 — Implement and test the workspace dependency fitness function — NOT STARTED
-- [ ] Add a deterministic Node script that inventories workspace package manifests, rejects forbidden dependency directions, and reports counts for allowed edges and violations.
-- [ ] Add Node tests for allowed and forbidden edge cases; observe RED before implementing behavior.
+### ODD-AFF-02 — Implement and test the workspace dependency fitness function — COMPLETE
+- [x] Add a deterministic Node script that inventories workspace package manifests, rejects forbidden dependency directions, and reports counts for allowed edges and violations.
+- [x] Add Node tests for allowed and forbidden edge cases; observe RED before implementing behavior.
 - **Acceptance:** Current workspace graph reports 13 packages, 7 allowed local edges, and zero forbidden edges; synthetic app-to-app and package-to-app edges fail the test/function.
-- **Checks:** `node --test scripts/architecture-fitness.test.mjs`; `node scripts/architecture-fitness.mjs`.
+- **RED:** `node --test scripts/architecture-fitness.test.mjs` failed before implementation because the validator module did not exist.
+- **GREEN:** `node --test scripts/architecture-fitness.test.mjs` passed (3 tests, 0 failures).
+- **Real audit:** `node scripts/architecture-fitness.mjs` reported 13 workspace packages, 7 local dependency edges, 7 allowed edges, and 0 violations.
+- **Commit:** `81391b2 feat: add workspace dependency fitness function`.
+- **Project checks after the source change:** `pnpm typecheck` passed (8 successful Turbo tasks); `pnpm test` passed (5 suites, 34 tests). Post-change `pnpm lint` is UNVERIFIED; the user explicitly approved proceeding without post-change lint evidence. The pre-change baseline lint passed with 17 warnings in `apps/learn`.
+- **RDD review:** Native risk assessment was medium. The user granted candidate review consent; the single `review-reliability` review ended approved. Exact acknowledgement returned `action: acknowledged`, authority `burned`. No correction was opened.
+- **Non-blocking follow-ups (not implemented here):** Add automated CLI-path assertions for inventory/output/exit-code behavior; include the manifest path in malformed-manifest failures; decide how to report unsupported inventory cases such as symlinked workspaces and the hardcoded roots.
 - **Likely files:** `scripts/architecture-fitness.mjs`, `scripts/architecture-fitness.test.mjs`.
 
-### ODD-AFF-03 — Wire the fitness function into the standard CI path — NOT STARTED
-- [ ] Add `pnpm architecture:check` to the root scripts, running the focused tests and real workspace audit.
-- [ ] Add the command to the existing CI `verify` job so pull requests and main pushes enforce it.
+### ODD-AFF-03 — Wire the fitness function into the standard CI path — IN PROGRESS
+- [x] Add `pnpm architecture:check` to the root scripts, running the focused tests and real workspace audit.
+- [x] Add the command to the existing CI `verify` job so pull requests and main pushes enforce it.
 - **Acceptance:** The command passes on the current graph and exits non-zero for a forbidden dependency; CI invokes it in the existing verification job.
+- **Implementation:** The root script runs `node --test scripts/architecture-fitness.test.mjs && node scripts/architecture-fitness.mjs`; the `Architecture fitness` step follows `Test` in the existing `verify` job. Existing PR and main-push triggers and broad CI path coverage are unchanged.
+- **Verification:** `pnpm architecture:check` passed (3 tests, 0 failures); the real audit reported 13 workspace packages, 7 local edges, 7 allowed, and 0 violations. Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice and was not run.
+- **Status:** Implementation and focused verification are complete; pending parent inspection, commit, and RDD review before marking this task complete.
 - **Checks:** `pnpm architecture:check`; inspect workflow placement and run the focused command locally.
 - **Likely files:** root `package.json`, `.github/workflows/ci.yml`.
 
@@ -71,9 +80,9 @@ This feature plan authorizes the four tasks above only. Do not alter application
 
 ## Progress
 - [x] Baseline architecture mapping and gate inventory.
-- [ ] Workspace dependency fitness function and tests.
-- [ ] CI integration.
+- [x] Workspace dependency fitness function and tests.
+- [ ] CI integration (implementation verified; pending parent commit/RDD).
 - [ ] Decision/metric documentation and ADR.
 
 ## Next Step
-Implement ODD-AFF-02 test-first, then verify and update both this file and its Engram mirror before continuing.
+Parent to inspect and commit ODD-AFF-03, complete the applicable RDD review, then resume ODD-AFF-04. Retain the declared-dependencies-only scope and recorded follow-up limitations.
