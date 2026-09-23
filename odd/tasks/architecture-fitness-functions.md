@@ -50,23 +50,31 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - **Non-blocking follow-ups (not implemented here):** Add automated CLI-path assertions for inventory/output/exit-code behavior; include the manifest path in malformed-manifest failures; decide how to report unsupported inventory cases such as symlinked workspaces and the hardcoded roots.
 - **Likely files:** `scripts/architecture-fitness.mjs`, `scripts/architecture-fitness.test.mjs`.
 
-### ODD-AFF-03 — Wire the fitness function into the standard CI path — IN PROGRESS
+### ODD-AFF-03 — Wire the fitness function into the standard CI path — COMPLETE
 - [x] Add `pnpm architecture:check` to the root scripts, running the focused tests and real workspace audit.
 - [x] Add the command to the existing CI `verify` job so pull requests and main pushes enforce it.
 - **Acceptance:** The command passes on the current graph and exits non-zero for a forbidden dependency; CI invokes it in the existing verification job.
 - **Implementation:** The root script runs `node --test scripts/architecture-fitness.test.mjs && node scripts/architecture-fitness.mjs`; the `Architecture fitness` step follows `Test` in the existing `verify` job. Existing PR and main-push triggers and broad CI path coverage are unchanged.
 - **Verification:** `pnpm architecture:check` passed (3 tests, 0 failures); the real audit reported 13 workspace packages, 7 local edges, 7 allowed, and 0 violations. Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice and was not run.
-- **Status:** Implementation and focused verification are complete; pending parent inspection, commit, and RDD review before marking this task complete.
+- **Project checks after the CI change:** `pnpm typecheck` passed (8 Turbo tasks); `pnpm test` passed (5 suites, 34 tests). Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice; do not treat the entire project loop as passed.
+- **Commit:** `0986ffb ci: enforce workspace dependency fitness check`.
+- **RDD review:** Assessment for `0986ffb` against last reviewed boundary `81391b2` returned high risk due to the shell-source signal in CI YAML. The user granted consent; the canonical four-lens review completed and was approved. Exact acknowledgement returned `action: acknowledged`, authority `burned`. No correction was opened.
+- **Non-blocking follow-ups (not implemented here):** Add automated CLI exit-code assertions for forbidden dependencies; document/track that the CI gate consumes scripts added by the prior commit and preserve its audited scope; retain the declared-dependencies-only limitation and consider future inventory-path/symlink diagnostics.
+- **Status:** Complete; the declared-dependencies-only scope and non-blocking follow-ups remain for later consideration.
 - **Checks:** `pnpm architecture:check`; inspect workflow placement and run the focused command locally.
 - **Likely files:** root `package.json`, `.github/workflows/ci.yml`.
 
-### ODD-AFF-04 — Document the fitness-function and decision-evidence model — NOT STARTED
-- [ ] Document what the first check enforces and its declared-dependencies-only limitation.
-- [ ] Define the decision evidence fields: quality attribute, fitness function/metric, baseline, target or threshold rationale, owner, measurement cadence, and revisit trigger.
-- [ ] Record the workspace dependency-direction decision in the existing intended ADR location (`docs/adr/`, which does not currently exist).
-- [ ] List follow-on baseline candidates—cross-workspace change rate, CI p50/p95 duration, and app-appropriate runtime measures—without assigning unsupported targets.
+### ODD-AFF-04 — Document the fitness-function and decision-evidence model — IN PROGRESS
+- [x] Document what the first check enforces and its declared-dependencies-only limitation.
+- [x] Define the decision evidence fields: quality attribute, fitness function/metric, baseline, target or threshold rationale, owner, measurement cadence, and revisit trigger.
+- [x] Record the workspace dependency-direction decision in the existing intended ADR location (`docs/adr/`, which does not currently exist).
+- [x] List follow-on baseline candidates—cross-workspace change rate, CI p50/p95 duration, and app-appropriate runtime measures—without assigning unsupported targets.
 - **Acceptance:** The docs distinguish hard CI invariants from trend metrics; no arbitrary targets or claims of unimplemented observability.
-- **Checks:** Structural readback; verify paths and statements against this repository.
+- **Artifacts:** `docs/architecture/fitness-functions.md` and `docs/adr/0001-workspace-dependency-boundaries.md`.
+- **Structural readback:** Both documents were read back. They state the current guardrail and measured baseline, declared-dependency-only scope and inventory limitations, review follow-ups, decision-evidence template, separate candidate metrics, adoption loop, and ADR alternatives/consequences. No additional checks were run.
+- **Verification status:** Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice; the full project loop is not claimed as green.
+- **Status:** Documentation is written and structurally read back; task remains IN PROGRESS pending parent review, commit, and RDD assessment.
+- **Checks:** Structural readback completed; no test or project checks were run for this documentation-only task.
 - **Likely files:** `docs/architecture/fitness-functions.md`, `docs/adr/0001-workspace-dependency-boundaries.md`.
 
 ## Applicable Checks
@@ -81,8 +89,8 @@ This feature plan authorizes the four tasks above only. Do not alter application
 ## Progress
 - [x] Baseline architecture mapping and gate inventory.
 - [x] Workspace dependency fitness function and tests.
-- [ ] CI integration (implementation verified; pending parent commit/RDD).
-- [ ] Decision/metric documentation and ADR.
+- [x] CI integration.
+- [ ] Decision/metric documentation and ADR (written and read back; pending parent commit/RDD).
 
 ## Next Step
-Parent to inspect and commit ODD-AFF-03, complete the applicable RDD review, then resume ODD-AFF-04. Retain the declared-dependencies-only scope and recorded follow-up limitations.
+Parent to perform structural readback, stage and commit this documentation-only work unit, then run native risk assessment relative to the last reviewed boundary `0986ffb`. Keep the declared-dependencies-only scope and recorded follow-up limitations.
