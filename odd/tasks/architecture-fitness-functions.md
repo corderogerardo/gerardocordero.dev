@@ -64,7 +64,7 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - **Checks:** `pnpm architecture:check`; inspect workflow placement and run the focused command locally.
 - **Likely files:** root `package.json`, `.github/workflows/ci.yml`.
 
-### ODD-AFF-04 — Document the fitness-function and decision-evidence model — IN PROGRESS
+### ODD-AFF-04 — Document the fitness-function and decision-evidence model — COMPLETE
 - [x] Document what the first check enforces and its declared-dependencies-only limitation.
 - [x] Define the decision evidence fields: quality attribute, fitness function/metric, baseline, target or threshold rationale, owner, measurement cadence, and revisit trigger.
 - [x] Record the workspace dependency-direction decision in the existing intended ADR location (`docs/adr/`, which does not currently exist).
@@ -73,7 +73,9 @@ The monorepo has distinct apps and shared packages, but current quality gates pr
 - **Artifacts:** `docs/architecture/fitness-functions.md` and `docs/adr/0001-workspace-dependency-boundaries.md`.
 - **Structural readback:** Both documents were read back. They state the current guardrail and measured baseline, declared-dependency-only scope and inventory limitations, review follow-ups, decision-evidence template, separate candidate metrics, adoption loop, and ADR alternatives/consequences. No additional checks were run.
 - **Verification status:** Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice; the full project loop is not claimed as green.
-- **Status:** Documentation is written and structurally read back; task remains IN PROGRESS pending parent review, commit, and RDD assessment.
+- **Commit:** `416ff70 docs: define architecture fitness functions`.
+- **RDD review:** Assessment for `416ff70` against last reviewed boundary `0986ffb` was passive. Structural readback was the complete proportional check; no semantic review was launched.
+- **Status:** Complete. Post-change `pnpm lint` remains UNVERIFIED by the user's explicit choice; the full project loop is not claimed as green.
 - **Checks:** Structural readback completed; no test or project checks were run for this documentation-only task.
 - **Likely files:** `docs/architecture/fitness-functions.md`, `docs/adr/0001-workspace-dependency-boundaries.md`.
 
@@ -90,7 +92,7 @@ This feature plan authorizes the four tasks above only. Do not alter application
 - [x] Baseline architecture mapping and gate inventory.
 - [x] Workspace dependency fitness function and tests.
 - [x] CI integration.
-- [ ] Decision/metric documentation and ADR (written and read back; pending parent commit/RDD).
+- [x] Decision/metric documentation and ADR.
 
 ## Next Step
-Parent to perform structural readback, stage and commit this documentation-only work unit, then run native risk assessment relative to the last reviewed boundary `0986ffb`. Keep the declared-dependencies-only scope and recorded follow-up limitations.
+Optional future follow-up: gather baselines for cross-workspace change coupling, CI p50/p95 duration, and app-specific runtime signals; then decide whether source-level boundary enforcement or CLI failure-path tests are warranted. This tracker authorizes no new targets or implementation.
