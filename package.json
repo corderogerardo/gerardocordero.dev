@@ -8,6 +8,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test --filter=@gerardocordero/portfolio",
+    "architecture:check": "node --test scripts/architecture-fitness.test.mjs && node scripts/architecture-fitness.mjs",
     "clean": "turbo clean"
   },
   "devDependencies": {

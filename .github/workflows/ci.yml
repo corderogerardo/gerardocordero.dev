@@ -8,7 +8,7 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'feature/**']
   pull_request:
 
 permissions:
@@ -43,6 +43,9 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Architecture fitness
+        run: pnpm architecture:check
 
   # Ship the live web build. `needs: verify` is the gate — this job cannot start
   # until typecheck + lint + test all pass, so a red main can never reach production.
