@@ -6,7 +6,8 @@
     "paths": {
       "@/*": ["./*"],
       "@gerardocordero/ui": ["../../packages/ui/src/index"],
-      "@gerardocordero/ui/*": ["../../packages/ui/src/*"]
+      "@gerardocordero/ui/*": ["../../packages/ui/src/*"],
+      "@gerardocordero/prep-kit/lib/*": ["../../packages/prep-kit/src/lib/*"]
     }
   },
   "include": [

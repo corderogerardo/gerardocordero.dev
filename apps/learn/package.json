@@ -13,6 +13,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@gerardocordero/prep-kit": "workspace:*",
     "@radix-ui/react-scroll-area": "^1.2.14",
     "@radix-ui/react-select": "^2.3.3",
     "@radix-ui/react-separator": "^1.1.11",

@@ -3,7 +3,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SrsEntry } from "@/lib/srs";
+import type { SrsEntry } from "@gerardocordero/prep-kit/lib/srs";
 
 /** Per-lesson reveal count (how many steps are visible). Key = "moduleId/lessonId" */
 type RevealMap = Record<string, number>;
