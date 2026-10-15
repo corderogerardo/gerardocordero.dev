@@ -20,7 +20,7 @@ final class WalkerViewModel {
         }
     }
 
-    func act(_ booking: Booking, _ action: String) async {
+    func act(_ booking: Booking, _ action: BookingAction) async {
         _ = try? await APIClient.shared.transitionBooking(id: booking.id, action: action)
         await load()
     }
@@ -82,7 +82,7 @@ struct WalkerHomeView: View {
 private struct WalkRow: View {
     let booking: Booking
     var onTrack: () -> Void
-    var onAction: (String) -> Void
+    var onAction: (BookingAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -103,10 +103,10 @@ private struct WalkRow: View {
         HStack(spacing: 8) {
             switch booking.status {
             case .pending:
-                actionButton("Accept", "accept", filled: true)
-                actionButton("Decline", "decline", filled: false)
+                actionButton("Accept", .accept, filled: true)
+                actionButton("Decline", .decline, filled: false)
             case .confirmed:
-                actionButton("Start walk", "start", filled: true)
+                actionButton("Start walk", .start, filled: true)
             case .inProgress:
                 Button(action: onTrack) {
                     HStack(spacing: 5) {
@@ -118,7 +118,7 @@ private struct WalkRow: View {
                     .background(Brand.signalGreen)
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 }
-                actionButton("Complete", "complete", filled: true)
+                actionButton("Complete", .complete, filled: true)
             case .completed, .cancelled:
                 EmptyView()
             }
@@ -126,7 +126,7 @@ private struct WalkRow: View {
         .padding(.top, 2)
     }
 
-    private func actionButton(_ label: String, _ action: String, filled: Bool) -> some View {
+    private func actionButton(_ label: String, _ action: BookingAction, filled: Bool) -> some View {
         Button {
             onAction(action)
         } label: {

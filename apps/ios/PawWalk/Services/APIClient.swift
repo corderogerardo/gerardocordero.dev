@@ -14,6 +14,14 @@ enum APIError: Error, LocalizedError {
     }
 }
 
+/// Owner/walker status transitions driven from the walker dashboard.
+enum BookingAction: String {
+    case accept
+    case decline
+    case start
+    case complete
+}
+
 @MainActor
 final class APIClient {
     static let shared = APIClient()
@@ -169,9 +177,9 @@ final class APIClient {
         try await post(path: "bookings/\(id)/cancel", authorized: true)
     }
 
-    /// Owner/walker transitions: action is one of "accept", "decline", "start", "complete".
-    func transitionBooking(id: String, action: String) async throws -> Booking {
-        try await post(path: "bookings/\(id)/\(action)", authorized: true)
+    /// Owner/walker transitions: accept, decline, start, complete.
+    func transitionBooking(id: String, action: BookingAction) async throws -> Booking {
+        try await post(path: "bookings/\(id)/\(action.rawValue)", authorized: true)
     }
 
     /// Bookings assigned TO the signed-in walker (`/bookings/assigned`).
