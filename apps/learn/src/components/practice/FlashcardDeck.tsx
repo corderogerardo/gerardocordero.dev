@@ -44,9 +44,6 @@ const levelLabels: Record<string, string> = {
   M3: 'M3',
   S1: 'S1',
   S2: 'S2',
-  easy: 'Fácil',
-  medium: 'Intermedio',
-  hard: 'Avanzado',
 };
 
 export default function FlashcardDeck({

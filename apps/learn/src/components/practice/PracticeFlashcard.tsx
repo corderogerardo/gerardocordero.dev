@@ -18,14 +18,13 @@ interface PracticeFlashcardProps {
 
 const levelLabels: Record<string, string> = {
   J1: 'J1', J2: 'J2', J3: 'J3', M1: 'M1', M2: 'M2', M3: 'M3',
-  S1: 'S1', S2: 'S2', easy: 'Fácil', medium: 'Intermedio', hard: 'Avanzado',
+  S1: 'S1', S2: 'S2',
 };
 
 const levelStyles: Record<string, string> = {
   J1: 'bg-success/15 text-success', J2: 'bg-success/15 text-success', J3: 'bg-success/15 text-success',
   M1: 'bg-chart-4/15 text-chart-4', M2: 'bg-chart-4/15 text-chart-4', M3: 'bg-chart-4/15 text-chart-4',
   S1: 'bg-destructive/15 text-destructive', S2: 'bg-destructive/15 text-destructive',
-  easy: 'bg-success/15 text-success', medium: 'bg-chart-4/15 text-chart-4', hard: 'bg-destructive/15 text-destructive',
 };
 
 /** Floor so a tiny question never renders a cramped card. */
