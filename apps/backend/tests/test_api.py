@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 
 
@@ -124,6 +126,47 @@ def test_payment_intent_stub(client: TestClient, auth_headers: dict[str, str]) -
     r = client.post("/payments/intent", headers=auth_headers, json={"booking_id": booking["id"]})
     assert r.status_code == 200
     assert r.json()["client_secret"].startswith("pi_stub_")
+
+
+def test_naive_start_time_is_normalized_to_utc(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    walkers = client.get("/walkers").json()
+    r = client.post(
+        "/bookings",
+        headers=auth_headers,
+        json={
+            "walker_id": walkers[0]["id"],
+            "dog_name": "Mochi",
+            "start_time": "2026-01-01T10:00:00",
+            "duration_minutes": 30,
+        },
+    )
+    assert r.status_code == 201
+    start = datetime.fromisoformat(r.json()["start_time"])
+    assert start.tzinfo is not None
+    assert start.utcoffset().total_seconds() == 0
+    assert (start.hour, start.minute) == (10, 0)
+
+
+def test_offset_start_time_is_normalized_to_utc(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    walkers = client.get("/walkers").json()
+    r = client.post(
+        "/bookings",
+        headers=auth_headers,
+        json={
+            "walker_id": walkers[0]["id"],
+            "dog_name": "Mochi",
+            "start_time": "2026-01-01T10:00:00-05:00",
+            "duration_minutes": 30,
+        },
+    )
+    assert r.status_code == 201
+    start = datetime.fromisoformat(r.json()["start_time"])
+    assert start.utcoffset().total_seconds() == 0
+    assert (start.hour, start.minute) == (15, 0)
 
 
 def test_assistant_chat_offline_heuristic(client: TestClient) -> None:
