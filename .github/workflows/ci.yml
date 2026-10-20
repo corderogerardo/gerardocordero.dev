@@ -417,19 +417,21 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes under apps/backend — skipping tests."
           fi
-      - name: Set up Python
+      - name: Set up uv
         if: steps.detect.outputs.changed == 'true'
-        uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v10
         with:
           python-version: '3.12'
+          enable-cache: true
+          cache-dependency-glob: apps/backend/uv.lock
       - name: Install
         if: steps.detect.outputs.changed == 'true'
         working-directory: apps/backend
-        run: pip install -e ".[dev]"
+        run: uv sync --frozen --extra dev
       - name: Test
         if: steps.detect.outputs.changed == 'true'
         working-directory: apps/backend
-        run: pytest
+        run: uv run --frozen --extra dev pytest
 
   ios-build:
     runs-on: macos-latest
