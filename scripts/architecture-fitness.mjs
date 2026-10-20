@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -8,6 +8,37 @@ const dependencyFields = [
   "peerDependencies",
   "optionalDependencies",
 ];
+
+// Directories never scanned for violation impact: installed dependencies and
+// generated build outputs. Kept dependency-free per ADR-0001 (Node.js
+// builtins only).
+const skippedImpactDirectories = new Set([
+  ".git",
+  ".next",
+  ".turbo",
+  "build",
+  "coverage",
+  "dist",
+  "node_modules",
+  "out",
+]);
+
+// Only file types that can statically reference a workspace package name.
+const scannedImpactExtensions = new Set([
+  ".cjs",
+  ".cts",
+  ".js",
+  ".json",
+  ".jsonc",
+  ".jsx",
+  ".mjs",
+  ".mts",
+  ".ts",
+  ".tsx",
+]);
+
+const maxImpactFiles = 10;
+const maxImpactFileBytes = 1024 * 1024;
 
 export function validateWorkspaceDependencies(workspacePackages) {
   const packagesByName = new Map();
@@ -56,6 +87,84 @@ export function validateWorkspaceDependencies(workspacePackages) {
   };
 }
 
+// Bounded static grep: lists the files inside a source package directory that
+// reference a forbidden target package name. Returns display paths relative
+// to the package directory, sorted, capped at maxFiles, plus the total match
+// count so callers can report truncation ("first 10 files + count").
+export async function findImportingFiles(packageDirectory, targetName, options = {}) {
+  const cappedFiles = options.maxFiles ?? maxImpactFiles;
+  const matches = [];
+
+  async function walk(directory) {
+    let entries;
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries
+      .slice()
+      .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))) {
+      if (entry.isSymbolicLink()) continue;
+      const entryPath = path.join(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        if (skippedImpactDirectories.has(entry.name)) continue;
+        await walk(entryPath);
+        continue;
+      }
+
+      if (!entry.isFile()) continue;
+      if (!scannedImpactExtensions.has(path.extname(entry.name))) continue;
+
+      let fileStat;
+      try {
+        fileStat = await stat(entryPath);
+      } catch {
+        continue;
+      }
+      if (fileStat.size > maxImpactFileBytes) continue;
+
+      let contents;
+      try {
+        contents = await readFile(entryPath, "utf8");
+      } catch {
+        continue;
+      }
+      if (contents.includes(targetName)) {
+        matches.push(path.relative(packageDirectory, entryPath));
+      }
+    }
+  }
+
+  try {
+    await walk(packageDirectory);
+  } catch {
+    return { files: [], totalCount: 0 };
+  }
+
+  matches.sort();
+  return { files: matches.slice(0, cappedFiles), totalCount: matches.length };
+}
+
+// Additive report lines for one violation. The existing
+// "Forbidden dependency: ..." line is untouched; these lines only append.
+export function formatImpactLines({ sourceDirectory, target, files, totalCount }) {
+  if (totalCount === 0) {
+    return [`  Impact: no files in ${sourceDirectory} import ${target}`];
+  }
+
+  const lines = [`  Impact: ${totalCount} file(s) in ${sourceDirectory} import ${target}:`];
+  for (const file of files) {
+    lines.push(`    - ${file}`);
+  }
+  if (totalCount > files.length) {
+    lines.push(`    ... and ${totalCount - files.length} more`);
+  }
+  return lines;
+}
+
 async function inventoryWorkspacePackages(rootDirectory) {
   const workspacePackages = [];
 
@@ -80,7 +189,7 @@ async function inventoryWorkspacePackages(rootDirectory) {
         throw new Error(`Workspace manifest has no package name: ${manifestPath}`);
       }
 
-      workspacePackages.push({ ...manifest, group });
+      workspacePackages.push({ ...manifest, group, directory: path.join(group, child.name) });
     }
   }
 
@@ -102,6 +211,24 @@ async function runAudit() {
     console.error(
       `Forbidden dependency: ${violation.source} -> ${violation.target} (${violation.direction})`,
     );
+
+    const sourcePackage = workspacePackages.find(
+      (workspacePackage) => workspacePackage.name === violation.source,
+    );
+    if (sourcePackage?.directory) {
+      const impact = await findImportingFiles(
+        path.join(rootDirectory, sourcePackage.directory),
+        violation.target,
+      );
+      for (const line of formatImpactLines({
+        sourceDirectory: sourcePackage.directory,
+        target: violation.target,
+        files: impact.files,
+        totalCount: impact.totalCount,
+      })) {
+        console.error(line);
+      }
+    }
   }
 
   if (result.violationCount > 0) process.exitCode = 1;

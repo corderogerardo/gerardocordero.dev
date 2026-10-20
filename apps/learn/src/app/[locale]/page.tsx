@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { Bot, Braces, Gem, Smartphone, Terminal } from "lucide-react";
 import { LOCALES } from "@/lib/i18n-config";
 import i18nEn from "@public/data/i18n/en.json";
 import i18nEs from "@public/data/i18n/es.json";
@@ -36,11 +37,11 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
 ];
 
 const SCENE_TILES = [
-  { emoji: "📱", hue: "var(--course-ios-hsl)" },
-  { emoji: "🤖", hue: "var(--course-android-hsl)" },
-  { emoji: "💎", hue: "var(--course-ruby-hsl)" },
-  { emoji: "🐍", hue: "var(--course-python-hsl)" },
-  { emoji: "🐹", hue: "var(--course-go-hsl)" },
+  { label: "iOS & Swift", href: "/en/learn/ios", Icon: Smartphone, hue: "var(--course-ios-hsl)" },
+  { label: "Android & Kotlin", href: "/en/learn/android", Icon: Bot, hue: "var(--course-android-hsl)" },
+  { label: "Ruby & Rails", href: "/en/learn/ruby", Icon: Gem, hue: "var(--course-ruby-hsl)" },
+  { label: "Python & FastAPI", href: "/en/learn/python", Icon: Braces, hue: "var(--course-python-hsl)" },
+  { label: "Go Backend", href: "/en/learn/go", Icon: Terminal, hue: "var(--course-go-hsl)" },
 ];
 
 export function generateStaticParams() {

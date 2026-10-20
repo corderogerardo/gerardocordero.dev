@@ -3,6 +3,7 @@ package com.pawwalk.android.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pawwalk.android.data.Booking
+import com.pawwalk.android.data.BookingAction
 import com.pawwalk.android.data.BookingRepository
 import com.pawwalk.android.data.Walker
 import com.pawwalk.android.data.WalkerProfileUpdate
@@ -46,7 +47,7 @@ class WalkerViewModel : ViewModel() {
         }
     }
 
-    fun act(id: String, action: String) {
+    fun act(id: String, action: BookingAction) {
         viewModelScope.launch { runCatching { BookingRepository.transition(id, action) }; load() }
     }
 

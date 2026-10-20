@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pawwalk.android.data.Booking
+import com.pawwalk.android.data.BookingAction
 import com.pawwalk.android.data.Walker
 import com.pawwalk.android.data.WalkerProfileUpdate
 import com.pawwalk.android.ui.components.DmText
@@ -81,7 +82,7 @@ fun WalkerScreen(
 }
 
 @Composable
-private fun WalkCard(c: BrandColors, booking: Booking, onTrack: () -> Unit, onAction: (String) -> Unit) {
+private fun WalkCard(c: BrandColors, booking: Booking, onTrack: () -> Unit, onAction: (BookingAction) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -96,13 +97,13 @@ private fun WalkCard(c: BrandColors, booking: Booking, onTrack: () -> Unit, onAc
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             when (booking.status) {
                 "pending" -> {
-                    MonoText("Accept", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction("accept") })
-                    MonoText("Decline", c.pinAmber, sizeSp = 9f, modifier = Modifier.clickable { onAction("decline") })
+                    MonoText("Accept", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.ACCEPT) })
+                    MonoText("Decline", c.pinAmber, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.DECLINE) })
                 }
-                "confirmed" -> MonoText("Start", c.accent, sizeSp = 9f, modifier = Modifier.clickable { onAction("start") })
+                "confirmed" -> MonoText("Start", c.accent, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.START) })
                 "in_progress" -> {
                     MonoText("Track", c.pinBlue, sizeSp = 9f, modifier = Modifier.clickable { onTrack() })
-                    MonoText("Complete", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction("complete") })
+                    MonoText("Complete", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.COMPLETE) })
                 }
             }
         }

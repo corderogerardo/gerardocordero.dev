@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
-import { srsIsDue, todayEpochDay, type SrsEntry } from "@/lib/srs";
+import { isDue, todayEpochDay, type SrsEntry } from "@gerardocordero/prep-kit/lib/srs";
 
 interface ProgressStats {
   total: number;
@@ -39,7 +39,7 @@ function computeProgressStats(
 
   const pct = total ? Math.round((complete / total) * 100) : 0;
   const today = todayEpochDay();
-  const dueCount = Object.values(review).filter((e) => srsIsDue(e, today)).length;
+  const dueCount = Object.values(review).filter((e) => isDue(e, today)).length;
 
   return { total, complete, pct, dueCount };
 }

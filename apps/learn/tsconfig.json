@@ -16,7 +16,7 @@
     "types": [],
     "plugins": [{ "name": "next" }],
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"], "@public/*": ["./public/*"] }
+    "paths": { "@/*": ["./src/*"], "@public/*": ["./public/*"], "@gerardocordero/prep-kit/lib/*": ["../../packages/prep-kit/src/lib/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
   "exclude": ["node_modules", "scripts", "tools", "design-system-ui"]

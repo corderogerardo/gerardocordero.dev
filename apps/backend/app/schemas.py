@@ -7,14 +7,30 @@ keys) that a client should never see.
 """
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Literal
+from datetime import datetime, timezone
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AfterValidator, BaseModel, EmailStr, Field
 
 Role = Literal["owner", "walker"]
 Duration = Literal[30, 45, 60]
 BookingStatus = Literal["pending", "confirmed", "in_progress", "completed", "cancelled"]
+
+
+def _as_utc(value: datetime) -> datetime:
+    """Treat naive datetimes as UTC and convert offsets to UTC.
+
+    Keeps the API backward compatible for clients that still send
+    ``2026-01-01T10:00:00`` while giving the DB a timezone-aware value,
+    which SQLModel 0.0.48+ requires.
+    """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+#: A datetime normalized to UTC at the API boundary.
+UtcDatetime = Annotated[datetime, AfterValidator(_as_utc)]
 
 
 # ── Auth ─────────────────────────────────────────────────────────────────
@@ -87,7 +103,7 @@ class CreatePetRequest(BaseModel):
 class CreateBookingRequest(BaseModel):
     walker_id: str
     dog_name: str
-    start_time: datetime
+    start_time: UtcDatetime
     duration_minutes: Duration = 30
     # ponytail: module 23's "contract loop" lesson has the learner edit this
     # line live to add the cap and watch /docs react — ship the app already
@@ -100,7 +116,7 @@ class Booking(BaseModel):
     owner_id: str
     walker_id: str
     dog_name: str
-    start_time: datetime
+    start_time: UtcDatetime
     duration_minutes: Duration
     notes: str | None = None
     status: BookingStatus
@@ -143,7 +159,7 @@ class BookingIntent(BaseModel):
     neighborhood: str | None = None
     dog_name: str | None = None
     duration_minutes: Duration = 30
-    start_time: datetime | None = None
+    start_time: UtcDatetime | None = None
 
 
 class DraftBooking(BaseModel):
@@ -151,7 +167,7 @@ class DraftBooking(BaseModel):
     dog_name: str | None = None
     neighborhood: str | None = None
     duration_minutes: Duration = 30
-    start_time: datetime | None = None
+    start_time: UtcDatetime | None = None
 
 
 class AssistantChatRequest(BaseModel):

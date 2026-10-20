@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useCourse, useCourseStore } from "@/stores/course-context";
 import { useI18n } from "@/lib/i18n";
-import { srsIsDue, srsSchedule, todayEpochDay } from "@/lib/srs";
+import { isDue, schedule, todayEpochDay, type SrsEntry } from "@gerardocordero/prep-kit/lib/srs";
 import { mdInline } from "@/lib/markdown";
 import { choiceOrder } from "@/lib/shuffle";
 import type { QuizStep, Module, Lesson } from "@/lib/course-data";
@@ -38,11 +38,11 @@ function buildPool(
 
 function dueList(
   pool: PoolEntry[],
-  review: Record<string, { reps: number; interval: number; ease: number; due: number }>,
+  review: Record<string, SrsEntry>,
 ): PoolEntry[] {
   const today = todayEpochDay();
   return pool
-    .filter((c) => srsIsDue(review[c.key], today))
+    .filter((c) => isDue(review[c.key], today))
     .sort(
       (a, b) =>
         (review[a.key] ? review[a.key].due : -Infinity) -
@@ -74,7 +74,7 @@ export default function ReviewPageClient() {
   const handleGrade = useCallback(
     (entry: PoolEntry, pass: boolean) => {
       const prev = review[entry.key];
-      const scheduled = srsSchedule(prev, pass ? "good" : "again");
+      const scheduled = schedule(prev, pass ? "good" : "again");
       setReview(entry.key, scheduled);
       setSeen((s) => s + 1);
       if (pass) setCorrect((c) => c + 1);
