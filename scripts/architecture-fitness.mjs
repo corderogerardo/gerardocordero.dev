@@ -87,6 +87,31 @@ export function validateWorkspaceDependencies(workspacePackages) {
   };
 }
 
+// Programmatic equivalent of the CLI audit: inventories the workspace
+// manifests under rootDirectory (apps/ and packages/ groups), validates their
+// dependency edges, and returns the inventory and violations as a plain
+// object so callers can assert on group assignment and violation output
+// without spawning a process.
+export async function evaluateWorkspace(rootDirectory) {
+  const resolvedRoot = path.resolve(rootDirectory);
+  const workspacePackages = await inventoryWorkspacePackages(resolvedRoot);
+  const result = validateWorkspaceDependencies(workspacePackages);
+
+  return {
+    root: resolvedRoot,
+    packageCount: result.packageCount,
+    localEdgeCount: result.localEdgeCount,
+    allowedEdgeCount: result.allowedEdgeCount,
+    violationCount: result.violationCount,
+    violations: result.violations,
+    packages: workspacePackages.map(({ name, group, directory }) => ({
+      name,
+      group,
+      directory,
+    })),
+  };
+}
+
 // Bounded static grep: lists the files inside a source package directory that
 // reference a forbidden target package name. Returns display paths relative
 // to the package directory, sorted, capped at maxFiles, plus the total match
@@ -170,7 +195,13 @@ async function inventoryWorkspacePackages(rootDirectory) {
 
   for (const group of ["apps", "packages"]) {
     const groupDirectory = path.join(rootDirectory, group);
-    const children = await readdir(groupDirectory, { withFileTypes: true });
+    let children;
+    try {
+      children = await readdir(groupDirectory, { withFileTypes: true });
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
 
     for (const child of children
       .filter((entry) => entry.isDirectory())
@@ -197,7 +228,7 @@ async function inventoryWorkspacePackages(rootDirectory) {
 }
 
 async function runAudit() {
-  const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const rootDirectory = process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const workspacePackages = await inventoryWorkspacePackages(rootDirectory);
   const result = validateWorkspaceDependencies(workspacePackages);
 
