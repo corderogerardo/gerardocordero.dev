@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { SiteHeader } from "@/components/site-header";
-import SceneTiles, { type SceneTile } from "@/components/SceneTiles";
+import SceneTiles from "@/components/SceneTiles";
 import { CoursesGrid } from "@/components/CoursesGrid";
-import { ArrowRight, BookOpen, Bot, Braces, Brain, Gem, Lock, Smartphone, Sparkles, Terminal } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, Lock, Sparkles } from "lucide-react";
 import type { CourseProgressShape } from '@/lib/course-progress';
 
 interface HomePageClientProps {
@@ -20,24 +20,13 @@ interface HomePageClientProps {
   }>;
   specs: Array<{ slug: string; title: string; emoji: string }>;
   totalLessons: number;
-  sceneTiles: Array<{ emoji: string; hue: string }>;
 }
-
-/** Canonical scene metadata paired with the caller-supplied hues at the call site below. */
-const SCENE_TILE_DETAILS: Array<Omit<SceneTile, "hue">> = [
-  { label: "iOS & Swift", href: "/en/learn/ios", Icon: Smartphone },
-  { label: "Android & Kotlin", href: "/en/learn/android", Icon: Bot },
-  { label: "Ruby & Rails", href: "/en/learn/ruby", Icon: Gem },
-  { label: "Python & FastAPI", href: "/en/learn/python", Icon: Braces },
-  { label: "Go Backend", href: "/en/learn/go", Icon: Terminal },
-];
 
 export function HomePageClient({
   locale,
   courses,
   specs,
   totalLessons,
-  sceneTiles,
 }: HomePageClientProps) {
   const { t: tI18n } = useI18n();
 
@@ -97,13 +86,7 @@ export function HomePageClient({
           </div>
         </section>
 
-        <SceneTiles
-          tiles={sceneTiles.map((scene, index) => ({
-            ...SCENE_TILE_DETAILS[index],
-            hue: scene.hue,
-          }))}
-          exploreLabel={t("explore_label")}
-        />
+        <SceneTiles locale={locale} exploreLabel={t("explore_label")} />
 
         {/* Stats — hairline-divided row, no card boxes.
             Mobile (2×2): border-t on the bottom row. Desktop (4-col): border-l

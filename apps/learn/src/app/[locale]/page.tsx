@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { Bot, Braces, Gem, Smartphone, Terminal } from "lucide-react";
 import { LOCALES } from "@/lib/i18n-config";
 import i18nEn from "@public/data/i18n/en.json";
 import i18nEs from "@public/data/i18n/es.json";
@@ -34,14 +33,6 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "go",      title: "Go Backend",        emoji: "🐹" },
   { id: "native",  title: "Native RN & Expo Modules", emoji: "🛰️" },
   { id: "expoui",  title: "Rebuild @expo/ui",         emoji: "🎛️" },
-];
-
-const SCENE_TILES = [
-  { label: "iOS & Swift", href: "/en/learn/ios", Icon: Smartphone, hue: "var(--course-ios-hsl)" },
-  { label: "Android & Kotlin", href: "/en/learn/android", Icon: Bot, hue: "var(--course-android-hsl)" },
-  { label: "Ruby & Rails", href: "/en/learn/ruby", Icon: Gem, hue: "var(--course-ruby-hsl)" },
-  { label: "Python & FastAPI", href: "/en/learn/python", Icon: Braces, hue: "var(--course-python-hsl)" },
-  { label: "Go Backend", href: "/en/learn/go", Icon: Terminal, hue: "var(--course-go-hsl)" },
 ];
 
 export function generateStaticParams() {
@@ -102,7 +93,7 @@ export default async function HomePage({
             </Link>
           </div>
         </div>
-        <SceneTiles tiles={SCENE_TILES} />
+        <SceneTiles locale={locale} />
       </header>
 
       <div className="stats-strip" aria-label={t("section_label", locale)}>

@@ -9,13 +9,6 @@ export default function Home({ params }: { params: { locale: string } }) {
       courses={[]}
       specs={[]}
       totalLessons={0}
-      sceneTiles={[
-        { emoji: "📱", hue: "ios" },
-        { emoji: "🤖", hue: "android" },
-        { emoji: "💎", hue: "ruby" },
-        { emoji: "🐍", hue: "python" },
-        { emoji: "🐹", hue: "go" },
-      ]}
     />
   );
 }
