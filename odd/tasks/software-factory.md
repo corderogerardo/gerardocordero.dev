@@ -47,12 +47,12 @@ Branch: `feature/monorepo-deepening`. Delivery: `ask-on-risk` (default); forecas
 - Checks: Follow `docs/skill-style-guide.md` if present, otherwise the bundled `skill-creator` guide; run `gentle-ai skill-registry refresh --cwd <repo> --force` and read back the resulting registry. Verify the skill through a monorepo and standalone invocation plan.
 
 ## Tasks
-- [x] T1 — Write the primary-source research and active-skill inventory — Spec S1, route: inline synthesis from completed research handoff, status: complete (report read back; primary-source claims checked), commit: 3a6bebe.
-- [x] T2 — Specify the factory workflow, profile contract, and approval gate — Specs S2–S5, route: inline, status: complete (ADR read back), commit: 3a6bebe.
-- [x] T3 — Implement topology-specific factory references for monorepo and standalone projects — Specs S2–S5, route: delegated (parallel writers with disjoint surfaces; trigger: two independent topology adapters), status: complete (both read back; verifier blocker corrected and rechecked), commit: 3a6bebe.
-- [x] T4 — Validate the monorepo and standalone-fixture flows — Specs S3–S6, route: inline, status: complete (monorepo no-op plan; fixture plan/apply and gates passed), commit: 3a6bebe.
-- [x] T5 — Create the reusable global skill and refresh the registry last — Spec S7, route: inline, status: complete (global package/readback/runtime links/registry verified), commit: 3a6bebe.
-- [x] T6 — Run applicable repo gates, review the full diff, and close with evidence — Specs S1–S7, route: inline, status: complete (S1/S6 independently rechecked; gates passed; RDD under budget), commit: 3a6bebe.
+- [x] T1 — Write the primary-source research and active-skill inventory — Spec S1, route: inline synthesis from completed research handoff, status: complete (report read back; primary-source claims checked), commit: 4af4cde.
+- [x] T2 — Specify the factory workflow, profile contract, and approval gate — Specs S2–S5, route: inline, status: complete (ADR read back), commit: 4af4cde.
+- [x] T3 — Implement topology-specific factory references for monorepo and standalone projects — Specs S2–S5, route: delegated (parallel writers with disjoint surfaces; trigger: two independent topology adapters), status: complete (both read back; verifier blocker corrected and rechecked), commit: 4af4cde.
+- [x] T4 — Validate the monorepo and standalone-fixture flows — Specs S3–S6, route: inline, status: complete (monorepo no-op plan; fixture plan/apply and gates passed), commit: 4af4cde.
+- [x] T5 — Create the reusable global skill and refresh the registry last — Spec S7, route: inline, status: complete (global package/readback/runtime links/registry verified), commit: 4af4cde.
+- [x] T6 — Run applicable repo gates, review the full diff, and close with evidence — Specs S1–S7, route: inline, status: complete (S1/S6 independently rechecked; gates passed; RDD under budget), commit: 4af4cde.
 
 ## Log
 
@@ -106,4 +106,4 @@ Branch: `feature/monorepo-deepening`. Delivery: `ask-on-risk` (default); forecas
 - Independent S6 recheck initially returned unmet because the original temporary fixture was empty. The parent rebuilt one standalone fixture, observed an unchanged plan-only hash, and reran the approved apply and tests. A focused verifier recheck then returned `met`.
 - Final native assessment over the six intended repository paths returned `risk: medium`, `review_due: false`, `review_due_reason: under_budget`, with 236 changed lines. No native review lifecycle was started; this is not a review receipt.
 - Removed the verifier scratch directories and all temporary standalone fixtures created for this initiative. Sibling repositories were not modified. Global skill source and five runtime links remain installed.
-- T6 complete: `pnpm typecheck`, `pnpm lint`, `pnpm test` (35 tests), and `pnpm architecture:check` passed; standalone `npm ci --offline`, `npm run check`, and `npm test` passed in the rebuilt fixture. Work-unit commit: `3a6bebe`.
+- T6 complete: `pnpm typecheck`, `pnpm lint`, `pnpm test` (35 tests), and `pnpm architecture:check` passed; standalone `npm ci --offline`, `npm run check`, and `npm test` passed in the rebuilt fixture. Work-unit commit: `4af4cde`; tracker closeout is recorded in the following commit.
