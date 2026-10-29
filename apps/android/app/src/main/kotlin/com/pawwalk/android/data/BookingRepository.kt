@@ -11,8 +11,11 @@ object BookingRepository {
 
     suspend fun fetchBookings(): List<Booking> = api.getBookings()
 
+    suspend fun fetchAssignedBookings(): List<Booking> = api.getAssignedBookings()
+
     suspend fun cancelBooking(bookingId: String): Booking = api.cancelBooking(bookingId)
 
     /** Accept / decline / start / complete — any non-cancel status transition a walker drives. */
-    suspend fun transition(bookingId: String, action: String): Booking = api.transitionBooking(bookingId, action)
+    suspend fun transition(bookingId: String, action: BookingAction): Booking =
+        api.transitionBooking(bookingId, action)
 }

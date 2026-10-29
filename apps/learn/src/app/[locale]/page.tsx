@@ -35,14 +35,6 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "expoui",  title: "Rebuild @expo/ui",         emoji: "🎛️" },
 ];
 
-const SCENE_TILES = [
-  { emoji: "📱", hue: "var(--course-ios-hsl)" },
-  { emoji: "🤖", hue: "var(--course-android-hsl)" },
-  { emoji: "💎", hue: "var(--course-ruby-hsl)" },
-  { emoji: "🐍", hue: "var(--course-python-hsl)" },
-  { emoji: "🐹", hue: "var(--course-go-hsl)" },
-];
-
 export function generateStaticParams() {
   return LOCALES.map((l) => ({ locale: l.id }));
 }
@@ -101,7 +93,7 @@ export default async function HomePage({
             </Link>
           </div>
         </div>
-        <SceneTiles tiles={SCENE_TILES} />
+        <SceneTiles locale={locale} />
       </header>
 
       <div className="stats-strip" aria-label={t("section_label", locale)}>

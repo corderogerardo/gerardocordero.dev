@@ -31,8 +31,8 @@ import {
   seenCount,
   type SrsMap,
   todayEpochDay,
-} from "@/src/study/srs";
-import { bumpStreak, currentStreak, type Streak } from "@/src/study/streak";
+} from "@gerardocordero/prep-kit/lib/srs";
+import { bumpStreak, currentStreak, type Streak } from "@gerardocordero/prep-kit/lib/streak";
 import { usePersistedState } from "@/src/study/store";
 
 const GRADE_META: { value: Grade; label: string; color: string; hint: string }[] = [

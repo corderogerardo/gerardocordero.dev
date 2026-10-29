@@ -1,7 +1,7 @@
 // Content model for the study engine. The engine is generic; a "subject" (React
 // Native, iOS, and — in future — Android, Python, Go …) is just data you register
 // in registry.ts. Adding a subject = drop a content/<id>.ts file and list it there.
-import type { Grade } from "./srs";
+import type { Grade } from "@gerardocordero/prep-kit/lib/srs";
 
 export type Level = "junior" | "mid" | "senior" | "architect" | "beyond";
 

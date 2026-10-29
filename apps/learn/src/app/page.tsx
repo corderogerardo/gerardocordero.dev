@@ -5,7 +5,6 @@ import { buildCourseProgressShape } from "@/lib/course-progress";
 import { CoursesGrid } from "@/components/CoursesGrid";
 import { SiteHeader } from "@/components/site-header";
 import { HomePageClient } from "@/components/HomePageClient";
-import SceneTiles from "@/components/SceneTiles";
 
 const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "ios", title: "iOS & Swift", emoji: "📱" },
@@ -16,14 +15,6 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "node", title: "Node.js & NestJS", emoji: "▲" },
   { id: "native", title: "Native RN & Expo Modules", emoji: "🛰️" },
   { id: "expoui", title: "Rebuild @expo/ui", emoji: "🎛️" },
-];
-
-const SCENE_TILES = [
-  { emoji: "📱", hue: "var(--course-ios-hsl)" },
-  { emoji: "🤖", hue: "var(--course-android-hsl)" },
-  { emoji: "💎", hue: "var(--course-ruby-hsl)" },
-  { emoji: "🐍", hue: "var(--course-python-hsl)" },
-  { emoji: "🐹", hue: "var(--course-go-hsl)" },
 ];
 
 export default async function HomePage() {
@@ -51,7 +42,6 @@ export default async function HomePage() {
       courses={courses}
       specs={specs}
       totalLessons={totalLessons}
-      sceneTiles={SCENE_TILES}
     />
   );
 }

@@ -9,3 +9,9 @@ jane:
   name: Jane Booker
   email: jane@example.com
   password_digest: <%= BCrypt::Password.create("walkies123") %>
+
+luna_walker:
+  name: Luna Martinez
+  email: luna.walker@pawwalk.dev
+  role: walker
+  password_digest: <%= BCrypt::Password.create("walkies123") %>

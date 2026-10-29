@@ -7,8 +7,17 @@ Rails.application.routes.draw do
 
   resources :walkers, only: %i[index show]
   resources :bookings, only: %i[index show create] do
+    collection do
+      get :assigned
+    end
+
     member do
-      patch :cancel
+      post :accept
+      post :decline
+      post :start
+      post :complete
+      # POST is the native owner-cancel route; PATCH stays as a compatibility alias to the same action.
+      match :cancel, via: %i[post patch]
     end
 
     resource :pay, only: :create, controller: :payments

@@ -41,11 +41,14 @@ interface PawWalkApi {
     @GET("bookings")
     suspend fun getBookings(): List<Booking>
 
+    @GET("bookings/assigned")
+    suspend fun getAssignedBookings(): List<Booking>
+
     @POST("bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") bookingId: String): Booking
 
     @POST("bookings/{id}/{action}")
-    suspend fun transitionBooking(@Path("id") bookingId: String, @Path("action") action: String): Booking
+    suspend fun transitionBooking(@Path("id") bookingId: String, @Path("action") action: BookingAction): Booking
 
     @GET("bookings/stats")
     suspend fun ownerStats(): OwnerStats
@@ -63,6 +66,21 @@ interface PawWalkApi {
     // Assistant
     @POST("assistant/chat")
     suspend fun assistantChat(@Body request: AssistantChatRequest): AssistantReply
+}
+
+/**
+ * Walker-driven booking transitions. [wireValue] is the exact path segment the
+ * backend expects; [toString] returns it because Retrofit renders `@Path`
+ * params that have no converter via `toString()`, so the wire path stays
+ * byte-identical to the previous raw strings.
+ */
+enum class BookingAction(val wireValue: String) {
+    ACCEPT("accept"),
+    DECLINE("decline"),
+    START("start"),
+    COMPLETE("complete");
+
+    override fun toString(): String = wireValue
 }
 
 @kotlinx.serialization.Serializable

@@ -20,7 +20,6 @@ interface HomePageClientProps {
   }>;
   specs: Array<{ slug: string; title: string; emoji: string }>;
   totalLessons: number;
-  sceneTiles: Array<{ emoji: string; hue: string }>;
 }
 
 export function HomePageClient({
@@ -28,7 +27,6 @@ export function HomePageClient({
   courses,
   specs,
   totalLessons,
-  sceneTiles,
 }: HomePageClientProps) {
   const { t: tI18n } = useI18n();
 
@@ -88,7 +86,7 @@ export function HomePageClient({
           </div>
         </section>
 
-        <SceneTiles tiles={sceneTiles} exploreLabel={t("explore_label")} />
+        <SceneTiles locale={locale} exploreLabel={t("explore_label")} />
 
         {/* Stats — hairline-divided row, no card boxes.
             Mobile (2×2): border-t on the bottom row. Desktop (4-col): border-l

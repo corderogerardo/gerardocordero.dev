@@ -1,16 +1,19 @@
-// Pure-logic tests for the study engine. Every function takes an explicit `today`
-// (integer epoch-day) so the scheduler is deterministic and timezone-independent.
+// Pure-logic tests for the shared SRS + streak scheduler. Every function takes
+// an explicit `today` (integer epoch-day) so the scheduler is deterministic and
+// timezone-independent. Lives beside the module it tests; consumed by any host
+// via the deep file import `@gerardocordero/prep-kit/lib/srs` (and /lib/streak).
 import {
   countToday,
   dueCount,
   isDue,
   logToday,
   nextLabel,
+  nextLabelEn,
   schedule,
   seenCount,
   type SrsMap,
-} from "../src/study/srs";
-import { bumpStreak, currentStreak } from "../src/study/streak";
+} from "@gerardocordero/prep-kit/lib/srs";
+import { bumpStreak, currentStreak } from "@gerardocordero/prep-kit/lib/streak";
 
 const DAY = 100;
 
@@ -76,12 +79,21 @@ describe("srs.schedule", () => {
   });
 });
 
-describe("srs.nextLabel", () => {
+describe("srs.nextLabelEn", () => {
   it("labels new, due, and future cards", () => {
-    expect(nextLabel(undefined, DAY)).toBe("new");
-    expect(nextLabel({ reps: 1, interval: 1, ease: 2.3, due: DAY }, DAY)).toBe("due now");
-    expect(nextLabel({ reps: 1, interval: 1, ease: 2.3, due: DAY + 1 }, DAY)).toBe("in 1 day");
-    expect(nextLabel({ reps: 1, interval: 3, ease: 2.3, due: DAY + 3 }, DAY)).toBe("in 3 days");
+    expect(nextLabelEn(undefined, DAY)).toBe("new");
+    expect(nextLabelEn({ reps: 1, interval: 1, ease: 2.3, due: DAY }, DAY)).toBe("due now");
+    expect(nextLabelEn({ reps: 1, interval: 1, ease: 2.3, due: DAY + 1 }, DAY)).toBe("in 1 day");
+    expect(nextLabelEn({ reps: 1, interval: 3, ease: 2.3, due: DAY + 3 }, DAY)).toBe("in 3 days");
+  });
+});
+
+describe("srs.nextLabel", () => {
+  it("returns locale keys for new, due, and future cards", () => {
+    expect(nextLabel(undefined, DAY)).toEqual({ key: "srs.new" });
+    expect(nextLabel({ reps: 1, interval: 1, ease: 2.3, due: DAY }, DAY)).toEqual({ key: "srs.dueNow" });
+    expect(nextLabel({ reps: 1, interval: 1, ease: 2.3, due: DAY + 1 }, DAY)).toEqual({ key: "srs.in1day" });
+    expect(nextLabel({ reps: 1, interval: 3, ease: 2.3, due: DAY + 3 }, DAY)).toEqual({ key: "srs.inDays", params: { n: 3 } });
   });
 });
 

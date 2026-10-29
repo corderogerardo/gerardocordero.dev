@@ -14,13 +14,40 @@ class AuthenticationTest < ActionDispatch::IntegrationTest
     assert_equal body["user"]["id"], decoded[:user_id]
   end
 
-  test "signup with a duplicate email is rejected" do
+  test "signup with a duplicate email returns 409 email_taken with a flat body" do
     post "/signup", params: { name: "Dupe", email: users(:demo).email, password: "secret123" }
+
+    assert_response :conflict
+    assert_equal({ "code" => "email_taken", "detail" => "Email already registered" }, JSON.parse(response.body))
+  end
+
+  test "signup with a duplicate email in another letter case is also email_taken" do
+    post "/signup", params: { name: "Dupe", email: users(:demo).email.upcase, password: "secret123" }
+
+    assert_response :conflict
+    assert_equal "email_taken", JSON.parse(response.body)["code"]
+  end
+
+  test "a concurrent duplicate that loses the unique-index race is also 409 email_taken" do
+    racer = User.new(name: "Racer", email: "racer@example.com", password: "secret123")
+    racer.define_singleton_method(:save) { raise ActiveRecord::RecordNotUnique, "UNIQUE constraint failed: users.email" }
+
+    User.stub(:new, racer) do
+      post "/signup", params: { name: "Racer", email: "racer@example.com", password: "secret123" }
+    end
+
+    assert_response :conflict
+    assert_equal({ "code" => "email_taken", "detail" => "Email already registered" }, JSON.parse(response.body))
+  end
+
+  test "signup with an ordinary validation error keeps the 422 errors body" do
+    post "/signup", params: { name: "", email: "fresh@example.com", password: "secret123" }
 
     assert_response :unprocessable_content
     body = JSON.parse(response.body)
 
-    assert_includes body["errors"].join, "Email has already been taken"
+    assert_includes body["errors"].join, "Name can't be blank"
+    assert_nil body["code"]
   end
 
   test "login with correct credentials returns a token" do

@@ -1,6 +1,10 @@
 // Lightweight spaced-repetition scheduler (SM-2-lite) with confidence grading.
-// Runs client-side; `due` is an integer epoch-day so comparisons are
-// timezone-stable and JSON-friendly. Shared by flashcards, prompts, and /today.
+// Single home for the monorepo (S4): portfolio and learn consume this module via
+// the deep file import `@gerardocordero/prep-kit/lib/srs` — never the barrel
+// `index.ts`, which pulls React. Runs client-side; `due` is an integer epoch-day
+// so comparisons are timezone-stable and JSON-friendly. Shared by flashcards,
+// prompts, /today, the portfolio study deck, and learn review.
+// NOTE: zero imports — keep it that way so deep imports pull no Next/React.
 
 export type SrsEntry = { reps: number; interval: number; ease: number; due: number };
 export type SrsMap = Record<string, SrsEntry>;
@@ -74,7 +78,10 @@ export function schedule(
   else if (reps === 2) interval = grade === "easy" ? 7 : grade === "hard" ? 3 : 4;
   else {
     const mult = grade === "hard" ? 1.2 : grade === "easy" ? ease * 1.3 : ease;
-    interval = Math.max(1, Math.round((prev?.interval ?? 1) * mult));
+    const prevInterval = prev?.interval ?? 1;
+    // Always advance by at least a day so a mature card can't get pinned at a
+    // fixed interval (e.g. repeated "hard" when the multiplier rounds back to ×1).
+    interval = Math.max(prevInterval + 1, Math.round(prevInterval * mult));
   }
 
   return { reps, interval, ease, due: today + interval };
@@ -88,6 +95,11 @@ export function dueCount(
   return ids.filter((id) => isDue(srs[id], today)).length;
 }
 
+/** How many of `ids` have been studied at least once (have an SRS entry). */
+export function seenCount(ids: string[], srs: SrsMap): number {
+  return ids.filter((id) => srs[id]).length;
+}
+
 /** Locale-aware label for when an item next comes up. Returns a key + optional param. */
 export function nextLabel(entry: SrsEntry | undefined, today = todayEpochDay()): { key: string; params?: Record<string, number> } {
   if (!entry) return { key: "srs.new" };
@@ -95,4 +107,13 @@ export function nextLabel(entry: SrsEntry | undefined, today = todayEpochDay()):
   if (d <= 0) return { key: "srs.dueNow" };
   if (d === 1) return { key: "srs.in1day" };
   return { key: "srs.inDays", params: { n: d } };
+}
+
+/** Plain-English label for when an item next comes up (no i18n; for RN callers). */
+export function nextLabelEn(entry: SrsEntry | undefined, today = todayEpochDay()): string {
+  if (!entry) return "new";
+  const d = entry.due - today;
+  if (d <= 0) return "due now";
+  if (d === 1) return "in 1 day";
+  return `in ${d} days`;
 }

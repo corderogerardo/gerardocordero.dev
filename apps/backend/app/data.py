@@ -11,12 +11,17 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from sqlalchemy import update
 from sqlmodel import Session, select
 
 from .models_db import BookingTable, WalkerTable
 from .schemas import Booking, CreateBookingRequest, Walker
 
 PRICE_PER_30MIN_DEFAULT_CENTS = 3500
+
+
+class BookingTransitionConflict(ValueError):
+    """Raised when an authorized actor requests an invalid booking transition."""
 
 
 def list_walkers(session: Session, min_rating: float = 0) -> list[Walker]:
@@ -47,12 +52,78 @@ def list_bookings(session: Session, owner_id: str) -> list[Booking]:
     return [Booking.model_validate(row, from_attributes=True) for row in rows]
 
 
+def list_assigned_bookings(session: Session, walker_user_id: str) -> list[Booking]:
+    rows = session.exec(
+        select(BookingTable)
+        .join(WalkerTable, BookingTable.walker_id == WalkerTable.id)
+        .where(WalkerTable.user_id == walker_user_id)
+    ).all()
+    return [Booking.model_validate(row, from_attributes=True) for row in rows]
+
+
 def get_booking(session: Session, booking_id: str, owner_id: str) -> Booking | None:
     """Scoped to owner_id on purpose — someone else's booking 404s, module 26."""
     row = session.get(BookingTable, booking_id)
     if row is None or row.owner_id != owner_id:
         return None
     return Booking.model_validate(row, from_attributes=True)
+
+
+def transition_booking(
+    session: Session,
+    booking_id: str,
+    actor_id: str,
+    actor_role: str,
+    allowed_statuses: tuple[str, ...],
+    next_status: str,
+    action: str,
+) -> Booking | None:
+    """Atomically transition a booking, returning None for non-owned resources.
+
+    The conditional UPDATE is the concurrency guard: competing requests cannot
+    both match the same previous status. ``get_booking`` deliberately remains
+    owner-scoped for payment callers.
+    """
+    if actor_role == "owner":
+        actor_filter = BookingTable.owner_id == actor_id
+    elif actor_role == "walker":
+        assigned_walker_ids = select(WalkerTable.id).where(WalkerTable.user_id == actor_id)
+        actor_filter = BookingTable.walker_id.in_(assigned_walker_ids)
+    else:
+        return None
+
+    result = session.exec(
+        update(BookingTable)
+        .where(
+            BookingTable.id == booking_id,
+            BookingTable.status.in_(allowed_statuses),
+            actor_filter,
+        )
+        .values(status=next_status)
+    )
+    if result.rowcount == 1:
+        session.commit()
+        row = session.get(BookingTable, booking_id)
+        return Booking.model_validate(row, from_attributes=True) if row else None
+
+    session.rollback()
+    row = session.get(BookingTable, booking_id)
+    if row is None:
+        return None
+    if actor_role == "owner":
+        authorized = row.owner_id == actor_id
+    else:
+        authorized = session.exec(
+            select(WalkerTable.id).where(
+                WalkerTable.id == row.walker_id,
+                WalkerTable.user_id == actor_id,
+            )
+        ).first() is not None
+    if not authorized:
+        return None
+    raise BookingTransitionConflict(
+        f"Cannot {action} a booking with status '{row.status}'."
+    )
 
 
 def create_booking(session: Session, owner_id: str, req: CreateBookingRequest) -> Booking:
