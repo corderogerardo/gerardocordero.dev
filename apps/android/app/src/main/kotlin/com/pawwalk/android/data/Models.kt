@@ -21,18 +21,29 @@ data class Walker(
 }
 
 @Serializable
+enum class BookingStatus(val wireValue: String) {
+    @SerialName("pending") PENDING("pending"),
+    @SerialName("confirmed") CONFIRMED("confirmed"),
+    @SerialName("in_progress") IN_PROGRESS("in_progress"),
+    @SerialName("completed") COMPLETED("completed"),
+    @SerialName("cancelled") CANCELLED("cancelled"),
+}
+
+@Serializable
 data class Booking(
     val id: String,
     @SerialName("walker_id") val walkerId: String,
     @SerialName("dog_name") val dogName: String,
     @SerialName("start_time") val startTime: String,
     @SerialName("duration_minutes") val durationMinutes: Int,
-    val status: String,
+    val status: BookingStatus,
     @SerialName("price_cents") val priceCents: Int,
     @SerialName("created_at") val createdAt: String,
 ) {
     /** Walk hasn't happened yet or is happening now (excludes completed and cancelled). */
-    val isActive: Boolean get() = status == "pending" || status == "confirmed" || status == "in_progress"
+    val isActive: Boolean get() = status == BookingStatus.PENDING ||
+        status == BookingStatus.CONFIRMED ||
+        status == BookingStatus.IN_PROGRESS
 }
 
 // ponytail: Pet isn't spelled out as a full data class anywhere in the course

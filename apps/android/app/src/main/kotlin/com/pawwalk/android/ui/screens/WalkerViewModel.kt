@@ -37,7 +37,7 @@ class WalkerViewModel : ViewModel() {
             _state.value = _state.value.copy(loading = true, error = null)
             _state.value = try {
                 State(
-                    bookings = BookingRepository.fetchBookings(),
+                    bookings = BookingRepository.fetchAssignedBookings(),
                     profile = WalkerRepository.myProfile(),
                     loading = false,
                 )

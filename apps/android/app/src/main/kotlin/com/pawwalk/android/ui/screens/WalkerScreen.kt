@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pawwalk.android.data.Booking
 import com.pawwalk.android.data.BookingAction
+import com.pawwalk.android.data.BookingStatus
 import com.pawwalk.android.data.Walker
 import com.pawwalk.android.data.WalkerProfileUpdate
 import com.pawwalk.android.ui.components.DmText
@@ -92,19 +93,20 @@ private fun WalkCard(c: BrandColors, booking: Booking, onTrack: () -> Unit, onAc
     ) {
         DmText(booking.dogName, c.ink, sizeSp = 15f, weight = FontWeight.SemiBold)
         Spacer(Modifier.height(4.dp))
-        MonoText(booking.status.replace('_', ' '), c.accent, sizeSp = 9f)
+        MonoText(booking.status.wireValue.replace('_', ' '), c.accent, sizeSp = 9f)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             when (booking.status) {
-                "pending" -> {
+                BookingStatus.PENDING -> {
                     MonoText("Accept", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.ACCEPT) })
                     MonoText("Decline", c.pinAmber, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.DECLINE) })
                 }
-                "confirmed" -> MonoText("Start", c.accent, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.START) })
-                "in_progress" -> {
+                BookingStatus.CONFIRMED -> MonoText("Start", c.accent, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.START) })
+                BookingStatus.IN_PROGRESS -> {
                     MonoText("Track", c.pinBlue, sizeSp = 9f, modifier = Modifier.clickable { onTrack() })
                     MonoText("Complete", c.signalGreen, sizeSp = 9f, modifier = Modifier.clickable { onAction(BookingAction.COMPLETE) })
                 }
+                BookingStatus.COMPLETED, BookingStatus.CANCELLED -> Unit
             }
         }
     }

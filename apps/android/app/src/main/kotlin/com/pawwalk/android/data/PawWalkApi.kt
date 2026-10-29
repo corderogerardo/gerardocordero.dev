@@ -41,6 +41,9 @@ interface PawWalkApi {
     @GET("bookings")
     suspend fun getBookings(): List<Booking>
 
+    @GET("bookings/assigned")
+    suspend fun getAssignedBookings(): List<Booking>
+
     @POST("bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") bookingId: String): Booking
 

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pawwalk.android.data.Booking
+import com.pawwalk.android.data.BookingStatus
 import com.pawwalk.android.ui.components.DmText
 import com.pawwalk.android.ui.components.MonoText
 import com.pawwalk.android.ui.theme.BrandColors
@@ -56,7 +57,7 @@ fun BookingsScreen(viewModel: BookingsViewModel = viewModel()) {
 
 @Composable
 private fun BookingCard(c: BrandColors, booking: Booking, onCancel: () -> Unit) {
-    val cancellable = booking.status == "pending" || booking.status == "confirmed"
+    val cancellable = booking.status == BookingStatus.PENDING || booking.status == BookingStatus.CONFIRMED
     Column(
         Modifier
             .fillMaxWidth()
@@ -81,16 +82,16 @@ private fun BookingCard(c: BrandColors, booking: Booking, onCancel: () -> Unit) 
 }
 
 @Composable
-private fun StatusPill(c: BrandColors, status: String) {
+private fun StatusPill(c: BrandColors, status: BookingStatus) {
     val color = when (status) {
-        "completed" -> c.signalGreen
-        "cancelled" -> Color(0xFFC0392B)
-        "in_progress" -> c.pinBlue
+        BookingStatus.COMPLETED -> c.signalGreen
+        BookingStatus.CANCELLED -> Color(0xFFC0392B)
+        BookingStatus.IN_PROGRESS -> c.pinBlue
         else -> c.accent
     }
     Row(
         Modifier.clip(RoundedCornerShape(50)).background(color.copy(alpha = 0.16f)).padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        MonoText(status.replace('_', ' '), color, sizeSp = 8.5f, trackingEm = 0.08f)
+        MonoText(status.wireValue.replace('_', ' '), color, sizeSp = 8.5f, trackingEm = 0.08f)
     }
 }
