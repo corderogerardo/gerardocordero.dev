@@ -25,7 +25,6 @@ import {
   type DayLog,
   type Grade,
   dueCount,
-  isDue,
   logToday,
   schedule,
   seenCount,
@@ -33,6 +32,16 @@ import {
   todayEpochDay,
 } from "@gerardocordero/prep-kit/lib/srs";
 import { bumpStreak, currentStreak, type Streak } from "@gerardocordero/prep-kit/lib/streak";
+import {
+  applyGrade,
+  currentCardId,
+  EMPTY_SESSION,
+  revealCard,
+  sessionProgress,
+  type Session,
+  startAheadSession,
+  startDueSession,
+} from "@/src/study/session";
 import { usePersistedState } from "@/src/study/store";
 
 const GRADE_META: { value: Grade; label: string; color: string; hint: string }[] = [
@@ -42,20 +51,9 @@ const GRADE_META: { value: Grade; label: string; color: string; hint: string }[]
   { value: "easy", label: "Easy", color: T.cyan, hint: "later" },
 ];
 
-// A study session is a queue of card ids plus its UI state. Collapsing it into one
-// object lets us reset it during render (React's "adjust state on input change"
-// pattern) when the subject/category changes — no effect, no cascading renders.
-type Session = {
-  key: string;
-  queue: string[];
-  revealed: boolean;
-  // Distinct cards completed (graded hard/good/easy) this session. "Again"
-  // recirculates the card and does NOT count, so the progress denominator
-  // (queue.length + done) stays fixed at the session's distinct card count.
-  done: number;
-  mode: "due" | "ahead";
-};
-
+// The session state machine lives in src/study/session.ts. It is reset during render
+// (React's "adjust state on input change" pattern) when the subject/category changes —
+// no effect, no cascading renders.
 export default function StudyScreen() {
   const insets = useSafeAreaInsets();
 
@@ -74,13 +72,7 @@ export default function StudyScreen() {
   });
 
   const [category, setCategory] = useState("all");
-  const [session, setSession] = useState<Session>({
-    key: "",
-    queue: [],
-    revealed: false,
-    done: 0,
-    mode: "due",
-  });
+  const [session, setSession] = useState<Session>(EMPTY_SESSION);
 
   const subject = subjectById(subjectId) ?? SUBJECTS[0];
   const categories = useMemo(() => subjectCategories(subject), [subject]);
@@ -99,46 +91,31 @@ export default function StudyScreen() {
   // snapshot so grading mid-session doesn't reset the queue.
   const sessionKey = `${subjectId}|${category}`;
   if (srsHydrated && session.key !== sessionKey) {
-    const due = poolIds.filter((id) => isDue(srs[id], today));
-    setSession({ key: sessionKey, queue: due, revealed: false, done: 0, mode: "due" });
+    setSession(startDueSession(sessionKey, poolIds, srs, today));
   }
 
-  const currentId = session.queue[0];
+  const currentId = currentCardId(session);
   const card = currentId ? cardMap.get(currentId) : undefined;
 
   function grade(g: Grade) {
-    const id = session.queue[0];
+    const id = currentCardId(session);
     if (!id) return;
     const t = todayEpochDay();
     setSrs((prev) => ({ ...prev, [id]: schedule(prev[id], g, t) }));
     setDayLog((prev) => logToday(prev, id, t));
     setStreak((prev) => bumpStreak(prev ?? undefined, t));
-    const removing = g !== "again";
-    setSession((prev) => ({
-      ...prev,
-      revealed: false,
-      done: prev.done + (removing ? 1 : 0),
-      // "Again" recirculates the card to the end of this session (no progress).
-      queue: removing ? prev.queue.slice(1) : [...prev.queue.slice(1), id],
-    }));
+    setSession((prev) => applyGrade(prev, g));
   }
 
   function studyAhead() {
-    setSession((prev) => ({
-      ...prev,
-      queue: poolIds,
-      revealed: false,
-      done: 0,
-      mode: "ahead",
-    }));
+    setSession((prev) => startAheadSession(prev, poolIds));
   }
 
   const subjectDue = dueCount(subjectAll, srs, today);
   const subjectSeen = seenCount(subjectAll, srs);
   const streakDays = currentStreak(streak ?? undefined, today);
 
-  const total = session.queue.length + session.done;
-  const progressPct = total > 0 ? (session.done / total) * 100 : 0;
+  const progress = sessionProgress(session);
 
   return (
     <ScrollView
@@ -272,18 +249,16 @@ export default function StudyScreen() {
                 marginBottom: 10,
               }}
             >
-              <GCTick>{`${session.done + 1} / ${total}`}</GCTick>
+              <GCTick>{`${session.done + 1} / ${progress.total}`}</GCTick>
               <GCTick color={session.mode === "ahead" ? T.cyan : T.red}>
                 {session.mode === "ahead" ? "STUDY AHEAD" : "DUE NOW"}
               </GCTick>
             </View>
-            <GCBar value={progressPct} />
+            <GCBar value={progress.percent} />
 
             <Pressable
               testID="study-flashcard"
-              onPress={() =>
-                !session.revealed && setSession((p) => ({ ...p, revealed: true }))
-              }
+              onPress={() => !session.revealed && setSession(revealCard)}
               style={{ marginTop: 14 }}
             >
               <GCCard>
