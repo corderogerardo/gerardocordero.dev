@@ -121,6 +121,7 @@ class Booking(BaseModel):
     notes: str | None = None
     status: BookingStatus
     price_cents: int
+    created_at: UtcDatetime
 
 
 # ── Reviews (module 23 exercise; schema only, no route in the course) ─────

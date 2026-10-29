@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, DateTime, func
 from sqlmodel import Field, SQLModel
 
 # ponytail: Role/Duration/BookingStatus are `Literal[...]` in schemas.py (the
@@ -39,7 +39,7 @@ class WalkerTable(SQLModel, table=True):
     price_per_30min_cents: int
     bio: str = ""
     neighborhoods: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    user_id: str | None = Field(default=None, foreign_key="users.id")
+    user_id: str | None = Field(default=None, foreign_key="users.id", unique=True)
 
 
 class PetTable(SQLModel, table=True):
@@ -64,6 +64,9 @@ class BookingTable(SQLModel, table=True):
     notes: str | None = None
     status: str = "pending"
     price_cents: int
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False, server_default=func.now()),
+    )
 
 
 class WaitlistTable(SQLModel, table=True):

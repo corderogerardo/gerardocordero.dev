@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from ..db import get_session
@@ -12,11 +14,20 @@ from ..security import create_access_token, hash_password, verify_password
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _email_taken_response() -> JSONResponse:
+    return JSONResponse(
+        status_code=409,
+        content={"code": "email_taken", "detail": "Email already registered"},
+    )
+
+
 @router.post("/signup", response_model=AuthResponse, status_code=201)
-def signup(req: SignupRequest, session: Session = Depends(get_session)) -> AuthResponse:
+def signup(
+    req: SignupRequest, session: Session = Depends(get_session)
+) -> AuthResponse | JSONResponse:
     existing = session.exec(select(UserTable).where(UserTable.email == req.email)).first()
     if existing is not None:
-        raise HTTPException(status_code=409, detail="Email already registered")
+        return _email_taken_response()
 
     row = UserTable(
         id=f"usr_{uuid4().hex[:12]}",
@@ -27,7 +38,14 @@ def signup(req: SignupRequest, session: Session = Depends(get_session)) -> AuthR
         created_at=datetime.now(timezone.utc),
     )
     session.add(row)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        existing = session.exec(select(UserTable).where(UserTable.email == req.email)).first()
+        if existing is not None:
+            return _email_taken_response()
+        raise
     session.refresh(row)
 
     user = User.model_validate(row, from_attributes=True)

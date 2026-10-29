@@ -1,6 +1,13 @@
 from datetime import datetime
+from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session
+
+from app.db import engine
+from app.models_db import UserTable
 
 
 def test_root(client: TestClient) -> None:
@@ -26,6 +33,78 @@ def test_signup_and_login(client: TestClient) -> None:
     login = client.post("/auth/login", json={"email": email, "password": "longenough"})
     assert login.status_code == 200
     assert "access_token" in login.json()
+
+
+def test_duplicate_signup_returns_flat_email_taken_conflict(client: TestClient) -> None:
+    email = f"duplicate+{uuid4().hex}@example.com"
+    payload = {"email": email, "password": "longenough", "name": "Duplicate"}
+    first_signup = client.post("/auth/signup", json=payload)
+    assert first_signup.status_code == 201
+
+    duplicate_signup = client.post("/auth/signup", json=payload)
+
+    assert duplicate_signup.status_code == 409
+    assert duplicate_signup.json() == {
+        "code": "email_taken",
+        "detail": "Email already registered",
+    }
+
+
+def test_signup_email_insert_race_returns_email_taken_conflict(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    email = f"race+{uuid4().hex}@example.com"
+    original_commit = Session.commit
+
+    def commit_after_competing_signup(session: Session) -> None:
+        with Session(engine) as competing_session:
+            competing_session.add(
+                UserTable(
+                    id=f"usr_{uuid4().hex[:12]}",
+                    email=email,
+                    name="Concurrent signup",
+                    password_hash="test-only",
+                    role="owner",
+                )
+            )
+            original_commit(competing_session)
+        raise IntegrityError(
+            "INSERT INTO users (email) VALUES (?)",
+            {"email": email},
+            Exception("UNIQUE constraint failed: users.email"),
+        )
+
+    monkeypatch.setattr(Session, "commit", commit_after_competing_signup)
+
+    response = client.post(
+        "/auth/signup",
+        json={"email": email, "password": "longenough", "name": "Racing signup"},
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "email_taken",
+        "detail": "Email already registered",
+    }
+
+
+def test_signup_reraises_unrelated_integrity_error(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail_commit(_session: Session) -> None:
+        raise IntegrityError("INSERT INTO users", {}, Exception("unrelated constraint"))
+
+    monkeypatch.setattr(Session, "commit", fail_commit)
+
+    with pytest.raises(IntegrityError, match="unrelated constraint"):
+        client.post(
+            "/auth/signup",
+            json={
+                "email": f"integrity+{uuid4().hex}@example.com",
+                "password": "longenough",
+                "name": "Integrity failure",
+            },
+        )
 
 
 def test_login_wrong_password_is_401(client: TestClient) -> None:

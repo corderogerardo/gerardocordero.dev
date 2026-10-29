@@ -16,7 +16,18 @@ A booking has a `status` that moves through `pending -> confirmed ->
 in_progress -> completed` (or `cancelled`). Prices are always in
 **cents** (`price_cents`), never floating-point dollars, to avoid rounding
 errors. `duration_minutes` is one of `30`, `45`, or `60` — no other value
-is accepted.
+is accepted. Booking responses are flat objects and include the server-generated
+`created_at` timestamp. `GET /bookings` returns an array of the current owner's
+bookings; `GET /bookings/assigned` returns an array assigned to the authenticated
+linked walker.
+
+Walkers may accept or decline their assigned pending bookings, start assigned
+confirmed bookings, and complete assigned in-progress bookings using POST
+`/bookings/{id}/accept|decline|start|complete`. Owners may cancel their own
+pending or confirmed bookings using POST `/bookings/{id}/cancel`. Invalid state
+changes return HTTP 409 with `{"code":"transition_conflict","detail":"..."}`.
+Bookings belonging to another owner or assigned to another walker are reported
+as not found.
 
 ## Cancellation policy
 
