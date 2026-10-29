@@ -1,5 +1,9 @@
 # Software Factory: Research and MVP Scope
 
+## Scope update (2026-10-29)
+
+This report records the original repository-foundation MVP, not the factory's current full scope. By the user decision in [ADR-0003](../adr/0003-complete-software-factory-workflow.md), the factory now also coordinates the full feature-delivery lifecycle described by the user-provided workflow reference: shared language, planning, implementation, review, and retro. This workflow choice comes from that user-selected reference; it is not a conclusion of the primary-source research below. The original research findings and sources remain historical context.
+
 ## Working definition
 
 The reviewed primary sources do not establish one universal software-factory architecture. In the DoD/USAF context, a software factory is a deployable DevSecOps capability for producing, securing, deploying, and operating software. In other contexts, the same term can name a much narrower project-template tool. The name alone does not justify building a developer portal or platform. [1][2]

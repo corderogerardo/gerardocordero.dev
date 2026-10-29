@@ -1,7 +1,7 @@
 # ADR-0002: Build an Approval-Gated Software Factory as a Skill
 
 ## Status
-Accepted
+Superseded by ADR-0003
 
 ## Date
 2026-10-20
