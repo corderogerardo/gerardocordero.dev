@@ -1,14 +1,18 @@
 import Foundation
 
 enum APIError: Error, LocalizedError {
-    /// Signup with an email that's already registered (backend returns 409).
+    /// Signup with an email that's already registered (backend returns 409 with `code: "email_taken"`).
     case emailTaken
+    /// A booking transition the current booking state does not allow
+    /// (backend returns 409 with `code: "transition_conflict"`).
+    case transitionConflict(String)
     /// Backend returned an error with a server-provided message.
     case serverError(String)
 
     var errorDescription: String? {
         switch self {
         case .emailTaken: return "That email is already registered. Try logging in instead."
+        case .transitionConflict(let detail): return detail
         case .serverError(let detail): return detail
         }
     }
@@ -90,6 +94,12 @@ final class APIClient {
         let detail: String
     }
 
+    /// Structured 409 body: a machine-readable `code` plus a human-readable `detail`.
+    private struct ConflictError: Decodable {
+        let code: String?
+        let detail: String?
+    }
+
     private func checkStatus(_ response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
         if http.statusCode == 401 {
@@ -97,7 +107,18 @@ final class APIClient {
         }
         switch http.statusCode {
         case 200..<300: return
-        case 409: throw APIError.emailTaken
+        case 409:
+            // Only a known code maps to a specific error; anything else is not assumed to be a duplicate email.
+            let conflict = try? decoder.decode(ConflictError.self, from: data)
+            switch conflict?.code {
+            case "email_taken":
+                throw APIError.emailTaken
+            case "transition_conflict":
+                throw APIError.transitionConflict(conflict?.detail ?? "This booking can't change status right now.")
+            default:
+                if let detail = conflict?.detail { throw APIError.serverError(detail) }
+                throw URLError(.badServerResponse)
+            }
         default:
             if let serverError = try? decoder.decode(ServerError.self, from: data) {
                 throw APIError.serverError(serverError.detail)
