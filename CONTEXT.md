@@ -86,12 +86,16 @@ _Avoid_: dependency rule (`docs/adr/0001-workspace-dependency-boundaries.md`)
 The deterministic CI gate reporting workspace and edge counts and listing each forbidden edge it finds.
 _Avoid_: lint pass, audit script (`scripts/architecture-fitness.mjs`, `pnpm architecture:check`, `Architecture fitness` step in `.github/workflows/ci.yml`)
 
+**PawWalk client contract**:
+The shared routes and JSON shapes expected by the iOS and Android clients, implemented independently by the FastAPI and Rails backends.
+_Avoid_: FastAPI contract, Rails contract (when referring to the shared behavior)
+
 ## Workspaces
 
 - `apps/portfolio` — the Expo portfolio app, including the Study tab that consumes the prep-kit SRS + streak seam.
 - `apps/learn` — PawWalk Academy: interactive courses, spec decks, and scene tiles.
 - `apps/*-prep` (`ios`, `reactnative`, `android`, `nest`, `nextjs`, plus the `template-prep` template) — static interview-prep study sites built on prep-kit.
-- `apps/pawwalk-api` — the Rails reference backend the native clients talk to.
+- `apps/backend`, `apps/pawwalk-api` — independent FastAPI and Rails backends intended to implement the shared PawWalk client contract for learning and comparative testing.
 - `apps/ios`, `apps/android` — the SwiftUI and Compose PawWalk reference clients owning the booking domain.
 - `packages/prep-kit` — the shared study home (SRS, streak, content types, study views).
 - `packages/ui` — the shared React Native primitive set consumed by the portfolio app.

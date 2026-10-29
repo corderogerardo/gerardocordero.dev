@@ -94,7 +94,7 @@ Risk: item 3 (the shared SRS module interface is consumed by multiple workspaces
 | ID | S# | Route | Status | Commit |
 |----|----|-------|--------|--------|
 | T1 | S1 | Delegated writer (parallel unit) | complete | 4cad5c1 |
-| T2 | S2 | Delegated direct (parallel unit) | partial; needs_validation | — |
+| T2 | S2 | Delegated direct (parallel unit) | partial; needs_validation | 4975060 |
 | T3 | S3 | Delegated direct (parallel unit) | partial; needs_validation | — |
 | T4 | S4 | Delegated direct (parallel unit) | partial; needs_validation | — |
 | T5 | S5 | Delegated direct (parallel unit) | partial; needs_validation | — |
@@ -136,3 +136,25 @@ Risk: item 3 (the shared SRS module interface is consumed by multiple workspaces
 - The user selected `stacked-to-main` as the chain strategy.
 - Commit only the architecture-deepening work-unit paths and their tracker; preserve pre-existing `CONTEXT.md`, `odd/tasks/monorepo-deepening.md`, and `.atl` changes.
 - The requested push still requires explicit remote destination and credential/session authorization. T2–T5 remain `partial; needs_validation`; do not represent the commits as fully verified.
+
+### L7 — T2 local work-unit commit (2026-10-29)
+- Commit `4975060` contains the FastAPI booking lifecycle, migration, API documentation, and tests. T2 remains `partial; needs_validation`; no test or migration was run in the required sandbox.
+
+### L8 — Commit request and review collection state (2026-10-29)
+- The user explicitly requested commits and a push before Expo source updates and chose `stacked-to-main`. Local commits created: `312a9ad` (architecture tracker), `f4eacbe` (Expo upgrade tracker), and `4975060` (partial T2 FastAPI unit). No push was made.
+- Post-commit assessment for T2 returned `risk: high` and `review_due: high_risk`. The exact STATUS preflight returned `collect` with reason `intended_untracked_selection_required`; no START or review authority was created.
+- The collection requires `external.select_intended_untracked` and a value matching `gentle-ai.review-intended-untracked-selection/v1`. The runtime exposes no exact capture operation or schema definition, so no selection was inferred or synthesized. This blocks further native review progression and subsequent work-unit commits.
+- Push remains blocked until the exact remote destination and credential/session are explicitly authorized. T3–T5 remain uncommitted and `needs_validation`.
+
+### L9 — Delivery scope correction (2026-10-29)
+> has commit and push incluyelas en un pr o crea un pr aparte
+
+- The user explicitly supersedes L6's exclusion for staged `.atl/.skill-registry.cache.json`, `.atl/skill-registry.md`, `CONTEXT.md`, and `odd/tasks/monorepo-deepening.md`; include these paths in an appropriate PR without losing their staged content.
+- Remote destination and `gh` session authorization are now resolved for this task. No commit or push has occurred.
+- New PR creation remains blocked because no `status:approved` issue exists; an approved issue is required before opening the stacked PRs.
+- T2–T5 remain `needs_validation`; dynamic proof is unavailable without the required sandbox. The Engram mirror remains pending because session registration could not be confirmed.
+
+### L10 — T3–T5 work-unit commits (2026-10-29)
+- Committed the staged S3–S5 source in three work units: `56f03ff` (Rails lifecycle, roles, Walker link, migrations, integration tests), `2e15cc1` (iOS structured 409 decoding), `38da6c6` (Android typed status + assigned bookings).
+- These units keep their `needs_validation` status: no test, build, or migration was executed locally. `needs_validation` reflects the recorded sandbox constraint, not a passing result.
+- The `.atl` registry files, `CONTEXT.md`, and `odd/tasks/monorepo-deepening.md` are committed separately as requested in L9 rather than dropped.
