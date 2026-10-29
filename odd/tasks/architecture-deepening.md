@@ -158,3 +158,8 @@ Risk: item 3 (the shared SRS module interface is consumed by multiple workspaces
 - Committed the staged S3–S5 source in three work units: `56f03ff` (Rails lifecycle, roles, Walker link, migrations, integration tests), `2e15cc1` (iOS structured 409 decoding), `38da6c6` (Android typed status + assigned bookings).
 - These units keep their `needs_validation` status: no test, build, or migration was executed locally. `needs_validation` reflects the recorded sandbox constraint, not a passing result.
 - The `.atl` registry files, `CONTEXT.md`, and `odd/tasks/monorepo-deepening.md` are committed separately as requested in L9 rather than dropped.
+
+### L11 — CI lint repair on the pushed branch (2026-10-29)
+- The push updated PR #125 and CI failed in `verify` → `Lint`: `apps/portfolio/__tests__/study-srs.test.ts` re-exported `@gerardocordero/prep-kit/lib/study-srs.test`, and `import/export` could not resolve named exports from that specifier.
+- The shim is removed; the suite keeps its single home beside the module in prep-kit. The root `test` script now filters both `@gerardocordero/portfolio` and `@gerardocordero/prep-kit`, so the moved suite actually runs in the loop instead of silently losing coverage.
+- Local evidence: portfolio ESLint clean, portfolio `tsc --noEmit` exit 0, portfolio jest 18/18, prep-kit jest 17/17. `turbo` itself could not resolve a package-manager binary outside CI, so the turbo-wrapped invocation is verified by the CI run rather than locally.
