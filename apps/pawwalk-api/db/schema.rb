@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_234227) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_100100) do
   create_table "bookings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "dog_id", null: false
@@ -85,6 +85,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_234227) do
     t.string "email", null: false
     t.string "name"
     t.string "password_digest"
+    t.string "role", default: "owner", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
@@ -107,6 +108,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_234227) do
     t.integer "price_per_30_min_cents", null: false
     t.decimal "rating", precision: 3, scale: 1, default: "5.0"
     t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_walkers_on_user_id", unique: true
   end
 
   add_foreign_key "bookings", "dogs"
@@ -118,4 +121,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_234227) do
   add_foreign_key "payments", "bookings"
   add_foreign_key "payouts", "walkers"
   add_foreign_key "walk_sessions", "bookings"
+  add_foreign_key "walkers", "users"
 end
