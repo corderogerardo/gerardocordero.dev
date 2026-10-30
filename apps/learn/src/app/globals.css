@@ -1,7 +1,7 @@
 /* Tailwind v4 entry. Preflight is intentionally NOT imported: the plain-CSS
    course pages (styles.css) own their base styling, exactly as with the v3
    corePlugins.preflight=false setup. We import only theme + utilities layers.
-   Design tokens are ported from design-system-ui/app/globals.css (oklch). */
+   Design tokens use the oklch palette ported from the original design prototype. */
 
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);

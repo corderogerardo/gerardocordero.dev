@@ -1,36 +1,45 @@
 // Seniority levels used to grade flashcards and drive the /roadmap page.
-export type Level = "junior" | "mid" | "senior" | "architect" | "beyond";
+// The taxonomy (values, order, labels, i18n keys, badge classes) lives in
+// prep-kit; this module adds only the Next.js roadmap taglines and the
+// category → level mapping.
+import { LEVELS as TAXONOMY, type Level } from "@gerardocordero/prep-kit";
 
-export const LEVELS: {
-  value: Level;
-  label: string;
-  labelEs: string;
-  short: string;
-  tagline: string;
-  taglineEs: string;
-}[] = [
-  { value: "junior", label: "Junior", labelEs: "Junior", short: "JR", tagline: "Ship pages and components with guidance.", taglineEs: "Publica páginas y componentes con guía." },
-  { value: "mid", label: "Mid", labelEs: "Mid", short: "MID", tagline: "Own a route end-to-end: data, layout, tests.", taglineEs: "Domina una ruta de principio a fin: datos, layout, tests." },
-  { value: "senior", label: "Senior", labelEs: "Senior", short: "SR", tagline: "Rendering & caching depth, performance & security.", taglineEs: "Profundidad en renderizado y caché, rendimiento y seguridad." },
-  { value: "architect", label: "Architect", labelEs: "Arquitecto", short: "ARCH", tagline: "System design, platform decisions, org-wide conventions.", taglineEs: "Diseño de sistemas, decisiones de plataforma, convenciones para toda la organización." },
-  { value: "beyond", label: "Beyond", labelEs: "Beyond", short: "★", tagline: "Frontier: Cache Components, edge, streaming AI UIs.", taglineEs: "Frontera: Cache Components, edge, UIs de IA en streaming." },
-];
+export {
+  LEVEL_BADGE,
+  LEVEL_LABEL,
+  LEVEL_LABEL_ES,
+  type Level,
+} from "@gerardocordero/prep-kit";
 
-export const LEVEL_LABEL: Record<Level, string> = {
-  junior: "Junior",
-  mid: "Mid",
-  senior: "Senior",
-  architect: "Architect",
-  beyond: "Beyond",
+/** Roadmap taglines — platform-specific copy this app owns. */
+const TAGLINES: Record<Level, { tagline: string; taglineEs: string }> = {
+  junior: {
+    tagline: "Ship pages and components with guidance.",
+    taglineEs: "Publica páginas y componentes con guía.",
+  },
+  mid: {
+    tagline: "Own a route end-to-end: data, layout, tests.",
+    taglineEs: "Domina una ruta de principio a fin: datos, layout, tests.",
+  },
+  senior: {
+    tagline: "Rendering & caching depth, performance & security.",
+    taglineEs: "Profundidad en renderizado y caché, rendimiento y seguridad.",
+  },
+  architect: {
+    tagline: "System design, platform decisions, org-wide conventions.",
+    taglineEs: "Diseño de sistemas, decisiones de plataforma, convenciones para toda la organización.",
+  },
+  beyond: {
+    tagline: "Frontier: Cache Components, edge, streaming AI UIs.",
+    taglineEs: "Frontera: Cache Components, edge, UIs de IA en streaming.",
+  },
 };
 
-export const LEVEL_LABEL_ES: Record<Level, string> = {
-  junior: "Junior",
-  mid: "Mid",
-  senior: "Senior",
-  architect: "Arquitecto",
-  beyond: "Beyond",
-};
+/** The shared taxonomy plus this app's roadmap taglines. */
+export const LEVELS = TAXONOMY.map((level) => ({
+  ...level,
+  ...TAGLINES[level.value],
+}));
 
 /** Default level for each flashcard/quiz category (overridable per card). */
 const LEVEL_BY_CATEGORY: Record<string, Level> = {
@@ -59,12 +68,3 @@ export function resolveLevel(card: {
     card.level ?? LEVEL_OVERRIDES[card.id] ?? LEVEL_BY_CATEGORY[card.category] ?? "senior"
   );
 }
-
-/** Tailwind classes for a level badge. */
-export const LEVEL_BADGE: Record<Level, string> = {
-  junior: "border-good/40 bg-good/12 text-good",
-  mid: "border-accent/40 bg-accent/12 text-accent",
-  senior: "border-warn/40 bg-warn/12 text-warn",
-  architect: "border-accent-2/40 bg-accent-2/12 text-accent-2",
-  beyond: "border-bad/40 bg-bad/12 text-bad",
-};

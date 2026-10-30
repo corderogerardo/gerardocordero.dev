@@ -1,8 +1,7 @@
-# template-prep
+# nest-prep
 
-A ready-to-fork starter for an on-device, spaced-repetition **study site**, built
-on [`@gerardocordero/prep-kit`](../../packages/prep-kit). It's how `ios-prep`,
-`android-prep`, and `reactnative-prep` are built — minus the content.
+A NestJS / Node-backend interview-prep study site built on
+[`@gerardocordero/prep-kit`](../../packages/prep-kit).
 
 Everything interactive (flashcards + SM-2-lite scheduling, a quiz, practice
 prompts, on-device AI hybrid search, an on-device AI tutor, a daily streak, and
@@ -31,17 +30,17 @@ and passes data as props (see `flashcards/page.tsx`). Long-form content? Add
 ## Develop
 
 ```bash
-pnpm --filter @gerardocordero/template-prep dev        # next dev
-pnpm --filter @gerardocordero/template-prep typecheck  # tsc --noEmit
-pnpm --filter @gerardocordero/template-prep lint        # eslint
-pnpm --filter @gerardocordero/template-prep build       # static export -> out/
+pnpm --filter @gerardocordero/nest-prep dev        # next dev
+pnpm --filter @gerardocordero/nest-prep typecheck  # tsc --noEmit
+pnpm --filter @gerardocordero/nest-prep lint       # eslint
+pnpm --filter @gerardocordero/nest-prep build      # static export -> out/
 ```
 
 ## Notes
 
-- **Static export** (`output: "export"`) → deploys as plain assets (e.g. Cloudflare
-  Pages). The `deploy` script targets a `template-prep` Pages project; it is **not**
-  wired into CI — this app is a scaffold, not a published site.
+- **Static export** (`output: "export"`) → deploys as plain assets to Cloudflare
+  Pages (`nestjs.gerardocordero.dev`). The `deploy-nest-prep` job in
+  `.github/workflows/ci.yml` builds and publishes `out/`.
 - Theme lives in `src/app/globals.css` + `tailwind.config.ts` (CSS-variable colors:
   `bg / surface / accent / good / warn / …`). The kit uses those class names, and
   `tailwind.config.ts` already scans the kit source so its classes aren't purged.

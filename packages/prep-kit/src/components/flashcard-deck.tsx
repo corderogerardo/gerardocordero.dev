@@ -8,7 +8,7 @@ import { Chip } from "./chip";
 import { RichText } from "./rich-text";
 import { AiTutor } from "./ai-tutor";
 import { plainText } from "../lib/plain-text";
-import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "../lib/levels";
+import { LEVELS, LEVEL_BADGE, LEVEL_LOCALE_KEY, type Level } from "../lib/levels";
 import {
   type SrsMap,
   type Grade,
@@ -217,7 +217,7 @@ export function FlashcardDeck({
                     <span
                       className={`rounded-full border px-2 py-0.5 text-center text-[0.62rem] font-bold uppercase ${LEVEL_BADGE[card.level]}`}
                     >
-                      {t(LEVEL_LABEL[card.level])}
+                      {t(LEVEL_LOCALE_KEY[card.level])}
                     </span>
                   )}
                 </span>
