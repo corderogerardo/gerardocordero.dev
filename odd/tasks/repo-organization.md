@@ -38,13 +38,13 @@ Contested points to decide by team, not by citation: barrels vs subpath exports 
 - T2 (S4) — Portfolio: split `components/hud.tsx` (542) into tokens + primitives, keeping the module path — route: delegated writer — status: done, commit `b1abc8c` (tsc, eslint and jest green; rendered widgets moved verbatim).
 - T3 (S4) — Portfolio: extract `XPRing` and static tables out of `app/(tabs)/index.tsx` (723) — route: delegated writer — status: done, commit `c8ebf7b` (723 → 549 lines; render tree identical).
 - T4 (S4) — Portfolio: extract the study session state machine from `app/(tabs)/study.tsx` (473) into a pure, tested module — route: delegated writer — status: done, commit `87d01a3` (19 new tests, 37 total green).
-- T5 (S2,S4) — Prep apps: consume `LEVELS`/`nav` from prep-kit instead of five local copies — route: delegated writer — status: blocked, needs decision (semantics differ: kit `LEVEL_LABEL` maps to i18n keys, apps map to display names; app `LEVELS` carry `labelEs`/`tagline`/`taglineEs` the kit lacks). No edits made.
+- T5 (S2,S4) — Prep apps: consume `LEVELS`/`nav` from prep-kit instead of five local copies — route: delegated writer — status: done, commit `0f7030d` (kit owns taxonomy, display labels, Spanish labels and locale keys; apps re-export and keep taglines plus `resolveLevel`; prep-kit 29/29 tests, 7 typechecks, 5 lints green). Side effect: `reactnative-prep` lesson badges now show `Junior` instead of the literal `level.junior`.
 - T6 (S2) — Replace prep-kit deep file imports with the package barrel where the barrel is safe — route: inline — status: pending.
-- T7 (S1,S2) — Learn: remove the legacy `src/app/reactnative/**` tree after confirming no live links — route: inline — status: pending.
+- T7 (S1,S2) — Learn: remove the legacy `src/app/reactnative/**` tree after confirming no live links — route: delegated writer — status: done, commit `151ab31` (1133 lines deleted; redirect entry points kept; `public/_redirects` preserves old URLs on Cloudflare Pages; static build and i18n check pass).
 - T8 (S4) — Learn: separate persistence/state from view in `practice/FlashcardDeck.tsx` (371) — route: delegated writer — status: done, commit `6cc466c` (371 → 81-line composition root plus hook and three presentational units; storage key unchanged).
 - T9 (S1,S5) — Decide and record the fate of `apps/learn/design-system-ui` (declare or remove) — route: inline, needs user decision — status: pending.
 - T10 (S5) — Close gate gaps that protect this work: prep-kit/ui scripts, root test filter breadth, Rails and template-prep CI — route: inline — status: pending.
-- T11 (S4) — Docs rot: `apps/nest-prep/README.md` title/filters, learn course catalog derived from `COURSE_IDS` — route: inline — status: pending.
+- T11 (S4) — Docs rot: `apps/nest-prep/README.md` title/filters — route: inline — status: done, commit `856028b`. Catalog derivation from `COURSE_IDS` deferred: the tuple is used in routing type positions, so widening it needs its own change.
 
 ## Log
 
@@ -54,3 +54,5 @@ Contested points to decide by team, not by citation: barrels vs subpath exports 
 - L4: Reference research completed with primary sources. Barrels vs subpath exports, Rails service objects, and SwiftUI MVVM are contested and will not be adopted by citation alone.
 - L5 (wave 1): T2, T3, T4 and T8 delivered in four work-unit commits (`b1abc8c`, `c8ebf7b`, `87d01a3`, `6cc466c`). Portfolio 37/37 tests, learn typecheck and lint green. T5 stopped before editing: prep-kit and the five apps disagree on `LEVEL_LABEL` semantics and on the per-app tagline fields, so a thin re-export would change rendered text. Awaiting the surface decision.
 - L6: Pre-existing defect found during T5: `apps/reactnative-prep/src/app/lessons/page.tsx:72` renders prep-kit's i18n keys directly, so those badges show literal `level.junior` / `level.mid` text. Not caused by this work; needs its own fix.
+- L7 (wave 2): T5 and T7 delivered in `0f7030d` and `151ab31`; T5 fixed the lessons badge defect as a side effect of the label change. T7 removed 1133 lines of duplicate routes; `apps/learn/public/_redirects` keeps old bookmarks working without JS, and `next build` plus `node tools/i18n-check.mjs` pass. A worker for T7 timed out mid-run and left the tree partially edited; the parent verified the partial result (3 redirect pages, no stale imports), completed the redirect file and ran the gates instead of relaunching.
+- L8 (wave 2): T11 README rot fixed in `856028b`; the learn catalog duplication remains open.
