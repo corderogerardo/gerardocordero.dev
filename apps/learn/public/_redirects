@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects for the retired /reactnative route tree.
+# The React Native practice section moved to /practice/reactnative.
+# These rules keep old bookmarks working without depending on client-side JS.
+/reactnative              /practice/reactnative/             301
+/reactnative/             /practice/reactnative/             301
+/reactnative/challenges   /practice/reactnative/challenges/  301
+/reactnative/challenges/  /practice/reactnative/challenges/  301
+/reactnative/challenges/* /practice/reactnative/challenges/:splat 301
