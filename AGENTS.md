@@ -19,6 +19,13 @@ are instant). A green exit (`0`) on all three is the signal that a change is saf
 - Scope to the active app:  `pnpm --filter @gerardocordero/portfolio typecheck`
 - First time / after pulling: `pnpm install` (deps are not committed)
 
+> **If `pnpm` is not found**, the package manager is pinned as `pnpm@10.11.0` in
+> `package.json` and only `corepack` is on PATH. Run `corepack enable pnpm` once:
+> it writes a shim into the Node install's `bin/` (already on PATH) and Turbo then
+> resolves it. `corepack pnpm <script>` runs the scripts themselves, but **not**
+> Turbo — it fails with `Unable to find package manager binary`. This has been the
+> state of this machine since at least 2026-10-29; do not debug it further.
+
 End-to-end (Maestro) tests are a separate, device-level gate — see
 "Mobile testing & deploys" below.
 
@@ -32,11 +39,13 @@ End-to-end (Maestro) tests are a separate, device-level gate — see
 | `apps/android-prep` | Static Next.js 16 export → Cloudflare Pages (`android.gerardocordero.dev`). Android/Kotlin interview-prep study site. | ✅ typecheck + lint (deploy: path-filtered `deploy-android-prep` in `ci.yml`) |
 | `apps/nest-prep` | Static Next.js 16 export → Cloudflare Pages (`nestjs.gerardocordero.dev`). NestJS / Node-backend interview-prep study site — flashcards, quiz, practice, **study guide, architecture, roadmap, pitches**. Built on `@gerardocordero/prep-kit`. | ✅ typecheck + lint (deploy: path-filtered `deploy-nest-prep` in `ci.yml`) |
 | `apps/nextjs-prep` | Static Next.js 16 export → Cloudflare Pages (`nextjs.gerardocordero.dev`). Next.js / React interview-prep study site — flashcards, quiz, practice, **study guide, architecture, roadmap, pitches**. Built on `@gerardocordero/prep-kit`. | ✅ typecheck + lint (deploy: path-filtered `deploy-nextjs-prep` in `ci.yml`) |
+| `apps/template-prep` | Ready-to-fork starter for an on-device spaced-repetition study site, built on `@gerardocordero/prep-kit` — the template the other prep apps are built from, minus the content. Static Next.js 16 export. | ✅ typecheck + lint (no CI deploy job; has a local `deploy` script for the `template-prep` Pages project) |
 | `apps/learn` | **PawWalk Academy** — one Next.js 16 static-export app that is the whole of `academy.gerardocordero.dev`. Renders the interactive courses (iOS/Swift, Android/Kotlin, Ruby/Rails, Python/FastAPI+AI, Go/net-http+backend, Node/NestJS, Native-RN/Expo-modules+LiDAR, Rebuild-@expo/ui) from `lessons*/*.js` (aggregated to `public/data/*.json` by `scripts/build-data.mjs`, rendered via `src/app/[locale]/learn/...`) **and** the senior-RN practice at `/reactnative/` (150 coding challenges with an in-browser JS test runner, 6 live game previews, a 91-card flashcard deck built from `docs/react-native-senior/*.md`). The RN section is Tailwind + shadcn, **scoped under `.rn-root` with Tailwind preflight OFF** (`tailwind.config.js`) so it can't touch the plain-CSS course pages (which use `styles.css` via `src/app/globals.css`). The former hand-written static engine and the separate `apps/learn-reactnative` workspace were **folded in here** (see `docs/plans/recursive-twirling-raven.md`); the two-column shell lives in `src/components/learn-shell.tsx` (`.layout` flex wrapper — load-bearing). Adding a course = a `lessons-<id>/` dir + registration in `scripts/build-data.mjs`, `tools/validate.mjs`, `src/lib/i18n-config.ts` (`COURSE_IDS`), and the homepage `src/app/[locale]/page.tsx`. Gates: `pnpm typecheck` + `pnpm lint` (the loop), `node tools/validate.mjs` (lesson content — no arg validates all: lessons \| lessons-android \| lessons-ruby \| lessons-python \| lessons-go \| lessons-node \| lessons-native \| lessons-expoui), `node tools/i18n-check.mjs` (translation drift), `node --test` (12 tests — the validator), `next build`. Deploy: `deploy-learn` in `ci.yml` builds the app and `pages deploy out` to the `academy` project (trigger paths: `apps/learn/`, `docs/react-native-senior/`). | ✅ typecheck + lint (+ validate / i18n / `node --test` / build content gates) |
 | `apps/pawwalk-api` | Rails 8.1 API (Ruby 3.4 via mise) built by the Ruby course; JWT auth, bookings, Stripe, Solid Queue/Cable, Kamal deploy. | ❌ not in pnpm loop — gate is `cd apps/pawwalk-api && mise x -- bin/rails test && mise x -- bin/rubocop` |
+| `apps/backend` | FastAPI reference backend (Python, uv) taught by PawWalk Academy's Python course; SQLAlchemy + Alembic, JWT auth. No `package.json` — not a pnpm workspace member. | ❌ not in pnpm loop — gate is the `backend-tests` job in `ci.yml` |
 | `apps/ios` | PawWalk: XcodeGen-based SwiftUI reference app extracted from the iOS course (walker list, bookings, auth, live GPS tracking, chat assistant); talks to `apps/pawwalk-api`/`apps/backend`. | ❌ not in pnpm loop — gate is path-filtered `ios-build` in `ci.yml` (`cd apps/ios && xcodegen generate && xcodebuild -scheme PawWalk -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`) |
 | `apps/android` | PawWalk Compose reference app extracted from the Android/Kotlin course (`apps/learn/lessons-android/`); Jetpack Compose, Retrofit/OkHttp + kotlinx.serialization, EncryptedSharedPreferences auth, fused-location live tracking over WebSocket. | ❌ not in pnpm loop — gate is `android-build` (path-filtered) in `ci.yml`: `./gradlew assembleDebug` on ubuntu-latest (no local Android SDK requirement) |
-| `apps/old-web` | Legacy portfolio (CRA, React 17). Archived. | ❌ quarantined — has pre-existing JS/TS errors; do not "fix" it as part of unrelated work |
+| `packages/prep-kit` | `@gerardocordero/prep-kit` — shared TS package for the prep study sites (SM-2 SRS, flashcard and prompt decks, level taxonomy). Public surface is its `exports` map; the root barrel re-exports React components, so non-React consumers import subpaths. | ✅ `jest` (`test` script only — no own typecheck/lint; covered through the prep apps) |
 | `packages/ui` | Shared RN UI library (`@gerardocordero/ui`), consumed by portfolio via a tsconfig path alias to its `src`. | covered via portfolio's typecheck |
 | `packages/courses` | TypeScript course exercises (vitest). Learning material — tests may be intentionally red. | ❌ |
 | `packages/interview-prep` | Algorithm practice. Learning material. | ❌ |
@@ -65,15 +74,17 @@ cd apps/portfolio && maestro test .maestro/smoke.yml
 - **Styling:** NativeWind (Tailwind) in the portfolio app; a `postinstall` compiles the global stylesheet.
 - **Unit test stack (portfolio):** `jest-expo ~56` (Jest 29) + `@testing-library/react-native ^14` + `test-renderer ^1.2`. Two SDK-56 gotchas: RN 0.85 extracted the Jest preset into `@react-native/jest-preset` (a required peer), and **RNTL v14 is async-by-default** — `await render(...)`, `await fireEvent...`. Do **not** add `react-test-renderer` (jest-expo bundles its own) or `@testing-library/jest-native` (deprecated; matchers are built in). Reanimated 4 is mocked via `react-native-worklets/src/mock` in `jest-setup.ts`.
 - **Secrets:** store submission credentials **on EAS**, not in the repo. iOS submit uses an App Store Connect API key and Android uses a Google Play service account, both uploaded once via `eas credentials -p ios|android` — so `eas.json`'s `submit.production` carries no `appleId`/`serviceAccountKeyPath` and CI needs only the `EXPO_TOKEN` GitHub secret. Never commit credentials; the `credentials/` dir stays gitignored for any local key files.
+- **`glob` does not traverse dot-directories.** Patterns such as `.github/workflows/*.yml` or `.atl/*.md` return "No files found" even with `hidden: true`, while the files exist. Use `ls`/`shell` for `.github/`, `.atl/`, `.claude/`, `.agents/`, and any other dot-path.
+- **Worktrees live as siblings of the repo, never inside it.** Convention: `<repo-parent>/<repo-name>-worktrees/<name>`, i.e. `~/noofficelocation/gerardocordero.dev-worktrees/<name>`. Nothing lives under `.worktrees/` or `worktrees/` — globbing for those returns nothing. Each worktree needs its own `pnpm install` and its own `.codegraph/` index.
 
 ## Content voice (interview prep + learn)
 
 All study/prep/learn content (prep-kit apps, `apps/learn` lessons, portfolio
 study cards) is authored in the **senior-coach voice** — why-first framing,
 quotable pitch lines, `Red flag:` callouts, numbered frameworks, 3-beat
-trade-off pitches. The rules live in
-`.Codex/skills/senior-coach-content/SKILL.md`; apply them when writing or
-reviewing any content, and use its checklist on content diffs.
+trade-off pitches. The rules live in the installed **`senior-coach-content`**
+skill; load it with the skill tool when writing or reviewing any content, and
+use its checklist on content diffs.
 
 ## Study engine (interview prep)
 
@@ -203,13 +214,17 @@ Every frontend task MUST apply the project-local skill at
 stack skills before editing. The policy covers Next.js App Router, React 19,
 React Native/Expo, TypeScript, accessibility, UI, and verification.
 
-Required routing:
+Required routing — use only skills actually installed in this environment:
 
-- Next.js: `nextjs-best-practices` + `nextjs-app-router-patterns`
-- React: `react-dev` + `react-patterns` + `react-useeffect`
-- React Native/Expo: `react-native-architecture` (+ `react-native-best-practices` for performance)
-- UI/accessibility: `frontend-ui-engineering` + `accessibility` + `ui-ux-pro-max`
+- UI/accessibility: `frontend-ui-engineering` + `accessibility`
 - Verification: `test-driven-development` + `code-review-and-quality`; add browser testing for web behavior
+
+**Not installed here — do NOT route to these, and do not search the skill roots for
+them:** `nextjs-best-practices`, `nextjs-app-router-patterns`, `react-dev`,
+`react-patterns`, `react-useeffect`, `react-native-architecture`,
+`react-native-best-practices`, `ui-ux-pro-max`. When a task needs
+framework-specific guidance, read the project policy file above and go to the
+framework's official documentation instead of hunting for a missing skill.
 
 The PostToolUse harness typechecks edited source files in `apps/portfolio`,
 `apps/learn`, and `apps/*-prep`. Before delivery, run the relevant app gates
@@ -224,6 +239,12 @@ components merely to satisfy a numeric limit. Keep web UI out of the existing
 React Native-only `packages/ui` unless that package is intentionally redesigned.
 
 ## Agent skills
+
+`.atl/skill-registry.md` is a generated ~49 KB index (~126 entries). **Grep it, do
+not read it whole** — `grep -i "<trigger word>" .atl/skill-registry.md` returns
+the matching row with its exact `SKILL.md` path. Reading the full file costs
+~12k tokens. Regenerate with `gentle-ai skill-registry refresh --force`; never
+hand-edit it.
 
 ### Issue tracker
 
