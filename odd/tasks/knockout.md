@@ -111,11 +111,12 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 | T12 | Leads list, detail timeline, capture with photo + QR | S6 | inline | 560 | pending | — |
 | T13 | Board screen (leaderboard, badges) + Settings/Sync diagnostics | S5, S7 | inline | 520 | pending | — |
 | T14 | Server scoring SQL + realtime publication + client display formatter | S7 | inline | 350 | pending | — |
-| T15 | Observability (Sentry wrapper, sync telemetry) + config plugins/permissions | S10 | inline | 260 | pending | — |
+| T15 | Observability (Sentry wrapper, sync telemetry) + config plugins/permissions | S10 | inline | 260 | partial — native config plugin + `verify:native` done; Sentry wrapper pending (see L8) | `## Log` L8 |
 | T16 | App unit/component tests (jest-expo + RNTL) | S11 | delegated (parallel with T17) | 700 | pending | — |
 | T17 | Maestro flows: smoke, offline knock, leaderboard | S11 | delegated (parallel with T16) | 200 | pending | — |
 | T18 | Docs set + ADRs 0004–0008 + AI workflow | S12 | inline | 2,000 (docs) | pending | — |
 | T19 | Final verification + read-back + AGENTS.md/README index updates | S13, S14 | inline | 160 | pending | — |
+| P0 | Phase 0: native toolchain verification (export, prebuild, build, boot) | S10, S13 | inline | 380 | complete on iOS compile; boot blocked by OS — see L8 | `## Log` L8 |
 
 Route note: T3 and T4 are disjoint edit surfaces (`supabase/` vs `packages/sync-core/`) and both exceed ~450 lines of independent behaviour, so they run as parallel delegated units. T16 and T17 are disjoint (`__tests__/` vs `.maestro/`) and follow the same rule. Everything else is one coherent unit and runs inline.
 
@@ -271,3 +272,41 @@ Two test bugs were mine, not the engine's: a deferral timestamp in 1970 (already
 Still open in T5: the auth store (`src/data/stores/session.ts`) and `refreshSession` that stays quiet offline. Tracked, not claimed.
 
 Repo loop after this unit: `pnpm typecheck --force` 10/10, `pnpm lint --force` 10/10, `pnpm test --force` 4/4.
+
+### L8 — 2026-11-03 — Phase 0: native toolchain verification
+
+Goal of the phase: prove the app compiles and runs natively **before** writing screens. It found three real defects and one environment wall. All evidence below was observed, not inferred.
+
+**1. Bundle.** `npx expo export --platform ios` → `iOS Bundled 18331ms node_modules/expo-router/entry.js (1520 modules)`, Hermes bytecode 3.6 MB. No Metro, import, or resolution errors. Re-run after every dependency change.
+
+**2. Prebuild.** `npx expo prebuild --platform ios --no-install` and `--platform android --no-install` both succeed. `ios/Knockout/Info.plist` contains `UIBackgroundModes = [location, fetch, processing]` and the four usage strings; `AndroidManifest.xml` contains the seven declared permissions.
+
+**3. A verifier, not a claim.** `scripts/verify-native-config.mjs` (new, `pnpm --filter @gerardocordero/knockout-mobile verify:native`) compares `app.config.ts` against the generated manifests. Its first run found a real defect: `expo-camera` adds `android.permission.RECORD_AUDIO` through its own library manifest, and this app only takes photos and scans QR codes. Fixed with `android.blockedPermissions`; the verifier now requires the permission to be **explicitly blocked**, not merely absent. It also asserts the Podfile override from (4) is present, because a prebuild after deleting the plugin reintroduces a build failure that looks unrelated.
+
+**4. Xcode 27 vs old podspecs.** First build: `❌ The iOS Simulator deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 12.0, but the range of supported deployment target versions is 15.0 to 27.2.x (in target 'ReachabilitySwift')` and the same for `Sentry-Sentry` at 11.0. `ReachabilitySwift` comes from `expo-updates`. Fixed with `plugins/withIosDeploymentTarget.js`, a config plugin that injects a `post_install` override aligning every pod target with the app's deployment target (16.4). A plugin, not a hand-edited Podfile, because `ios/` is generated and gitignored.
+
+**5. `@sentry/react-native` removed, deliberately.** `expo-doctor` flagged a major mismatch (8.33.0 installed, `~7.11.0` expected by SDK 56). Downgrading to 7.11.0 then failed the build on the same deployment-target rule (its pods declare iOS 11.0). Nothing imports Sentry yet, so it was removed rather than patched around; T15 re-adds it now that the plugin in (4) handles old podspecs. The alternative — keeping a monitoring SDK that no code calls and that blocks the build — is not a trade-off, it is a preference for a checklist.
+
+**6. Swift 6.2 vs `expo-modules-jsi`.** After (4), the build got further and failed in Expo's own code: `❌ a C function pointer can only be formed from a reference to a 'func' or a literal closure` at `expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/JavaScriptRuntime.swift:219`. Installed 56.0.10. I downloaded 56.0.14 with `npm pack` and diffed the file without installing anything: it introduces `let setterPointer: (@convention(c) ...) = setter`, which is exactly what Swift 6.2 requires. `expo@56.0.24` → `expo-modules-core@56.0.27` → `expo-modules-jsi@~56.0.14`, so bumping one dep (as `expo-doctor` had already advised) fixes it. Applied: `expo 56.0.12 → 56.0.24`.
+
+**7. Build succeeds.** `npx expo run:ios --no-bundler --no-install` → exit 0, `› Installing .../Knockout.app`, `› Installing on iPhone 18 Pro Max`, `› Opening on iPhone 18 Pro Max (dev.gerardocordero.knockout)`. Across the session the build compiled 1,500+ modules including `ReactCodegen`, `RNWorklets`, `NitroMmkv`, `NitroModules`, `ExpoSQLite`, `ExpoCamera`, `ExpoLocation`.
+
+**8. Boot blocked by the OS — the wall.** The app installs and exits immediately. Crash report `Knockout-2026-11-03-133936.ips`:
+
+```
+exception: EXC_BREAKPOINT (SIGTRAP)
+triggered thread frame 0:
+  UIKitCore ___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption_block_invoke
+  UIKitCore -[UIApplication workspace:didCreateScene:withTransitionContext:completion:]
+```
+
+UIKit on iOS 27 refuses an app that has not adopted `UIScene` lifecycle. `Info.plist` has no `UIApplicationSceneManifest`, `AppDelegate.swift` builds a manual `UIWindow`, and `react-native@0.85.3` has no `application:configurationForConnectingSceneSession:` anywhere in its sources — so this cannot be fixed by adding a plist key; a manifest without a scene delegate gives a black screen. `xcrun simctl list runtimes` shows only `iOS 27.0` and `iOS 27.1` installed on this machine, and the sibling `apps/trading-mobile` (Expo `~58.0.22`) does run here, which corroborates that the missing piece is SDK support, not this app.
+
+**Consequences, written down instead of discovered later:**
+- Screen work (T10–T13) cannot be visually verified on this machine until one of: an iOS ≤ 26 simulator runtime is installed (`xcodebuild -downloadPlatform iOS`), or the repo moves to an SDK with UIScene support (`odd/tasks/expo-sdk-upgrade.md`).
+- The JS-only work is unaffected: SQLite DAOs, the sync runtime, auth, and every unit test run under Jest with no device.
+- Android was attempted as the alternative: the `Medium_Phone` AVD attaches to `adb` but never reaches `sys.boot_completed` headless with SwiftShader within ten minutes, so it was abandoned rather than left running. Recorded as not verified.
+
+**Accepted drift.** `expo-doctor` still reports five patch-level mismatches (`expo-linking`, `expo-router`, `expo-splash-screen`, `expo-updates`, `jest-expo`). They are not fixed here because those versions are hoisted and shared with `apps/portfolio`, whose Jest suite is green and whose SDK upgrade is its own tracked task. Raising them from a side project is how a portfolio app breaks the app next door.
+
+**Loop after the phase:** `pnpm typecheck --force` 10/10, `pnpm test --force` 4/4 (portfolio 37 tests, knockout 8, prep-kit, sync-core 43).

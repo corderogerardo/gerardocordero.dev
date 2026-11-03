@@ -54,6 +54,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "dev.gerardocordero.knockout",
+    /**
+     * `expo-camera` adds RECORD_AUDIO through its own library manifest. This app
+     * takes photos and scans QR codes; it never records audio. A permission the app
+     * does not need is a permission the user is asked to grant and the store shows.
+     */
+    blockedPermissions: ["android.permission.RECORD_AUDIO"],
     permissions: [
       "ACCESS_COARSE_LOCATION",
       "ACCESS_FINE_LOCATION",
@@ -64,7 +70,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "WAKE_LOCK",
     ],
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    // Aligns every pod's deployment target with ours; Xcode 27 hard-fails below iOS 15.
+    "./plugins/withIosDeploymentTarget",
+  ],
   experiments: {
     typedRoutes: true,
   },

@@ -25,7 +25,27 @@ supabase db reset            # drop + migrate + seed
 
 # the app (needs a development build, not Expo Go: MMKV and camera are native)
 pnpm --filter @gerardocordero/knockout-mobile start
+
+# prove the config became native permissions (macOS; run after prebuild)
+npx expo prebuild --no-install
+pnpm --filter @gerardocordero/knockout-mobile verify:native
 ```
+
+### Native prerequisites (macOS), and two traps this project already hit
+
+1. **Xcode 27 rejects any pod whose deployment target is below iOS 15.0.**
+   `ReachabilitySwift` (pulled in by `expo-updates`) still declares 12.0, and the build
+   dies with `The iOS Simulator deployment target ... is set to 12.0`. `plugins/withIosDeploymentTarget.js`
+   aligns every pod target with the app's own deployment target. It is a config plugin,
+   not a hand-edited Podfile, because `ios/` is generated and gitignored.
+2. **An Expo SDK 56 app traps at launch on an iOS 27 simulator** with
+   `EXC_BREAKPOINT` in `_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`:
+   UIKit requires UIScene adoption, and React Native 0.85 does not implement it.
+   Compiling, installing and signing all work; the process dies the moment it tries to
+   create a window. Until this repo moves to an SDK with UIScene support, run the app on
+   an **iOS 26 or older simulator runtime**, or verify the runtime behaviour on Android.
+   Do not chase this as an app bug — the crash report and the iOS 27-only runtime list
+   are in `odd/tasks/knockout.md` (L8).
 
 The loop you run before saying "done", every time:
 
