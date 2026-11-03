@@ -21,24 +21,18 @@ jest.mock("expo-sqlite", () => ({
 // about synchronous reads without needing the native module.
 jest.mock("react-native-mmkv", () => {
   const store = new Map<string, string>();
-  class MMKV {
-    getString(key: string) {
-      return store.get(key);
-    }
-    set(key: string, value: string) {
+  const instance = {
+    getString: (key: string) => store.get(key),
+    set: (key: string, value: string) => {
       store.set(key, value);
-    }
-    delete(key: string) {
-      store.delete(key);
-    }
-    clearAll() {
+    },
+    remove: (key: string) => store.delete(key),
+    clearAll: () => {
       store.clear();
-    }
-    contains(key: string) {
-      return store.has(key);
-    }
-  }
-  return { MMKV, useMMKVStorage: jest.fn() };
+    },
+    contains: (key: string) => store.has(key),
+  };
+  return { createMMKV: jest.fn(() => instance) };
 });
 
 // --- expo-secure-store -------------------------------------------------------

@@ -100,8 +100,8 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 | T1 | Design tokens + UI primitives (text, button, card, pill, sheet, empty) | S3 | inline | 320 | pending | — |
 | T2 | Postgres schema migrations + seed (2 orgs, 8 reps, properties, knocks, leads) | S6, S9 | inline | 700 | complete | `## Log` L6 |
 | T3 | RLS policies + pgTAP isolation matrix | S9 | inline (delegation denied, see L6) | 450 | complete | `## Log` L6 |
-| T4 | `sync-core`: contract, outbox, backoff, engine, conflict policies + Vitest | S4 | inline (delegation denied, see L6) | 1,300 | in progress | — |
-| T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | pending | — |
+| T4 | `sync-core`: contract, outbox, backoff, engine, conflict policies + Vitest | S4 | inline (delegation denied, see L6) | 1,300 | complete | `## Log` L7 |
+| T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | in progress — client/config/storage/types done; auth store pending | `## Log` L7 |
 | T6 | `sync-push` Edge Function (idempotent batch apply, merge, cursor) | S4, S9 | inline | 420 | pending | — |
 | T7 | HubSpot adapter + `hubspot-sync` function + fake adapter + tests | S8 | inline | 460 | pending | — |
 | T8 | App SQLite schema, DAOs, TanStack Query hooks, Zustand stores | S4, S6 | inline | 620 | pending | — |
@@ -237,3 +237,37 @@ Three defects the tests caught, all fixed in the migration rather than in the te
 3. The same default grant let `anon` read `knocks` — the anon key ships in the bundle, so this is the one that matters most.
 
 Work unit note: migrations + seed + policies + their tests ship as one commit (~1,200 authored lines, above the ~400 heuristic). A policy without its table is not reviewable in isolation, and the seed is the fixture the policy tests read. Split anyway would create commits that cannot be verified alone.
+
+### L7 — 2026-11-03 — T4 evidence (sync-core) and T5 partial (Supabase client)
+
+**T4 — `packages/sync-core`.** Five source modules, five test files, 43 tests.
+
+- `contract.ts` — Zod schemas for the mutation envelope and the push response; types are inferred from the schemas, never declared twice.
+- `backoff.ts` — `nextDelay(attempt, random)` and `shouldQuarantine(attempt)`. Pure, so the curve is asserted exactly instead of slept on.
+- `policies.ts` — the field-group → policy table from ADR-0007, plus `resolveConflict` with a real per-field last-write-wins merge (one-sided change, both-changed, tie to server, restricted field list).
+- `outbox.ts` — the `OutboxStore` port and an in-memory adapter used by tests and by the app's offline simulator.
+- `engine.ts` — `runDrain(ctx)`: reclaim stale `inflight`, one ordered batch, idempotent replay handling, terminal stop, quarantine at the attempt ceiling, transport errors treated as retryable.
+
+Evidence:
+
+```
+pnpm --filter @gerardocordero/sync-core test    → Test Files 5 passed, Tests 43 passed
+pnpm --filter @gerardocordero/sync-core typecheck → clean
+pnpm --filter @gerardocordero/sync-core lint      → clean
+```
+
+**The tests can fail.** Sabotage check, run deliberately: deleting `stopped = true` from the `rejected` branch produced exactly one failure (`stops the batch on the first terminal rejection`) and 42 passes; restoring the line returned 43/43. A suite that stays green under a broken engine is decoration.
+
+Two test bugs were mine, not the engine's: a deferral timestamp in 1970 (already due) and an expected value that ignored the doubling (`attempt 1` starts at twice the base). Both were fixed in the test, because the engine was right.
+
+**T5 (partial) — Supabase client.**
+
+- `supabase gen types typescript --local > packages/sync-core/src/database.types.ts` — 1,069 generated lines, committed. This is the type-safe contract the job asks for: a column rename becomes a compile error.
+- `src/api/config.ts` — platform-aware local URL (`10.0.2.2` on the Android emulator, `127.0.0.1` elsewhere) with the shifted ports, and an explicit env override.
+- `src/api/storage.ts` — session persistence in two layers: an AES-256 key in Keychain/Keystore, the session in encrypted MMKV. The naive version (session straight into `expo-secure-store`) breaks on Android at 2,048 bytes per value, which is a field failure, not a theoretical one. A shared in-flight promise prevents two MMKV instances over the same file on first launch.
+- `src/api/client.ts` — one typed client, `detectSessionInUrl: false`, refresh on.
+- `__tests__/api-config.test.ts` (3) and `__tests__/session-storage.test.ts` (4) — the port, the `anon`-role claim in the key, the env override, round-trip, missing key, removal, concurrent first read.
+
+Still open in T5: the auth store (`src/data/stores/session.ts`) and `refreshSession` that stays quiet offline. Tracked, not claimed.
+
+Repo loop after this unit: `pnpm typecheck --force` 10/10, `pnpm lint --force` 10/10, `pnpm test --force` 4/4.

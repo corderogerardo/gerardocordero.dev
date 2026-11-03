@@ -1,9 +1,15 @@
 /**
- * @gerardocordero/sync-core
+ * @gerardocordero/sync-core — the offline sync engine, as a library.
  *
- * Framework-free offline sync engine. It knows nothing about React, Expo, or
- * Supabase: the runtime supplies those through ports (see engine.ts).
+ * Read order for a newcomer: `contract` → `backoff` → `policies` → `outbox` →
+ * `engine`. Each file is one decision, and each decision has a test.
  *
- * Read order for a newcomer: contract -> backoff -> policies -> outbox -> engine.
+ * The rule that keeps this package valuable: it must never import React, React
+ * Native, Expo, or Supabase. Those are the app's adapters; this is the logic.
  */
-export const SYNC_CORE_VERSION = "0.1.0";
+export { SYNC_CORE_VERSION } from "./version";
+export * from "./backoff";
+export * from "./contract";
+export * from "./engine";
+export * from "./outbox";
+export * from "./policies";
