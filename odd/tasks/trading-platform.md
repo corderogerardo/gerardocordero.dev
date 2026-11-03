@@ -1,6 +1,6 @@
 # Trading platform (paper trading)
 Objective: Create two new projects under `apps/` — a Rust backend (`apps/trading-api`) and an Expo SDK 58 mobile client (`apps/trading-mobile`) — for a simulated paper-trading product, plus a junior-ready delivery plan covering unit, integration, e2e, security, and concurrency tests.
-Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are the review slices; forecast ~3,500–5,000 authored lines including tests and docs, generated files excluded). Verification: `make verify` in `apps/trading-api` (fmt, clippy, unit + integration + security + concurrency tests against Postgres) and `pnpm --filter @gerardocordero/trading-mobile typecheck lint test` plus the repo loop (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm architecture:check`).
+Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are the review slices; forecast ~3,500–5,000 authored lines including tests and docs, generated files excluded). Verification: `make verify` in `apps/trading-api` (fmt, clippy, unit + integration + security + concurrency tests against Postgres) and `cd apps/trading-mobile && pnpm verify` plus the repo loop (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm architecture:check`).
 
 ## Specs
 
@@ -20,7 +20,7 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 - User request: “su app en react native usando el ultimo sdk de expo”
 - Scope: Expo SDK 58 (`expo@~58.0.22`, React 19.3, React Native 0.88.1), expo-router, TypeScript strict, React Compiler enabled. No custom Babel/Metro layer; styling uses a typed token module and `StyleSheet`.
 - Acceptance: `expo-doctor` reports no blocking issue; typecheck, lint, and jest pass; the app renders markets, market detail with chart and order ticket, portfolio, orders, and settings.
-- Checks: `pnpm --filter @gerardocordero/trading-mobile typecheck lint test`; `npx expo-doctor`.
+- Checks: `cd apps/trading-mobile && pnpm typecheck && pnpm lint && pnpm test`; `npx expo-doctor`.
 
 ### S4 — Trading product surface
 - User request: “un backend para una app de trading”
@@ -32,7 +32,7 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 - User request: “que cubras los tests unit test, e2e, security tests, todos los tests de un producto completo”
 - Scope: Rust unit tests (domain + crypto + rate limiter), integration tests (routers against Postgres), security tests (authn/authz, token tampering and reuse, SQL injection probes, rate limiting, idempotency replay/conflict), concurrency tests (no double fill, no negative balance), e2e journey over HTTP, and mobile unit/component tests plus Maestro flows. Load testing is scripted and documented, run on demand.
 - Acceptance: Every layer runs from a documented command; concurrency and security suites fail if their invariant is broken; skipped layers are reported explicitly.
-- Checks: `make verify` output; `pnpm --filter @gerardocordero/trading-mobile test`; Maestro flows are authored and marked not-run without a booted simulator.
+- Checks: `make verify` output; `cd apps/trading-mobile && pnpm test`; Maestro flows are authored and marked not-run without a booted simulator.
 
 ### S6 — Junior-ready delivery plan
 - User request: “quiero que hagas un plan completo con tareas bien definidas que un junior pueda tomar”
@@ -125,7 +125,7 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 - `pnpm --filter @gerardocordero/portfolio typecheck` fails in `packages/ui` (`className` is not a prop of `Pressable`/`View`/`Text`) with `pnpm-lock.yaml` identical to `main` (`a97b3d3`) and a fresh install from it. It is unrelated to this feature; per the containment spec it was reported, not fixed.
 
 ### L5 — Verification evidence (2026-11-03)
-- Backend: `make verify` → fmt clean, clippy `-D warnings` clean, **80 unit tests + 30 HTTP suites** (auth 9, trading 9, security 8, concurrency 3, e2e 1) green against Postgres 17.
+- Backend: `make verify` → fmt clean, clippy `-D warnings` clean, **80 unit tests + 32 HTTP suites** (auth 9, trading 9, security 8, concurrency 3, quote stream 2, e2e 1) green against Postgres 17.
 - Live smoke: server started, register → market buy (0.5 BTC) → idempotent replay returned the same order id → portfolio reflected cash/position/P&L → invalid order returned `422 VALIDATION_ERROR` with `details.field`.
 - Mobile: `pnpm typecheck`, `pnpm lint`, `pnpm test` → **11 suites / 115 tests**; `expo-doctor` 20/20; iOS Metro export succeeded. Maestro flows authored, not run (no booted simulator / dev build).
 - Repo: `pnpm architecture:check` green; the new app is outside the workspace by design.

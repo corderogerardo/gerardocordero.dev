@@ -16,8 +16,9 @@ and `X#` (cross-cutting).
    reason (RED) before you write the fix.
 3. Keep the change inside one task. If you need a schema change, write the
    migration first and mention it in the PR.
-4. Run `make verify` for the backend, or `pnpm --filter @gerardocordero/trading-mobile
-   verify` for the mobile app. Both must be green.
+4. Run `make verify` for the backend, or `cd apps/trading-mobile && pnpm verify` for
+   the mobile app. The mobile app is not a pnpm workspace member (its SDK 58
+   install is isolated), so it takes no `--filter`. Both gates must be green.
 5. Update `docs/api.md` if a payload changed, and add an entry to
    `docs/ARCHITECTURE.md` if a new module or failure mode appears.
 
@@ -291,12 +292,12 @@ and they improve the product immediately.
 | Layer | Where | What it proves |
 | --- | --- | --- |
 | Unit | `cargo test --lib` | Money math, order validation, P&L, price walk, JWT, password policy, rate limiter |
-| Integration | `tests/*.rs` (except e2e) | HTTP contracts, authorization, idempotency, rate limits, SQL behavior |
+| Integration | `tests/*.rs` (except e2e) | HTTP contracts, authorization, idempotency, rate limits, SQL behavior, WebSocket stream |
 | Security | `tests/security.rs` | Authn/authz, token tampering and reuse, injection probes, error hygiene |
 | Concurrency | `tests/concurrency.rs` | No double fill, no overdraft, one order per key |
 | E2E | `tests/e2e_journey.rs` | The full user story over real HTTP + Postgres |
 | Load | `scripts/load-test.js` | Latency curve and ledger consistency under sustained load (on demand) |
-| Mobile unit | `pnpm --filter @gerardocordero/trading-mobile test` | Formatting, decimal math, API mapping, reconnect policy |
+| Mobile unit | `cd apps/trading-mobile && pnpm test` | Formatting, decimal math, API mapping, reconnect policy |
 | Mobile component | same | Screen states with mocked network |
 | Mobile E2E | `.maestro/*.yml` | Real device flow (requires a booted simulator) |
 
