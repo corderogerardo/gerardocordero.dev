@@ -313,9 +313,9 @@ test("CLI with no root argument still audits the repository root", async () => {
 
   assert.equal(outcome.code, 0);
   assert.ok(outcome.stdout.includes("Architecture fitness check"));
-  assert.ok(outcome.stdout.includes("Workspace packages: 13"));
-  assert.ok(outcome.stdout.includes("Declared local workspace edges: 9"));
-  assert.ok(outcome.stdout.includes("Allowed edges: 9"));
+  assert.ok(outcome.stdout.includes("Workspace packages: 15"));
+  assert.ok(outcome.stdout.includes("Declared local workspace edges: 10"));
+  assert.ok(outcome.stdout.includes("Allowed edges: 10"));
   assert.ok(outcome.stdout.includes("Violations: 0"));
   assert.equal(outcome.stderr, "");
 });

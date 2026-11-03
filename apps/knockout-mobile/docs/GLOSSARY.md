@@ -23,7 +23,7 @@ Read the sections in order the first time. Later, jump by name.
 ### React 19
 
 - **What.** The UI library. React 19 adds `use()`, actions, and removes most `forwardRef` needs.
-- **Why.** It is what Expo SDK 58 ships. Hooks discipline is a named requirement.
+- **Why.** It is what the monorepo's Expo SDK ships. Hooks discipline is a named requirement.
 - **How here.** Function components only. Server state belongs to TanStack Query, not `useEffect`;
   the only effects are subscriptions (Realtime, network listener, app-state listener) and each one
   cleans up.
@@ -37,7 +37,7 @@ Read the sections in order the first time. Later, jump by name.
   assume a phone held in one hand, in sunlight, with gloves off.
 - **Rejected.** Flutter (different hire), native Swift/Kotlin (two teams, not one).
 
-### Expo SDK 58
+### Expo SDK (the monorepo's pinned major)
 
 - **What.** A curated set of React Native libraries, build tooling, and OTA updates, with versions
   pinned to work together.
@@ -45,6 +45,12 @@ Read the sections in order the first time. Later, jump by name.
   deployment, device management, and release channels". Expo is the release pipeline.
 - **How here.** `app.config.ts`, `expo-*` modules only (no unmaintained third-party native libs
   except MMKV), and a development build (not Expo Go) so native modules work.
+- **Version note.** This app pins the **same Expo major the rest of the repo uses**, not the newest
+  one. Reason, observed rather than assumed: this workspace installs with `node-linker=hoisted`, and
+  a second Expo major flips the *hoisted* `react-native`, `babel-preset-expo`, `jest-expo` and
+  `hermes-parser` to the newer versions, which breaks `apps/portfolio`'s Jest run. Two RN majors in
+  one flat tree is the constraint; moving the whole repo to a new SDK is a separate, tracked upgrade
+  (`odd/tasks/expo-sdk-upgrade.md`), not a side effect of adding an app.
 - **Rejected.** Bare RN without Expo: you then own Fastlane, code signing, and OTA yourself.
 
 ### Expo Router

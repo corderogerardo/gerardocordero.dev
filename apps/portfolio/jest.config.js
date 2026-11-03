@@ -11,7 +11,7 @@ module.exports = {
     'node_modules/(?!(?:\\.pnpm/)?(' +
       '(jest-)?react-native|@react-native(-community)?|@react-native/.*|' +
       'expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|' +
-      'react-navigation|@react-navigation/.*|expo-router|expo-modules-core|' +
+      'react-navigation|@react-navigation/.*|expo-router|expo-modules-core|jest-expo|' +
       'nativewind|react-native-css-interop|' +
       'react-native-reanimated|react-native-worklets|' +
       'react-native-gesture-handler|react-native-safe-area-context|' +

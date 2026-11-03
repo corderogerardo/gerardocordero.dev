@@ -1,0 +1,19 @@
+# Expo / React Native
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Generated native projects (regenerate with `expo prebuild`)
+/ios
+/android
+
+# Credentials and local env
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.env.local
+.env.*.local

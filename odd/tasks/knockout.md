@@ -22,7 +22,7 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 
 ### S3 — Stack mirrors the target job description
 - User request: “un producto completo que satisfaga estos requisitos y me ayude a generar experiencia para conseguir el empleo”
-- Scope: React Native + Expo SDK 58 + TypeScript strict + expo-router; TanStack Query for server state; Zustand for local UI/session state; Zod at every boundary; expo-sqlite as the on-device database; react-native-mmkv for fast key-value; Supabase (Postgres, RLS, Realtime, Edge Functions on Deno, Storage); HubSpot CRM API v3 integration; expo-location, expo-camera, expo-notifications, expo-network, expo-task-manager, expo-background-task; Sentry; EAS Build/Submit/Update profiles. Styling uses a typed token module + `StyleSheet` (NativeWind is already demonstrated in `apps/portfolio`; this app spends its novelty budget on the sync engine).
+- Scope: React Native + the monorepo's Expo SDK major + TypeScript strict + expo-router; TanStack Query for server state; Zustand for local UI/session state; Zod at every boundary; expo-sqlite as the on-device database; react-native-mmkv for fast key-value; Supabase (Postgres, RLS, Realtime, Edge Functions on Deno, Storage); HubSpot CRM API v3 integration; expo-location, expo-camera, expo-notifications, expo-network, expo-task-manager, expo-background-task; Sentry; EAS Build/Submit/Update profiles. Styling uses a typed token module + `StyleSheet` (NativeWind is already demonstrated in `apps/portfolio`; this app spends its novelty budget on the sync engine).
 - Acceptance: Each technology in the scope is installed, used by production code, and named in `GLOSSARY.md` with what/why/how/alternative.
 - Checks: `pnpm --filter @gerardocordero/knockout-mobile typecheck`; a dependency audit against GLOSSARY.md.
 
@@ -96,7 +96,7 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 
 | ID | Task | Specs | Route | Est. lines | Status | Commit |
 |---|---|---|---|---|---|---|
-| T0 | Worktree, branch, app scaffold, workspace wiring, loop gates | S1, S13 | inline | 260 | in progress | — |
+| T0 | Worktree, branch, app scaffold, workspace wiring, loop gates | S1, S13 | inline | 260 | complete | see `## Log` L5 |
 | T1 | Design tokens + UI primitives (text, button, card, pill, sheet, empty) | S3 | inline | 320 | pending | — |
 | T2 | Postgres schema migrations + seed (2 orgs, 8 reps, properties, knocks, leads) | S6, S9 | inline | 700 | pending | — |
 | T3 | RLS policies + pgTAP isolation matrix | S9 | delegated (parallel with T4) | 450 | pending | — |
@@ -178,3 +178,34 @@ Experience with location-based features: react-native-maps, background location 
 - **NativeWind rejected for this app**: `apps/portfolio` already demonstrates it. A typed token module + `StyleSheet` keeps this app's dependency surface small so the novelty budget goes to the sync engine.
 - **Vitest kept for `sync-core` only** (job names it), jest-expo + RNTL for the app (repo-proven with RN 0.85+ and RNTL v14 async API). Detox rejected in favour of Maestro (already proven in this repo, no native test harness, cross-platform) — documented in `ARCHITECTURE.md` with the migration path.
 - **Scoring is server-authoritative.** A leaderboard fed by client-claimed XP is trivially cheatable; recomputing from raw knock rows in SQL also demonstrates RLS-adjacent thinking. This is a deliberate, documented deviation from the naive design.
+
+### L4 — 2026-11-03 — Expo SDK: same major as the repo, not the newest (observed constraint)
+
+Scope line S3 originally said "Expo SDK 58". It was changed after the scaffold proved the constraint, not before:
+
+- First scaffold attempt used `expo ~58.0.22` / `react-native 0.88.1`. `pnpm install` succeeded, but `apps/portfolio`'s Jest suite — green on `main` (verified in the sibling worktree: 4 suites, 18 tests, 0 failures) — turned red inside this worktree: `SyntaxError` from `babel-plugin-syntax-hermes-parser` on React Native's Flow-typed `src/private/specs_DEPRECATED/*.js`.
+- Cause, measured by comparing hoisted versions against the `main` worktree: with `node-linker=hoisted`, adding a second Expo major flipped the **root** copies of `react-native` (0.85.3 → 0.88.1), `expo` (56.0.12 → 58.0.22), `babel-preset-expo` (56.0.15 → 58.0.23), `jest-expo` (56.0.5 → 58.0.13) and `hermes-parser`/`babel-plugin-syntax-hermes-parser` (0.33.3 → 0.36.0) — which the older app's toolchain then resolves.
+- Decision: **pin the app to the Expo major the repo already uses** (`expo ~56.0.12`, RN 0.85.3, React 19.2.3, `jest-expo ~56.0.5`, `babel-preset-expo ~56.0.15`). One Expo toolchain in a flat tree; no dependency surgery on a shared lockfile; the loop is green again. Moving the whole repo to a newer SDK is a separate tracked task (`odd/tasks/expo-sdk-upgrade.md`), not a side effect of adding an app.
+- Second observation: with two RN consumers, pnpm's peer resolution created a second `jest-expo` instance with a nested `expo` (`node_modules/jest-expo/node_modules/expo/...`), which the shared `transformIgnorePatterns` skipped. Fixed by adding `jest-expo` to that allowlist in **both** app configs (one-line config change, no source change) — recorded because it touches `apps/portfolio/jest.config.js`.
+
+### L5 — 2026-11-03 — T0 evidence (scaffold + loop)
+
+Commands and results, force-run (`--force`, no Turbo cache), from the worktree root:
+
+- `pnpm typecheck --force` → `Tasks: 10 successful, 10 total`.
+- `pnpm lint --force` → `Tasks: 10 successful, 10 total` (13 pre-existing warnings, all in `apps/learn`, 0 errors).
+- `pnpm test --force` → `Tasks: 4 successful, 4 total` (portfolio 37 tests, knockout 1, prep-kit, sync-core).
+- `pnpm architecture:check` → `Workspace packages: 15`, `Violations: 0`. `scripts/architecture-fitness.test.mjs` expected the old inventory (13 packages / 9 edges) and was updated to 15 / 10 — the two new workspace members are the packages this feature adds.
+- `cd apps/knockout-mobile && npx expo config --type public` → resolves, `sdkVersion: '56.0.0'`, permission strings and `runtimeVersion { policy: appVersion }` present.
+- `supabase start` → API on `127.0.0.1:54341` (defaults 54321–54327 are owned by another local stack), DB on 54342, Studio on 54343.
+- `npx jest` in `apps/portfolio` → 5 suites / 37 tests pass (was failing before the SDK pin).
+
+Scaffold contents: `apps/knockout-mobile` (expo-router root layout + 5 tab routes with `screen-*`/`tab-*` selectors, tokens, `Screen`), `packages/sync-core` (package + tsconfig + vitest + an eslint rule that forbids React/Expo/Supabase imports), root `test` filter extended, `AGENTS.md` rows for both new packages.
+
+Errors hit and fixed, in order (kept because they are the kind a junior will hit):
+1. `newArchEnabled` no longer exists in the Expo config type → removed with a comment.
+2. Flow parse error from the second Expo major → SDK pinned (L4).
+3. `Cannot use import statement outside a module` from a nested `jest-expo/node_modules/expo` → allowlist fix (L4).
+4. `Cannot find module '2g'` from a corrupted hoisted `@expo/cli` → `rm -rf node_modules && pnpm install` (23.8 s); `npx expo config` then worked for both apps.
+
+Commit hashes for every task are filled in one pass at T19, from `git log`, so the record is exact instead of guessed.
