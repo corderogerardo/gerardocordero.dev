@@ -7,7 +7,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test --filter=@gerardocordero/portfolio --filter=@gerardocordero/prep-kit",
+    "test": "turbo test --filter=@gerardocordero/portfolio --filter=@gerardocordero/prep-kit --filter=@gerardocordero/sync-core --filter=@gerardocordero/knockout-mobile",
     "architecture:check": "node --test scripts/architecture-fitness.test.mjs && node scripts/architecture-fitness.mjs",
     "clean": "turbo clean"
   },

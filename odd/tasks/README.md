@@ -19,6 +19,7 @@ one is the most expensive navigation mistake available in this repo.
 
 | Document | Objective | Branch (merged) | Status | Last commit |
 |---|---|---|---|---|
+| [`knockout.md`](knockout.md) | Knockout: offline-first, gamified field-sales product (Expo + Supabase + `sync-core`), built as job-target practice. Reads as the goal document — specs, tasks, log. | `feature/knockout-field-sales` (open) | **In progress** — T0. Docs and ADRs written; code not started. | `—` |
 | [`architecture-deepening.md`](architecture-deepening.md) | Implement nine architecture-deepening candidates across the monorepo (18.7 KB — the largest; read selectively). | `feature/monorepo-deepening` (#125) | **Partial** — T2–T5 `needs_validation`; S7 blocked on a cross-host product decision. Read `## Log` before resuming. | `395a639` |
 | [`architecture-fitness-functions.md`](architecture-fitness-functions.md) | Dependency-direction fitness checks plus the Node inventory script and its tests (13.2 KB). | `feature/architecture-fitness-functions` (#109) | **15 of 18 tasks checked**; 3 open. | `f0b0f0c` |
 | [`expo-sdk-upgrade.md`](expo-sdk-upgrade.md) | Incremental Expo SDK 56 → 57 → 58 upgrade for `apps/portfolio`, Node ≥22.13, Router/web-export compatibility (4.7 KB). | `feature/monorepo-deepening` (#125) | **Open, not started** — T1 and T2 both `pending`; no source, manifest, or lockfile changed yet. | `395a639` |
