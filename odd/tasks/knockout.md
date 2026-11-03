@@ -104,7 +104,7 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 | T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | complete | `## Log` L9 |
 | T6 | `sync-push` Edge Function (idempotent batch apply, merge, cursor) | S4, S9 | inline | 420 | pending | — |
 | T7 | HubSpot adapter + `hubspot-sync` function + fake adapter + tests | S8 | inline | 460 | pending | — |
-| T8 | App SQLite schema, DAOs, TanStack Query hooks, Zustand stores | S4, S6 | inline | 620 | pending | — |
+| T8 | App SQLite schema, DAOs, TanStack Query hooks, Zustand stores | S4, S6 | inline | 620 | in progress — schema, migrations, outbox adapter and the atomic knock write done; query hooks pending | `## Log` L10 |
 | T9 | Sync runtime adapters: network, background task, provider, status pill | S4, S5 | inline | 360 | pending | — |
 | T10 | Auth screen + Shift screen (start/end, streak, XP, quick knock) | S6, S7 | inline | 360 | pending | — |
 | T11 | Map screen: territory polygon, pins, geofence, knock sheet | S6 | inline | 520 | pending | — |
@@ -351,3 +351,44 @@ pnpm architecture:check      → 0 violations
 **One flake, diagnosed rather than ignored.** The first `pnpm test --force` run failed on `knockout-mobile#test` and the next two passed. Standalone, `sign-in-screen.test.tsx` took 5.42 s — right on Jest's 5 s default — and Turbo runs four suites in parallel. Fixed with `testTimeout: 15_000` in the app's jest config and a comment explaining why, instead of re-running until it went green.
 
 **Still open in T1**: `Card`, `Pill`, `Sheet`, `EmptyState`. They belong with the screens that use them (T10–T13), not before.
+
+### L10 — 2026-11-03 — Phase 2: the offline write path (T8, first half)
+
+Branch: `feature/knockout-offline-write`, cut from `origin/main` after PR #136 merged (`912904f`).
+
+**What was built**
+
+- `src/db/runner.ts` — a four-method `SqliteRunner` seam (`run`, `all`, `first`, `transaction`) with one expo-sqlite adapter. The seam exists so the persistence layer can be **executed** in tests, not asserted against a fake.
+- `src/db/migrations.ts` — `PRAGMA user_version` ladder, append-only, with `check` constraints that mirror the Postgres enums. `knocks`, `leads`, `outbox`, `sync_meta`.
+- `src/db/outbox-store.ts` — the SQLite implementation of `sync-core`'s `OutboxStore` port. `attempt = attempt + 1` happens in SQL, not read-then-write, so two drains cannot both read 2 and write 3.
+- `src/db/knocks.ts` — `recordKnock()`, the write path the product rests on: the knock row and its outbox mutation are inserted in **one transaction**, so the app can never show a knock that will not sync, or sync a knock the rep cannot see.
+- `src/db/open.ts` — single open handle, WAL on, migrations applied once.
+
+**Tests run against real SQLite.** `sql.js` (SQLite compiled to WebAssembly) is a devDependency used only by `__tests__/support/sqljs-runner.ts`; Metro never sees it. Fourteen cases:
+
+- migrations create the schema, are idempotent, and the *database* rejects an invalid outcome (not just TypeScript);
+- `recordKnock` writes both rows, and a rejected insert leaves **zero** rows behind — the crash window that matters;
+- the outbox adapter orders by `created_at`, honours `nextAttemptAt`, increments attempts in SQL, counts the queue, reclaims `inflight` rows after a crash, and quarantines without blocking;
+- **the real engine drains the real database**: `runDrain` over the SQLite outbox with a transport that fails once and then succeeds — first pass `retryable` with 2 deferred, second pass `applied: 2`, rows persisted as `applied`.
+
+**Two bugs the loop caught, both real**
+
+1. `typecheck` never looked at test files (`tsconfig.test.json` existed but no script used it). Added `typecheck:test` and made `typecheck` run both configs. It passed — but the gap was open, and a type error in a test is silent under babel-jest.
+2. `pnpm test` failed twice while the suite passed standalone: jest-expo's `testMatch` treats every file under `__tests__/` as a suite, so `__tests__/support/sqljs-runner.ts` was reported as "Your test suite must contain at least one test". Fixed with `testPathIgnorePatterns`. This only appears when the loop runs the way CI runs it.
+
+**Evidence**
+
+```
+cd apps/knockout-mobile
+npx jest                    → 6 suites, 39 tests passed
+npx tsc --noEmit && npx tsc -p tsconfig.test.json --noEmit → clean
+npx eslint .                → 0 errors
+
+from the worktree root
+pnpm typecheck --force      → 10/10
+pnpm lint --force           → 10/10
+pnpm test --force           → 4/4
+pnpm architecture:check     → 0 violations
+```
+
+**Still open in T8**: TanStack Query hooks over these DAOs (`useTodayKnocks`, `useLeads`), and the shift store. They land with the screens that consume them.
