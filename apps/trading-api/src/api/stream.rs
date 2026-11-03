@@ -101,7 +101,10 @@ async fn handle(mut socket: WebSocket, state: AppState, mut subscribed: HashSet<
         return;
     }
 
-    let mut ping = tokio::time::interval(PING_INTERVAL);
+    // First keepalive after one full interval: an immediate send would race the
+    // initial snapshot on every new connection.
+    let mut ping =
+        tokio::time::interval_at(tokio::time::Instant::now() + PING_INTERVAL, PING_INTERVAL);
     ping.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
 
     loop {

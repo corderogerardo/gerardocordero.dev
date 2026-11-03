@@ -51,9 +51,9 @@ make test       # same suite, explicit
 make load       # on-demand k6 load test (requires k6)
 ```
 
-`make verify` is the gate. It starts Postgres if needed and runs **110 tests**:
-80 unit tests (no database) and 30 HTTP suites against real Postgres, including
-security and concurrency suites.
+`make verify` is the gate. It starts Postgres if needed and runs **112 tests**:
+80 unit tests (no database) and 32 HTTP suites against real Postgres, including
+security, concurrency, end-to-end, and the WebSocket stream contract.
 
 ## Configuration
 
@@ -119,7 +119,7 @@ src/
   config.rs    validated environment
   error.rs     the public error contract
 migrations/    forward-only SQL, embedded at compile time
-tests/         auth, trading, security, concurrency, e2e (real Postgres)
+tests/         auth, trading, security, concurrency, quote stream, e2e (real Postgres)
 docs/          architecture, API contract, ADRs, security, plan
 ```
 
