@@ -76,6 +76,15 @@ cd apps/portfolio && maestro test .maestro/smoke.yml
 - **Secrets:** store submission credentials **on EAS**, not in the repo. iOS submit uses an App Store Connect API key and Android uses a Google Play service account, both uploaded once via `eas credentials -p ios|android` — so `eas.json`'s `submit.production` carries no `appleId`/`serviceAccountKeyPath` and CI needs only the `EXPO_TOKEN` GitHub secret. Never commit credentials; the `credentials/` dir stays gitignored for any local key files.
 - **`glob` does not traverse dot-directories.** Patterns such as `.github/workflows/*.yml` or `.atl/*.md` return "No files found" even with `hidden: true`, while the files exist. Use `ls`/`shell` for `.github/`, `.atl/`, `.claude/`, `.agents/`, and any other dot-path.
 - **Worktrees live as siblings of the repo, never inside it.** Convention: `<repo-parent>/<repo-name>-worktrees/<name>`, i.e. `~/noofficelocation/gerardocordero.dev-worktrees/<name>`. Nothing lives under `.worktrees/` or `worktrees/` — globbing for those returns nothing. Each worktree needs its own `pnpm install` and its own `.codegraph/` index.
+- **Every worktree carries its owning session id.** When you create one, record it inside the worktree's git dir:
+
+  ```sh
+  printf 'OPENCODE_SESSION_ID=%s\nCREATED=%s\nPURPOSE=%s\n' \
+    "$OPENCODE_SESSION_ID" "$(date +%Y-%m-%d)" "<why this worktree exists>" \
+    > "$(git -C <worktree> rev-parse --git-dir)/opencode-session"
+  ```
+
+  Before touching any worktree — removing it, switching its branch, committing in it, deleting its branch — read that file and compare it with `$OPENCODE_SESSION_ID`. **No marker, or a different id, means the worktree is not yours: leave it alone and ask.** The marker lives in `.git/worktrees/<name>/`, so it never shows up in `git status`. Worktrees you create stay until the owning session finishes with them; never clean up a worktree just because its branch is merged.
 
 ## Content voice (interview prep + learn)
 
