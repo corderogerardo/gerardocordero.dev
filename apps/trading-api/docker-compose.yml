@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: trading-api-postgres
+    environment:
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+      POSTGRES_DB: trading
+    ports:
+      - "5433:5432"
+    volumes:
+      - trading-pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading -d trading"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # Optional: `docker compose --profile full up --build`.
+  # Local development normally runs the API with `make run` and only Postgres in
+  # Docker, which keeps rebuild loops fast.
+  api:
+    profiles: ["full"]
+    build: .
+    environment:
+      DATABASE_URL: postgres://trading:trading@postgres:5432/trading
+      JWT_SECRET: ${JWT_SECRET:-change-me-this-placeholder-is-rejected-at-startup}
+      HOST: 0.0.0.0
+      PORT: 8080
+      ENVIRONMENT: development
+      RUST_LOG: trading_api=info,tower_http=info
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  trading-pgdata:
