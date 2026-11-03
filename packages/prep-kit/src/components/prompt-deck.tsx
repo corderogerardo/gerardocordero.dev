@@ -6,7 +6,7 @@ import { usePersisted } from "../config";
 import { useI18n } from "../lib/i18n";
 import { Chip } from "./chip";
 import { RichText } from "./rich-text";
-import { LEVELS, LEVEL_BADGE, LEVEL_LABEL, type Level } from "../lib/levels";
+import { LEVELS, LEVEL_BADGE, LEVEL_LOCALE_KEY, type Level } from "../lib/levels";
 import {
   type SrsMap,
   type DayLog,
@@ -150,7 +150,7 @@ export function PromptDeck({
                   <span
                       className={`rounded-full border px-2 py-0.5 text-[0.62rem] font-bold uppercase ${LEVEL_BADGE[p.level]}`}
                     >
-                      {t(LEVEL_LABEL[p.level])}
+                      {t(LEVEL_LOCALE_KEY[p.level])}
                 </span>
                 <h2 className="text-base font-bold text-white">{p.title}</h2>
                 {st && (
