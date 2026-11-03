@@ -1,0 +1,7 @@
+appId: dev.gerardocordero.meridian
+---
+# Cold-launch step shared by every flow. `clearState: false` keeps the session so
+# a signed-in device goes straight to the tabs.
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd

@@ -1,0 +1,37 @@
+appId: dev.gerardocordero.meridian
+---
+# Places a market buy on the first listed market and expects a fill confirmation.
+# Needs a signed-in session (run smoke.yml or sign-in.yml first).
+- runFlow: subflows/launch.yml
+
+- extendedWaitUntil:
+    visible:
+      id: screen-markets
+    timeout: 20000
+
+# Any market row: the id is a regex, so this does not depend on the seed symbols.
+- tapOn:
+    id: market-row-.*
+
+- extendedWaitUntil:
+    visible:
+      id: screen-market-detail
+    timeout: 20000
+
+- tapOn:
+    id: order-quantity
+- inputText: "0.01"
+- hideKeyboard
+
+# Defaults are BUY + MARKET, which fill immediately at the simulated price.
+- tapOn:
+    id: order-submit
+
+- extendedWaitUntil:
+    visible:
+      id: order-confirmation
+    timeout: 20000
+
+- assertVisible: "Order filled"
+- assertVisible:
+    id: order-estimate-fee

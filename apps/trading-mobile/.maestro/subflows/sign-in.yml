@@ -1,0 +1,15 @@
+appId: dev.gerardocordero.meridian
+---
+# Signs in with the credentials supplied on the command line. Requires:
+#   maestro test .maestro/sign-in.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
+- assertVisible:
+    id: screen-sign-in
+- tapOn:
+    id: sign-in-email
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: sign-in-password
+- inputText: ${MAESTRO_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: sign-in-submit
