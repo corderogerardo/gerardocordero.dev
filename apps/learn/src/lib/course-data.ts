@@ -74,4 +74,4 @@ export interface Course {
   modules: Module[];
 }
 
-export type LangId = "swift" | "python" | "kotlin" | "ruby" | "go" | "ts";
+export type LangId = "swift" | "python" | "kotlin" | "ruby" | "go" | "rust" | "ts";
