@@ -1,3 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # The trading app runs Expo SDK 58 while the rest of the monorepo is on SDK 56.
+  # Excluding it keeps its native modules and lockfile isolated from the hoisted tree.
+  - "!apps/trading-mobile"
