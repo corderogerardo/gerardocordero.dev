@@ -6,6 +6,10 @@ module.exports = {
   // machine (Turbo runs four suites in parallel). Jest's 5 s default made this suite
   // fail once and pass twice; the timeout was the flake, not the code.
   testTimeout: 15_000,
+  // jest-expo's testMatch treats everything under __tests__/ as a suite. Shared
+  // helpers live in __tests__/support/ and contain no tests, so they would fail with
+  // "Your test suite must contain at least one test".
+  testPathIgnorePatterns: ["/node_modules/", "<rootDir>/__tests__/support/"],
   // pnpm with node-linker=hoisted still materializes packages under
   // node_modules/.pnpm/<pkg>@<ver>/... — the (?:\.pnpm/)? guard lets their
   // ESM/Flow source be transformed by babel-jest instead of skipped.
