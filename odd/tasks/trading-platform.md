@@ -63,19 +63,19 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 - Checks: Readback; `environment` field present in `/healthz` and the mobile settings screen.
 
 ## Tasks
-- [x] T1 — Write the ODD feature document, API contract, and junior plan skeleton — Specs S1–S10, route: inline, status: complete, commit: feature branch.
-- [x] T2 — Scaffold `apps/trading-api` (Cargo, mise/toolchain pin, migrations, config, error contract) — Specs S2, S7, route: inline, status: complete.
-- [x] T3 — Implement domain layer (decimal money, order state machine, P&L, seeded price engine) with unit tests — Spec S2, S5, route: inline, status: complete.
-- [x] T4 — Implement auth (Argon2id, JWT access, rotating refresh with reuse detection) and rate limiting — Specs S2, S4, S5, route: inline, status: complete.
-- [x] T5 — Implement markets, orders with atomic idempotency, portfolio, and WebSocket quotes — Specs S4, S5, route: inline, status: complete.
-- [x] T6 — Implement limit-order matching task with atomic SQL and concurrency tests — Specs S2, S5, route: inline, status: complete.
-- [x] T7 — Write integration, security, concurrency, and e2e suites; run them against Postgres — Spec S5, route: inline, status: complete.
-- [x] T8 — Scaffold `apps/trading-mobile` on Expo SDK 58 and wire the workspace install — Specs S3, S7, route: inline, status: complete.
-- [x] T9 — Implement the mobile client (session, API layer, markets, detail/chart, order ticket, portfolio, orders, settings) — Specs S3, S4, route: delegated (Writer trigger: independent unit with a disjoint edit surface; S3/S4 contract supplied), status: complete.
-- [x] T10 — Write mobile unit and component tests plus Maestro flows — Spec S5, route: delegated with T9, status: complete.
-- [x] T11 — Add architecture, ADRs, threat model, security policy, README, AGENTS.md, plan, Dockerfile, compose, Makefile — Specs S6–S10, route: inline, status: complete.
-- [x] T12 — Add the CI workflow for the new projects and wire the mobile tests into the root loop — Specs S1, S7, route: inline, status: complete.
-- [x] T13 — Run the full verification (backend `make verify`, mobile gates, repo loop, architecture fitness), review the diff, and close — Specs S1–S10, route: inline plus one independent verifier for the security-touching change, status: complete.
+- [x] T1 — Write the ODD feature document, API contract, and junior plan skeleton — Specs S1–S10, route: inline, status: complete, commit: ac7b255.
+- [x] T2 — Scaffold `apps/trading-api` (Cargo, mise/toolchain pin, migrations, config, error contract) — Specs S2, S7, route: inline, status: complete, commit: 97cf64f.
+- [x] T3 — Implement domain layer (decimal money, order state machine, P&L, seeded price engine) with unit tests — Spec S2, S5, route: inline, status: complete, commit: 97cf64f.
+- [x] T4 — Implement auth (Argon2id, JWT access, rotating refresh with reuse detection) and rate limiting — Specs S2, S4, S5, route: inline, status: complete, commit: 97cf64f.
+- [x] T5 — Implement markets, orders with atomic idempotency, portfolio, and WebSocket quotes — Specs S4, S5, route: inline, status: complete, commit: 97cf64f.
+- [x] T6 — Implement limit-order matching task with atomic SQL and concurrency tests — Specs S2, S5, route: inline, status: complete, commit: 97cf64f.
+- [x] T7 — Write integration, security, concurrency, and e2e suites; run them against Postgres — Spec S5, route: inline, status: complete, commit: 97cf64f.
+- [x] T8 — Scaffold `apps/trading-mobile` on Expo SDK 58 and wire the isolated install — Specs S3, S7, route: inline, status: complete, commit: a0672f4.
+- [x] T9 — Implement the mobile client (session, API layer, markets, detail/chart, order ticket, portfolio, orders, settings) — Specs S3, S4, route: delegated (Writer trigger: independent unit with a disjoint edit surface; S3/S4 contract supplied), status: complete, commit: a0672f4.
+- [x] T10 — Write mobile unit and component tests plus Maestro flows — Spec S5, route: delegated with T9, status: complete, commit: a0672f4.
+- [x] T11 — Add architecture, ADRs, threat model, security policy, README, AGENTS.md, plan, Dockerfile, compose, Makefile — Specs S6–S10, route: inline, status: complete, commit: 97cf64f.
+- [x] T12 — Add the CI workflow for the new projects and record the isolated mobile install — Specs S1, S7, route: inline, status: complete, commit: ac7b255.
+- [x] T13 — Run the full verification (backend `make verify`, mobile gates, expo-doctor, Metro bundle, architecture fitness), review the diff, and close — Specs S1–S10, route: inline plus one independent verifier for the security-touching change, status: complete, commit: ac7b255.
 
 ## Log
 
@@ -111,3 +111,22 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 > Python proficiency to read and migrate legacy logic
 > Autonomy and a senior mindset: you drive features end-to-end
 > Comfort working with AI coding tools (Claude, Cursor, Copilot, etc.) to move faster without lowering the bar y quiero que hagas un backend para una app de trading con su app en react native usando el ultimo sdk de expo, usa todas las skills que necesites, quiero que crees 2 proyectos nuevos uno frontend mobile y el backend para esto, necesito que contenga las cualidades que te mencione de un lider tecnico, el mejor stack, no tiene que ser node y nest, puede ser go para manejar concurrencia con algun framework de go o rust, de hecho que mejor lo hagamos sobre rust el backend, sea como sea que quieras iniciar, quiero que hagas un plan completo con tareas bien definidas que un junior pueda tomar, que cubras los tests unit test, e2e, security tests, todos los tests de un producto completo, puedes buscar ejemplos en internet y todo lo que necesites investigar
+
+### L2 — Toolchain and SDK decisions (2026-11-03)
+- Rust is not on this machine; installed `rust@1.99.1` through `mise` and pinned it in `apps/trading-api/mise.toml` + `rust-toolchain.toml`. The Makefile falls back to `mise exec -- cargo` when `cargo` is not on PATH.
+- Expo's latest stable is SDK 58 (`expo@58.0.22`, RN 0.88.1, React 19.3.0), not the portfolio's SDK 56. Scaffolding used the official `default@latest` template and the SDK 58 native-module map for exact versions.
+- Mixing SDK 56 and 58 in the hoisted pnpm tree polluted the portfolio's resolution (`@expo/metro-runtime@58` grafted onto expo 56, duplicate native modules). The mobile app is therefore excluded from the workspace (`!apps/trading-mobile`) and installs with `pnpm install --ignore-workspace` and its own lockfile. Result: `expo-doctor` 20/20 and a verified Metro bundle (1475 modules).
+- Evidence: `npx expo-doctor@latest` → “20/20 checks passed”; `npx expo export --platform ios` → bundle written.
+
+### L3 — Refresh semantics correction (2026-11-03)
+- The generated client cleared the keychain whenever a token refresh failed, including transport failures. Corrected to distinguish them: a rejected refresh (401) clears the session; a transport failure (status 0) keeps it, so an offline moment does not force a re-login. One regression test added (`115` mobile tests total).
+
+### L4 — Pre-existing baseline failure, left untouched (2026-11-03)
+- `pnpm --filter @gerardocordero/portfolio typecheck` fails in `packages/ui` (`className` is not a prop of `Pressable`/`View`/`Text`) with `pnpm-lock.yaml` identical to `main` (`a97b3d3`) and a fresh install from it. It is unrelated to this feature; per the containment spec it was reported, not fixed.
+
+### L5 — Verification evidence (2026-11-03)
+- Backend: `make verify` → fmt clean, clippy `-D warnings` clean, **80 unit tests + 30 HTTP suites** (auth 9, trading 9, security 8, concurrency 3, e2e 1) green against Postgres 17.
+- Live smoke: server started, register → market buy (0.5 BTC) → idempotent replay returned the same order id → portfolio reflected cash/position/P&L → invalid order returned `422 VALIDATION_ERROR` with `details.field`.
+- Mobile: `pnpm typecheck`, `pnpm lint`, `pnpm test` → **11 suites / 115 tests**; `expo-doctor` 20/20; iOS Metro export succeeded. Maestro flows authored, not run (no booted simulator / dev build).
+- Repo: `pnpm architecture:check` green; the new app is outside the workspace by design.
+- Commits: `97cf64f` (backend), `a0672f4` (mobile), `ac7b255` (wiring + CI + this record).
