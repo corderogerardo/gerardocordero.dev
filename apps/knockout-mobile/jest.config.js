@@ -2,6 +2,10 @@
 module.exports = {
   preset: "jest-expo",
   setupFilesAfterEnv: ["<rootDir>/jest-setup.ts"],
+  // RNTL v14 renders asynchronously and a screen test can take ~5 s on a loaded
+  // machine (Turbo runs four suites in parallel). Jest's 5 s default made this suite
+  // fail once and pass twice; the timeout was the flake, not the code.
+  testTimeout: 15_000,
   // pnpm with node-linker=hoisted still materializes packages under
   // node_modules/.pnpm/<pkg>@<ver>/... — the (?:\.pnpm/)? guard lets their
   // ESM/Flow source be transformed by babel-jest instead of skipped.

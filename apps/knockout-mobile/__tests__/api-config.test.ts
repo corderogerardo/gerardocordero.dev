@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- each case re-imports the
+   module after changing process.env, which needs a real require, not an ESM import. */
 describe("supabase configuration", () => {
   const ORIGINAL_ENV = process.env;
 
