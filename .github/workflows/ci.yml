@@ -449,19 +449,19 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/pawwalk-api/'; then
+            if git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" | grep -qE '^apps/pawwalk-api/|^\.github/workflows/ci\.yml$'; then
               echo "changed=true" >> "$GITHUB_OUTPUT"
             else
               echo "changed=false" >> "$GITHUB_OUTPUT"
-              echo "No changes under apps/pawwalk-api — skipping tests."
+              echo "No changes under apps/pawwalk-api or the CI definition — skipping tests."
             fi
           elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/pawwalk-api/'; then
+          elif git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -qE '^apps/pawwalk-api/|^\.github/workflows/ci\.yml$'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No changes under apps/pawwalk-api — skipping tests."
+            echo "No changes under apps/pawwalk-api or the CI definition — skipping tests."
           fi
       - name: Set up Ruby
         if: steps.detect.outputs.changed == 'true'
