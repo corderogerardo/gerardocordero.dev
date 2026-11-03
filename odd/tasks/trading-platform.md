@@ -121,8 +121,10 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 ### L3 — Refresh semantics correction (2026-11-03)
 - The generated client cleared the keychain whenever a token refresh failed, including transport failures. Corrected to distinguish them: a rejected refresh (401) clears the session; a transport failure (status 0) keeps it, so an offline moment does not force a re-login. One regression test added (`115` mobile tests total).
 
-### L4 — Pre-existing baseline failure, left untouched (2026-11-03)
-- `pnpm --filter @gerardocordero/portfolio typecheck` fails in `packages/ui` (`className` is not a prop of `Pressable`/`View`/`Text`) with `pnpm-lock.yaml` identical to `main` (`a97b3d3`) and a fresh install from it. It is unrelated to this feature; per the containment spec it was reported, not fixed.
+### L4 — Install contamination fixed, not a pre-existing failure (2026-11-03)
+- `pnpm --filter @gerardocordero/portfolio typecheck` failed in `packages/ui` (`className` is not a prop of `Pressable`/`View`/`Text`). Initial diagnosis blamed the baseline because `pnpm-lock.yaml` matched `main`; that was wrong.
+- Root cause: while the mobile app was briefly a workspace member, the hoisted install materialized `packages/ui/node_modules/react-native@0.88.1`. `packages/ui` then type-checked against RN 0.88 types while the NativeWind augmentation applied to the root RN 0.85.3 copy.
+- Fix: removed the stale nested `node_modules` and reinstalled. The full repo loop is now green (`pnpm typecheck` 8/8, `pnpm lint` 8/8, `pnpm test` 2/2, `pnpm architecture:check` 0 violations). No shared code changed.
 
 ### L5 — Verification evidence (2026-11-03)
 - Backend: `make verify` → fmt clean, clippy `-D warnings` clean, **80 unit tests + 32 HTTP suites** (auth 9, trading 9, security 8, concurrency 3, quote stream 2, e2e 1) green against Postgres 17.
