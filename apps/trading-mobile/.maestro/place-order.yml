@@ -21,7 +21,14 @@ appId: dev.gerardocordero.meridian
 - tapOn:
     id: order-quantity
 - inputText: "0.01"
-- hideKeyboard
+# `hideKeyboard` is unreliable on the iOS 27 simulator; tap a non-interactive
+# area of the price header instead.
+- tapOn:
+    point: "50%,22%"
+- scrollUntilVisible:
+    element:
+      id: order-submit
+    direction: DOWN
 
 # Defaults are BUY + MARKET, which fill immediately at the simulated price.
 - tapOn:

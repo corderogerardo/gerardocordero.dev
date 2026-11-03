@@ -132,3 +132,10 @@ Branch: `feature/trading-platform`. Delivery: `single-pr` (work-unit commits are
 - Mobile: `pnpm typecheck`, `pnpm lint`, `pnpm test` → **11 suites / 115 tests**; `expo-doctor` 20/20; iOS Metro export succeeded. Maestro flows authored, not run (no booted simulator / dev build).
 - Repo: `pnpm architecture:check` green; the new app is outside the workspace by design.
 - Commits: `97cf64f` (backend), `a0672f4` (mobile), `ac7b255` (wiring + CI + this record).
+
+### L6 — Delivery closure (2026-11-03)
+- PR: https://github.com/corderogerardo/gerardocordero.dev/pull/134 — `MERGEABLE`, base `main`, 6 commits.
+- CI on the PR head: `Trading platform` backend and mobile jobs pass; the repo `CI` verify/backend-tests/validate-learn jobs pass.
+- Repo loop after the merge with main: `pnpm typecheck` 8/8, `pnpm lint` 8/8, `pnpm test` 2/2, `pnpm architecture:check` 0 violations.
+- Maestro on a booted iPhone 17e (iOS 27) with the dev build: `smoke.yml`, `sign-in.yml`, and `place-order.yml` all pass. The flows were hardened for the native password-save sheet, iOS autofill (field erase), and Maestro device selection (`-p ios`).
+- Observed during the burst: the matcher logged two `pool timed out` errors and recovered; no stuck transactions remained (4 idle connections, 0 open orders). Not changed; it is a capacity note for production, not a defect.

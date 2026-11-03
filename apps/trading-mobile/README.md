@@ -67,13 +67,18 @@ pnpm test
 ```bash
 cd apps/trading-mobile
 npx expo run:ios
-maestro test .maestro/smoke.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
-maestro test .maestro/sign-in.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
-maestro test .maestro/place-order.yml
+maestro -p ios test .maestro/smoke.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
+maestro -p ios test .maestro/sign-in.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
+maestro -p ios test .maestro/place-order.yml
 ```
 
 `smoke.yml` accepts an existing keychain session or signs in when credentials are
 passed. `place-order.yml` expects a signed-in device.
+
+Pass `-p ios` when an Android emulator is also attached: Maestro otherwise picks
+the Android device and fails to find the iOS bundle id. The flows were verified on
+an iPhone 17e simulator (iOS 27) with a dev build; they dismiss the native
+"Save Password?" sheet and erase autofilled fields before typing.
 
 ## Notes
 

@@ -5,3 +5,7 @@ appId: dev.gerardocordero.meridian
 - launchApp:
     clearState: false
 - waitForAnimationToEnd
+# A lingering iOS "Save Password?" sheet is not part of the app.
+- tapOn:
+    text: "Not Now"
+    optional: true
