@@ -98,9 +98,9 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 |---|---|---|---|---|---|---|
 | T0 | Worktree, branch, app scaffold, workspace wiring, loop gates | S1, S13 | inline | 260 | complete | see `## Log` L5 |
 | T1 | Design tokens + UI primitives (text, button, card, pill, sheet, empty) | S3 | inline | 320 | pending | — |
-| T2 | Postgres schema migrations + seed (2 orgs, 8 reps, properties, knocks, leads) | S6, S9 | inline | 700 | pending | — |
-| T3 | RLS policies + pgTAP isolation matrix | S9 | delegated (parallel with T4) | 450 | pending | — |
-| T4 | `sync-core`: contract, outbox, backoff, engine, conflict policies + Vitest | S4 | delegated (parallel with T3) | 1,300 | pending | — |
+| T2 | Postgres schema migrations + seed (2 orgs, 8 reps, properties, knocks, leads) | S6, S9 | inline | 700 | complete | `## Log` L6 |
+| T3 | RLS policies + pgTAP isolation matrix | S9 | inline (delegation denied, see L6) | 450 | complete | `## Log` L6 |
+| T4 | `sync-core`: contract, outbox, backoff, engine, conflict policies + Vitest | S4 | inline (delegation denied, see L6) | 1,300 | in progress | — |
 | T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | pending | — |
 | T6 | `sync-push` Edge Function (idempotent batch apply, merge, cursor) | S4, S9 | inline | 420 | pending | — |
 | T7 | HubSpot adapter + `hubspot-sync` function + fake adapter + tests | S8 | inline | 460 | pending | — |
@@ -209,3 +209,31 @@ Errors hit and fixed, in order (kept because they are the kind a junior will hit
 4. `Cannot find module '2g'` from a corrupted hoisted `@expo/cli` → `rm -rf node_modules && pnpm install` (23.8 s); `npx expo config` then worked for both apps.
 
 Commit hashes for every task are filled in one pass at T19, from `git log`, so the record is exact instead of guessed.
+
+### L6 — 2026-11-03 — T2 + T3 evidence (schema, seed, RLS, pgTAP)
+
+**Delegation was denied.** `subagent` returned `permission.rejected: Permission denied: subagent`, so T3 and T4 run inline instead of as parallel units. Route recorded here rather than silently changing the plan.
+
+Delivered (8 migrations + seed + 2 pgTAP files):
+
+- `0001_init.sql` — `app` schema for non-exposed helpers, enums, one global `server_seq` sequence, and the `app.touch()` trigger that stamps `server_seq`/`updated_at` and bumps `version` on every synced table in one place.
+- `0002_tenancy.sql` … `0007_scores.sql` — orgs/teams/members, properties/territories (boundary as JSON, with the PostGIS trade-off written next to it), shifts/knocks/DNC (with `app.propagate_dnc()` and a partial unique index for one open shift per rep), leads + `crm_outbox` + `hubspot_links` + `app.queue_lead_for_crm()`, the idempotency ledger `sync_mutations`, `sync_conflicts`, badges and `daily_scores` with `app.xp_for_day()`.
+- `0008_rls.sql` — helper functions (`current_org_id`, `current_role`, `is_manager`, `is_member_of`) as `security definer` with a pinned `search_path`, a read and a write policy per table, and an explicit grant surface.
+- `supabase/seed.sql` — 2 orgs, 4 teams, 10 people (2 managers), 240 properties, 4800 knocks over 10 days, 360 leads, 80 score rows, plus real `auth.users` + `auth.identities` rows so password sign-in works.
+- `supabase/tests/01_rls.sql` (22 assertions) and `02_scoring.sql` (6) — the isolation matrix and a hand-computed XP fixture.
+
+Observed evidence:
+
+```
+supabase db reset  → all 8 migrations applied, seed applied, 4800 knocks / 360 leads / 80 score rows
+curl POST /auth/v1/token?grant_type=password (marcus@northwind.test) → access_token returned
+supabase test db → All tests successful. Files=2, Tests=28
+```
+
+Three defects the tests caught, all fixed in the migration rather than in the test:
+
+1. `permission denied for schema app` — `execute` on the helper functions is useless without `grant usage on schema app`. Real finding: policies looked right and every query failed.
+2. `update daily_scores set xp = …` **succeeded**. Supabase's default grants on `public` are permissive; my explicit `grant select` never revoked the default `update`. Fixed with `revoke all on all tables in schema public from anon, authenticated` before granting the intended surface. Without this, "the client cannot write a score" was a claim, not a fact.
+3. The same default grant let `anon` read `knocks` — the anon key ships in the bundle, so this is the one that matters most.
+
+Work unit note: migrations + seed + policies + their tests ship as one commit (~1,200 authored lines, above the ~400 heuristic). A policy without its table is not reviewable in isolation, and the seed is the fixture the policy tests read. Split anyway would create commits that cannot be verified alone.
