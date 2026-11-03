@@ -3,7 +3,7 @@
 
 import { deserializeRe } from "./regexp";
 
-export type LangId = "swift" | "python" | "kotlin" | "ruby" | "go" | "ts";
+export type LangId = "swift" | "python" | "kotlin" | "ruby" | "go" | "rust" | "ts";
 
 export interface CheckRule {
   re: unknown;

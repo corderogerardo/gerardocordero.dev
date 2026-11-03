@@ -20,7 +20,7 @@ const err = (file, msg) => errors.push(`${file}: ${msg}`);
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Eight course directories — one per subject, matching the token namespace
-const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go", "lessons-node", "lessons-native", "lessons-expoui"];
+const ALL_DIRS = ["lessons", "lessons-android", "lessons-ruby", "lessons-python", "lessons-go", "lessons-rust", "lessons-node", "lessons-native", "lessons-expoui"];
 
 // ---------- Token parity guard (Phase 0: unified token namespace) ----------
 
@@ -149,7 +149,7 @@ function normalize(code, lang) {
     .trim();
 }
 
-const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby", "go", "ts"]);
+const KNOWN_LANGS = new Set(["swift", "python", "kotlin", "ruby", "go", "rust", "ts"]);
 
 const isBlocks = (v) => Array.isArray(v) && v.length > 0 && v.every((b) => typeof b === "string" && b.trim());
 

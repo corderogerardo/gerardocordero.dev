@@ -12,6 +12,7 @@ const COURSES: { id: string; title: string; emoji: string }[] = [
   { id: "ruby", title: "Ruby & Rails", emoji: "💎" },
   { id: "python", title: "Python & FastAPI", emoji: "🐍" },
   { id: "go", title: "Go Backend", emoji: "▲" },
+  { id: "rust", title: "Rust & Axum", emoji: "🦀" },
   { id: "node", title: "Node.js & NestJS", emoji: "▲" },
   { id: "native", title: "Native RN & Expo Modules", emoji: "🛰️" },
   { id: "expoui", title: "Rebuild @expo/ui", emoji: "🎛️" },

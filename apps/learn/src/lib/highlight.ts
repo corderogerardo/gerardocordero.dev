@@ -21,6 +21,8 @@ const GO_KW = new Set(("package import func var const type struct interface map 
   "case default break continue fallthrough goto nil true false iota make new len cap append copy delete panic recover " +
   "string int int8 int16 int32 int64 uint uint8 uint16 uint32 uint64 uintptr byte rune float32 float64 complex64 complex128 bool error").split(" "));
 
+const RUST_KW = new Set(("as async await break const continue crate dyn else enum extern false fn for if impl in let loop match mod move mut pub ref return self static struct super trait true type unsafe use where while yield").split(" "));
+
 const TS_KW = new Set(("const let var function return if else switch case default for while do break continue " +
   "class extends implements interface type enum namespace declare abstract public private protected readonly static " +
   "new this super import export from as void null undefined true false typeof instanceof in of keyof infer is satisfies " +
@@ -46,6 +48,10 @@ const LANG = {
   go: {
     kw: GO_KW,
     re: /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\.)*"|`[^`]*`|'(?:[^'\\]|\\.)*')|(@\w+)|\b(\d[\d_]*(?:\.\d[\d_]*)?)\b|\b([A-Za-z_]\w*)\b/g,
+  },
+  rust: {
+    kw: RUST_KW,
+    re: /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(r#*"[\s\S]*?"#*|"(?:[^"\\]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(#!?\[[^\]]*\])|\b(\d[\d_]*(?:\.\d[\d_]*)?)\b|('?[A-Za-z_]\w*)/g,
   },
   ts: { kw: TS_KW, re: TS_RE },
 };

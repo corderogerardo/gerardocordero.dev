@@ -71,6 +71,10 @@
   --course-go-strong: #116778;
   --course-go-soft: #E7F6F9;
   --course-go-on: #FFFFFF;
+  --course-rust-base: #A63A12;
+  --course-rust-strong: #8A2F0E;
+  --course-rust-soft: #FBEAE3;
+  --course-rust-on: #FFFFFF;
   --course-node-base: #278634;
   --course-node-strong: #22772E;
   --course-node-soft: #E7F8EA;
@@ -198,6 +202,10 @@
     --course-go-strong: #91E2F3;
     --course-go-soft: #153237;
     --course-go-on: #0E0C17;
+    --course-rust-base: #F0916B;
+    --course-rust-strong: #F5B295;
+    --course-rust-soft: #3A1D13;
+    --course-rust-on: #0E0C17;
     --course-node-base: #7CDE89;
     --course-node-strong: #9DE7A7;
     --course-node-soft: #15371A;
