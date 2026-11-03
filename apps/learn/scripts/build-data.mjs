@@ -17,6 +17,7 @@ export const COURSES = [
   { dir: "lessons-ruby",     id: "ruby",    storeKey: "pawwalk-academy-ruby-v1",    title: "Ruby & Rails",  emoji: "💎" },
   { dir: "lessons-python",   id: "python",  storeKey: "pawwalk-academy-python-v1",  title: "Python & FastAPI", emoji: "🐍" },
   { dir: "lessons-go",       id: "go",      storeKey: "pawwalk-academy-go-v1",      title: "Go Backend",    emoji: "🐹" },
+  { dir: "lessons-rust",     id: "rust",    storeKey: "pawwalk-academy-rust-v1",    title: "Rust & Axum",   emoji: "🦀" },
   { dir: "lessons-node",     id: "node",    storeKey: "pawwalk-academy-node-v1",    title: "Node & NestJS", emoji: "🟢" },
   { dir: "lessons-native",   id: "native",  storeKey: "pawwalk-academy-native-v1",  title: "Native RN & Expo Modules", emoji: "🛰️" },
   { dir: "lessons-expoui",   id: "expoui",  storeKey: "pawwalk-academy-expoui-v1",  title: "Rebuild @expo/ui", emoji: "🎛️" },

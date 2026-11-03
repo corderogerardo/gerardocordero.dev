@@ -4,9 +4,10 @@ One **Next.js 16 static-export app** that is the whole of `academy.gerardocorder
 It renders two things from a single build:
 
 1. **Interactive courses** — step-by-step, type-the-real-code, in-browser-checked lessons that
-   rebuild the PawWalk app and backend from zero. One engine, eight courses:
+   rebuild the PawWalk app and backend from zero. One engine, nine courses:
    - **iOS** — Swift & SwiftUI · **Android** — Kotlin & Jetpack Compose · **Ruby** — Ruby & Rails
    - **Python** — Flask → Django → FastAPI → LLM agents → RAG · **Go** — net/http → a real backend
+   - **Rust** — ownership → traits → async → Axum + sqlx, with tests and a production deploy
    - **Node** — NestJS · **Native RN** — Expo native modules + a LiDAR/ARCore depth view
    - **Rebuild @expo/ui** — SwiftUI/Compose-native primitives + Host/Children composition
 2. **Senior React Native practice** at **`/reactnative/`** — a 91-card flashcard deck (generated
@@ -41,8 +42,12 @@ Course progress (including code you type) is saved in `localStorage` under per-c
 - **Courses are data.** Each `lessons-<id>/*.js` file pushes one module onto `window.COURSE`.
   `scripts/build-data.mjs` runs them in a sandbox and emits `public/data/{locale}/<id>.json`,
   which the App Router pages (`src/app/[locale]/learn/…`) render. Adding a course = a new
-  `lessons-<id>/` dir + registration in `scripts/build-data.mjs`, `tools/validate.mjs`,
-  `src/lib/i18n-config.ts` (`COURSE_IDS`), and the homepage `src/app/[locale]/page.tsx`.
+  `lessons-<id>/` dir + registration in `scripts/build-data.mjs`, `tools/validate.mjs`
+  (`ALL_DIRS`, plus `KNOWN_LANGS` when the language is new), `src/lib/i18n-config.ts`
+  (`COURSE_IDS`), `src/lib/course-data.ts` and `src/lib/code-check.ts` (the `LangId` union),
+  `src/lib/highlight.ts` (keywords + tokenizer), `styles.css` (`--course-<id>-*` in **both** the
+  light and dark blocks — the validator enforces parity), and both homepages
+  (`src/app/page.tsx` plus `src/app/[locale]/page.tsx`).
 - **Two-column shell** — `src/components/learn-shell.tsx` wraps `<nav>` + `<main>` in
   `<div className="layout">` (the flex container from `styles.css`, imported via
   `src/app/globals.css`). That `.layout` wrapper is load-bearing for the desktop layout.
@@ -60,7 +65,8 @@ pnpm typecheck                # tsc --noEmit  (in the pnpm/turbo loop)
 pnpm lint                     # eslint         (in the pnpm/turbo loop)
 node tools/validate.mjs       # lesson schema + every exercise's solution passes its own checks
                               # (no arg validates all: lessons | lessons-android | lessons-ruby |
-                              #  lessons-python | lessons-go | lessons-node | lessons-native | lessons-expoui)
+                              #  lessons-python | lessons-go | lessons-rust | lessons-node |
+                              #  lessons-native | lessons-expoui)
 node tools/i18n-check.mjs     # translation-overlay drift
 node --test                   # tools/validate.test.mjs (the validator's own tests)
 ```
