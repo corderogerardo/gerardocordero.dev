@@ -101,7 +101,7 @@ Verification: repo loop from the worktree (`pnpm typecheck`, `pnpm lint`, `pnpm 
 | T2 | Postgres schema migrations + seed (2 orgs, 8 reps, properties, knocks, leads) | S6, S9 | inline | 700 | complete | `## Log` L6 |
 | T3 | RLS policies + pgTAP isolation matrix | S9 | inline (delegation denied, see L6) | 450 | complete | `## Log` L6 |
 | T4 | `sync-core`: contract, outbox, backoff, engine, conflict policies + Vitest | S4 | inline (delegation denied, see L6) | 1,300 | complete | `## Log` L7 |
-| T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | in progress — client/config/storage/types done; auth store pending | `## Log` L7 |
+| T5 | Supabase client, typed DB types, auth store, persistence adapter | S3, S6 | inline | 380 | complete | `## Log` L9 |
 | T6 | `sync-push` Edge Function (idempotent batch apply, merge, cursor) | S4, S9 | inline | 420 | pending | — |
 | T7 | HubSpot adapter + `hubspot-sync` function + fake adapter + tests | S8 | inline | 460 | pending | — |
 | T8 | App SQLite schema, DAOs, TanStack Query hooks, Zustand stores | S4, S6 | inline | 620 | pending | — |
@@ -310,3 +310,44 @@ UIKit on iOS 27 refuses an app that has not adopted `UIScene` lifecycle. `Info.p
 **Accepted drift.** `expo-doctor` still reports five patch-level mismatches (`expo-linking`, `expo-router`, `expo-splash-screen`, `expo-updates`, `jest-expo`). They are not fixed here because those versions are hoisted and shared with `apps/portfolio`, whose Jest suite is green and whose SDK upgrade is its own tracked task. Raising them from a side project is how a portfolio app breaks the app next door.
 
 **Loop after the phase:** `pnpm typecheck --force` 10/10, `pnpm test --force` 4/4 (portfolio 37 tests, knockout 8, prep-kit, sync-core 43).
+
+### L9 — 2026-11-03 — Phase 1: session store, sign-in, and the auth gate (T5 complete)
+
+Branch: `feature/knockout-auth-data`, cut from `origin/main` after PR #135 merged (`3350a2a`).
+
+**What was built**
+
+- `src/data/session-store.ts` — the session state machine as a **factory** (`createSessionStore(deps)`), not a singleton. Deps: an auth port (`getSession`, `signInWithPassword`, `signOut`), a profile fetcher, and a cache. The store knows nothing about Supabase, which is why its thirteen tests need no SDK mock.
+- `src/data/session.ts` — the one place that wires Supabase and MMKV to those ports (profile row → `MemberProfile`, `error.status === 400` → invalid credentials, thrown request → network).
+- `src/data/storage.ts` — a plain MMKV instance for non-secret app state. Session tokens stay in `src/api/storage.ts` (Keychain-held key, encrypted MMKV).
+- `src/features/auth/use-protected-route.ts` — one route guard, driven by `useSegments` + `useRouter`, so sign-in and home cannot bounce each other.
+- `app/(auth)/sign-in.tsx` and `app/(auth)/_layout.tsx` — email/password form, one error line, busy state, a hint with the seeded demo account only when the app points at the local stack.
+- `src/ui/Button.tsx`, `src/ui/Field.tsx` — the first two primitives of T1, extracted because the form needed them.
+
+**Decisions worth keeping**
+
+- *Offline-first sign-in*: on boot the cached profile is applied immediately, then refreshed. No cache and no network → `signed_out` with an explicit sentence, never a guessed org id.
+- *Sign-out never depends on the network*: `signOut()` swallows a failed server call because the tokens are discarded locally either way. The first test asserted this and failed against a `try/finally` that re-threw — the implementation was wrong, not the test.
+- *The busy guard lives in the handler*, not only in the `onPress` prop. Two tests failed because a disabled `Pressable` still received the press, which is exactly the "one tap becomes two leads" bug the guard exists to prevent.
+- *Typed routes are generated*: `.expo/types/router.d.ts` was stale and made `tsc` reject the new `(auth)` group. Regenerated with a short `expo start`; CI is unaffected because the file is gitignored and absent there.
+
+**Evidence**
+
+```
+cd apps/knockout-mobile
+npx jest                     → 5 suites, 25 tests passed
+npx tsc --noEmit             → clean, with regenerated typed routes
+npx eslint .                 → 0 errors, 0 warnings
+npx expo export --platform ios → Hermes bundle 4.3 MB (was 3.6 MB before the auth route existed,
+                                 so the new route, Zustand and the Supabase client are really in the bundle)
+
+from the worktree root
+pnpm typecheck --force       → 10/10
+pnpm lint --force            → 10/10
+pnpm test --force            → 4/4
+pnpm architecture:check      → 0 violations
+```
+
+**One flake, diagnosed rather than ignored.** The first `pnpm test --force` run failed on `knockout-mobile#test` and the next two passed. Standalone, `sign-in-screen.test.tsx` took 5.42 s — right on Jest's 5 s default — and Turbo runs four suites in parallel. Fixed with `testTimeout: 15_000` in the app's jest config and a comment explaining why, instead of re-running until it went green.
+
+**Still open in T1**: `Card`, `Pill`, `Sheet`, `EmptyState`. They belong with the screens that use them (T10–T13), not before.
