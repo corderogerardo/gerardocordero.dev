@@ -2,21 +2,10 @@ import Link from "next/link";
 import { getSpecs } from "@/lib/andersen-decks";
 import { getCourseData } from "@/lib/course-loader";
 import { buildCourseProgressShape } from "@/lib/course-progress";
+import { COURSES } from "@/lib/i18n-config";
 import { CoursesGrid } from "@/components/CoursesGrid";
 import { SiteHeader } from "@/components/site-header";
 import { HomePageClient } from "@/components/HomePageClient";
-
-const COURSES: { id: string; title: string; emoji: string }[] = [
-  { id: "ios", title: "iOS & Swift", emoji: "📱" },
-  { id: "android", title: "Android & Kotlin", emoji: "🤖" },
-  { id: "ruby", title: "Ruby & Rails", emoji: "💎" },
-  { id: "python", title: "Python & FastAPI", emoji: "🐍" },
-  { id: "go", title: "Go Backend", emoji: "▲" },
-  { id: "rust", title: "Rust & Axum", emoji: "🦀" },
-  { id: "node", title: "Node.js & NestJS", emoji: "▲" },
-  { id: "native", title: "Native RN & Expo Modules", emoji: "🛰️" },
-  { id: "expoui", title: "Rebuild @expo/ui", emoji: "🎛️" },
-];
 
 export default async function HomePage() {
   const locale = "en";

@@ -1,0 +1,20 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "types": [],
+    "paths": {
+      "@/*": ["./*"],
+      "@gerardocordero/sync-core": ["../../packages/sync-core/src/index.ts"],
+      "@gerardocordero/sync-core/*": ["../../packages/sync-core/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "../../packages/sync-core/src/**/*.ts"
+  ],
+  "exclude": [".turbo", "node_modules", "__tests__", "jest-setup.ts"]
+}
