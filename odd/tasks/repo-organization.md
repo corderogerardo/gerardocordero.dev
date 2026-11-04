@@ -1,6 +1,6 @@
 # Feature: repository organization — readability first
 
-Objective: review every project in the monorepo, document its functionality, and reorganize the code with readability as the top priority, then SOLID boundaries, then general quality, using the software-factory workflow. Branch: `feature/repo-organization`. Delivery: `ask-on-risk`. Verification: the existing loop (`pnpm typecheck`, `pnpm lint`, `pnpm test`), `pnpm architecture:check`, `node tools/validate.mjs`, plus the per-project gates named in each task.
+Objective: review every project in the monorepo, document its functionality, and reorganize the code with readability as the top priority, then SOLID boundaries, then general quality, using the software-factory workflow. Original implementation merged in PR #127; this docs-only closeout uses `docs/repo-organization-closeout`. Verification: the existing loop (`pnpm typecheck`, `pnpm lint`, `pnpm test`), `pnpm architecture:check`, `node tools/validate.mjs`, plus the per-project gates named in each task.
 
 ## Specs
 
@@ -12,11 +12,12 @@ Objective: review every project in the monorepo, document its functionality, and
 
 ## Discovery evidence (2026-10-29)
 
-- Declared members: `apps/portfolio`, `apps/learn`, `apps/ios-prep`, `apps/nest-prep`, `apps/android-prep`, `apps/reactnative-prep`, `apps/nextjs-prep`, `apps/template-prep`, `packages/prep-kit`, `packages/ui`, `packages/courses`, `packages/interview-prep`, `packages/server-node-concepts`.
+- Declared members at the initial inventory (2026-10-29): `apps/portfolio`, `apps/learn`, `apps/ios-prep`, `apps/nest-prep`, `apps/android-prep`, `apps/reactnative-prep`, `apps/nextjs-prep`, `apps/template-prep`, `packages/prep-kit`, `packages/ui`, `packages/courses`, `packages/interview-prep`, `packages/server-node-concepts`.
 - On disk but outside the workspace glob (no `package.json`): `apps/ios` (SwiftUI), `apps/android` (Compose), `apps/backend` (FastAPI), `apps/pawwalk-api` (Rails), `packages/old-web` (archived).
-- Undeclared nested project: `apps/learn/design-system-ui` (name `my-project`, own lockfile, no typecheck/test, invisible to Turbo and CI).
-- Root `test` filters only portfolio and prep-kit; learn's tests run only in `validate-learn`; `courses` and `interview-prep` declare vitest configs but no scripts.
+- `apps/learn/design-system-ui` was an undeclared nested project (`my-project`, own lockfile, no typecheck/test); it was removed in PR #127 and is no longer on main.
+- At the initial inventory, root `test` filtered portfolio and prep-kit. Current main additionally filters sync-core and knockout-mobile; learn's tests run through `validate-learn`; `courses` and `interview-prep` are exercise material without scripts in the production loop.
 - `architecture:check` validates only workspace dependency edges; it cannot catch file-size, layer, or import-depth problems.
+- Current-main additions after the initial inventory: PR #131 added the Rust course to learn; PRs #135–#137 added `apps/knockout-mobile` and `packages/sync-core`, whose functionality and gates are documented in `AGENTS.md`. These separate product lines were added after this refactor's candidate selection; they were not changed by this feature. PR #134 (Meridian) remains open and is not part of the main snapshot.
 
 ## Reference research (T1)
 
@@ -43,8 +44,8 @@ Contested points to decide by team, not by citation: barrels vs subpath exports 
 - T7 (S1,S2) — Learn: remove the legacy `src/app/reactnative/**` tree after confirming no live links — route: delegated writer — status: done, commit `151ab31` (1133 lines deleted; redirect entry points kept; `public/_redirects` preserves old URLs on Cloudflare Pages; static build and i18n check pass).
 - T8 (S4) — Learn: separate persistence/state from view in `practice/FlashcardDeck.tsx` (371) — route: delegated writer — status: done, commit `6cc466c` (371 → 81-line composition root plus hook and three presentational units; storage key unchanged).
 - T9 (S1,S5) — Decide and record the fate of `apps/learn/design-system-ui` (declare or remove) — route: inline, user decision — status: done, commit `29d0040` (user chose removal; 29 files deleted, stale tsconfig exclude and CSS provenance comment cleaned).
-- T10 (S5) — Close gate gaps that protect this work: prep-kit/ui scripts, root test filter breadth, Rails and template-prep CI — route: inline — status: blocked. `apps/pawwalk-api` tests cannot run here: `mise x -- bin/rails test` falls back to system Ruby 2.6 and fails on the locked Bundler 2.6.9, so a Rails CI job cannot be validated before adding it. Installing the Ruby toolchain needs explicit approval.
-- T11 (S4) — Docs rot: `apps/nest-prep/README.md` title/filters — route: inline — status: done, commit `856028b`. Catalog derivation from `COURSE_IDS` deferred: the tuple is used in routing type positions, so widening it needs its own change.
+- T10 (S5) — Close gate gaps that protect this work: prep-kit/ui scripts, root test filter breadth, Rails and template-prep CI — route: inline — **status: done, verified on main**. `prep-kit` has its Jest script and is in the root test filter; `packages/ui` is typechecked through the portfolio path alias; `learn` tests run in `validate-learn`; the generic `verify` job runs `template-prep` typecheck/lint; PR #132 added the Rails test/RuboCop job. No separate deploy job is needed for the unpublished template scaffold.
+- T11 (S4) — Docs rot and course catalog — route: inline — **status: done, PR #132**. `apps/nest-prep/README.md` title/filters were corrected in `856028b`; `COURSES` now owns the homepage catalog and `COURSE_IDS` derives from it (`apps/learn/src/lib/i18n-config.ts`).
 
 ## Log
 
@@ -57,3 +58,5 @@ Contested points to decide by team, not by citation: barrels vs subpath exports 
 - L7 (wave 2): T5 and T7 delivered in `0f7030d` and `151ab31`; T5 fixed the lessons badge defect as a side effect of the label change. T7 removed 1133 lines of duplicate routes; `apps/learn/public/_redirects` keeps old bookmarks working without JS, and `next build` plus `node tools/i18n-check.mjs` pass. A worker for T7 timed out mid-run and left the tree partially edited; the parent verified the partial result (3 redirect pages, no stale imports), completed the redirect file and ran the gates instead of relaunching.
 - L8 (wave 2): T11 README rot fixed in `856028b`; the learn catalog duplication remains open.
 - L9 (wave 3): T9 completed in `29d0040` — the user confirmed the prototype was scaffolding and chose removal. T6 closed with no change: prep-kit's barrel re-exports React, so subpath imports are the correct surface. T10 is blocked on the missing Ruby toolchain: the Rails gate cannot be validated before adding it.
+- L10 (closeout, 2026-11-03): Reconciled the tracker against current `main` (`44bfa4f`). PR #127 delivered the readability refactor; PR #132 delivered the Rails gate and course-catalog single source of truth. Main CI run `41694382550` at `44bfa4f` is green (`verify`, `rails-tests`, `validate-learn`, platform builds, and deploys); its `verify` log explicitly ran `@gerardocordero/template-prep:typecheck`, `:lint`, and `@gerardocordero/prep-kit:test`. The root test filter includes portfolio, prep-kit, sync-core, and knockout-mobile; learn's validator/test gate is separate. T10 and T11 are complete. PRs #135–#137 added Knockout and sync-core after the initial inventory; they are separately delivered project work, not refactors in this feature. PR #134 remains open and outside the main snapshot. This PR only reconciles evidence and does not touch other worktrees or product sources.
+- L11 (closeout PR, 2026-11-03): Opened docs-only PR #138 from `docs/repo-organization-closeout` at `ef1b545` against current main `44bfa4f`. PR CI run `41696032193` passed `verify`, `rails-tests`, `validate-learn`, and the path-detection job; platform deploys were skipped on the PR as expected. The PR remains open; no merge was requested in this task.
