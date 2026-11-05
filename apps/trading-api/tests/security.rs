@@ -194,6 +194,39 @@ async fn auth_rate_limit_returns_429_with_retry_after() {
 }
 
 #[tokio::test]
+async fn global_rate_limit_429_keeps_the_request_id_contract() {
+    let app = spawn_with(RateLimitConfig {
+        auth: Limit::new(1_000_000, Duration::from_secs(60)),
+        orders: Limit::new(1_000_000, Duration::from_secs(60)),
+        global: Limit::new(2, Duration::from_secs(60)),
+    })
+    .await;
+
+    for _ in 0..2 {
+        let allowed = app.get("/v1/healthz", None).await;
+        assert_eq!(allowed.status(), StatusCode::OK);
+    }
+
+    let limited = app
+        .client
+        .get(format!("{}/v1/healthz", app.base_url))
+        .header("x-request-id", "global-limit-probe")
+        .send()
+        .await
+        .expect("global limit probe");
+
+    assert_eq!(limited.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        limited
+            .headers()
+            .get("x-request-id")
+            .and_then(|value| value.to_str().ok()),
+        Some("global-limit-probe"),
+        "every response carries x-request-id, including a 429 from the global limiter"
+    );
+}
+
+#[tokio::test]
 async fn cors_is_disabled_unless_origins_are_configured() {
     let app = spawn().await;
 

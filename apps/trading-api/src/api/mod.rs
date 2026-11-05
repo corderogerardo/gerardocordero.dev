@@ -68,9 +68,10 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/healthz", get(health::healthz))
         .route("/v1/readyz", get(health::readyz))
         .route("/", get(health::index))
+        // `Router::layer` wraps inside-out: the last call is the outermost one.
+        // Request-id and tracing must wrap the global limiter, otherwise its
+        // early 429 skips both and breaks the documented `x-request-id` contract.
         .layer(DefaultBodyLimit::max(16 * 1024))
-        .layer(TraceLayer::new_for_http())
-        .layer(from_fn(extract::request_id))
         .layer(from_fn_with_state(
             (
                 state.limiter.clone(),
@@ -81,6 +82,8 @@ pub fn router(state: AppState) -> Router {
             ),
             extract::rate_limit,
         ))
+        .layer(TraceLayer::new_for_http())
+        .layer(from_fn(extract::request_id))
         .with_state(state);
 
     match cors {
