@@ -1,0 +1,107 @@
+name: Trading platform
+
+# The two trading projects have different toolchains and different install roots:
+# `apps/trading-api` is Rust, `apps/trading-mobile` is a standalone pnpm project
+# (Expo SDK 58, isolated from the monorepo's SDK 56). This workflow is additive;
+# it does not change the main CI job.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'feature/**']
+    paths:
+      - 'apps/trading-api/**'
+      - 'apps/trading-mobile/**'
+      - '.github/workflows/trading.yml'
+  pull_request:
+    paths:
+      - 'apps/trading-api/**'
+      - 'apps/trading-mobile/**'
+      - '.github/workflows/trading.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trading-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (fmt, clippy, unit, integration)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/trading-api
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: trading
+          POSTGRES_PASSWORD: trading
+          POSTGRES_DB: trading
+        ports:
+          - '5433:5432'
+        options: >-
+          --health-cmd "pg_isready -U trading -d trading"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      # The suite uses the same database the service creates; every test owns a
+      # unique user, so runs are independent.
+      TEST_DATABASE_URL: postgres://trading:trading@127.0.0.1:5433/trading
+      JWT_SECRET: ci-only-secret-with-more-than-32-characters
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/trading-api -> target
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Unit tests
+        run: cargo test --lib
+
+      - name: Integration, security, concurrency, e2e
+        run: cargo test --tests -- --test-threads=4
+
+  mobile:
+    name: Mobile (typecheck, lint, jest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/trading-mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/trading-mobile/pnpm-lock.yaml
+
+      - name: Install (isolated from the monorepo workspace)
+        run: pnpm install --ignore-workspace --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test --ci

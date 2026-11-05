@@ -1,0 +1,28 @@
+appId: dev.gerardocordero.meridian
+---
+# Boot gate: the app must reach the markets tab.
+#
+# A fresh install shows the auth screens, so the flow signs in when credentials
+# are supplied (MAESTRO_EMAIL / MAESTRO_PASSWORD). Without them it expects an
+# existing session in the keychain.
+- runFlow: subflows/launch.yml
+
+- runFlow:
+    when:
+      visible:
+        id: screen-sign-up
+    commands:
+      - tapOn:
+          id: sign-up-to-sign-in
+
+- runFlow:
+    when:
+      visible:
+        id: screen-sign-in
+    commands:
+      - runFlow: subflows/sign-in.yml
+
+- extendedWaitUntil:
+    visible:
+      id: screen-markets
+    timeout: 20000

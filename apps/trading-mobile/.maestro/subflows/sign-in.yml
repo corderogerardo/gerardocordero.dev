@@ -1,0 +1,38 @@
+appId: dev.gerardocordero.meridian
+---
+# Signs in with the credentials supplied on the command line. Requires:
+#   maestro test .maestro/sign-in.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
+#
+# iOS shows a native "Save Password?" sheet the first time a password field is
+# submitted. It is dismissed opportunistically; it is not part of the app.
+- runFlow:
+    when:
+      visible:
+        id: screen-sign-up
+    commands:
+      - tapOn:
+          id: sign-up-to-sign-in
+
+- assertVisible:
+    id: screen-sign-in
+- tapOn:
+    id: sign-in-email
+- eraseText: 120
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: sign-in-password
+- eraseText: 120
+- inputText: ${MAESTRO_PASSWORD}
+- tapOn:
+    text: "Not Now"
+    optional: true
+- scrollUntilVisible:
+    element:
+      id: sign-in-submit
+    direction: DOWN
+- tapOn:
+    id: sign-in-submit
+- extendedWaitUntil:
+    visible:
+      id: screen-markets
+    timeout: 20000

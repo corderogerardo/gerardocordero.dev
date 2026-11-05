@@ -1,0 +1,34 @@
+appId: dev.gerardocordero.meridian
+---
+# Signs out (when already signed in), then signs in and lands on the markets tab.
+#   maestro test .maestro/sign-in.yml -e MAESTRO_EMAIL=... -e MAESTRO_PASSWORD=...
+- runFlow: subflows/launch.yml
+
+- runFlow:
+    when:
+      visible:
+        id: tab-settings
+    commands:
+      - tapOn:
+          id: tab-settings
+      - scrollUntilVisible:
+          element:
+            id: settings-sign-out
+          direction: DOWN
+      - tapOn:
+          id: settings-sign-out
+
+- extendedWaitUntil:
+    visible:
+      id: screen-sign-in
+    timeout: 20000
+
+- runFlow: subflows/sign-in.yml
+
+- extendedWaitUntil:
+    visible:
+      id: screen-markets
+    timeout: 20000
+
+- assertVisible:
+    id: tab-orders
